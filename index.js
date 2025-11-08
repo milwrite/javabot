@@ -261,11 +261,7 @@ const commands = [
         .addStringOption(option =>
             option.setName('description')
                 .setDescription('Brief description of what the game does')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('template')
-                .setDescription('Game template (canvas, phaser, vanilla)')
-                .setRequired(false)),
+                .setRequired(true)),
                 
     new SlashCommandBuilder()
         .setName('status')
@@ -512,12 +508,10 @@ async function handleCommit(interaction) {
 async function handleCreateGame(interaction) {
     const name = interaction.options.getString('name');
     const description = interaction.options.getString('description');
-    const template = interaction.options.getString('template') || 'vanilla';
     
     await interaction.editReply(getBotResponse('thinking'));
 
-    const gameTemplates = {
-        vanilla: `// ${name} - ${description}
+    const gameContent = `// ${name} - ${description}
 // Created via JavaBot with coffee-fueled efficiency
 
 class ${name.charAt(0).toUpperCase() + name.slice(1)}Game {
@@ -575,93 +569,7 @@ class ${name.charAt(0).toUpperCase() + name.slice(1)}Game {
 // Initialize game when page loads
 window.addEventListener('load', () => {
     new ${name.charAt(0).toUpperCase() + name.slice(1)}Game();
-});`,
-
-        canvas: `// ${name} - ${description}
-// Canvas-based game, brewed to perfection
-
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-canvas.width = 800;
-canvas.height = 600;
-
-let gameState = {
-    score: 0,
-    playing: true
-};
-
-function update() {
-    if (!gameState.playing) return;
-    
-    // Game update logic goes here
-}
-
-function render() {
-    ctx.fillStyle = '#2c3e50';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    ctx.fillStyle = '#ecf0f1';
-    ctx.font = '32px Arial';
-    ctx.fillText('${name}', 50, 100);
-    ctx.fillText(\`Score: \${gameState.score}\`, 50, 150);
-}
-
-function gameLoop() {
-    update();
-    render();
-    requestAnimationFrame(gameLoop);
-}
-
-// Start the game
-gameLoop();`,
-
-        phaser: `// ${name} - ${description}  
-// Phaser game, crafted like a perfect espresso shot
-
-const config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 300 },
-            debug: false
-        }
-    },
-    scene: {
-        preload: preload,
-        create: create,
-        update: update
-    }
-};
-
-let score = 0;
-let scoreText;
-
-function preload() {
-    // Load game assets here
-    this.load.setBaseURL('https://labs.phaser.io');
-    this.load.image('sky', 'assets/skies/space3.png');
-}
-
-function create() {
-    this.add.image(400, 300, 'sky');
-    
-    scoreText = this.add.text(16, 16, 'Score: 0', {
-        fontSize: '32px',
-        fill: '#000'
-    });
-}
-
-function update() {
-    // Game update logic
-}
-
-const game = new Phaser.Game(config);`
-    };
-
-    const gameContent = gameTemplates[template];
+});`;
     const fileName = `games/${name}.js`;
     
     try {
@@ -699,7 +607,6 @@ const game = new Phaser.Game(config);`
     <h1>${name}</h1>
     <p>${description}</p>
     <canvas id="gameCanvas"></canvas>
-    ${template === 'phaser' ? '<script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>' : ''}
     <script src="${name}.js"></script>
 </body>
 </html>`;
@@ -711,7 +618,6 @@ const game = new Phaser.Game(config);`
             .setDescription(getBotResponse('success'))
             .addFields(
                 { name: 'Game Name', value: name, inline: true },
-                { name: 'Template', value: template, inline: true },
                 { name: 'Description', value: description, inline: false },
                 { name: 'Files', value: `${fileName}\ngames/${name}.html`, inline: false }
             )
