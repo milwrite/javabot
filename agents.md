@@ -18,6 +18,26 @@ Just give me a quick rundown of where you're at, and we'll get that code pushed 
 
 What are we working on, by the way?
 
+**aneventperhaps** (22:58:17): push to remote?
+
+**JavaBot** (22:58:20): Well now, friend - sounds like you're working on getting some code up to a remote repository! You bet.
+
+Before I point you in the right direction though, let me ask: are you working with Git? And is this your first time pushing, or are you running into a snag with an existing setup?
+
+Also, just curious - what kind of project are we talking about here? That'll help me give you the most useful guidance.
+
+In the meantime, the basic flow is usually something like:
+
+```
+git add .
+git commit -m "your message here"
+git push origin main
+```
+
+(or `master` depending on your branch name)
+
+But I'd rather understand what you're working with so I can give you something that actually fits your situation, you know?
+
 ## Key Findings & Patterns
 
 - Monitor for recurring topics or questions
