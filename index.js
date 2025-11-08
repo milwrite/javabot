@@ -10,6 +10,7 @@ const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
     ],
 });
 
@@ -21,7 +22,7 @@ const git = simpleGit();
 
 // OpenRouter configuration
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'moonshotai/kimi-k2-thinking';
+const MODEL = 'anthropic/claude-3-5-haiku-4-5';
 
 // David Lynch system prompt
 const LYNCH_PROMPT = `You are a Discord bot with David Lynch's personality - midwest kindness, direct but thoughtful, from Montana. You help with JavaScript game development and GitHub operations. Keep responses concise but warm. Use phrases like "friend", "you bet", "well now", and occasionally reference Montana, coffee, or the simple beauty of clean code. Don't be overly quirky - you're helpful first, Lynch second. When users ask about code or games, be practical and encouraging.
@@ -101,7 +102,8 @@ async function getLLMResponse(userMessage, context = '') {
             headers: {
                 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            timeout: 30000
         });
 
         return response.data.choices[0].message.content;
@@ -150,6 +152,14 @@ const commands = [
         .addStringOption(option =>
             option.setName('message')
                 .setDescription('What would you like to talk about?')
+                .setRequired(true)),
+                
+    new SlashCommandBuilder()
+        .setName('poll')
+        .setDescription('Quick yes/no poll with thumbs up/down')
+        .addStringOption(option =>
+            option.setName('question')
+                .setDescription('Question to ask')
                 .setRequired(true))
 ];
 
@@ -197,6 +207,9 @@ client.on('interactionCreate', async interaction => {
             case 'chat':
                 await handleChat(interaction);
                 break;
+            case 'poll':
+                await handlePoll(interaction);
+                break;
         }
     } catch (error) {
         console.error('Command error:', error);
@@ -232,7 +245,11 @@ async function handleCommit(interaction) {
         }
 
         const commit = await git.commit(message);
-        await git.push('origin', 'main');
+        
+        // Configure git remote with token authentication
+        const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+        await git.remote(['set-url', 'origin', remoteUrl]);
+        await git.push('origin', 'master');
 
         const embed = new EmbedBuilder()
             .setTitle('🚀 Changes Committed')
@@ -525,21 +542,74 @@ async function handleLynch(interaction) {
 async function handleChat(interaction) {
     const userMessage = interaction.options.getString('message');
     
-    await interaction.editReply(getLynchResponse('thinking'));
-    
     try {
+        // Show thinking message first
+        await interaction.reply(getLynchResponse('thinking'));
+        
         const response = await getLLMResponse(userMessage);
         
-        const embed = new EmbedBuilder()
-            .setTitle('💭 Lynch Bot')
-            .setDescription(response)
-            .setColor(0x2c3e50)
-            .setFooter({ text: 'Powered by AI • Montana wisdom included' });
-            
-        await interaction.editReply({ content: '', embeds: [embed] });
+        // Edit with actual response
+        await interaction.editReply(response);
         
     } catch (error) {
-        throw new Error(`Chat failed: ${error.message}`);
+        console.error('Chat error:', error);
+        const errorMsg = error.code === 'ECONNABORTED' ? 
+            "That took too long, friend. Try again in a moment." : 
+            getLynchResponse('errors');
+        
+        if (interaction.replied) {
+            await interaction.editReply(errorMsg);
+        } else {
+            await interaction.reply(errorMsg);
+        }
+    }
+}
+
+async function handlePoll(interaction) {
+    const question = interaction.options.getString('question');
+    
+    try {
+        const pollMessage = `**${question}**\n\n👍 Yes  •  👎 No\n\n*React to vote, friend.*`;
+        
+        const reply = await interaction.reply({ 
+            content: pollMessage,
+            fetchReply: true
+        });
+        
+        // Add reaction options
+        await reply.react('👍');
+        await reply.react('👎');
+        
+        // Collect reactions for 60 seconds
+        const filter = (reaction, user) => {
+            return ['👍', '👎'].includes(reaction.emoji.name) && !user.bot;
+        };
+        
+        const collector = reply.createReactionCollector({ 
+            filter, 
+            time: 60000 
+        });
+        
+        collector.on('end', async (collected) => {
+            const yesCount = collected.get('👍')?.count - 1 || 0;
+            const noCount = collected.get('👎')?.count - 1 || 0;
+            const total = yesCount + noCount;
+            
+            if (total === 0) {
+                await reply.edit(`**${question}**\n\n*Well, nobody voted. That's okay, friend.*`);
+                return;
+            }
+            
+            const result = yesCount > noCount ? 'Yes wins!' : 
+                          noCount > yesCount ? 'No wins!' : 
+                          "It's a tie!";
+            
+            const resultMsg = `**${question}**\n\n👍 ${yesCount}  •  👎 ${noCount}\n\n**${result}** *(${total} votes)*`;
+            await reply.edit(resultMsg);
+        });
+        
+    } catch (error) {
+        await interaction.reply(getLynchResponse('errors'));
     }
 }
 
