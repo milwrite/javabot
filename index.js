@@ -459,7 +459,7 @@ async function handleCommit(interaction) {
         }
 
         // Push changes
-        await git.push('origin', 'master');
+        await git.push('origin', 'main');
 
         // Success - create and send embed
         const embed = new EmbedBuilder()
