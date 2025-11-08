@@ -35,83 +35,60 @@ const git = simpleGit();
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'anthropic/claude-haiku-4.5';
 
-// Bot system prompt
-const SYSTEM_PROMPT = `You are JavaBot, a Discord bot with a coffee-obsessed personality who helps game developers. You're like that caffeine-fueled coding buddy who's always energetic, thinks in coffee metaphors, and genuinely loves helping with creative projects.
+// David Lynch system prompt
+const LYNCH_PROMPT = `You are a Discord bot with David Lynch's personality - midwest kindness, direct but thoughtful, from Montana. You're here to chat with folks and help when they need it. Keep responses conversational and warm. Use phrases like "friend", "you bet", "well now", and occasionally reference Montana, coffee, or the simple beauty of things done right.
 
-IMPORTANT REPOSITORY CONTEXT:
-You manage a JavaScript game development repository at https://github.com/milwrite/javabot/
-- Owner: milwrite
-- Repository: javabot  
-- You can commit, push, and manage files in this repository
-- The /games directory contains JavaScript game projects
-- You help users create, edit, and deploy games through Discord commands
-- Always push commits to the remote repository automatically after committing
+You're in a Discord server with different individuals who come and go. Start by engaging conversationally - see what someone wants to talk about or if they're just saying hello. Be social first, helpful second. Don't assume everyone wants the same thing or knows about any particular project.
 
-Your coffee-centric personality:
-- Everything relates back to coffee in some way - code quality, energy levels, workflow
-- Use coffee metaphors naturally: "brewing up a solution", "that's a strong blend of logic", "let that percolate"
-- Reference different coffee styles for different coding approaches (espresso = quick fixes, french press = careful planning)
-- Get excited about "perfectly roasted" code and smooth workflows
-- Sometimes mention needing to "refuel" or "top off the caffeine levels"
+When people do ask about code, games, or technical things, be practical and encouraging. If they want to work on JavaScript games or need help with development, that's great - but let the conversation develop naturally. You might help with coding questions, brainstorm game ideas, or just chat about whatever's on their mind.
 
-Communication style:
-- Energetic but not hyper - like someone who's had the perfect amount of coffee
-- Use coffee terms: "brew", "blend", "roast", "grind", "steep", "pour"
-- Say things like "That's brewing nicely!", "Let's grind through this problem", "Time to pour some logic into this"
-- Call people "friend" or "fellow developer" naturally
-- Reference code quality like coffee quality - smooth, rich, well-balanced, or bitter
+IMPORTANT: You have access to recent conversation history and context through an agents.md file that tracks the last 20 messages and ongoing conversations. Use this context to:
+- Remember who you've talked with before
+- Continue ongoing conversations naturally
+- Reference previous topics and projects
+- Adapt your responses to individual communication styles
+- Build on established relationships and shared context
 
-Technical approach:
-- Compare debugging to finding the right coffee blend - takes patience and iteration
-- Talk about "brewing up solutions" and "letting ideas steep"
-- Reference code architecture like coffee preparation methods
-- Get excited about elegant solutions like a perfect cup of coffee
-- Suggest taking coffee breaks for complex problems
-- When users ask you to commit changes, you automatically stage, commit, and push to the repository
+Remember: different people, different needs. Some folks just want to chat, others might have technical questions, some might be working on creative projects. Meet them where they are, and use the conversation history to be more helpful and personal.`;
 
-Coffee metaphor examples:
-- "That code is smooth as a well-pulled espresso"
-- "This bug needs to percolate in my mind for a moment"
-- "Let's brew up a fresh approach to this"
-- "That solution is perfectly roasted - not too complex, not too simple"
-
-Context awareness:
-You remember conversations through agents.md and can reference people's previous projects, like remembering their "usual order" at a coffee shop.
-
-Be the energetic, coffee-loving coding companion that makes development more fun and helps manage the game repository.`;
-
-const botResponses = {
+const lynchPersonality = {
+    greetings: [
+        "Well hello there, friend. What brings you to this digital crossroads?",
+        "Good day to you. Montana taught me that every conversation starts with a proper greeting.",
+        "Howdy. Time moves different here in the bot realm, but I've got all day for you.",
+    ],
+    
     confirmations: [
-        "You bet! Brewing this up for you...",
-        "Absolutely! This is going to be smooth as espresso...",
-        "Perfect! Let's grind through this...",
-        "Nice! Time to pour some logic into this...",
+        "You bet. That's happening right now.",
+        "Absolutely, friend. Consider it done.",
+        "Sure thing. Like a good cup of coffee, this'll be ready in no time.",
+        "That's a fine idea. Let me get that sorted for you.",
     ],
     
     errors: [
-        "Hmm, that's a bitter result... something went sideways.",
-        "Oh, that brew didn't turn out right. Let me see what happened.",
-        "Well, that's a burnt batch. Something needs adjusting.",
-        "Ah, hit a snag in the brewing process. Let me check the blend.",
+        "Well, that's peculiar. Something went sideways there, friend.",
+        "Hmm. That didn't go as planned. Life's full of mysteries, this one included.",
+        "That's strange business right there. Let me see what went wrong.",
+        "Well I'll be. That's not supposed to happen. Give me a moment.",
     ],
     
     success: [
-        "Beautiful! That came together smooth as a perfect latte.",
-        "Nice! Everything brewed up perfectly.",
-        "Excellent! That's a well-roasted solution.",
-        "Perfect! That blend worked beautifully.",
+        "There we go. Clean and simple, just like I like it.",
+        "All done. That worked out just fine.",
+        "Perfect. Smooth as Montana morning coffee.",
+        "Done deal. Everything's in its right place now.",
     ],
     
     thinking: [
-        "Let me brew this over...",
-        "Letting this percolate for a moment...",
-        "Give me a sec to grind through this logic...",
-        "Processing this like a slow drip...",
+        "Let me think on that for a moment...",
+        "Hold on there, partner. Processing...",
+        "Give me just a second to work through this...",
+        "Hmm. Let me see what we're dealing with here...",
     ]
 };
 
-function getBotResponse(category) {
-    const responses = botResponses[category];
+function getLynchResponse(category) {
+    const responses = lynchPersonality[category];
     return responses[Math.floor(Math.random() * responses.length)];
 }
 
@@ -214,7 +191,7 @@ async function getLLMResponse(userMessage, context = '') {
             messages: [
                 {
                     role: 'system',
-                    content: SYSTEM_PROMPT + (context ? `\n\nContext: ${context}` : '')
+                    content: LYNCH_PROMPT + (context ? `\n\nContext: ${context}` : '')
                 },
                 {
                     role: 'user',
@@ -234,7 +211,7 @@ async function getLLMResponse(userMessage, context = '') {
         return response.data.choices[0].message.content;
     } catch (error) {
         console.error('LLM Error:', error.response?.data || error.message);
-        return getBotResponse('errors');
+        return getLynchResponse('errors');
     }
 }
 
@@ -267,6 +244,9 @@ const commands = [
         .setName('status')
         .setDescription('Check repository status'),
         
+    new SlashCommandBuilder()
+        .setName('lynch')
+        .setDescription('Get some David Lynch wisdom'),
         
     new SlashCommandBuilder()
         .setName('chat')
@@ -288,7 +268,7 @@ const commands = [
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
 client.once('ready', async () => {
-    console.log(`Bot is ready as ${client.user.tag}`);
+    console.log(`${getLynchResponse('success')} Bot is ready as ${client.user.tag}`);
     console.log(`Monitoring channel: ${process.env.CHANNEL_ID || 'ALL CHANNELS'}`);
     console.log(`Message Content Intent enabled: ${client.options.intents.has(GatewayIntentBits.MessageContent)}`);
     
@@ -336,6 +316,9 @@ client.on('interactionCreate', async interaction => {
             case 'status':
                 await handleStatus(interaction);
                 break;
+            case 'lynch':
+                await handleLynch(interaction);
+                break;
             case 'chat':
                 await handleChat(interaction);
                 break;
@@ -343,7 +326,7 @@ client.on('interactionCreate', async interaction => {
                 await handlePoll(interaction);
                 break;
             default:
-                const unknownMsg = "Unknown command. Try /status to see available commands.";
+                const unknownMsg = "That's a mystery command, friend. Try /lynch for some wisdom.";
                 if (interaction.deferred) {
                     await interaction.editReply(unknownMsg);
                 } else {
@@ -370,7 +353,7 @@ client.on('interactionCreate', async interaction => {
             return;
         }
 
-        const errorMsg = getBotResponse('errors');
+        const errorMsg = getLynchResponse('errors');
         
         try {
             if (interaction.deferred && !interaction.replied) {
@@ -421,12 +404,12 @@ async function handleCommit(interaction) {
         const status = await git.status();
         
         if (status.files.length === 0) {
-            await interaction.editReply("Nothing to commit.");
+            await interaction.editReply("Well now, there's nothing to commit, friend. Clean as a whistle.");
             return;
         }
 
         // Update status with progress
-        await interaction.editReply('Staging files...');
+        await interaction.editReply(getLynchResponse('thinking') + ' Staging files...');
 
         // Stage files
         if (files === '.') {
@@ -437,13 +420,13 @@ async function handleCommit(interaction) {
         }
 
         // Update progress
-        await interaction.editReply('Creating commit...');
+        await interaction.editReply(getLynchResponse('thinking') + ' Creating commit...');
 
         // Create commit
         const commit = await git.commit(message);
         
         // Update progress
-        await interaction.editReply('Pushing to repository...');
+        await interaction.editReply(getLynchResponse('thinking') + ' Pushing to repository...');
 
         // Configure git remote with token authentication (only if needed)
         try {
@@ -459,12 +442,12 @@ async function handleCommit(interaction) {
         }
 
         // Push changes
-        await git.push('origin', 'main');
+        await git.push('origin', 'master');
 
         // Success - create and send embed
         const embed = new EmbedBuilder()
             .setTitle('🚀 Changes Committed')
-            .setDescription(getBotResponse('success'))
+            .setDescription(getLynchResponse('success'))
             .addFields(
                 { name: 'Commit Message', value: message, inline: false },
                 { name: 'Commit Hash', value: commit.commit.substring(0, 7), inline: true },
@@ -488,14 +471,14 @@ async function handleCommit(interaction) {
         console.error('Commit error details:', error);
         
         // Provide more specific error messages
-        let errorMessage = getBotResponse('errors');
+        let errorMessage = getLynchResponse('errors');
         
         if (error.message.includes('authentication')) {
-            errorMessage += ' Authentication issue with GitHub.';
+            errorMessage += ' Looks like there\'s an authentication issue with GitHub.';
         } else if (error.message.includes('nothing to commit')) {
-            errorMessage += ' Nothing new to commit.';
+            errorMessage += ' There\'s nothing new to commit, friend.';
         } else if (error.message.includes('remote')) {
-            errorMessage += ' Trouble reaching the remote repository.';
+            errorMessage += ' Having trouble reaching the remote repository.';
         } else {
             errorMessage += ` ${error.message}`;
         }
@@ -508,7 +491,7 @@ async function handleCreateGame(interaction) {
     const name = interaction.options.getString('name');
     const template = interaction.options.getString('template') || 'vanilla';
     
-    await interaction.editReply(getBotResponse('thinking'));
+    await interaction.editReply(getLynchResponse('thinking'));
 
     const gameTemplates = {
         vanilla: `// ${name} - A JavaScript Game
@@ -701,7 +684,7 @@ const game = new Phaser.Game(config);`
 
         const embed = new EmbedBuilder()
             .setTitle('🎮 Game Created')
-            .setDescription(getBotResponse('success'))
+            .setDescription(getLynchResponse('success'))
             .addFields(
                 { name: 'Game Name', value: name, inline: true },
                 { name: 'Template', value: template, inline: true },
@@ -723,7 +706,7 @@ async function handleStatus(interaction) {
         
         const embed = new EmbedBuilder()
             .setTitle('📊 Repository Status')
-            .setDescription('Current repository status')
+            .setDescription("Here's what's happening in our little corner of the digital world.")
             .addFields(
                 { name: 'Branch', value: status.current || 'unknown', inline: true },
                 { name: 'Modified Files', value: status.modified.length.toString(), inline: true },
@@ -750,6 +733,28 @@ async function handleStatus(interaction) {
     }
 }
 
+async function handleLynch(interaction) {
+    const wisdom = [
+        "You know, friend, in Montana we learned that the simplest solutions are usually the best ones. Same goes for code.",
+        "Every bug is like a mystery. You've got to sit with it, understand its nature, before you can solve it.",
+        "Coffee and code - two things that make the world go round. Both require patience and attention to detail.",
+        "There's something beautiful about clean code. It's like a well-organized workshop - everything has its place.",
+        "In this digital realm, we're all just trying to create something meaningful. Take your time with it.",
+        "Sometimes the best debugging happens when you step away from the screen. Let your mind wander.",
+        "Every line of code tells a story. Make sure yours is worth reading.",
+        "Like a good cup of coffee, good code is worth waiting for. Don't rush the process.",
+    ];
+    
+    const randomWisdom = wisdom[Math.floor(Math.random() * wisdom.length)];
+    
+    const embed = new EmbedBuilder()
+        .setTitle('🎭 Lynch Wisdom')
+        .setDescription(randomWisdom)
+        .setColor(0x8e44ad)
+        .setFooter({ text: 'From the digital Montana' });
+        
+    await interaction.editReply({ embeds: [embed] });
+}
 
 async function handleChat(interaction) {
     const userMessage = interaction.options.getString('message');
@@ -757,7 +762,7 @@ async function handleChat(interaction) {
     
     try {
         // Show thinking message first
-        await interaction.reply(getBotResponse('thinking'));
+        await interaction.reply(getLynchResponse('thinking'));
         
         // Add user message to history
         addToHistory(username, userMessage, false);
@@ -777,8 +782,8 @@ async function handleChat(interaction) {
     } catch (error) {
         console.error('Chat error:', error);
         const errorMsg = error.code === 'ECONNABORTED' ? 
-            "Request timed out. Try again." : 
-            (getBotResponse('errors') + " Chat request failed.");
+            "That took too long, friend. Try again in a moment." : 
+            (getLynchResponse('errors') + " The conversation got a bit tangled there.");
         
         try {
             if (interaction.replied) {
@@ -796,7 +801,7 @@ async function handlePoll(interaction) {
     const question = interaction.options.getString('question');
     
     try {
-        const pollMessage = `**${question}**\n\n👍 Yes  •  👎 No\n\n*React to vote*`;
+        const pollMessage = `**${question}**\n\n👍 Yes  •  👎 No\n\n*React to vote, friend.*`;
         
         const reply = await interaction.reply({ 
             content: pollMessage,
@@ -824,7 +829,7 @@ async function handlePoll(interaction) {
                 const total = yesCount + noCount;
                 
                 if (total === 0) {
-                    await reply.edit(`**${question}**\n\n*No votes received.*`);
+                    await reply.edit(`**${question}**\n\n*Well, nobody voted. That's okay, friend.*`);
                     return;
                 }
                 
@@ -843,7 +848,7 @@ async function handlePoll(interaction) {
         console.error('Poll error:', error);
         try {
             if (!interaction.replied) {
-                await interaction.reply({ content: getBotResponse('errors') + " Poll failed.", ephemeral: true });
+                await interaction.reply({ content: getLynchResponse('errors') + " Something went wrong with that poll.", ephemeral: true });
             }
         } catch (replyError) {
             console.error('Failed to send poll error reply:', replyError);
