@@ -189,7 +189,10 @@ client.on('interactionCreate', async interaction => {
     const { commandName } = interaction;
 
     try {
-        await interaction.deferReply();
+        // Only defer reply for commands that need it (not chat and poll)
+        if (!['chat', 'poll'].includes(commandName)) {
+            await interaction.deferReply();
+        }
 
         switch (commandName) {
             case 'commit':
@@ -210,15 +213,29 @@ client.on('interactionCreate', async interaction => {
             case 'poll':
                 await handlePoll(interaction);
                 break;
+            default:
+                const unknownMsg = "That's a mystery command, friend. Try /lynch for some wisdom.";
+                if (interaction.deferred) {
+                    await interaction.editReply(unknownMsg);
+                } else {
+                    await interaction.reply({ content: unknownMsg, ephemeral: true });
+                }
         }
     } catch (error) {
         console.error('Command error:', error);
-        const errorMsg = getLynchResponse('errors') + ` Error: ${error.message}`;
+        const errorMsg = getLynchResponse('errors') + ` Something went sideways: ${error.message}`;
         
-        if (interaction.deferred) {
-            await interaction.editReply(errorMsg);
-        } else {
-            await interaction.reply({ content: errorMsg, ephemeral: true });
+        try {
+            if (interaction.deferred && !interaction.replied) {
+                await interaction.editReply(errorMsg);
+            } else if (!interaction.replied) {
+                await interaction.reply({ content: errorMsg, ephemeral: true });
+            } else {
+                // If we already replied, we can't reply again, so just log it
+                console.error('Could not send error message - interaction already handled');
+            }
+        } catch (replyError) {
+            console.error('Failed to send error reply:', replyError);
         }
     }
 });
@@ -227,9 +244,8 @@ async function handleCommit(interaction) {
     const message = interaction.options.getString('message');
     const files = interaction.options.getString('files') || '.';
     
-    await interaction.editReply(getLynchResponse('thinking'));
-
     try {
+        // First, check if there's anything to commit
         const status = await git.status();
         
         if (status.files.length === 0) {
@@ -237,6 +253,10 @@ async function handleCommit(interaction) {
             return;
         }
 
+        // Update status with progress
+        await interaction.editReply(getLynchResponse('thinking') + ' Staging files...');
+
+        // Stage files
         if (files === '.') {
             await git.add('.');
         } else {
@@ -244,29 +264,72 @@ async function handleCommit(interaction) {
             await git.add(fileList);
         }
 
+        // Update progress
+        await interaction.editReply(getLynchResponse('thinking') + ' Creating commit...');
+
+        // Create commit
         const commit = await git.commit(message);
         
-        // Configure git remote with token authentication
-        const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
-        await git.remote(['set-url', 'origin', remoteUrl]);
+        // Update progress
+        await interaction.editReply(getLynchResponse('thinking') + ' Pushing to repository...');
+
+        // Configure git remote with token authentication (only if needed)
+        try {
+            const remotes = await git.getRemotes(true);
+            const origin = remotes.find(r => r.name === 'origin');
+            const expectedUrl = `https://github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+            
+            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
+                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                await git.remote(['set-url', 'origin', remoteUrl]);
+            }
+        } catch (remoteError) {
+            console.warn('Remote URL setup warning:', remoteError.message);
+        }
+
+        // Push changes
         await git.push('origin', 'master');
 
+        // Success - create and send embed
         const embed = new EmbedBuilder()
             .setTitle('🚀 Changes Committed')
             .setDescription(getLynchResponse('success'))
             .addFields(
                 { name: 'Commit Message', value: message, inline: false },
                 { name: 'Commit Hash', value: commit.commit.substring(0, 7), inline: true },
-                { name: 'Files Changed', value: status.files.length.toString(), inline: true },
-                { name: 'Repository', value: `[View Changes](${process.env.GITHUB_REPO_URL}commit/${commit.commit})`, inline: false }
+                { name: 'Files Changed', value: status.files.length.toString(), inline: true }
             )
             .setColor(0x00AE86)
             .setTimestamp();
 
+        // Add repository link if URL is available
+        if (process.env.GITHUB_REPO_URL) {
+            embed.addFields({ 
+                name: 'Repository', 
+                value: `[View Changes](${process.env.GITHUB_REPO_URL}/commit/${commit.commit})`, 
+                inline: false 
+            });
+        }
+
         await interaction.editReply({ content: '', embeds: [embed] });
 
     } catch (error) {
-        throw new Error(`Git operation failed: ${error.message}`);
+        console.error('Commit error details:', error);
+        
+        // Provide more specific error messages
+        let errorMessage = getLynchResponse('errors');
+        
+        if (error.message.includes('authentication')) {
+            errorMessage += ' Looks like there\'s an authentication issue with GitHub.';
+        } else if (error.message.includes('nothing to commit')) {
+            errorMessage += ' There\'s nothing new to commit, friend.';
+        } else if (error.message.includes('remote')) {
+            errorMessage += ' Having trouble reaching the remote repository.';
+        } else {
+            errorMessage += ` ${error.message}`;
+        }
+        
+        await interaction.editReply(errorMessage);
     }
 }
 
@@ -555,12 +618,16 @@ async function handleChat(interaction) {
         console.error('Chat error:', error);
         const errorMsg = error.code === 'ECONNABORTED' ? 
             "That took too long, friend. Try again in a moment." : 
-            getLynchResponse('errors');
+            (getLynchResponse('errors') + " The conversation got a bit tangled there.");
         
-        if (interaction.replied) {
-            await interaction.editReply(errorMsg);
-        } else {
-            await interaction.reply(errorMsg);
+        try {
+            if (interaction.replied) {
+                await interaction.editReply(errorMsg);
+            } else {
+                await interaction.reply({ content: errorMsg, ephemeral: true });
+            }
+        } catch (replyError) {
+            console.error('Failed to send chat error reply:', replyError);
         }
     }
 }
@@ -591,25 +658,36 @@ async function handlePoll(interaction) {
         });
         
         collector.on('end', async (collected) => {
-            const yesCount = collected.get('👍')?.count - 1 || 0;
-            const noCount = collected.get('👎')?.count - 1 || 0;
-            const total = yesCount + noCount;
-            
-            if (total === 0) {
-                await reply.edit(`**${question}**\n\n*Well, nobody voted. That's okay, friend.*`);
-                return;
+            try {
+                const yesCount = collected.get('👍')?.count - 1 || 0;
+                const noCount = collected.get('👎')?.count - 1 || 0;
+                const total = yesCount + noCount;
+                
+                if (total === 0) {
+                    await reply.edit(`**${question}**\n\n*Well, nobody voted. That's okay, friend.*`);
+                    return;
+                }
+                
+                const result = yesCount > noCount ? 'Yes wins!' : 
+                              noCount > yesCount ? 'No wins!' : 
+                              "It's a tie!";
+                
+                const resultMsg = `**${question}**\n\n👍 ${yesCount}  •  👎 ${noCount}\n\n**${result}** *(${total} votes)*`;
+                await reply.edit(resultMsg);
+            } catch (editError) {
+                console.error('Failed to edit poll results:', editError);
             }
-            
-            const result = yesCount > noCount ? 'Yes wins!' : 
-                          noCount > yesCount ? 'No wins!' : 
-                          "It's a tie!";
-            
-            const resultMsg = `**${question}**\n\n👍 ${yesCount}  •  👎 ${noCount}\n\n**${result}** *(${total} votes)*`;
-            await reply.edit(resultMsg);
         });
         
     } catch (error) {
-        await interaction.reply(getLynchResponse('errors'));
+        console.error('Poll error:', error);
+        try {
+            if (!interaction.replied) {
+                await interaction.reply({ content: getLynchResponse('errors') + " Something went wrong with that poll.", ephemeral: true });
+            }
+        } catch (replyError) {
+            console.error('Failed to send poll error reply:', replyError);
+        }
     }
 }
 
