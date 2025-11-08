@@ -269,6 +269,8 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
 client.once('ready', async () => {
     console.log(`${getLynchResponse('success')} Bot is ready as ${client.user.tag}`);
+    console.log(`Monitoring channel: ${process.env.CHANNEL_ID || 'ALL CHANNELS'}`);
+    console.log(`Message Content Intent enabled: ${client.options.intents.has(GatewayIntentBits.MessageContent)}`);
     
     try {
         console.log('Refreshing slash commands...');
@@ -370,16 +372,27 @@ client.on('interactionCreate', async interaction => {
 
 // Message tracking for conversation context
 client.on('messageCreate', async message => {
-    // Ignore bot messages (including our own)
-    if (message.author.bot) return;
+    console.log(`Message received: ${message.author.username} (bot: ${message.author.bot}) in channel: ${message.channel.id}`);
+    console.log(`Configured CHANNEL_ID: ${process.env.CHANNEL_ID}`);
+    console.log(`Message content: "${message.content}"`);
     
-    // Only track messages from the designated channel
-    if (process.env.CHANNEL_ID && message.channel.id !== process.env.CHANNEL_ID) return;
+    // Ignore bot messages (including our own)
+    if (message.author.bot) {
+        console.log('Ignoring bot message');
+        return;
+    }
+    
+    // Only track messages from the designated channel (if CHANNEL_ID is set)
+    if (process.env.CHANNEL_ID && message.channel.id !== process.env.CHANNEL_ID) {
+        console.log(`Ignoring message - wrong channel. Expected: ${process.env.CHANNEL_ID}, Got: ${message.channel.id}`);
+        return;
+    }
     
     // Add message to conversation history
+    console.log(`Adding to history: ${message.author.username}: ${message.content}`);
     addToHistory(message.author.username, message.content, false);
     
-    console.log(`Tracked message from ${message.author.username}: ${message.content}`);
+    console.log(`Successfully tracked message from ${message.author.username}`);
 });
 
 async function handleCommit(interaction) {
