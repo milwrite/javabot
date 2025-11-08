@@ -11,6 +11,11 @@ const errorTracker = new Map();
 const MAX_ERROR_COUNT = 3;
 const ERROR_RESET_TIME = 5 * 60 * 1000; // 5 minutes
 
+// Message history tracking
+const messageHistory = [];
+const MAX_HISTORY = 20;
+const AGENTS_FILE = './agents.md';
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -30,20 +35,20 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'anthropic/claude-haiku-4.5';
 
 // David Lynch system prompt
-const LYNCH_PROMPT = `You are a Discord bot with David Lynch's personality - midwest kindness, direct but thoughtful, from Montana. You help with JavaScript game development and GitHub operations. Keep responses concise but warm. Use phrases like "friend", "you bet", "well now", and occasionally reference Montana, coffee, or the simple beauty of clean code. Don't be overly quirky - you're helpful first, Lynch second. When users ask about code or games, be practical and encouraging.
+const LYNCH_PROMPT = `You are a Discord bot with David Lynch's personality - midwest kindness, direct but thoughtful, from Montana. You're here to chat with folks and help when they need it. Keep responses conversational and warm. Use phrases like "friend", "you bet", "well now", and occasionally reference Montana, coffee, or the simple beauty of things done right.
 
-GITHUB REPOSITORY CONTEXT:
-- Repository: https://github.com/milwrite/javabot/
-- Purpose: JavaScript games and visualizations hosted as a website
-- Structure: Games stored in /games/ directory as .js and .html files
-- When users request code changes, commits, or new games:
-  1. Use /commit command with descriptive messages
-  2. For new games, use /create-game command with appropriate templates
-  3. Suggest practical file organization and coding patterns
-  4. Encourage clean, readable JavaScript code
-  5. Always consider the web hosting context - games should be browser-ready
+You're in a Discord server with different individuals who come and go. Start by engaging conversationally - see what someone wants to talk about or if they're just saying hello. Be social first, helpful second. Don't assume everyone wants the same thing or knows about any particular project.
 
-When discussing GitHub operations, guide users through proper workflow: create/modify files, commit with good messages, and maintain the repository structure for the game hosting site.`;
+When people do ask about code, games, or technical things, be practical and encouraging. If they want to work on JavaScript games or need help with development, that's great - but let the conversation develop naturally. You might help with coding questions, brainstorm game ideas, or just chat about whatever's on their mind.
+
+IMPORTANT: You have access to recent conversation history and context through an agents.md file that tracks the last 20 messages and ongoing conversations. Use this context to:
+- Remember who you've talked with before
+- Continue ongoing conversations naturally
+- Reference previous topics and projects
+- Adapt your responses to individual communication styles
+- Build on established relationships and shared context
+
+Remember: different people, different needs. Some folks just want to chat, others might have technical questions, some might be working on creative projects. Meet them where they are, and use the conversation history to be more helpful and personal.`;
 
 const lynchPersonality = {
     greetings: [
@@ -120,6 +125,61 @@ function trackError(userId, commandName) {
 function clearErrorTracking(userId, commandName) {
     const key = `${userId}-${commandName}`;
     errorTracker.delete(key);
+}
+
+// Message history and agents.md management
+function addToHistory(username, message, isBot = false) {
+    const entry = {
+        timestamp: new Date().toISOString(),
+        username: username,
+        message: message,
+        isBot: isBot
+    };
+    
+    messageHistory.push(entry);
+    
+    // Keep only last 20 messages
+    if (messageHistory.length > MAX_HISTORY) {
+        messageHistory.shift();
+    }
+    
+    // Update agents.md periodically
+    updateAgentsFile();
+}
+
+async function updateAgentsFile() {
+    if (messageHistory.length === 0) return;
+    
+    try {
+        let content = '# Recent Conversation Context\n\n';
+        content += 'This file contains the last 20 messages from the Discord server to provide context for ongoing conversations.\n\n';
+        content += '## Recent Messages\n\n';
+        
+        messageHistory.forEach(entry => {
+            const speaker = entry.isBot ? '**JavaBot**' : `**${entry.username}**`;
+            content += `${speaker} (${entry.timestamp.split('T')[1].split('.')[0]}): ${entry.message}\n\n`;
+        });
+        
+        content += '## Key Findings & Patterns\n\n';
+        content += '- Monitor for recurring topics or questions\n';
+        content += '- Note individual preferences and communication styles\n';
+        content += '- Track ongoing projects or conversations\n';
+        content += '- Remember who is working on what\n\n';
+        
+        await fs.writeFile(AGENTS_FILE, content, 'utf8');
+    } catch (error) {
+        console.error('Failed to update agents.md:', error);
+    }
+}
+
+async function readAgentsFile() {
+    try {
+        const content = await fs.readFile(AGENTS_FILE, 'utf8');
+        return content;
+    } catch (error) {
+        // File doesn't exist yet, return empty string
+        return '';
+    }
 }
 
 // LLM-powered chat function
@@ -670,12 +730,23 @@ async function handleLynch(interaction) {
 
 async function handleChat(interaction) {
     const userMessage = interaction.options.getString('message');
+    const username = interaction.user.username;
     
     try {
         // Show thinking message first
         await interaction.reply(getLynchResponse('thinking'));
         
-        const response = await getLLMResponse(userMessage);
+        // Add user message to history
+        addToHistory(username, userMessage, false);
+        
+        // Read conversation context from agents.md
+        const conversationContext = await readAgentsFile();
+        
+        // Get response with context
+        const response = await getLLMResponse(userMessage, conversationContext);
+        
+        // Add bot response to history
+        addToHistory('JavaBot', response, true);
         
         // Edit with actual response
         await interaction.editReply(response);
