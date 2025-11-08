@@ -259,6 +259,10 @@ const commands = [
                 .setDescription('Game name')
                 .setRequired(true))
         .addStringOption(option =>
+            option.setName('description')
+                .setDescription('Brief description of what the game does')
+                .setRequired(true))
+        .addStringOption(option =>
             option.setName('template')
                 .setDescription('Game template (canvas, phaser, vanilla)')
                 .setRequired(false)),
@@ -507,13 +511,14 @@ async function handleCommit(interaction) {
 
 async function handleCreateGame(interaction) {
     const name = interaction.options.getString('name');
+    const description = interaction.options.getString('description');
     const template = interaction.options.getString('template') || 'vanilla';
     
     await interaction.editReply(getBotResponse('thinking'));
 
     const gameTemplates = {
-        vanilla: `// ${name} - A JavaScript Game
-// Created via Discord bot with Lynch-like efficiency
+        vanilla: `// ${name} - ${description}
+// Created via JavaBot with coffee-fueled efficiency
 
 class ${name.charAt(0).toUpperCase() + name.slice(1)}Game {
     constructor() {
@@ -572,8 +577,8 @@ window.addEventListener('load', () => {
     new ${name.charAt(0).toUpperCase() + name.slice(1)}Game();
 });`,
 
-        canvas: `// ${name} - Canvas-based Game
-// Simple and direct, like good Montana conversation
+        canvas: `// ${name} - ${description}
+// Canvas-based game, brewed to perfection
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -610,8 +615,8 @@ function gameLoop() {
 // Start the game
 gameLoop();`,
 
-        phaser: `// ${name} - Phaser Game
-// Built with the efficiency of a Montana morning
+        phaser: `// ${name} - ${description}  
+// Phaser game, crafted like a perfect espresso shot
 
 const config = {
     type: Phaser.AUTO,
@@ -672,7 +677,7 @@ const game = new Phaser.Game(config);`
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${name}</title>
+    <title>${name} - ${description}</title>
     <style>
         body {
             margin: 0;
@@ -692,6 +697,7 @@ const game = new Phaser.Game(config);`
 </head>
 <body>
     <h1>${name}</h1>
+    <p>${description}</p>
     <canvas id="gameCanvas"></canvas>
     ${template === 'phaser' ? '<script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>' : ''}
     <script src="${name}.js"></script>
@@ -706,6 +712,7 @@ const game = new Phaser.Game(config);`
             .addFields(
                 { name: 'Game Name', value: name, inline: true },
                 { name: 'Template', value: template, inline: true },
+                { name: 'Description', value: description, inline: false },
                 { name: 'Files', value: `${fileName}\ngames/${name}.html`, inline: false }
             )
             .setColor(0x9b59b6)
