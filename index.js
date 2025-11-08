@@ -21,6 +21,7 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.MessageContent,
     ],
 });
 
@@ -365,6 +366,20 @@ client.on('interactionCreate', async interaction => {
             console.error('Failed to send error reply:', replyError);
         }
     }
+});
+
+// Message tracking for conversation context
+client.on('messageCreate', async message => {
+    // Ignore bot messages (including our own)
+    if (message.author.bot) return;
+    
+    // Only track messages from the designated channel
+    if (process.env.CHANNEL_ID && message.channel.id !== process.env.CHANNEL_ID) return;
+    
+    // Add message to conversation history
+    addToHistory(message.author.username, message.content, false);
+    
+    console.log(`Tracked message from ${message.author.username}: ${message.content}`);
 });
 
 async function handleCommit(interaction) {
