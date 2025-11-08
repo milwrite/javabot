@@ -6,6 +6,11 @@ const fs = require('fs').promises;
 const path = require('path');
 const axios = require('axios');
 
+// Error tracking to prevent loops
+const errorTracker = new Map();
+const MAX_ERROR_COUNT = 3;
+const ERROR_RESET_TIME = 5 * 60 * 1000; // 5 minutes
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -81,6 +86,42 @@ function getLynchResponse(category) {
     return responses[Math.floor(Math.random() * responses.length)];
 }
 
+// Helper function to track and prevent error loops
+function trackError(userId, commandName) {
+    const key = `${userId}-${commandName}`;
+    const now = Date.now();
+    
+    if (!errorTracker.has(key)) {
+        errorTracker.set(key, { count: 1, lastError: now });
+        return false; // Not in error loop
+    }
+    
+    const errorData = errorTracker.get(key);
+    
+    // Reset counter if enough time has passed
+    if (now - errorData.lastError > ERROR_RESET_TIME) {
+        errorTracker.set(key, { count: 1, lastError: now });
+        return false;
+    }
+    
+    // Increment error count
+    errorData.count++;
+    errorData.lastError = now;
+    
+    // Check if we're in an error loop
+    if (errorData.count >= MAX_ERROR_COUNT) {
+        console.warn(`Error loop detected for user ${userId} command ${commandName}`);
+        return true; // In error loop
+    }
+    
+    return false;
+}
+
+function clearErrorTracking(userId, commandName) {
+    const key = `${userId}-${commandName}`;
+    errorTracker.delete(key);
+}
+
 // LLM-powered chat function
 async function getLLMResponse(userMessage, context = '') {
     try {
@@ -109,7 +150,7 @@ async function getLLMResponse(userMessage, context = '') {
         return response.data.choices[0].message.content;
     } catch (error) {
         console.error('LLM Error:', error.response?.data || error.message);
-        return getLynchResponse('errors') + " Give me just a moment to gather my thoughts.";
+        return getLynchResponse('errors');
     }
 }
 
@@ -187,8 +228,16 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
     const { commandName } = interaction;
+    const userId = interaction.user.id;
 
     try {
+        // Check for error loops before processing
+        if (trackError(userId, commandName)) {
+            const loopMsg = "Looks like we're stuck in a loop, friend. Let's take a break and try again in a few minutes.";
+            await interaction.reply({ content: loopMsg, ephemeral: true });
+            return;
+        }
+
         // Only defer reply for commands that need it (not chat and poll)
         if (!['chat', 'poll'].includes(commandName)) {
             await interaction.deferReply();
@@ -221,9 +270,27 @@ client.on('interactionCreate', async interaction => {
                     await interaction.reply({ content: unknownMsg, ephemeral: true });
                 }
         }
+
+        // Clear error tracking on successful completion
+        clearErrorTracking(userId, commandName);
+
     } catch (error) {
         console.error('Command error:', error);
-        const errorMsg = getLynchResponse('errors') + ` Something went sideways: ${error.message}`;
+        
+        // Check if this is part of an error loop
+        if (trackError(userId, commandName)) {
+            const loopMsg = "We seem to be having repeated issues, friend. I'll take a step back for a few minutes.";
+            try {
+                if (!interaction.replied) {
+                    await interaction.reply({ content: loopMsg, ephemeral: true });
+                }
+            } catch (replyError) {
+                console.error('Failed to send loop detection message:', replyError);
+            }
+            return;
+        }
+
+        const errorMsg = getLynchResponse('errors');
         
         try {
             if (interaction.deferred && !interaction.replied) {
@@ -277,7 +344,6 @@ async function handleCommit(interaction) {
         try {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
-            const expectedUrl = `https://github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
             
             if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
                 const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
