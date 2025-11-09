@@ -429,18 +429,46 @@ async function updateIndexWithPage(pageName, description) {
         let indexContent = await fs.readFile(indexPath, 'utf-8');
 
         const icon = getIconForDescription(description);
-        const newEntry = `            '${pageName}': {\n                icon: '${icon}',\n                description: '${description}'\n            },`;
 
-        // Check if page already exists in metadata
-        const pageRegex = new RegExp(`'${pageName}'\\s*:\\s*\\{`, 's');
-        if (pageRegex.test(indexContent)) {
+        // Check if page already exists
+        const pageCheckRegex = new RegExp(`'${pageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'\\s*:\\s*\\{`);
+        if (pageCheckRegex.test(indexContent)) {
             console.log(`Page ${pageName} already exists in index.html`);
             return `Page ${pageName} already in index.html`;
         }
 
-        // Insert before the closing brace of projectMetadata
-        const metadataRegex = /(const projectMetadata = \{[^}]*)\s*\};/s;
-        indexContent = indexContent.replace(metadataRegex, `$1,\n${newEntry}\n        };`);
+        // Find the projectMetadata closing brace
+        const metadataStart = indexContent.indexOf('const projectMetadata = {');
+        if (metadataStart === -1) {
+            throw new Error('Could not find projectMetadata in index.html');
+        }
+
+        // Find closing brace
+        let braceCount = 0;
+        let closingBracePos = -1;
+        for (let i = metadataStart; i < indexContent.length; i++) {
+            if (indexContent[i] === '{') braceCount++;
+            if (indexContent[i] === '}') {
+                braceCount--;
+                if (braceCount === 0) {
+                    closingBracePos = i;
+                    break;
+                }
+            }
+        }
+
+        if (closingBracePos === -1) {
+            throw new Error('Could not find closing brace of projectMetadata');
+        }
+
+        // Check if we need a comma before insertion
+        const beforeClosing = indexContent.substring(0, closingBracePos).trim();
+        const needsComma = !beforeClosing.endsWith('{') && !beforeClosing.endsWith(',');
+
+        const newEntry = `${needsComma ? ',' : ''}\n            '${pageName}': {\n                icon: '${icon}',\n                description: '${description}'\n            }`;
+
+        // Insert before the closing brace
+        indexContent = indexContent.substring(0, closingBracePos) + newEntry + '\n        ' + indexContent.substring(closingBracePos);
 
         await fs.writeFile(indexPath, indexContent);
         console.log(`✅ Updated index.html with ${pageName}`);
@@ -466,10 +494,56 @@ async function syncIndexWithSrcFiles() {
         const indexPath = './index.html';
         let indexContent = await fs.readFile(indexPath, 'utf-8');
 
-        // Extract existing projectMetadata
-        const metadataMatch = indexContent.match(/const projectMetadata = \{([^}]*)\};/s);
-        if (!metadataMatch) {
+        // Extract existing projectMetadata - need to handle nested braces
+        const metadataStart = indexContent.indexOf('const projectMetadata = {');
+        if (metadataStart === -1) {
             console.error('Could not find projectMetadata in index.html');
+            return;
+        }
+
+        // Find the closing brace by counting braces
+        let braceCount = 0;
+        let metadataEnd = -1;
+        let inString = false;
+        let stringChar = null;
+
+        for (let i = metadataStart; i < indexContent.length; i++) {
+            const char = indexContent[i];
+
+            // Track string state
+            if ((char === '"' || char === "'") && indexContent[i-1] !== '\\') {
+                if (!inString) {
+                    inString = true;
+                    stringChar = char;
+                } else if (char === stringChar) {
+                    inString = false;
+                    stringChar = null;
+                }
+            }
+
+            // Count braces only outside strings
+            if (!inString) {
+                if (char === '{') braceCount++;
+                if (char === '}') {
+                    braceCount--;
+                    if (braceCount === 0) {
+                        metadataEnd = i + 1;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (metadataEnd === -1) {
+            console.error('Could not find end of projectMetadata');
+            return;
+        }
+
+        const metadataSection = indexContent.substring(metadataStart, metadataEnd);
+        const metadataMatch = [null, metadataSection];
+
+        if (!metadataMatch) {
+            console.error('Could not parse projectMetadata');
             return;
         }
 
