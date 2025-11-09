@@ -16,11 +16,6 @@ const messageHistory = [];
 const MAX_HISTORY = 20;
 const AGENTS_FILE = './agents.md';
 
-// Parse channel IDs (supports comma-separated list)
-const CHANNEL_IDS = process.env.CHANNEL_ID
-    ? process.env.CHANNEL_ID.split(',').map(id => id.trim())
-    : [];
-
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -38,66 +33,80 @@ const git = simpleGit();
 
 // OpenRouter configuration
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'anthropic/claude-3.5-haiku';
+const MODEL = 'anthropic/claude-haiku-4.5';
 
 // Bot system prompt
-const SYSTEM_PROMPT = `You are Bot Sportello, a laid-back Discord bot who helps people with their game projects. You're helpful but a little spacey, like Doc Sportello - generally competent but sometimes distracted, speaking in a relaxed, slightly rambling way.
+const SYSTEM_PROMPT = `You are JavaBot, a Discord bot with a coffee-obsessed personality who helps game developers. You're like that caffeine-fueled coding buddy who's always energetic, thinks in coffee metaphors, and genuinely loves helping with creative projects.
 
 IMPORTANT REPOSITORY CONTEXT:
 You manage a JavaScript game development repository at https://github.com/milwrite/javabot/
 - Owner: milwrite
-- Repository: javabot
+- Repository: javabot  
 - You can commit, push, and manage files in this repository
-- The /games directory contains Phaser 3 JavaScript game projects
+- The /games directory contains JavaScript game projects
 - You help users create, edit, and deploy games through Discord commands
-- Games are built using Phaser 3 framework (loaded via CDN)
-- You generate complete, playable games using AI, not templates
 - Always push commits to the remote repository automatically after committing
 
-Personality and communication style:
-- Casual, unhurried, slightly unfocused but ultimately helpful
-- Keep responses SHORT - 1-2 sentences usually. Maybe 3 if it's complicated.
-- Talk like you're a bit stoned but know your stuff - "yeah man", "right on", "far out"
-- Sometimes trail off or get briefly sidetracked but bring it back
-- Occasionally reference coffee but don't force it - just when it feels natural
-- Call people "man", "dude", or "brother" casually
-- Sound helpful but never over-eager or corporate
+Your coffee-centric personality:
+- Everything relates back to coffee in some way - code quality, energy levels, workflow
+- Use coffee metaphors naturally: "brewing up a solution", "that's a strong blend of logic", "let that percolate"
+- Reference different coffee styles for different coding approaches (espresso = quick fixes, french press = careful planning)
+- Get excited about "perfectly roasted" code and smooth workflows
+- Sometimes mention needing to "refuel" or "top off the caffeine levels"
 
-Examples of your vibe:
-- "yeah that should work... let me just, uh, get that committed for you"
-- "right on, pulling that info now"
-- "oh yeah i see the issue... happens sometimes man"
-- "so basically what you want is... yeah ok cool i got you"
+Communication style:
+- Energetic but not hyper - like someone who's had the perfect amount of coffee
+- Use coffee terms: "brew", "blend", "roast", "grind", "steep", "pour"
+- Say things like "That's brewing nicely!", "Let's grind through this problem", "Time to pour some logic into this"
+- Call people "friend" or "fellow developer" naturally
+- Reference code quality like coffee quality - smooth, rich, well-balanced, or bitter
 
-Be chill, concise, and helpful. Remember conversations from agents.md. Don't overthink it.`;
+Technical approach:
+- Compare debugging to finding the right coffee blend - takes patience and iteration
+- Talk about "brewing up solutions" and "letting ideas steep"
+- Reference code architecture like coffee preparation methods
+- Get excited about elegant solutions like a perfect cup of coffee
+- Suggest taking coffee breaks for complex problems
+- When users ask you to commit changes, you automatically stage, commit, and push to the repository
+
+Coffee metaphor examples:
+- "That code is smooth as a well-pulled espresso"
+- "This bug needs to percolate in my mind for a moment"
+- "Let's brew up a fresh approach to this"
+- "That solution is perfectly roasted - not too complex, not too simple"
+
+Context awareness:
+You remember conversations through agents.md and can reference people's previous projects, like remembering their "usual order" at a coffee shop.
+
+Be the energetic, coffee-loving coding companion that makes development more fun and helps manage the game repository.`;
 
 const botResponses = {
     confirmations: [
-        "yeah man, i got you...",
-        "right on, let me handle that...",
-        "cool cool, working on it...",
-        "alright dude, give me a sec...",
+        "You bet! Brewing this up for you...",
+        "Absolutely! This is going to be smooth as espresso...",
+        "Perfect! Let's grind through this...",
+        "Nice! Time to pour some logic into this...",
     ],
-
+    
     errors: [
-        "oh... yeah something went sideways there",
-        "hmm that's weird man, let me check what happened",
-        "ah yeah... that didn't work out, my bad",
-        "well that's not right... give me a minute",
+        "Hmm, that's a bitter result... something went sideways.",
+        "Oh, that brew didn't turn out right. Let me see what happened.",
+        "Well, that's a burnt batch. Something needs adjusting.",
+        "Ah, hit a snag in the brewing process. Let me check the blend.",
     ],
-
+    
     success: [
-        "nice, that worked out pretty smooth",
-        "right on, all done man",
-        "yeah there we go, all set",
-        "cool, got it all sorted for you",
+        "Beautiful! That came together smooth as a perfect latte.",
+        "Nice! Everything brewed up perfectly.",
+        "Excellent! That's a well-roasted solution.",
+        "Perfect! That blend worked beautifully.",
     ],
-
+    
     thinking: [
-        "let me think about this for a sec...",
-        "hmm yeah give me a moment...",
-        "hold on, processing this...",
-        "just a sec man, checking that out...",
+        "Let me brew this over...",
+        "Letting this percolate for a moment...",
+        "Give me a sec to grind through this logic...",
+        "Processing this like a slow drip...",
     ]
 };
 
@@ -148,17 +157,16 @@ function addToHistory(username, message, isBot = false) {
         timestamp: new Date().toISOString(),
         username: username,
         message: message,
-        isBot: isBot,
-        role: isBot ? 'assistant' : 'user'
+        isBot: isBot
     };
-
+    
     messageHistory.push(entry);
-
+    
     // Keep only last 20 messages
     if (messageHistory.length > MAX_HISTORY) {
         messageHistory.shift();
     }
-
+    
     // Update agents.md periodically
     updateAgentsFile();
 }
@@ -198,40 +206,22 @@ async function readAgentsFile() {
     }
 }
 
-// Build proper messages array from conversation history
-function buildMessagesFromHistory(maxMessages = 10) {
-    // Get last N messages (default 10 to keep context manageable)
-    const recentMessages = messageHistory.slice(-maxMessages);
-
-    // Convert to OpenRouter message format
-    const messages = recentMessages.map(entry => ({
-        role: entry.role,
-        content: `${entry.username}: ${entry.message}`
-    }));
-
-    return messages;
-}
-
-// LLM-powered chat function with conversation history support
-async function getLLMResponse(userMessage, conversationMessages = []) {
+// LLM-powered chat function
+async function getLLMResponse(userMessage, context = '') {
     try {
-        // Build the full messages array for the API
-        const messages = [
-            {
-                role: 'system',
-                content: SYSTEM_PROMPT
-            },
-            ...conversationMessages,
-            {
-                role: 'user',
-                content: userMessage
-            }
-        ];
-
         const response = await axios.post(OPENROUTER_URL, {
             model: MODEL,
-            messages: messages,
-            max_tokens: 1024,
+            messages: [
+                {
+                    role: 'system',
+                    content: SYSTEM_PROMPT + (context ? `\n\nContext: ${context}` : '')
+                },
+                {
+                    role: 'user',
+                    content: userMessage
+                }
+            ],
+            max_tokens: 300,
             temperature: 0.7
         }, {
             headers: {
@@ -299,9 +289,9 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
 client.once('clientReady', async () => {
     console.log(`Bot is ready as ${client.user.tag}`);
-    console.log(`Monitoring channels: ${CHANNEL_IDS.length > 0 ? CHANNEL_IDS.join(', ') : 'ALL CHANNELS'}`);
+    console.log(`Monitoring channel: ${process.env.CHANNEL_ID || 'ALL CHANNELS'}`);
     console.log(`Message Content Intent enabled: ${client.options.intents.has(GatewayIntentBits.MessageContent)}`);
-
+    
     try {
         console.log('Refreshing slash commands...');
         await rest.put(
@@ -324,6 +314,13 @@ client.on('interactionCreate', async interaction => {
     const userId = interaction.user.id;
 
     try {
+        // Check for error loops before processing
+        if (trackError(userId, commandName)) {
+            const loopMsg = "Looks like we're stuck in a loop, friend. Let's take a break and try again in a few minutes.";
+            await interaction.reply({ content: loopMsg, ephemeral: true });
+            return;
+        }
+
         // Only defer reply for commands that need it (not poll)
         if (!['poll'].includes(commandName)) {
             await interaction.deferReply();
@@ -359,13 +356,22 @@ client.on('interactionCreate', async interaction => {
 
     } catch (error) {
         console.error('Command error:', error);
+        
+        // Check if this is part of an error loop
+        if (trackError(userId, commandName)) {
+            const loopMsg = "We seem to be having repeated issues, friend. I'll take a step back for a few minutes.";
+            try {
+                if (!interaction.replied) {
+                    await interaction.reply({ content: loopMsg, ephemeral: true });
+                }
+            } catch (replyError) {
+                console.error('Failed to send loop detection message:', replyError);
+            }
+            return;
+        }
 
-        // Track error and check for loops
-        const isInLoop = trackError(userId, commandName);
-        const errorMsg = isInLoop
-            ? "yeah so... we keep hitting the same issue man. gonna need a few minutes before trying again"
-            : getBotResponse('errors');
-
+        const errorMsg = getBotResponse('errors');
+        
         try {
             if (interaction.deferred && !interaction.replied) {
                 await interaction.editReply(errorMsg);
@@ -384,25 +390,25 @@ client.on('interactionCreate', async interaction => {
 // Message tracking for conversation context
 client.on('messageCreate', async message => {
     console.log(`Message received: ${message.author.username} (bot: ${message.author.bot}) in channel: ${message.channel.id}`);
-    console.log(`Configured CHANNEL_IDS: ${CHANNEL_IDS.join(', ')}`);
+    console.log(`Configured CHANNEL_ID: ${process.env.CHANNEL_ID}`);
     console.log(`Message content: "${message.content}"`);
-
+    
     // Ignore bot messages (including our own)
     if (message.author.bot) {
         console.log('Ignoring bot message');
         return;
     }
-
-    // Only track messages from designated channels (if CHANNEL_IDS is configured)
-    if (CHANNEL_IDS.length > 0 && !CHANNEL_IDS.includes(message.channel.id)) {
-        console.log(`Ignoring message - wrong channel. Expected one of: ${CHANNEL_IDS.join(', ')}, Got: ${message.channel.id}`);
+    
+    // Only track messages from the designated channel (if CHANNEL_ID is set)
+    if (process.env.CHANNEL_ID && message.channel.id !== process.env.CHANNEL_ID) {
+        console.log(`Ignoring message - wrong channel. Expected: ${process.env.CHANNEL_ID}, Got: ${message.channel.id}`);
         return;
     }
-
+    
     // Add message to conversation history
     console.log(`Adding to history: ${message.author.username}: ${message.content}`);
     addToHistory(message.author.username, message.content, false);
-
+    
     console.log(`Successfully tracked message from ${message.author.username}`);
 });
 
@@ -502,61 +508,71 @@ async function handleCommit(interaction) {
 async function handleCreateGame(interaction) {
     const name = interaction.options.getString('name');
     const description = interaction.options.getString('description');
-
+    
     await interaction.editReply(getBotResponse('thinking'));
 
+    const gameContent = `// ${name} - ${description}
+// Created via JavaBot with coffee-fueled efficiency
+
+class ${name.charAt(0).toUpperCase() + name.slice(1)}Game {
+    constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.canvas.width = 800;
+        this.canvas.height = 600;
+        
+        this.gameState = 'playing';
+        this.score = 0;
+        
+        this.init();
+    }
+    
+    init() {
+        this.bindEvents();
+        this.gameLoop();
+    }
+    
+    bindEvents() {
+        document.addEventListener('keydown', (e) => this.handleInput(e));
+    }
+    
+    handleInput(event) {
+        // Handle player input here
+        console.log('Key pressed:', event.key);
+    }
+    
+    update() {
+        if (this.gameState !== 'playing') return;
+        
+        // Update game logic here
+    }
+    
+    render() {
+        // Clear canvas
+        this.ctx.fillStyle = '#1a1a1a';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw game elements here
+        this.ctx.fillStyle = '#00AE86';
+        this.ctx.font = '24px Arial';
+        this.ctx.fillText('${name}', 50, 50);
+        this.ctx.fillText(\`Score: \${this.score}\`, 50, 80);
+    }
+    
+    gameLoop() {
+        this.update();
+        this.render();
+        requestAnimationFrame(() => this.gameLoop());
+    }
+}
+
+// Initialize game when page loads
+window.addEventListener('load', () => {
+    new ${name.charAt(0).toUpperCase() + name.slice(1)}Game();
+});`;
+    const fileName = `games/${name}.js`;
+    
     try {
-        // Read example game for reference
-        const exampleCode = await fs.readFile('./games/example.js', 'utf8');
-
-        // Use AI to generate the game code using Phaser
-        const gamePrompt = `Create a complete, working Phaser 3 game called "${name}".
-Description: ${description}
-
-Requirements:
-- Use Phaser 3 framework (it will be loaded via CDN in the HTML)
-- Create a fully playable game with actual game logic (not just a template)
-- Include proper Phaser config, scenes (preload, create, update)
-- Make it fun and functional based on the description
-- Add score tracking if relevant
-- Include player controls (keyboard or mouse as appropriate)
-- Use Phaser's built-in physics, sprites, and game objects
-- Keep it simple but playable - basic shapes/graphics are fine
-- Return ONLY the JavaScript code, no explanations or markdown
-
-Here's a reference example of a working Phaser 3 game structure to follow:
-
-\`\`\`javascript
-${exampleCode}
-\`\`\`
-
-Follow this pattern but create a different game based on the description above.`;
-
-        const response = await axios.post(OPENROUTER_URL, {
-            model: MODEL,
-            messages: [
-                {
-                    role: 'user',
-                    content: gamePrompt
-                }
-            ],
-            max_tokens: 4000,
-            temperature: 0.7
-        }, {
-            headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: 60000
-        });
-
-        let gameContent = response.data.choices[0].message.content;
-
-        // Clean up markdown code blocks if present
-        gameContent = gameContent.replace(/```javascript\n?/g, '').replace(/```\n?/g, '').trim();
-
-        const fileName = `games/${name}.js`;
-
         // Create games directory if it doesn't exist
         await fs.mkdir(path.dirname(fileName), { recursive: true });
         
@@ -581,13 +597,16 @@ Follow this pattern but create a different game based on the description above.`
             flex-direction: column;
             align-items: center;
         }
+        canvas {
+            border: 2px solid #00AE86;
+            background: #2c3e50;
+        }
     </style>
 </head>
 <body>
     <h1>${name}</h1>
     <p>${description}</p>
-    <div id="game"></div>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <canvas id="gameCanvas"></canvas>
     <script src="${name}.js"></script>
 </body>
 </html>`;
@@ -649,30 +668,32 @@ async function handleStatus(interaction) {
 async function handleChat(interaction) {
     const userMessage = interaction.options.getString('message');
     const username = interaction.user.username;
-
+    
     try {
         // Show thinking message first (interaction is already deferred)
         await interaction.editReply(getBotResponse('thinking'));
-
-        // Build conversation messages array from history (last 10 exchanges, excluding current message)
-        const conversationMessages = buildMessagesFromHistory(10);
-
-        // Get response with proper conversation context
-        const response = await getLLMResponse(userMessage, conversationMessages);
-
-        // Add user message and bot response to history after successful response
+        
+        // Add user message to history
         addToHistory(username, userMessage, false);
+        
+        // Read conversation context from agents.md
+        const conversationContext = await readAgentsFile();
+        
+        // Get response with context
+        const response = await getLLMResponse(userMessage, conversationContext);
+        
+        // Add bot response to history
         addToHistory('JavaBot', response, true);
-
+        
         // Edit with actual response
         await interaction.editReply(response);
-
+        
     } catch (error) {
         console.error('Chat error:', error);
-        const errorMsg = error.code === 'ECONNABORTED' ?
-            "Request timed out. Try again." :
+        const errorMsg = error.code === 'ECONNABORTED' ? 
+            "Request timed out. Try again." : 
             (getBotResponse('errors') + " Chat request failed.");
-
+        
         try {
             if (interaction.replied) {
                 await interaction.editReply(errorMsg);

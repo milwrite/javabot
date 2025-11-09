@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Bot Sportello is a Discord bot with a laid-back Doc Sportello personality that manages a JavaScript game development repository. The bot integrates Discord slash commands with GitHub operations and AI-powered conversations through OpenRouter's API.
+JavaBot is a Discord bot with a coffee-obsessed personality that manages a JavaScript game development repository. The bot integrates Discord slash commands with GitHub operations and AI-powered conversations through OpenRouter's API.
 
-**Core Purpose**: Help users create, commit, and manage JavaScript games through Discord commands while maintaining a chill, slightly spacey but helpful personality.
+**Core Purpose**: Help users create, commit, and manage JavaScript games through Discord commands while maintaining an energetic, coffee-themed personality that uses coffee metaphors for coding concepts.
 
 ## Development Commands
 
@@ -30,7 +30,7 @@ The entire bot is contained in `index.js` with these key sections:
 - Discord client setup with specific intents
 - GitHub integration via Octokit and simple-git
 - OpenRouter AI integration for chat functionality
-- Doc Sportello personality response system
+- Coffee-themed personality response system
 - Slash command definitions
 - Command handlers (one per command)
 
@@ -41,18 +41,17 @@ The entire bot is contained in `index.js` with these key sections:
 - Commands automatically register on bot startup
 - Error handling prevents spam loops with tracking system
 - All interactions are deferred except for polls
-- Supports multiple channels via comma-separated `CHANNEL_ID` env var
 
-**GitHub Integration**:
+**GitHub Integration**: 
 - Uses simple-git for local operations
-- Octokit for GitHub API interactions
+- Octokit for GitHub API interactions  
 - Automated commit/push workflows to `main` branch
 - Repository: https://github.com/milwrite/javabot/
 - Dynamic branch detection using `git.status().current`
 
 **AI Integration**:
-- OpenRouter API with model: `anthropic/claude-3.5-haiku`
-- Doc Sportello personality prompt system
+- OpenRouter API with model: `anthropic/claude-haiku-4.5`
+- Coffee-themed personality prompt system
 - Chat command for AI conversations
 - Conversation history tracked in `agents.md`
 
@@ -60,28 +59,27 @@ The entire bot is contained in `index.js` with these key sections:
 
 Commands are defined in the `commands` array and handled by corresponding `handle*` functions:
 - `/commit <message> [files]` - Git operations (stage, commit, push to main)
-- `/create-game <name> <description>` - Generate new game files (vanilla template only)
+- `/create-game <name> <description> [template]` - Generate new game files from templates
 - `/status` - Repository status check
-- `/chat <message>` - AI-powered conversations with Doc Sportello personality
+- `/chat <message>` - AI-powered conversations with coffee personality
 - `/poll <question>` - Yes/no polls with emoji reactions
 
-### Doc Sportello Personality System
+### Coffee Personality System
 
 The `botResponses` object contains categorized response arrays:
 - `confirmations`, `errors`, `success`, `thinking`
-- `getBotResponse(category)` randomly selects appropriate laid-back responses
-- System prompt defines chill, concise, slightly spacey conversational style
-- All responses are short and casual: "yeah man", "right on", "cool cool"
-- Occasionally references coffee but doesn't force it
+- `getBotResponse(category)` randomly selects appropriate coffee-themed responses
+- System prompt defines coffee-obsessed conversational style and GitHub workflow guidance
+- All responses use coffee metaphors: "brewing up a solution", "let that percolate", "smooth as espresso"
 
 ### Environment Variables
 
 Required environment variables:
 - `DISCORD_TOKEN` - Discord bot token
-- `DISCORD_CLIENT_ID` - Bot application ID
+- `DISCORD_CLIENT_ID` - Bot application ID  
 - `GITHUB_TOKEN` - GitHub personal access token with repo permissions
 - `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME`, `GITHUB_REPO_URL` - Repository details
-- `CHANNEL_ID` - Comma-separated list of Discord channel IDs for message tracking (e.g., "123,456,789")
+- `CHANNEL_ID` - Dedicated Discord channel for message tracking
 - `OPENROUTER_API_KEY` - AI service API key
 
 ### Error Handling
@@ -89,34 +87,25 @@ Required environment variables:
 Implements error loop prevention:
 - Tracks errors per user/command combination
 - Limits to 3 consecutive errors before 5-minute cooldown
-- Chill error messages match Doc Sportello personality
+- Different error messages for different failure types
 - Graceful Discord interaction handling (all commands use `deferReply()` except polls)
-- Error tracking happens after deferring to avoid timing issues
 
 ### Game Templates
 
-The `/create-game` command uses a vanilla template:
-- Full class-based game structure with constructor, update, render methods
-- Includes HTML boilerplate and JavaScript game loops
+The `/create-game` command supports multiple templates:
+- `vanilla` - Full class-based game structure with constructor, update, render methods
+- `canvas` - Simple canvas-based game with functional approach
+- `phaser` - Phaser.js framework setup with config and scene functions
+- Templates include HTML boilerplate and JavaScript game loops
 - Generated files include both `.js` and `.html` files in `/games` directory
 
 ### Message History System
 
 Conversation tracking via `agents.md`:
 - Tracks last 20 messages from Discord
-- Monitors multiple channels specified in `CHANNEL_ID` env var
 - Provides context for AI conversations
 - Auto-updates through `addToHistory()` and `updateAgentsFile()`
 - Used by chat command for personalized responses
-
-### Multi-Channel Support
-
-Channel monitoring implementation:
-- Parses `CHANNEL_ID` as comma-separated list
-- Creates `CHANNEL_IDS` array from split values
-- Uses `CHANNEL_IDS.includes()` to check message origin
-- If `CHANNEL_ID` is empty, monitors all channels
-- Logs all configured channels on startup
 
 ## Adding New Commands
 
@@ -124,11 +113,11 @@ Channel monitoring implementation:
 2. Add case to switch statement in `interactionCreate` handler
 3. Create corresponding `handle*` function
 4. Commands auto-register on bot restart
-5. Use `getBotResponse()` for consistent Doc Sportello messaging
+5. Use `getBotResponse()` for consistent coffee-themed messaging
 
 ## Key Patterns
 
-- All commands use Doc Sportello personality responses (chill, concise)
+- All commands use coffee-themed personality responses
 - Git operations include progress updates via `interaction.editReply()`
 - Error messages are randomized through `getBotResponse('errors')`
 - Commands that take time use `deferReply()` except polls
