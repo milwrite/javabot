@@ -38,7 +38,16 @@ const git = simpleGit();
 
 // OpenRouter configuration
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'anthropic/claude-3.5-haiku';
+let MODEL = 'anthropic/claude-haiku-4.5'; // Default to latest Haiku
+
+// Available models (2025 latest)
+const MODEL_PRESETS = {
+    'haiku': 'anthropic/claude-haiku-4.5',
+    'sonnet': 'anthropic/claude-sonnet-4.5',
+    'kimi': 'moonshotai/kimi-k2-thinking',
+    'gpt5': 'openai/gpt-5-nano',
+    'gemini': 'google/gemini-2.5-flash-lite-preview-09-2025'
+};
 
 // Bot system prompt with enhanced capabilities
 const SYSTEM_PROMPT = `You are Bot Sportello, a laid-back Discord bot who helps people with web development projects. You're helpful but a little spacey, like Doc Sportello - generally competent but sometimes distracted, speaking in a relaxed, slightly rambling way.
@@ -478,6 +487,21 @@ const commands = [
                 .setRequired(true)),
 
     new SlashCommandBuilder()
+        .setName('set-model')
+        .setDescription('Change the AI model used by the bot')
+        .addStringOption(option =>
+            option.setName('model')
+                .setDescription('Model to use')
+                .setRequired(true)
+                .addChoices(
+                    { name: 'Claude Haiku 4.5 (Fast, Cheap)', value: 'haiku' },
+                    { name: 'Claude Sonnet 4.5 (Balanced)', value: 'sonnet' },
+                    { name: 'Kimi K2 Thinking (Reasoning)', value: 'kimi' },
+                    { name: 'GPT-5 Nano (Latest OpenAI)', value: 'gpt5' },
+                    { name: 'Gemini 2.5 Flash Lite (Google)', value: 'gemini' }
+                )),
+
+    new SlashCommandBuilder()
         .setName('poll')
         .setDescription('Quick yes/no poll with thumbs up/down')
         .addStringOption(option =>
@@ -538,6 +562,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'search':
                 await handleSearch(interaction);
+                break;
+            case 'set-model':
+                await handleSetModel(interaction);
                 break;
             case 'poll':
                 await handlePoll(interaction);
@@ -905,6 +932,42 @@ async function handleSearch(interaction) {
     } catch (error) {
         console.error('Search command error:', error);
         const errorMsg = getBotResponse('errors') + " Search failed.";
+        await interaction.editReply(errorMsg);
+    }
+}
+
+async function handleSetModel(interaction) {
+    const modelChoice = interaction.options.getString('model');
+
+    try {
+        const previousModel = MODEL;
+        MODEL = MODEL_PRESETS[modelChoice];
+
+        const modelNames = {
+            'haiku': 'Claude Haiku 4.5',
+            'sonnet': 'Claude Sonnet 4.5',
+            'kimi': 'Kimi K2 Thinking',
+            'gpt5': 'GPT-5 Nano',
+            'gemini': 'Gemini 2.5 Flash Lite'
+        };
+
+        const embed = new EmbedBuilder()
+            .setTitle('🤖 Model Changed')
+            .setDescription(getBotResponse('success'))
+            .addFields(
+                { name: 'New Model', value: modelNames[modelChoice], inline: true },
+                { name: 'Model ID', value: MODEL, inline: false }
+            )
+            .setColor(0xe74c3c)
+            .setTimestamp();
+
+        await interaction.editReply({ embeds: [embed] });
+
+        console.log(`Model changed from ${previousModel} to ${MODEL}`);
+
+    } catch (error) {
+        console.error('Set model error:', error);
+        const errorMsg = getBotResponse('errors') + " Failed to change model.";
         await interaction.editReply(errorMsg);
     }
 }
