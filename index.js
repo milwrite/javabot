@@ -71,31 +71,31 @@ Be chill, concise, and helpful. Remember conversations from agents.md. Don't ove
 
 const botResponses = {
     confirmations: [
-        "You bet! Brewing this up for you...",
-        "Absolutely! This is going to be smooth as espresso...",
-        "Perfect! Let's grind through this...",
-        "Nice! Time to pour some logic into this...",
+        "yeah man, i got you...",
+        "right on, let me handle that...",
+        "cool cool, working on it...",
+        "alright dude, give me a sec...",
     ],
-    
+
     errors: [
-        "Hmm, that's a bitter result... something went sideways.",
-        "Oh, that brew didn't turn out right. Let me see what happened.",
-        "Well, that's a burnt batch. Something needs adjusting.",
-        "Ah, hit a snag in the brewing process. Let me check the blend.",
+        "oh... yeah something went sideways there",
+        "hmm that's weird man, let me check what happened",
+        "ah yeah... that didn't work out, my bad",
+        "well that's not right... give me a minute",
     ],
-    
+
     success: [
-        "Beautiful! That came together smooth as a perfect latte.",
-        "Nice! Everything brewed up perfectly.",
-        "Excellent! That's a well-roasted solution.",
-        "Perfect! That blend worked beautifully.",
+        "nice, that worked out pretty smooth",
+        "right on, all done man",
+        "yeah there we go, all set",
+        "cool, got it all sorted for you",
     ],
-    
+
     thinking: [
-        "Let me brew this over...",
-        "Letting this percolate for a moment...",
-        "Give me a sec to grind through this logic...",
-        "Processing this like a slow drip...",
+        "let me think about this for a sec...",
+        "hmm yeah give me a moment...",
+        "hold on, processing this...",
+        "just a sec man, checking that out...",
     ]
 };
 
@@ -322,13 +322,6 @@ client.on('interactionCreate', async interaction => {
     const userId = interaction.user.id;
 
     try {
-        // Check for error loops before processing
-        if (trackError(userId, commandName)) {
-            const loopMsg = "Looks like we're stuck in a loop, friend. Let's take a break and try again in a few minutes.";
-            await interaction.reply({ content: loopMsg, ephemeral: true });
-            return;
-        }
-
         // Only defer reply for commands that need it (not poll)
         if (!['poll'].includes(commandName)) {
             await interaction.deferReply();
@@ -364,22 +357,13 @@ client.on('interactionCreate', async interaction => {
 
     } catch (error) {
         console.error('Command error:', error);
-        
-        // Check if this is part of an error loop
-        if (trackError(userId, commandName)) {
-            const loopMsg = "We seem to be having repeated issues, friend. I'll take a step back for a few minutes.";
-            try {
-                if (!interaction.replied) {
-                    await interaction.reply({ content: loopMsg, ephemeral: true });
-                }
-            } catch (replyError) {
-                console.error('Failed to send loop detection message:', replyError);
-            }
-            return;
-        }
 
-        const errorMsg = getBotResponse('errors');
-        
+        // Track error and check for loops
+        const isInLoop = trackError(userId, commandName);
+        const errorMsg = isInLoop
+            ? "yeah so... we keep hitting the same issue man. gonna need a few minutes before trying again"
+            : getBotResponse('errors');
+
         try {
             if (interaction.deferred && !interaction.replied) {
                 await interaction.editReply(errorMsg);
