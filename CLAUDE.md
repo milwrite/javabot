@@ -81,7 +81,7 @@ The entire bot is contained in `index.js` (~1838 lines) with these key sections 
 |---------|---------|---------|
 | `/commit <message> [files]` | `handleCommit` | Git add, commit, push to main |
 | `/add-page <name> <description>` | `handleAddPage` | Generate self-contained HTML page |
-| `/add-function <name> <description>` | `handleAddFunction` | Generate JS library + demo page |
+| `/add-feature <name> <description>` | `handleAddFeature` | Generate JS feature/component + demo |
 | `/status` | `handleStatus` | Show repo status + live site link |
 | `/chat <message>` | `handleChat` | AI conversation with context |
 | `/search <query>` | `handleSearch` | Web search via OpenRouter |
@@ -117,12 +117,13 @@ The bot uses OpenRouter's function calling to give the AI autonomous access to:
 4. File saved to `src/{name}.html`
 5. Live URL shown in Discord embed
 
-**`/add-function`**:
-1. User provides library name + function descriptions
-2. First AI call: Generate `.js` file with JSDoc comments
-3. Second AI call: Generate demo HTML page that imports the JS
+**`/add-feature`**:
+1. User provides feature name + description of what it should do
+2. First AI call: Generate `.js` file (library, component, utility, etc.)
+3. Second AI call: Generate interactive demo HTML page that imports the JS
 4. Both files saved to `src/` directory
 5. Live demo URL shown in Discord embed
+6. Flexible enough for libraries, UI components, interactive elements, utilities
 
 **Prompts are optimized for token efficiency** - concise, direct instructions with inline examples.
 

@@ -645,20 +645,21 @@ Return only HTML, no markdown blocks or explanations.`;
     }
 }
 
-async function createFunction(name, description) {
-    console.log(`[CREATE_FUNCTION] Starting: ${name}`);
+async function createFeature(name, description) {
+    console.log(`[CREATE_FEATURE] Starting: ${name}`);
     try {
-        // Generate JS library
-        const jsPrompt = `Create a JavaScript function library called "${name}".
-Functions needed: ${description}
+        // Generate JS feature/library/component
+        const jsPrompt = `Create a JavaScript feature called "${name}".
+Description: ${description}
 
 Output clean, well-documented JavaScript with:
-- Pure functions (no dependencies)
-- JSDoc comments for each function
-- Export functions as a module
-- Practical, reusable code
+- Pure functions or component code (minimal dependencies)
+- JSDoc comments for functions/methods
+- Export as module or global object
+- Practical, reusable implementation
+- Handle edge cases and provide good defaults
 
-Return only JavaScript, no markdown blocks or explanations.`;
+Return only JavaScript code, no markdown blocks or explanations.`;
 
         const jsResponse = await axios.post(OPENROUTER_URL, {
             model: MODEL,
@@ -677,16 +678,17 @@ Return only JavaScript, no markdown blocks or explanations.`;
         jsContent = cleanMarkdownCodeBlocks(jsContent, 'javascript');
 
         // Generate demo HTML
-        const htmlPrompt = `Create a demo HTML page for "${name}" JavaScript library.
-Library functions: ${description}
+        const htmlPrompt = `Create an interactive demo page for "${name}" JavaScript feature.
+Feature description: ${description}
 
 Output a single HTML file that:
 - Loads ${name}.js via <script src="${name}.js"></script>
-- Demonstrates each function with interactive examples
-- Modern, clean UI with embedded CSS
+- Provides interactive examples showing all capabilities
+- Modern, polished UI with embedded CSS
+- Clear documentation/instructions for users
 - Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
 
-Return only HTML, no markdown blocks or explanations.`;
+Return only HTML code, no markdown blocks or explanations.`;
 
         const htmlResponse = await axios.post(OPENROUTER_URL, {
             model: MODEL,
@@ -714,11 +716,11 @@ Return only HTML, no markdown blocks or explanations.`;
         // Update index.html
         await updateIndexWithPage(name, description);
 
-        console.log(`[CREATE_FUNCTION] Success: ${jsFileName}, ${htmlFileName}`);
+        console.log(`[CREATE_FEATURE] Success: ${jsFileName}, ${htmlFileName}`);
         return `Created ${jsFileName} and ${htmlFileName}, updated index.html. Live demo: https://milwrite.github.io/javabot/src/${name}.html`;
     } catch (error) {
-        console.error(`[CREATE_FUNCTION] Error:`, error.message);
-        return `Error creating function library: ${error.message}`;
+        console.error(`[CREATE_FEATURE] Error:`, error.message);
+        return `Error creating feature: ${error.message}`;
     }
 }
 
@@ -886,13 +888,13 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
             {
                 type: 'function',
                 function: {
-                    name: 'create_function',
-                    description: 'Create a JavaScript function library with demo page in /src directory. Automatically updates index.html.',
+                    name: 'create_feature',
+                    description: 'Create a JavaScript feature (library, component, utility, interactive element) with demo page in /src directory. Automatically updates index.html.',
                     parameters: {
                         type: 'object',
                         properties: {
-                            name: { type: 'string', description: 'Library name (filename without extension)' },
-                            description: { type: 'string', description: 'What functions the library should provide' }
+                            name: { type: 'string', description: 'Feature name (filename without extension)' },
+                            description: { type: 'string', description: 'What the feature should do - functions, behavior, capabilities' }
                         },
                         required: ['name', 'description']
                     }
@@ -974,8 +976,8 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                     result = await writeFile(args.path, args.content);
                 } else if (functionName === 'create_page') {
                     result = await createPage(args.name, args.description);
-                } else if (functionName === 'create_function') {
-                    result = await createFunction(args.name, args.description);
+                } else if (functionName === 'create_feature') {
+                    result = await createFeature(args.name, args.description);
                 } else if (functionName === 'commit_changes') {
                     result = await commitChanges(args.message, args.files);
                 } else if (functionName === 'get_repo_status') {
@@ -1044,15 +1046,15 @@ const commands = [
                 .setRequired(true)),
 
     new SlashCommandBuilder()
-        .setName('add-function')
-        .setDescription('Create a JavaScript function library with demo page')
+        .setName('add-feature')
+        .setDescription('Create a feature: JS library, component, or interactive element with demo')
         .addStringOption(option =>
             option.setName('name')
-                .setDescription('Function library name')
+                .setDescription('Feature name (e.g., slider, utils, carousel)')
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('description')
-                .setDescription('What functions should this library provide?')
+                .setDescription('What should this feature do? Describe functions, behavior, or capabilities')
                 .setRequired(true)),
 
     new SlashCommandBuilder()
@@ -1171,8 +1173,8 @@ client.on('interactionCreate', async interaction => {
             case 'add-page':
                 await handleAddPage(interaction);
                 break;
-            case 'add-function':
-                await handleAddFunction(interaction);
+            case 'add-feature':
+                await handleAddFeature(interaction);
                 break;
             case 'status':
                 await handleStatus(interaction);
@@ -1473,23 +1475,24 @@ Return only HTML, no markdown blocks or explanations.`;
     }
 }
 
-async function handleAddFunction(interaction) {
+async function handleAddFeature(interaction) {
     await interaction.editReply(getBotResponse('thinking'));
 
     try {
         const name = sanitizeFileName(interaction.options.getString('name'));
         const description = validateInput(interaction.options.getString('description'), 1000);
-        // Use AI to generate JavaScript function library
-        const jsPrompt = `Create a JavaScript function library called "${name}".
-Functions needed: ${description}
+        // Use AI to generate JavaScript feature/library/component
+        const jsPrompt = `Create a JavaScript feature called "${name}".
+Description: ${description}
 
 Output clean, well-documented JavaScript with:
-- Pure functions (no dependencies)
-- JSDoc comments for each function
-- Export functions as a module
-- Practical, reusable code
+- Pure functions or component code (minimal dependencies)
+- JSDoc comments for functions/methods
+- Export as module or global object
+- Practical, reusable implementation
+- Handle edge cases and provide good defaults
 
-Return only JavaScript, no markdown blocks or explanations.`;
+Return only JavaScript code, no markdown blocks or explanations.`;
 
         const jsResponse = await axios.post(OPENROUTER_URL, {
             model: MODEL,
@@ -1508,16 +1511,17 @@ Return only JavaScript, no markdown blocks or explanations.`;
         jsContent = cleanMarkdownCodeBlocks(jsContent, 'javascript');
 
         // Generate demo HTML page
-        const htmlPrompt = `Create a demo HTML page for "${name}" JavaScript library.
-Library functions: ${description}
+        const htmlPrompt = `Create an interactive demo page for "${name}" JavaScript feature.
+Feature description: ${description}
 
 Output a single HTML file that:
 - Loads ${name}.js via <script src="${name}.js"></script>
-- Demonstrates each function with interactive examples
-- Modern, clean UI with embedded CSS
+- Provides interactive examples showing all capabilities
+- Modern, polished UI with embedded CSS
+- Clear documentation/instructions for users
 - Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
 
-Return only HTML, no markdown blocks or explanations.`;
+Return only HTML code, no markdown blocks or explanations.`;
 
         const htmlResponse = await axios.post(OPENROUTER_URL, {
             model: MODEL,
@@ -1550,7 +1554,7 @@ Return only HTML, no markdown blocks or explanations.`;
         await updateIndexWithPage(name, description);
 
         const embed = new EmbedBuilder()
-            .setTitle('⚡ Function Library Added')
+            .setTitle('⚡ Feature Added')
             .setDescription(getBotResponse('success') + '\n\n**Note:** Changes have been pushed to GitHub. GitHub Pages will deploy in 1-2 minutes.')
             .addFields(
                 { name: 'Name', value: name, inline: true },
@@ -1565,7 +1569,7 @@ Return only HTML, no markdown blocks or explanations.`;
         await interaction.editReply({ content: '', embeds: [embed] });
 
     } catch (error) {
-        throw new Error(`Function library creation failed: ${error.message}`);
+        throw new Error(`Feature creation failed: ${error.message}`);
     }
 }
 
