@@ -380,41 +380,34 @@ client.on('interactionCreate', async interaction => {
         try {
             if (interaction.deferred && !interaction.replied) {
                 await interaction.editReply(errorMsg);
-            } else if (!interaction.replied) {
+            } else if (!interaction.replied && !interaction.deferred) {
                 await interaction.reply({ content: errorMsg, ephemeral: true });
-            } else {
-                // If we already replied, we can't reply again, so just log it
-                console.error('Could not send error message - interaction already handled');
             }
+            // If already replied or deferred but replied, silently fail
         } catch (replyError) {
-            console.error('Failed to send error reply:', replyError);
+            // Silently handle reply errors - interaction may have expired
+            if (replyError.code !== 40060 && replyError.code !== 10062) {
+                console.error('Unexpected error reply failure:', replyError.code, replyError.message);
+            }
         }
     }
 });
 
 // Message tracking for conversation context
 client.on('messageCreate', async message => {
-    console.log(`Message received: ${message.author.username} (bot: ${message.author.bot}) in channel: ${message.channel.id}`);
-    console.log(`Configured CHANNEL_IDS: ${CHANNEL_IDS.join(', ')}`);
-    console.log(`Message content: "${message.content}"`);
-
     // Ignore bot messages (including our own)
     if (message.author.bot) {
-        console.log('Ignoring bot message');
         return;
     }
 
     // Only track messages from designated channels (if CHANNEL_IDS is configured)
     if (CHANNEL_IDS.length > 0 && !CHANNEL_IDS.includes(message.channel.id)) {
-        console.log(`Ignoring message - wrong channel. Expected one of: ${CHANNEL_IDS.join(', ')}, Got: ${message.channel.id}`);
         return;
     }
 
     // Add message to conversation history
-    console.log(`Adding to history: ${message.author.username}: ${message.content}`);
+    console.log(`[TRACKING] ${message.author.username} in #${message.channel.name || message.channel.id}: ${message.content.substring(0, 100)}`);
     addToHistory(message.author.username, message.content, false);
-
-    console.log(`Successfully tracked message from ${message.author.username}`);
 });
 
 async function handleCommit(interaction) {
