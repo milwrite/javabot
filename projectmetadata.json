@@ -34,5 +34,17 @@
   "alex_dog_mess": {
     "icon": "🐕",
     "description": "A webpage telling Alex to clean up"
+  },
+  "borscht": {
+    "icon": "🌐",
+    "description": "Borscht"
+  },
+  "parlay_probability_viz": {
+    "icon": "🌐",
+    "description": "Parlay_probability_viz"
+  },
+  "subway_sub_ratio": {
+    "icon": "🌐",
+    "description": "Subway_sub_ratio"
   }
 }
