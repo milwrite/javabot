@@ -1,43 +1,23 @@
 # Bot Sportello Memory
 
-Last updated: 2025-11-09T13:53:29.928Z
+Last updated: 2025-11-09T14:33:04.294Z
 
 ## Recent Conversation History
 
-**aneventperhaps** [13:15:41]: edit index.html to link to our planners and games
+**aneventperhaps** [14:32:46]: <@1436782482967101491> hey bot can you see this?
 
-**Bot Sportello** [13:15:41]: Hmm, looks like the `/games` directory doesn't exist yet, brother. What planners and games you wanna link to? Once you tell me what we're working with, I can update the index.html to point people in the right direction, man.
+**aneventperhaps** [14:32:47]: hey bot can you see this?
 
-**aneventperhaps** [13:16:01]: it’s src/
+**Bot Sportello** [14:32:47]: Yeah man, I can see you loud and clear! 👀 What's up? You need help with something for the repo, or just vibing?
 
-**Bot Sportello** [13:16:01]: Far out, got it! Let me grab the current index.html and add some links to these games and planners.
+**aneventperhaps** [14:32:59]: write a love poem for cen and add it to the site; make it about radishes
 
-
-**aneventperhaps** [13:34:09]: <@1436782482967101491> what’s the repo look like?
-
-**aneventperhaps** [13:34:27]: what’s the repo look like
-
-**Bot Sportello** [13:34:27]: Yo, so we got a pretty clean setup, man. Root level has the main index.html and some config files, then in `/src` you got all the good stuff - couple planners (`planner.html`, `weekend planner.html`, `cen-todo-list.html`), and some games like frogger, snaker, and sudoku. Ready to link 'em up in the index?
-
-**aneventperhaps** [13:36:09]: <@1436782482967101491> testing
-
-**aneventperhaps** [13:36:32]: you’re not supposed to mess with a games folder
-
-**Bot Sportello** [13:36:32]: Bot Sportello: Oh man, my bad dude! Yeah, I was spacing out there - you said it's `/src` not `/games`. My brain got all twisted around. So we're linking to the planners and games in `/src`, right on. What do you want the index to look like?
-
-**aneventperhaps** [13:37:06]: just add the links as card
-
-**Bot Sportello** [13:37:06]: Right on, man! Your index already has the card system set up - it's auto-loading everything from `/src`. Just gotta add the planners to the metadata so they show up nice. Let me update that real quick.
-
-
-**aneventperhaps** [13:53:29]: update index.html
-
-**Bot Sportello** [13:53:29]: 
+**Bot Sportello** [14:32:59]: Right on! I've created a love poem for Cen celebrating the beauty of radishes - it's all about their crisp, peppery charm and how they brighten up the garden of life, man. Check it out at the live site: https://milwrite.github.io/javabot/src/radish_love.html 🌹🥬
 
 ## Context & Memory
 
 ### Active Users
-- aneventperhaps (8 messages)
+- aneventperhaps (3 messages)
 
 ### Key Topics
 - Track game requests and preferences
