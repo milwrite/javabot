@@ -5,6 +5,7 @@ const simpleGit = require('simple-git');
 const fs = require('fs').promises;
 const path = require('path');
 const axios = require('axios');
+const axiosRetry = require('axios-retry').default;
 
 // Validate required environment variables
 const REQUIRED_ENV_VARS = [
@@ -96,6 +97,21 @@ async function gitWithTimeout(operation, timeoutMs = CONFIG.GIT_TIMEOUT) {
         )
     ]);
 }
+
+// Configure axios with retry logic
+axiosRetry(axios, {
+    retries: 3,
+    retryDelay: axiosRetry.exponentialDelay,
+    retryCondition: (error) => {
+        // Retry on network errors or 5xx errors
+        return axiosRetry.isNetworkOrIdempotentRequestError(error) ||
+               (error.response && error.response.status >= 500);
+    },
+    onRetry: (retryCount, error, requestConfig) => {
+        console.log(`🔄 Retry attempt ${retryCount} for ${requestConfig.url} (${error.message})`);
+    },
+    shouldResetTimeout: true
+});
 
 // OpenRouter configuration
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -1117,12 +1133,12 @@ async function handleMentionAsync(message) {
 }
 
 async function handleCommit(interaction) {
-    const message = interaction.options.getString('message');
-    const files = interaction.options.getString('files') || '.';
-    
     try {
+        const message = validateInput(interaction.options.getString('message'), 500);
+        const files = interaction.options.getString('files') || '.';
+
         // First, check if there's anything to commit
-        const status = await git.status();
+        const status = await gitWithTimeout(() => git.status());
         
         if (status.files.length === 0) {
             await interaction.editReply("Nothing to commit.");
@@ -1134,18 +1150,18 @@ async function handleCommit(interaction) {
 
         // Stage files
         if (files === '.') {
-            await git.add('.');
+            await gitWithTimeout(() => git.add('.'));
         } else {
             const fileList = files.split(',').map(f => f.trim());
-            await git.add(fileList);
+            await gitWithTimeout(() => git.add(fileList));
         }
 
         // Update progress
         await interaction.editReply('Creating commit...');
 
         // Create commit
-        const commit = await git.commit(message);
-        
+        const commit = await gitWithTimeout(() => git.commit(message));
+
         // Update progress
         await interaction.editReply('Pushing to repository...');
 
@@ -1153,7 +1169,7 @@ async function handleCommit(interaction) {
         try {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
-            
+
             if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
                 const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
                 await git.remote(['set-url', 'origin', remoteUrl]);
@@ -1164,7 +1180,7 @@ async function handleCommit(interaction) {
 
         // Push changes - use current branch
         const currentBranch = status.current || 'main';
-        await git.push('origin', currentBranch);
+        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
 
         // Success - create and send embed
         const embed = new EmbedBuilder()
@@ -1210,12 +1226,11 @@ async function handleCommit(interaction) {
 }
 
 async function handleAddPage(interaction) {
-    const name = interaction.options.getString('name');
-    const description = interaction.options.getString('description');
-
     await interaction.editReply(getBotResponse('thinking'));
 
     try {
+        const name = sanitizeFileName(interaction.options.getString('name'));
+        const description = validateInput(interaction.options.getString('description'), 1000);
         // Use AI to generate pure web development project
         const webPrompt = `Build "${name}": ${description}
 
@@ -1236,31 +1251,19 @@ Return only HTML, no markdown blocks or explanations.`;
                     content: webPrompt
                 }
             ],
-            max_tokens: 10000,
-            temperature: 0.7
+            max_tokens: CONFIG.AI_MAX_TOKENS,
+            temperature: CONFIG.AI_TEMPERATURE
         }, {
             headers: {
                 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            timeout: 60000
+            timeout: CONFIG.API_TIMEOUT
         });
 
         let htmlContent = response.data.choices[0].message.content;
-
-        // Clean up markdown code blocks if present
-        htmlContent = htmlContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
-
-        // Ensure the page has a back to home link - inject if not present
-        if (!htmlContent.includes('index.html') && !htmlContent.includes('Back to Home')) {
-            // Find the opening body tag and inject a home link
-            const homeLink = `
-    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
-        <a href="../index.html" style="text-decoration: none; background: rgba(102, 126, 234, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-family: Arial, sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(102, 126, 234, 1)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.9)'">← Home</a>
-    </div>
-`;
-            htmlContent = htmlContent.replace(/<body([^>]*)>/, `<body$1>${homeLink}`);
-        }
+        htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
+        htmlContent = ensureHomeLinkInHTML(htmlContent);
 
         const fileName = `src/${name}.html`;
 
@@ -1293,12 +1296,11 @@ Return only HTML, no markdown blocks or explanations.`;
 }
 
 async function handleAddFunction(interaction) {
-    const name = interaction.options.getString('name');
-    const description = interaction.options.getString('description');
-
     await interaction.editReply(getBotResponse('thinking'));
 
     try {
+        const name = sanitizeFileName(interaction.options.getString('name'));
+        const description = validateInput(interaction.options.getString('description'), 1000);
         // Use AI to generate JavaScript function library
         const jsPrompt = `Create a JavaScript function library called "${name}".
 Functions needed: ${description}
@@ -1314,18 +1316,18 @@ Return only JavaScript, no markdown blocks or explanations.`;
         const jsResponse = await axios.post(OPENROUTER_URL, {
             model: MODEL,
             messages: [{ role: 'user', content: jsPrompt }],
-            max_tokens: 10000,
-            temperature: 0.7
+            max_tokens: CONFIG.AI_MAX_TOKENS,
+            temperature: CONFIG.AI_TEMPERATURE
         }, {
             headers: {
                 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            timeout: 60000
+            timeout: CONFIG.API_TIMEOUT
         });
 
         let jsContent = jsResponse.data.choices[0].message.content;
-        jsContent = jsContent.replace(/```javascript\n?/g, '').replace(/```js\n?/g, '').replace(/```\n?/g, '').trim();
+        jsContent = cleanMarkdownCodeBlocks(jsContent, 'javascript');
 
         // Generate demo HTML page
         const htmlPrompt = `Create a demo HTML page for "${name}" JavaScript library.
@@ -1342,28 +1344,19 @@ Return only HTML, no markdown blocks or explanations.`;
         const htmlResponse = await axios.post(OPENROUTER_URL, {
             model: MODEL,
             messages: [{ role: 'user', content: htmlPrompt }],
-            max_tokens: 10000,
-            temperature: 0.7
+            max_tokens: CONFIG.AI_MAX_TOKENS,
+            temperature: CONFIG.AI_TEMPERATURE
         }, {
             headers: {
                 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            timeout: 60000
+            timeout: CONFIG.API_TIMEOUT
         });
 
         let htmlContent = htmlResponse.data.choices[0].message.content;
-        htmlContent = htmlContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
-
-        // Ensure home link is present
-        if (!htmlContent.includes('index.html') && !htmlContent.includes('Home</a>')) {
-            const homeLink = `
-    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
-        <a href="../index.html" style="text-decoration: none; background: rgba(102, 126, 234, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-family: Arial, sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(102, 126, 234, 1)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.9)'">← Home</a>
-    </div>
-`;
-            htmlContent = htmlContent.replace(/<body([^>]*)>/, `<body$1>${homeLink}`);
-        }
+        htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
+        htmlContent = ensureHomeLinkInHTML(htmlContent);
 
         // Create src directory if it doesn't exist
         await fs.mkdir('src', { recursive: true });
@@ -1565,26 +1558,35 @@ async function handlePoll(interaction) {
             return ['👍', '👎'].includes(reaction.emoji.name) && !user.bot;
         };
         
-        const collector = reply.createReactionCollector({ 
-            filter, 
-            time: 60000 
+        const collector = reply.createReactionCollector({
+            filter,
+            time: CONFIG.POLL_DURATION,
+            dispose: true // Clean up removed reactions
         });
-        
+
+        collector.on('error', (error) => {
+            console.error('Reaction collector error:', error);
+            collector.stop();
+        });
+
         collector.on('end', async (collected) => {
             try {
+                // Remove bot's own reactions to clean up
+                await reply.reactions.removeAll().catch(() => {});
+
                 const yesCount = collected.get('👍')?.count - 1 || 0;
                 const noCount = collected.get('👎')?.count - 1 || 0;
                 const total = yesCount + noCount;
-                
+
                 if (total === 0) {
                     await reply.edit(`**${question}**\n\n*No votes received.*`);
                     return;
                 }
-                
-                const result = yesCount > noCount ? 'Yes wins!' : 
-                              noCount > yesCount ? 'No wins!' : 
+
+                const result = yesCount > noCount ? 'Yes wins!' :
+                              noCount > yesCount ? 'No wins!' :
                               "It's a tie!";
-                
+
                 const resultMsg = `**${question}**\n\n👍 ${yesCount}  •  👎 ${noCount}\n\n**${result}** *(${total} votes)*`;
                 await reply.edit(resultMsg);
             } catch (editError) {

@@ -8,16 +8,23 @@
     "dev": "nodemon index.js"
   },
   "dependencies": {
-    "discord.js": "^14.14.1",
     "@octokit/rest": "^20.0.2",
-    "simple-git": "^3.20.0",
+    "axios": "^1.6.0",
+    "axios-retry": "^4.5.0",
+    "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
-    "axios": "^1.6.0"
+    "simple-git": "^3.20.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
   },
-  "keywords": ["discord", "bot", "github", "games", "javascript"],
+  "keywords": [
+    "discord",
+    "bot",
+    "github",
+    "games",
+    "javascript"
+  ],
   "author": "javabot",
   "license": "MIT"
 }
