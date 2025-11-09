@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Bot Sportello's Arcade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
         * {
             margin: 0;
@@ -14,34 +19,34 @@
         }
 
         body {
-            font-family: 'Press Start 2P', cursive;
-            background: #0a0e0f;
+            font-family: 'Press Start 2P', cursive, monospace !important;
+            background-color: #0a0e0f !important;
+            background-image:
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 49px,
+                    rgba(0, 255, 100, 0.15) 49px,
+                    rgba(0, 255, 100, 0.15) 51px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 49px,
+                    rgba(0, 255, 100, 0.15) 49px,
+                    rgba(0, 255, 100, 0.15) 51px
+                ) !important;
+            background-size: 50px 50px !important;
             min-height: 100vh;
             padding: 40px 20px;
             position: relative;
             overflow-x: hidden;
+            animation: gridMove 20s linear infinite !important;
         }
 
-        /* Animated grid background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:
-                linear-gradient(0deg, transparent 24%, rgba(0, 255, 100, 0.15) 25%, rgba(0, 255, 100, 0.15) 26%, transparent 27%, transparent 74%, rgba(0, 255, 100, 0.15) 75%, rgba(0, 255, 100, 0.15) 76%, transparent 77%, transparent),
-                linear-gradient(90deg, transparent 24%, rgba(0, 255, 100, 0.15) 25%, rgba(0, 255, 100, 0.15) 26%, transparent 27%, transparent 74%, rgba(0, 255, 100, 0.15) 75%, rgba(0, 255, 100, 0.15) 76%, transparent 77%, transparent);
-            background-size: 50px 50px;
-            animation: gridScroll 20s linear infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        @keyframes gridScroll {
-            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
-            100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 50px; }
         }
 
         .container {
