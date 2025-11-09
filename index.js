@@ -403,36 +403,113 @@ async function writeFile(filePath, content) {
     }
 }
 
+// Helper function to pick emoji based on description
+function getIconForDescription(description) {
+    const lowerDesc = description.toLowerCase();
+
+    if (lowerDesc.includes('game')) return '🎮';
+    if (lowerDesc.includes('snake')) return '🐍';
+    if (lowerDesc.includes('todo') || lowerDesc.includes('task') || lowerDesc.includes('list')) return '✅';
+    if (lowerDesc.includes('calculator')) return '🔢';
+    if (lowerDesc.includes('timer') || lowerDesc.includes('clock')) return '⏰';
+    if (lowerDesc.includes('music') || lowerDesc.includes('audio')) return '🎵';
+    if (lowerDesc.includes('photo') || lowerDesc.includes('image')) return '📸';
+    if (lowerDesc.includes('chat') || lowerDesc.includes('message')) return '💬';
+    if (lowerDesc.includes('weather')) return '🌤️';
+    if (lowerDesc.includes('draw') || lowerDesc.includes('paint')) return '🎨';
+    if (lowerDesc.includes('plan')) return '📋';
+
+    return '🌐'; // Default
+}
+
 // Helper function to update index.html with new page
 async function updateIndexWithPage(pageName, description) {
     try {
         const indexPath = './index.html';
         let indexContent = await fs.readFile(indexPath, 'utf-8');
 
-        // Pick an emoji based on description keywords
-        const lowerDesc = description.toLowerCase();
-        let icon = '🌐'; // Default
-
-        if (lowerDesc.includes('game')) icon = '🎮';
-        else if (lowerDesc.includes('todo') || lowerDesc.includes('task') || lowerDesc.includes('list')) icon = '✅';
-        else if (lowerDesc.includes('calculator')) icon = '🔢';
-        else if (lowerDesc.includes('timer') || lowerDesc.includes('clock')) icon = '⏰';
-        else if (lowerDesc.includes('music') || lowerDesc.includes('audio')) icon = '🎵';
-        else if (lowerDesc.includes('photo') || lowerDesc.includes('image')) icon = '📸';
-        else if (lowerDesc.includes('chat') || lowerDesc.includes('message')) icon = '💬';
-        else if (lowerDesc.includes('weather')) icon = '🌤️';
-        else if (lowerDesc.includes('draw') || lowerDesc.includes('paint')) icon = '🎨';
-
+        const icon = getIconForDescription(description);
         const newEntry = `            '${pageName}': {\n                icon: '${icon}',\n                description: '${description}'\n            },`;
+
+        // Check if page already exists in metadata
+        const pageRegex = new RegExp(`'${pageName}'\\s*:\\s*\\{`, 's');
+        if (pageRegex.test(indexContent)) {
+            console.log(`Page ${pageName} already exists in index.html`);
+            return `Page ${pageName} already in index.html`;
+        }
 
         // Insert before the closing brace of projectMetadata
         const metadataRegex = /(const projectMetadata = \{[^}]*)\s*\};/s;
         indexContent = indexContent.replace(metadataRegex, `$1,\n${newEntry}\n        };`);
 
         await fs.writeFile(indexPath, indexContent);
+        console.log(`✅ Updated index.html with ${pageName}`);
         return `Updated index.html with ${pageName}`;
     } catch (error) {
+        console.error(`Error updating index.html:`, error.message);
         return `Error updating index.html: ${error.message}`;
+    }
+}
+
+// Sync all HTML files in /src to index.html
+async function syncIndexWithSrcFiles() {
+    try {
+        console.log('🔄 Syncing index.html with /src directory...');
+
+        // Read all HTML files in src directory
+        const srcFiles = await fs.readdir('./src');
+        const htmlFiles = srcFiles.filter(file => file.endsWith('.html'));
+
+        console.log(`Found ${htmlFiles.length} HTML files in /src`);
+
+        // Read current index.html
+        const indexPath = './index.html';
+        let indexContent = await fs.readFile(indexPath, 'utf-8');
+
+        // Extract existing projectMetadata
+        const metadataMatch = indexContent.match(/const projectMetadata = \{([^}]*)\};/s);
+        if (!metadataMatch) {
+            console.error('Could not find projectMetadata in index.html');
+            return;
+        }
+
+        const existingMetadata = metadataMatch[1];
+        const existingPages = new Set();
+
+        // Parse existing pages
+        const pageMatches = existingMetadata.matchAll(/'([^']+)':/g);
+        for (const match of pageMatches) {
+            existingPages.add(match[1]);
+        }
+
+        // Find missing pages
+        const missingPages = [];
+        for (const htmlFile of htmlFiles) {
+            const pageName = htmlFile.replace('.html', '');
+            if (!existingPages.has(pageName)) {
+                missingPages.push(pageName);
+            }
+        }
+
+        if (missingPages.length === 0) {
+            console.log('✅ All pages are already in index.html');
+            return;
+        }
+
+        console.log(`📝 Adding ${missingPages.length} missing pages: ${missingPages.join(', ')}`);
+
+        // Add missing pages with default metadata
+        for (const pageName of missingPages) {
+            const icon = getIconForDescription(pageName);
+            const description = `${pageName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`;
+
+            await updateIndexWithPage(pageName, description);
+        }
+
+        console.log('✅ Index sync complete!');
+
+    } catch (error) {
+        console.error('Error syncing index.html:', error);
     }
 }
 
@@ -954,7 +1031,11 @@ const commands = [
         .addStringOption(option =>
             option.setName('description')
                 .setDescription('For custom style: describe what you want')
-                .setRequired(false))
+                .setRequired(false)),
+
+    new SlashCommandBuilder()
+        .setName('sync-index')
+        .setDescription('Sync index.html with all HTML files in /src directory')
 ];
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
@@ -973,6 +1054,13 @@ client.once('clientReady', async () => {
         console.log('Slash commands registered successfully.');
     } catch (error) {
         console.error('Error registering slash commands:', error);
+    }
+
+    // Sync index.html with all HTML files in /src
+    try {
+        await syncIndexWithSrcFiles();
+    } catch (error) {
+        console.error('Error syncing index.html on startup:', error);
     }
 });
 
@@ -1018,6 +1106,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'update-style':
                 await handleUpdateStyle(interaction);
+                break;
+            case 'sync-index':
+                await handleSyncIndex(interaction);
                 break;
             default:
                 const unknownMsg = "Unknown command. Try /status to see available commands.";
@@ -1603,6 +1694,37 @@ async function handlePoll(interaction) {
         } catch (replyError) {
             console.error('Failed to send poll error reply:', replyError);
         }
+    }
+}
+
+async function handleSyncIndex(interaction) {
+    try {
+        await interaction.editReply(getBotResponse('thinking'));
+
+        // Run the sync
+        await syncIndexWithSrcFiles();
+
+        // Check results
+        const srcFiles = await fs.readdir('./src');
+        const htmlFiles = srcFiles.filter(file => file.endsWith('.html'));
+
+        const embed = new EmbedBuilder()
+            .setTitle('🔄 Index Sync Complete')
+            .setDescription(getBotResponse('success'))
+            .addFields(
+                { name: 'HTML Files Found', value: htmlFiles.length.toString(), inline: true },
+                { name: 'Status', value: 'All files synced to index.html', inline: false },
+                { name: 'Live Site', value: '[View Arcade](https://milwrite.github.io/javabot/)', inline: false }
+            )
+            .setColor(0x00AE86)
+            .setTimestamp();
+
+        await interaction.editReply({ content: '', embeds: [embed] });
+
+    } catch (error) {
+        console.error('Sync index error:', error);
+        const errorMsg = getBotResponse('errors') + " Failed to sync index.";
+        await interaction.editReply(errorMsg);
     }
 }
 
