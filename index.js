@@ -56,7 +56,7 @@ REPOSITORY CONTEXT:
 Repository: https://github.com/milwrite/javabot/
 Live Site: https://milwrite.github.io/javabot/
 - You can commit, push, and manage files
-- /games directory contains web pages and JS libraries
+- /src directory contains web pages and JS libraries
 - You help create, edit, and deploy web projects via Discord commands
 - When sharing pages, always link to the live site at https://milwrite.github.io/javabot/
 
@@ -239,7 +239,7 @@ function buildMessagesFromHistory(maxMessages = 50) {
 }
 
 // Filesystem tools for the AI
-async function listFiles(dirPath = './games') {
+async function listFiles(dirPath = './src') {
     try {
         const files = await fs.readdir(dirPath);
         return files.join(', ');
@@ -263,6 +263,214 @@ async function writeFile(filePath, content) {
         return `File written successfully: ${filePath}`;
     } catch (error) {
         return `Error writing file: ${error.message}`;
+    }
+}
+
+// Helper function to update index.html with new page
+async function updateIndexWithPage(pageName, description) {
+    try {
+        const indexPath = './index.html';
+        let indexContent = await fs.readFile(indexPath, 'utf-8');
+
+        // Pick an emoji based on description keywords
+        const lowerDesc = description.toLowerCase();
+        let icon = '🌐'; // Default
+
+        if (lowerDesc.includes('game')) icon = '🎮';
+        else if (lowerDesc.includes('todo') || lowerDesc.includes('task') || lowerDesc.includes('list')) icon = '✅';
+        else if (lowerDesc.includes('calculator')) icon = '🔢';
+        else if (lowerDesc.includes('timer') || lowerDesc.includes('clock')) icon = '⏰';
+        else if (lowerDesc.includes('music') || lowerDesc.includes('audio')) icon = '🎵';
+        else if (lowerDesc.includes('photo') || lowerDesc.includes('image')) icon = '📸';
+        else if (lowerDesc.includes('chat') || lowerDesc.includes('message')) icon = '💬';
+        else if (lowerDesc.includes('weather')) icon = '🌤️';
+        else if (lowerDesc.includes('draw') || lowerDesc.includes('paint')) icon = '🎨';
+
+        const newEntry = `            '${pageName}': {\n                icon: '${icon}',\n                description: '${description}'\n            },`;
+
+        // Insert before the closing brace of projectMetadata
+        const metadataRegex = /(const projectMetadata = \{[^}]*)\s*\};/s;
+        indexContent = indexContent.replace(metadataRegex, `$1,\n${newEntry}\n        };`);
+
+        await fs.writeFile(indexPath, indexContent);
+        return `Updated index.html with ${pageName}`;
+    } catch (error) {
+        return `Error updating index.html: ${error.message}`;
+    }
+}
+
+// Tool functions that AI can call via @ mentions
+async function createPage(name, description) {
+    try {
+        const webPrompt = `Build "${name}": ${description}
+
+Output a single HTML file with embedded CSS and JavaScript. Requirements:
+- Fully functional and interactive
+- Modern, attractive styling
+- Vanilla JS (CDN libraries allowed)
+- Creative implementation
+- Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
+
+Return only HTML, no markdown blocks or explanations.`;
+
+        const response = await axios.post(OPENROUTER_URL, {
+            model: MODEL,
+            messages: [{ role: 'user', content: webPrompt }],
+            max_tokens: 10000,
+            temperature: 0.7
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 60000
+        });
+
+        let htmlContent = response.data.choices[0].message.content;
+        htmlContent = htmlContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+
+        // Ensure home link
+        if (!htmlContent.includes('index.html') && !htmlContent.includes('Back to Home')) {
+            const homeLink = `
+    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
+        <a href="../index.html" style="text-decoration: none; background: rgba(102, 126, 234, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-family: Arial, sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(102, 126, 234, 1)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.9)'">← Home</a>
+    </div>
+`;
+            htmlContent = htmlContent.replace(/<body([^>]*)>/, `<body$1>${homeLink}`);
+        }
+
+        const fileName = `src/${name}.html`;
+        await fs.mkdir('src', { recursive: true });
+        await fs.writeFile(fileName, htmlContent);
+
+        // Update index.html
+        await updateIndexWithPage(name, description);
+
+        return `Created ${fileName} and updated index.html. Live at: https://milwrite.github.io/javabot/src/${name}.html`;
+    } catch (error) {
+        return `Error creating page: ${error.message}`;
+    }
+}
+
+async function createFunction(name, description) {
+    try {
+        // Generate JS library
+        const jsPrompt = `Create a JavaScript function library called "${name}".
+Functions needed: ${description}
+
+Output clean, well-documented JavaScript with:
+- Pure functions (no dependencies)
+- JSDoc comments for each function
+- Export functions as a module
+- Practical, reusable code
+
+Return only JavaScript, no markdown blocks or explanations.`;
+
+        const jsResponse = await axios.post(OPENROUTER_URL, {
+            model: MODEL,
+            messages: [{ role: 'user', content: jsPrompt }],
+            max_tokens: 10000,
+            temperature: 0.7
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 60000
+        });
+
+        let jsContent = jsResponse.data.choices[0].message.content;
+        jsContent = jsContent.replace(/```javascript\n?/g, '').replace(/```js\n?/g, '').replace(/```\n?/g, '').trim();
+
+        // Generate demo HTML
+        const htmlPrompt = `Create a demo HTML page for "${name}" JavaScript library.
+Library functions: ${description}
+
+Output a single HTML file that:
+- Loads ${name}.js via <script src="${name}.js"></script>
+- Demonstrates each function with interactive examples
+- Modern, clean UI with embedded CSS
+- Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
+
+Return only HTML, no markdown blocks or explanations.`;
+
+        const htmlResponse = await axios.post(OPENROUTER_URL, {
+            model: MODEL,
+            messages: [{ role: 'user', content: htmlPrompt }],
+            max_tokens: 10000,
+            temperature: 0.7
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 60000
+        });
+
+        let htmlContent = htmlResponse.data.choices[0].message.content;
+        htmlContent = htmlContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+
+        // Ensure home link
+        if (!htmlContent.includes('index.html') && !htmlContent.includes('Home</a>')) {
+            const homeLink = `
+    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
+        <a href="../index.html" style="text-decoration: none; background: rgba(102, 126, 234, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-family: Arial, sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(102, 126, 234, 1)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.9)'">← Home</a>
+    </div>
+`;
+            htmlContent = htmlContent.replace(/<body([^>]*)>/, `<body$1>${homeLink}`);
+        }
+
+        await fs.mkdir('src', { recursive: true });
+        const jsFileName = `src/${name}.js`;
+        const htmlFileName = `src/${name}.html`;
+        await fs.writeFile(jsFileName, jsContent);
+        await fs.writeFile(htmlFileName, htmlContent);
+
+        // Update index.html
+        await updateIndexWithPage(name, description);
+
+        return `Created ${jsFileName} and ${htmlFileName}, updated index.html. Live demo: https://milwrite.github.io/javabot/src/${name}.html`;
+    } catch (error) {
+        return `Error creating function library: ${error.message}`;
+    }
+}
+
+async function commitChanges(message, files = '.') {
+    try {
+        const status = await git.status();
+        if (status.files.length === 0) {
+            return 'Nothing to commit';
+        }
+
+        if (files === '.') {
+            await git.add('.');
+        } else {
+            const fileList = files.split(',').map(f => f.trim());
+            await git.add(fileList);
+        }
+
+        const commit = await git.commit(message);
+        const currentBranch = status.current || 'main';
+        await git.push('origin', currentBranch);
+
+        return `Committed and pushed: ${commit.commit.substring(0, 7)} - ${message}`;
+    } catch (error) {
+        return `Error committing: ${error.message}`;
+    }
+}
+
+async function getRepoStatus() {
+    try {
+        const status = await git.status();
+        let result = `Branch: ${status.current}\n`;
+        result += `Modified: ${status.modified.length}, New: ${status.not_added.length}\n`;
+        result += `Live site: https://milwrite.github.io/javabot/\n`;
+        if (status.files.length > 0) {
+            result += `Changed files: ${status.files.slice(0, 5).map(f => f.path).join(', ')}`;
+        }
+        return result;
+    } catch (error) {
+        return `Error getting status: ${error.message}`;
     }
 }
 
@@ -325,7 +533,7 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                     parameters: {
                         type: 'object',
                         properties: {
-                            path: { type: 'string', description: 'Directory path (default: ./games)' }
+                            path: { type: 'string', description: 'Directory path (default: ./src)' }
                         }
                     }
                 }
@@ -341,6 +549,77 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                             path: { type: 'string', description: 'File path to read' }
                         },
                         required: ['path']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'write_file',
+                    description: 'Create or update a file in the repository',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string', description: 'File path to write' },
+                            content: { type: 'string', description: 'Content to write to the file' }
+                        },
+                        required: ['path', 'content']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'create_page',
+                    description: 'Create a new HTML page/app in /src directory with AI-generated code. Automatically updates index.html.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            name: { type: 'string', description: 'Page name (filename without .html)' },
+                            description: { type: 'string', description: 'What the page should do' }
+                        },
+                        required: ['name', 'description']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'create_function',
+                    description: 'Create a JavaScript function library with demo page in /src directory. Automatically updates index.html.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            name: { type: 'string', description: 'Library name (filename without extension)' },
+                            description: { type: 'string', description: 'What functions the library should provide' }
+                        },
+                        required: ['name', 'description']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'commit_changes',
+                    description: 'Git add, commit, and push changes to the repository',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            message: { type: 'string', description: 'Commit message' },
+                            files: { type: 'string', description: 'Files to commit (default: "." for all)' }
+                        },
+                        required: ['message']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'get_repo_status',
+                    description: 'Get current git repository status',
+                    parameters: {
+                        type: 'object',
+                        properties: {}
                     }
                 }
             },
@@ -387,9 +666,19 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
 
                 let result;
                 if (functionName === 'list_files') {
-                    result = await listFiles(args.path || './games');
+                    result = await listFiles(args.path || './src');
                 } else if (functionName === 'read_file') {
                     result = await readFile(args.path);
+                } else if (functionName === 'write_file') {
+                    result = await writeFile(args.path, args.content);
+                } else if (functionName === 'create_page') {
+                    result = await createPage(args.name, args.description);
+                } else if (functionName === 'create_function') {
+                    result = await createFunction(args.name, args.description);
+                } else if (functionName === 'commit_changes') {
+                    result = await commitChanges(args.message, args.files);
+                } else if (functionName === 'get_repo_status') {
+                    result = await getRepoStatus();
                 } else if (functionName === 'web_search') {
                     result = await webSearch(args.query);
                 }
@@ -643,6 +932,52 @@ client.on('messageCreate', async message => {
     // Add message to conversation history
     console.log(`[TRACKING] ${message.author.username} in #${message.channel.name || message.channel.id}: ${message.content.substring(0, 100)}`);
     addToHistory(message.author.username, message.content, false);
+
+    // Handle @ mentions with full AI capabilities
+    if (message.mentions.has(client.user)) {
+        try {
+            const content = message.content.replace(/<@!?\d+>/g, '').trim();
+            const username = message.author.username;
+
+            console.log(`[MENTION] ${username}: ${content}`);
+
+            // Send thinking message
+            const thinkingMsg = await message.reply(getBotResponse('thinking'));
+
+            // Build conversation context
+            const conversationMessages = buildMessagesFromHistory(50);
+
+            // Get AI response with full tool calling capabilities
+            const response = await getLLMResponse(content, conversationMessages);
+
+            // Add to history
+            addToHistory(username, content, false);
+            addToHistory('Bot Sportello', response, true);
+
+            // Handle long responses
+            if (response.length > 2000) {
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const fileName = `responses/mention-${timestamp}.txt`;
+
+                await fs.mkdir('responses', { recursive: true });
+                const fileContent = `User: ${username}\nMessage: ${content}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${response}`;
+                await fs.writeFile(fileName, fileContent);
+
+                const truncated = response.substring(0, 1800);
+                await thinkingMsg.edit(`${truncated}...\n\n*[Full response saved to \`${fileName}\`]*`);
+            } else {
+                await thinkingMsg.edit(response);
+            }
+
+        } catch (error) {
+            console.error('Mention handler error:', error);
+            try {
+                await message.reply(getBotResponse('errors'));
+            } catch (replyError) {
+                console.error('Failed to reply to mention:', replyError);
+            }
+        }
+    }
 });
 
 async function handleCommit(interaction) {
@@ -799,35 +1134,8 @@ Return only HTML, no markdown blocks or explanations.`;
         // Write the HTML file
         await fs.writeFile(fileName, htmlContent);
 
-        // Update index.html to include the new page in projectMetadata
-        try {
-            const indexPath = './index.html';
-            let indexContent = await fs.readFile(indexPath, 'utf-8');
-
-            // Pick an emoji based on description keywords
-            const lowerDesc = description.toLowerCase();
-            let icon = '🌐'; // Default
-
-            if (lowerDesc.includes('game')) icon = '🎮';
-            else if (lowerDesc.includes('todo') || lowerDesc.includes('task') || lowerDesc.includes('list')) icon = '✅';
-            else if (lowerDesc.includes('calculator')) icon = '🔢';
-            else if (lowerDesc.includes('timer') || lowerDesc.includes('clock')) icon = '⏰';
-            else if (lowerDesc.includes('music') || lowerDesc.includes('audio')) icon = '🎵';
-            else if (lowerDesc.includes('photo') || lowerDesc.includes('image')) icon = '📸';
-            else if (lowerDesc.includes('chat') || lowerDesc.includes('message')) icon = '💬';
-            else if (lowerDesc.includes('weather')) icon = '🌤️';
-            else if (lowerDesc.includes('draw') || lowerDesc.includes('paint')) icon = '🎨';
-
-            const newEntry = `            '${name}': {\n                icon: '${icon}',\n                description: '${description}'\n            },`;
-
-            // Insert before the closing brace of projectMetadata
-            const metadataRegex = /(const projectMetadata = \{[^}]*)\s*\};/s;
-            indexContent = indexContent.replace(metadataRegex, `$1,\n${newEntry}\n        };`);
-
-            await fs.writeFile(indexPath, indexContent);
-        } catch (indexError) {
-            console.log('Could not update index.html:', indexError.message);
-        }
+        // Update index.html to include the new page
+        await updateIndexWithPage(name, description);
 
         const embed = new EmbedBuilder()
             .setTitle('🌐 Page Added')
@@ -930,6 +1238,9 @@ Return only HTML, no markdown blocks or explanations.`;
 
         await fs.writeFile(jsFileName, jsContent);
         await fs.writeFile(htmlFileName, htmlContent);
+
+        // Update index.html to include the new page
+        await updateIndexWithPage(name, description);
 
         const embed = new EmbedBuilder()
             .setTitle('⚡ Function Library Added')
