@@ -48,15 +48,19 @@
             'sudoku': {
                 icon: '🔢',
                 description: 'Sudoku puzzle game'
+            },
+            'cen-todo-list': {
+                icon: '✅',
+                description: 'A beautiful todo list app'
             }
         };
 
         async function loadProjects() {
             const grid = document.getElementById('projectsGrid');
 
-            // Try to fetch the games directory listing
+            // Try to fetch the src directory listing
             try {
-                const response = await fetch('./games/');
+                const response = await fetch('./src/');
                 const text = await response.text();
 
                 // Parse HTML directory listing for .html files
@@ -94,7 +98,7 @@
 
                 const card = document.createElement('a');
                 card.className = 'project-card';
-                card.href = `./games/${project}.html`;
+                card.href = `./src/${project}.html`;
                 card.innerHTML = `
                     <div class="project-icon">${metadata.icon}</div>
                     <div class="project-title">${formatProjectName(project).toUpperCase()}</div>

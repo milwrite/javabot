@@ -27,7 +27,7 @@ npm start
 ## Architecture Overview
 
 ### Single-File Architecture
-The entire bot is contained in `index.js` (~1100 lines) with these key sections in order:
+The entire bot is contained in `index.js` (~1838 lines) with these key sections in order:
 1. Environment configuration and imports
 2. Error tracking system (prevents infinite error loops)
 3. OpenRouter configuration with model presets
@@ -66,11 +66,14 @@ The entire bot is contained in `index.js` (~1100 lines) with these key sections 
 - 10,000 token output limit for detailed responses
 - Conversation history from `agents.md` (100 messages max)
 
-**Vintage Arcade Frontend**:
-- `index.html` uses Press Start 2P font with neon green (#00ff64)
-- Animated perspective grid background with scanlines
-- Auto-discovers pages in `/games` directory
-- All pages link back to arcade home
+**Arcade Frontend Styling**:
+- `index.html` + `style.css` separated for easier style updates
+- Current theme: Soft Arcade (mint green #7dd3a0, dark blue-gray background)
+- Press Start 2P font from Google Fonts
+- Subtle grid background with scanlines
+- Auto-discovers pages in `/games` directory via JavaScript
+- All pages include home button linking back to arcade
+- Swappable themes via `/update-style` command
 
 ### Available Slash Commands
 
@@ -83,6 +86,7 @@ The entire bot is contained in `index.js` (~1100 lines) with these key sections 
 | `/chat <message>` | `handleChat` | AI conversation with context |
 | `/search <query>` | `handleSearch` | Web search via OpenRouter |
 | `/set-model <model>` | `handleSetModel` | Switch AI model at runtime |
+| `/update-style <preset> [description]` | `handleUpdateStyle` | Update website styling with presets or AI-generated custom CSS |
 | `/poll <question>` | `handlePoll` | Yes/no poll with reactions |
 
 ### AI Function Calling System

@@ -753,7 +753,7 @@ Output a single HTML file with embedded CSS and JavaScript. Requirements:
 - Modern, attractive styling
 - Vanilla JS (CDN libraries allowed)
 - Creative implementation
-- Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
+- Include: <a href="/index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
 
 Return only HTML, no markdown blocks or explanations.`;
 
@@ -791,13 +791,43 @@ Return only HTML, no markdown blocks or explanations.`;
             htmlContent = htmlContent.replace(/<body([^>]*)>/, `<body$1>${homeLink}`);
         }
 
-        const fileName = `games/${name}.html`;
+        const fileName = `src/${name}.html`;
 
-        // Create games directory if it doesn't exist
-        await fs.mkdir('games', { recursive: true });
+        // Create src directory if it doesn't exist
+        await fs.mkdir('src', { recursive: true });
 
         // Write the HTML file
         await fs.writeFile(fileName, htmlContent);
+
+        // Update index.html to include the new page in projectMetadata
+        try {
+            const indexPath = './index.html';
+            let indexContent = await fs.readFile(indexPath, 'utf-8');
+
+            // Pick an emoji based on description keywords
+            const lowerDesc = description.toLowerCase();
+            let icon = '🌐'; // Default
+
+            if (lowerDesc.includes('game')) icon = '🎮';
+            else if (lowerDesc.includes('todo') || lowerDesc.includes('task') || lowerDesc.includes('list')) icon = '✅';
+            else if (lowerDesc.includes('calculator')) icon = '🔢';
+            else if (lowerDesc.includes('timer') || lowerDesc.includes('clock')) icon = '⏰';
+            else if (lowerDesc.includes('music') || lowerDesc.includes('audio')) icon = '🎵';
+            else if (lowerDesc.includes('photo') || lowerDesc.includes('image')) icon = '📸';
+            else if (lowerDesc.includes('chat') || lowerDesc.includes('message')) icon = '💬';
+            else if (lowerDesc.includes('weather')) icon = '🌤️';
+            else if (lowerDesc.includes('draw') || lowerDesc.includes('paint')) icon = '🎨';
+
+            const newEntry = `            '${name}': {\n                icon: '${icon}',\n                description: '${description}'\n            },`;
+
+            // Insert before the closing brace of projectMetadata
+            const metadataRegex = /(const projectMetadata = \{[^}]*)\s*\};/s;
+            indexContent = indexContent.replace(metadataRegex, `$1,\n${newEntry}\n        };`);
+
+            await fs.writeFile(indexPath, indexContent);
+        } catch (indexError) {
+            console.log('Could not update index.html:', indexError.message);
+        }
 
         const embed = new EmbedBuilder()
             .setTitle('🌐 Page Added')
@@ -806,7 +836,7 @@ Return only HTML, no markdown blocks or explanations.`;
                 { name: 'Name', value: name, inline: true },
                 { name: 'Description', value: description, inline: false },
                 { name: 'File', value: fileName, inline: false },
-                { name: 'Live URL', value: `https://milwrite.github.io/javabot/games/${name}.html`, inline: false }
+                { name: 'Live URL', value: `https://milwrite.github.io/javabot/src/${name}.html`, inline: false }
             )
             .setColor(0x9b59b6)
             .setTimestamp();
@@ -861,7 +891,7 @@ Output a single HTML file that:
 - Loads ${name}.js via <script src="${name}.js"></script>
 - Demonstrates each function with interactive examples
 - Modern, clean UI with embedded CSS
-- Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
+- Include: <a href="/index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
 
 Return only HTML, no markdown blocks or explanations.`;
 
@@ -891,12 +921,12 @@ Return only HTML, no markdown blocks or explanations.`;
             htmlContent = htmlContent.replace(/<body([^>]*)>/, `<body$1>${homeLink}`);
         }
 
-        // Create games directory if it doesn't exist
-        await fs.mkdir('games', { recursive: true });
+        // Create src directory if it doesn't exist
+        await fs.mkdir('src', { recursive: true });
 
         // Write both files
-        const jsFileName = `games/${name}.js`;
-        const htmlFileName = `games/${name}.html`;
+        const jsFileName = `src/${name}.js`;
+        const htmlFileName = `src/${name}.html`;
 
         await fs.writeFile(jsFileName, jsContent);
         await fs.writeFile(htmlFileName, htmlContent);
@@ -908,7 +938,7 @@ Return only HTML, no markdown blocks or explanations.`;
                 { name: 'Name', value: name, inline: true },
                 { name: 'Description', value: description, inline: false },
                 { name: 'Files', value: `${jsFileName}\n${htmlFileName}`, inline: false },
-                { name: 'Live Demo', value: `https://milwrite.github.io/javabot/games/${name}.html`, inline: false }
+                { name: 'Live Demo', value: `https://milwrite.github.io/javabot/src/${name}.html`, inline: false }
             )
             .setColor(0xf39c12)
             .setTimestamp();
