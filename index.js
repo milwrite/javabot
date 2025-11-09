@@ -466,7 +466,15 @@ const commands = [
             option.setName('message')
                 .setDescription('What would you like to talk about?')
                 .setRequired(true)),
-                
+
+    new SlashCommandBuilder()
+        .setName('search')
+        .setDescription('Search the web for information')
+        .addStringOption(option =>
+            option.setName('query')
+                .setDescription('What do you want to search for?')
+                .setRequired(true)),
+
     new SlashCommandBuilder()
         .setName('poll')
         .setDescription('Quick yes/no poll with thumbs up/down')
@@ -525,6 +533,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'chat':
                 await handleChat(interaction);
+                break;
+            case 'search':
+                await handleSearch(interaction);
                 break;
             case 'poll':
                 await handlePoll(interaction);
@@ -853,6 +864,44 @@ Return only HTML, no markdown blocks or explanations.`;
 
     } catch (error) {
         throw new Error(`Function library creation failed: ${error.message}`);
+    }
+}
+
+async function handleSearch(interaction) {
+    const query = interaction.options.getString('query');
+
+    try {
+        await interaction.editReply(getBotResponse('thinking'));
+
+        // Perform web search
+        const searchResult = await webSearch(query);
+
+        // If response is longer than 2000 characters, save to file and truncate
+        if (searchResult.length > 2000) {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `responses/search-${timestamp}.txt`;
+
+            // Create responses directory if it doesn't exist
+            await fs.mkdir('responses', { recursive: true });
+
+            // Save full response to file
+            const fileContent = `Search Query: ${query}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${searchResult}`;
+            await fs.writeFile(fileName, fileContent);
+
+            // Truncate response and add link
+            const truncated = searchResult.substring(0, 1800);
+            const replyMessage = `**Search: "${query}"**\n\n${truncated}...\n\n*[Full results saved to \`${fileName}\`]*`;
+
+            await interaction.editReply(replyMessage);
+        } else {
+            // Response is short enough, send normally
+            await interaction.editReply(`**Search: "${query}"**\n\n${searchResult}`);
+        }
+
+    } catch (error) {
+        console.error('Search command error:', error);
+        const errorMsg = getBotResponse('errors') + " Search failed.";
+        await interaction.editReply(errorMsg);
     }
 }
 
