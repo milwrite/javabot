@@ -1,8 +1,4 @@
 {
-  "example": {
-    "icon": "🎯",
-    "description": "Example game showing basic structure"
-  },
   "frogger": {
     "icon": "🐸",
     "description": "Classic frogger game"

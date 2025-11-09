@@ -261,3 +261,145 @@ Available presets (2025 models):
 - `gemini` - Gemini 2.5 Flash Lite (Google)
 
 Changes apply immediately to all subsequent AI calls.
+
+## Mobile Responsiveness Standards
+
+**CRITICAL**: All pages must be mobile-responsive and fully scrollable. The bot MUST implement these patterns consistently:
+
+### Required Mobile Features
+
+**1. Viewport and Overflow Settings**:
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+```
+```css
+body {
+    overflow-x: auto;
+    overflow-y: auto;
+    padding: 20px; /* or appropriate mobile padding */
+}
+```
+
+**2. Mobile Breakpoints (MANDATORY)**:
+```css
+@media (max-width: 768px) {
+    /* Tablet/mobile landscape */
+    body { padding: 10px; }
+    .container { max-width: 100%; }
+    /* Touch targets minimum 44px */
+    .btn, .control-btn, .number-btn { min-height: 44px; }
+}
+
+@media (max-width: 480px) {
+    /* Mobile portrait */
+    body { padding: 5px; }
+    /* Smaller text and spacing */
+    h1 { font-size: 1.8em; }
+}
+```
+
+**3. Touch-Friendly Interactions**:
+- All buttons minimum 44px height/width for accessibility
+- Form inputs minimum 44px height
+- Adequate spacing between clickable elements (minimum 8px gap)
+- No hover-only functionality (provide tap alternatives)
+
+### Game-Specific Mobile Patterns
+
+**For Canvas Games** (like Frogger, Snake):
+```css
+canvas {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    canvas {
+        max-width: 95vw;
+        max-height: 60vh;
+    }
+}
+
+/* Mobile touch controls */
+.mobile-controls {
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+@media (max-width: 768px) {
+    .mobile-controls { display: grid; }
+}
+```
+
+**For Grid Games** (like Sudoku):
+```css
+.game-grid {
+    max-width: 100%;
+    aspect-ratio: 1;
+}
+
+@media (max-width: 768px) {
+    .game-grid {
+        max-width: 90vw;
+        gap: 1px; /* Tighter gaps on mobile */
+    }
+    .cell {
+        font-size: 12px;
+        min-height: 30px;
+    }
+}
+```
+
+### Common Anti-Patterns to AVOID
+
+❌ **Never use**: `overflow: hidden` on body (prevents scrolling)  
+❌ **Never use**: Fixed widths without max-width fallbacks  
+❌ **Never use**: Touch targets smaller than 44px  
+❌ **Never use**: Viewport-breaking fixed positioning  
+
+✅ **Always use**: `overflow-x: auto; overflow-y: auto` for scrollability  
+✅ **Always use**: Responsive units (vw, vh, %, em, rem)  
+✅ **Always use**: Flexible layouts (flexbox, grid with auto-fit)  
+
+### Page Layout Standards
+
+**Consistent Mobile Structure**:
+```css
+body {
+    min-height: 100vh;
+    overflow-x: auto;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.container, .game-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding-bottom: 50px; /* Space for scrolling */
+}
+
+@media (max-width: 768px) {
+    body { 
+        align-items: flex-start; /* Top-align on mobile */
+        padding-top: 80px; /* Space for home button */
+    }
+}
+```
+
+### Implementation Checklist
+
+When creating or updating any page, the bot MUST verify:
+
+- [ ] Viewport meta tag present
+- [ ] Body has proper overflow settings (auto, not hidden)
+- [ ] Mobile breakpoints at 768px and 480px minimum
+- [ ] All buttons/inputs minimum 44px touch targets
+- [ ] Content scrollable on mobile without horizontal overflow
+- [ ] Text readable at mobile sizes (minimum 14px)
+- [ ] Home button doesn't interfere with content on mobile
+- [ ] Games have mobile controls if needed
+- [ ] Consistent spacing and padding patterns
+
+The bot should reference `frogger.html` and `sudoku.html` as exemplary implementations of mobile responsiveness.
