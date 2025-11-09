@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Sportello's Projects</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .tagline {
+            font-size: 1.2em;
+            opacity: 0.9;
+            font-style: italic;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .project-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .project-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .project-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .project-description {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .add-project {
+            background: linear-gradient(135deg, #00AE86 0%, #00d9a5 100%);
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .add-project:hover {
+            background: linear-gradient(135deg, #00d9a5 0%, #00AE86 100%);
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 60px;
+            opacity: 0.8;
+        }
+
+        .refresh-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Bot Sportello's Workshop</h1>
+            <p class="tagline">yeah man... just a chill space for all the projects</p>
+            <button class="refresh-btn" onclick="loadProjects()">🔄 Refresh Projects</button>
+        </header>
+
+        <div class="projects-grid" id="projectsGrid">
+            <!-- Projects will be loaded here -->
+        </div>
+
+        <footer>
+            <p>Built with Bot Sportello • Discord Bot Project Manager</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">Use <code>/create-game</code> in Discord to add new projects</p>
+        </footer>
+    </div>
+
+    <script>
+        // Map of known projects with metadata
+        const projectMetadata = {
+            'example': {
+                icon: '🎯',
+                description: 'Example game showing basic structure'
+            },
+            'frogger': {
+                icon: '🐸',
+                description: 'Classic frogger game'
+            },
+            'sudoku': {
+                icon: '🔢',
+                description: 'Sudoku puzzle game'
+            }
+        };
+
+        async function loadProjects() {
+            const grid = document.getElementById('projectsGrid');
+
+            // Try to fetch the games directory listing
+            try {
+                const response = await fetch('./games/');
+                const text = await response.text();
+
+                // Parse HTML directory listing for .html files
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const links = doc.querySelectorAll('a');
+
+                const projects = [];
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href.endsWith('.html')) {
+                        const name = href.replace('.html', '');
+                        projects.push(name);
+                    }
+                });
+
+                displayProjects(projects);
+            } catch (error) {
+                // Fallback to known projects if directory listing fails
+                console.log('Using fallback project list');
+                displayProjects(Object.keys(projectMetadata));
+            }
+        }
+
+        function displayProjects(projects) {
+            const grid = document.getElementById('projectsGrid');
+            grid.innerHTML = '';
+
+            // Display each project
+            projects.forEach(project => {
+                const metadata = projectMetadata[project] || {
+                    icon: '🌐',
+                    description: 'Interactive web project'
+                };
+
+                const card = document.createElement('a');
+                card.className = 'project-card';
+                card.href = `./games/${project}.html`;
+                card.innerHTML = `
+                    <div class="project-icon">${metadata.icon}</div>
+                    <div class="project-title">${formatProjectName(project)}</div>
+                    <div class="project-description">${metadata.description}</div>
+                `;
+                grid.appendChild(card);
+            });
+
+            // Add "Create New" card
+            const addCard = document.createElement('div');
+            addCard.className = 'project-card add-project';
+            addCard.innerHTML = `
+                <div class="project-icon">➕</div>
+                <div class="project-title">Create New Project</div>
+                <div class="project-description">Use /create-game in Discord to add a new project</div>
+            `;
+            grid.appendChild(addCard);
+        }
+
+        function formatProjectName(name) {
+            // Convert "example-game" to "Example Game"
+            return name
+                .split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        // Load projects on page load
+        loadProjects();
+    </script>
+</body>
+</html>
