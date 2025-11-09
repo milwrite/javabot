@@ -1360,22 +1360,23 @@ async function handleCommit(interaction) {
 
         // Success - create and send embed
         const embed = new EmbedBuilder()
-            .setTitle('🚀 Changes Committed')
-            .setDescription(getBotResponse('success'))
+            .setTitle('🚀 Changes Committed & Pushed')
+            .setDescription(getBotResponse('success') + '\n\n**Note:** Changes are live on GitHub. If you modified HTML/CSS, GitHub Pages will deploy in 1-2 minutes.')
             .addFields(
                 { name: 'Commit Message', value: message, inline: false },
                 { name: 'Commit Hash', value: commit.commit.substring(0, 7), inline: true },
-                { name: 'Files Changed', value: status.files.length.toString(), inline: true }
+                { name: 'Files Changed', value: status.files.length.toString(), inline: true },
+                { name: 'Deployment', value: '⏳ Deploying to GitHub Pages... (1-2 min)', inline: false }
             )
             .setColor(0x00AE86)
             .setTimestamp();
 
         // Add repository link if URL is available
         if (process.env.GITHUB_REPO_URL) {
-            embed.addFields({ 
-                name: 'Repository', 
-                value: `[View Changes](${process.env.GITHUB_REPO_URL}/commit/${commit.commit})`, 
-                inline: false 
+            embed.addFields({
+                name: 'Repository',
+                value: `[View Changes](${process.env.GITHUB_REPO_URL}/commit/${commit.commit})`,
+                inline: false
             });
         }
 
@@ -1454,12 +1455,13 @@ Return only HTML, no markdown blocks or explanations.`;
 
         const embed = new EmbedBuilder()
             .setTitle('🌐 Page Added')
-            .setDescription(getBotResponse('success'))
+            .setDescription(getBotResponse('success') + '\n\n**Note:** Changes have been pushed to GitHub. GitHub Pages will deploy in 1-2 minutes.')
             .addFields(
                 { name: 'Name', value: name, inline: true },
                 { name: 'Description', value: description, inline: false },
                 { name: 'File', value: fileName, inline: false },
-                { name: 'Live URL', value: `https://milwrite.github.io/javabot/src/${name}.html`, inline: false }
+                { name: 'Live URL', value: `https://milwrite.github.io/javabot/src/${name}.html`, inline: false },
+                { name: 'Deployment', value: '⏳ Deploying... Please be patient (1-2 min)', inline: false }
             )
             .setColor(0x9b59b6)
             .setTimestamp();
@@ -1549,12 +1551,13 @@ Return only HTML, no markdown blocks or explanations.`;
 
         const embed = new EmbedBuilder()
             .setTitle('⚡ Function Library Added')
-            .setDescription(getBotResponse('success'))
+            .setDescription(getBotResponse('success') + '\n\n**Note:** Changes have been pushed to GitHub. GitHub Pages will deploy in 1-2 minutes.')
             .addFields(
                 { name: 'Name', value: name, inline: true },
                 { name: 'Description', value: description, inline: false },
                 { name: 'Files', value: `${jsFileName}\n${htmlFileName}`, inline: false },
-                { name: 'Live Demo', value: `https://milwrite.github.io/javabot/src/${name}.html`, inline: false }
+                { name: 'Live Demo', value: `https://milwrite.github.io/javabot/src/${name}.html`, inline: false },
+                { name: 'Deployment', value: '⏳ Deploying... Please be patient (1-2 min)', inline: false }
             )
             .setColor(0xf39c12)
             .setTimestamp();
@@ -2499,11 +2502,12 @@ Output ONLY the CSS code, no explanations.`;
         await git.push('origin', status.current);
 
         const embed = new EmbedBuilder()
-            .setTitle('🎨 Style Updated')
-            .setDescription(getBotResponse('success'))
+            .setTitle('🎨 Style Updated & Pushed')
+            .setDescription(getBotResponse('success') + '\n\n**Note:** Changes have been pushed to GitHub. GitHub Pages will deploy in 1-2 minutes.')
             .addFields(
                 { name: 'Style', value: preset === 'custom' ? 'Custom AI-generated' : preset, inline: true },
                 { name: 'File', value: 'style.css', inline: true },
+                { name: 'Deployment', value: '⏳ Deploying... Please be patient (1-2 min)', inline: false },
                 { name: 'Live Site', value: '[View Changes](https://milwrite.github.io/javabot/)', inline: false }
             )
             .setColor(0x9b59b6)
