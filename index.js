@@ -1329,12 +1329,15 @@ async function handleAddPage(interaction) {
         // Use AI to generate pure web development project
         const webPrompt = `Build "${name}": ${description}
 
-Output a single HTML file with embedded CSS and JavaScript. Requirements:
-- Fully functional and interactive
-- Modern, attractive styling
-- Vanilla JS (CDN libraries allowed)
-- Creative implementation
-- Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
+Output a single HTML file. Requirements:
+- Link to shared arcade theme: <link rel="stylesheet" href="../page-theme.css"> in <head>
+- Add Google Font for Press Start 2P: <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+- Include home link after <body>: <a href="../index.html" class="home-link">← HOME</a>
+- Use arcade color palette: mint green (#7dd3a0), dark backgrounds (#1a1d23, #252a32)
+- Fully functional and interactive JavaScript
+- Vanilla JS (CDN libraries allowed for functionality)
+- Creative implementation matching the retro arcade aesthetic
+- Use CSS classes from page-theme.css: .container, .card, .btn, etc.
 
 Return only HTML, no markdown blocks or explanations.`;
 
@@ -1431,11 +1434,15 @@ Return only JavaScript code, no markdown blocks or explanations.`;
 Feature description: ${description}
 
 Output a single HTML file that:
+- Links to shared arcade theme: <link rel="stylesheet" href="../page-theme.css"> in <head>
+- Add Google Font: <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 - Loads ${name}.js via <script src="${name}.js"></script>
+- Include home link after <body>: <a href="../index.html" class="home-link">← HOME</a>
+- Use arcade colors: mint green (#7dd3a0), dark backgrounds (#1a1d23, #252a32)
 - Provides interactive examples showing all capabilities
-- Modern, polished UI with embedded CSS
 - Clear documentation/instructions for users
-- Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
+- Use CSS classes from page-theme.css: .container, .card, .btn, etc.
+- Match retro arcade aesthetic
 
 Return only HTML code, no markdown blocks or explanations.`;
 

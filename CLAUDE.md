@@ -67,13 +67,15 @@ The entire bot is contained in `index.js` (~1838 lines) with these key sections 
 - Conversation history from `agents.md` (100 messages max)
 
 **Arcade Frontend Styling**:
-- `index.html` + `style.css` separated for easier style updates
-- Current theme: Soft Arcade (mint green #7dd3a0, dark blue-gray background)
-- Press Start 2P font from Google Fonts
-- Subtle grid background with scanlines
-- Auto-discovers pages in `/src` directory via JavaScript
-- All pages include home button linking back to arcade
-- Swappable themes via `/update-style` command
+- **Main arcade page**: `index.html` + `style.css` (homepage styling)
+- **Individual pages**: Link to `page-theme.css` (shared arcade theme for all pages)
+- **Current theme**: Soft Arcade (mint green #7dd3a0, dark blue-gray background)
+- **Typography**: Press Start 2P font from Google Fonts (retro pixel aesthetic)
+- **Visual effects**: Subtle grid background with scanlines overlay
+- **Project discovery**: `index.html` loads projects from `projectmetadata.json`
+- **Navigation**: All pages include styled home button linking back to arcade
+- **Theme updates**: `/update-style` command updates `style.css` (homepage only)
+- **Consistency**: New pages automatically use `page-theme.css` for uniform styling
 
 ### Available Slash Commands
 
@@ -112,20 +114,25 @@ The bot uses OpenRouter's function calling to give the AI autonomous access to:
 
 **`/add-page`**:
 1. User provides name + description
-2. AI generates complete HTML with embedded CSS/JavaScript
-3. Home link automatically injected if missing
-4. File saved to `src/{name}.html`
-5. Live URL shown in Discord embed
+2. AI generates HTML that links to `page-theme.css` (shared arcade theme)
+3. Prompt specifies: arcade colors, Press Start 2P font, CSS classes to use
+4. Home link with `.home-link` class automatically included
+5. File saved to `src/{name}.html` and added to `projectmetadata.json`
+6. Live URL shown in Discord embed
 
 **`/add-feature`**:
 1. User provides feature name + description of what it should do
 2. First AI call: Generate `.js` file (library, component, utility, etc.)
-3. Second AI call: Generate interactive demo HTML page that imports the JS
-4. Both files saved to `src/` directory
+3. Second AI call: Generate demo HTML that links to `page-theme.css`
+4. Both files saved to `src/` directory and metadata updated
 5. Live demo URL shown in Discord embed
 6. Flexible enough for libraries, UI components, interactive elements, utilities
 
-**Prompts are optimized for token efficiency** - concise, direct instructions with inline examples.
+**Styling Consistency**:
+- All new pages link to `page-theme.css` for uniform arcade aesthetic
+- Prompts specify arcade color palette: mint green (#7dd3a0), dark backgrounds (#1a1d23, #252a32)
+- Available CSS classes: `.container`, `.card`, `.btn`, `.panel`, `.home-link`, etc.
+- Prompts optimized for token efficiency with inline examples
 
 **`/update-style`**:
 1. User selects preset or "Custom" with description

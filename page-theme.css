@@ -1,0 +1,254 @@
+/* Bot Sportello Arcade - Shared Page Theme */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Press Start 2P', cursive, monospace;
+    background: linear-gradient(to bottom, #1a1d23 0%, #0f1419 100%);
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 49px,
+            rgba(100, 200, 150, 0.08) 49px,
+            rgba(100, 200, 150, 0.08) 50px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 49px,
+            rgba(100, 200, 150, 0.08) 49px,
+            rgba(100, 200, 150, 0.08) 50px
+        );
+    background-size: 50px 50px;
+    min-height: 100vh;
+    padding: 40px 20px;
+    color: #7dd3a0;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Subtle scanline effect */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.05) 0px,
+        transparent 1px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.05) 3px
+    );
+    pointer-events: none;
+    z-index: 999;
+}
+
+/* Home link styling */
+.home-link, a[href*="index.html"] {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 9999;
+    text-decoration: none;
+    background: rgba(90, 157, 122, 0.9);
+    color: #1a1d23;
+    padding: 10px 20px;
+    border-radius: 25px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.6em;
+    border: 2px solid #7dd3a0;
+    transition: all 0.3s ease;
+}
+
+.home-link:hover, a[href*="index.html"]:hover {
+    background: rgba(125, 211, 160, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(125, 211, 160, 0.4);
+}
+
+/* Container for page content */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* Headers */
+h1, h2, h3 {
+    color: #7dd3a0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    line-height: 1.4;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+h2 {
+    font-size: 1.4em;
+    margin-bottom: 15px;
+}
+
+h3 {
+    font-size: 1em;
+    margin-bottom: 10px;
+}
+
+/* Text and paragraphs */
+p {
+    color: #95c9ad;
+    line-height: 1.8;
+    font-size: 0.6em;
+}
+
+/* Links */
+a {
+    color: #7dd3a0;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: #a8e6c1;
+}
+
+/* Buttons */
+button, .btn {
+    background: #252a32;
+    color: #7dd3a0;
+    border: 2px solid #5a9d7a;
+    padding: 12px 24px;
+    cursor: pointer;
+    font-size: 0.6em;
+    font-family: 'Press Start 2P', cursive;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+button:hover, .btn:hover {
+    background: #5a9d7a;
+    color: #1a1d23;
+    border-color: #7dd3a0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(90, 157, 122, 0.3);
+}
+
+button:active, .btn:active {
+    transform: translateY(0);
+}
+
+/* Input fields */
+input, textarea, select {
+    background: #252a32;
+    color: #7dd3a0;
+    border: 2px solid #5a9d7a;
+    padding: 12px;
+    font-size: 0.6em;
+    font-family: 'Press Start 2P', cursive;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #7dd3a0;
+    box-shadow: 0 0 10px rgba(125, 211, 160, 0.3);
+}
+
+input::placeholder, textarea::placeholder {
+    color: #5a9d7a;
+}
+
+/* Cards and panels */
+.card, .panel {
+    background: linear-gradient(135deg, #252a32 0%, #1d2228 100%);
+    border: 2px solid #5a9d7a;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    margin-bottom: 20px;
+}
+
+/* Lists */
+ul, ol {
+    list-style-position: inside;
+    color: #95c9ad;
+    font-size: 0.6em;
+    line-height: 1.8;
+}
+
+li {
+    margin-bottom: 10px;
+}
+
+/* Code blocks */
+code, pre {
+    background: #252a32;
+    padding: 3px 8px;
+    border: 1px solid #5a9d7a;
+    border-radius: 3px;
+    color: #7dd3a0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.5em;
+}
+
+pre {
+    padding: 15px;
+    overflow-x: auto;
+    display: block;
+    margin: 15px 0;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.6em;
+    margin: 20px 0;
+}
+
+th, td {
+    border: 2px solid #5a9d7a;
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background: #252a32;
+    color: #7dd3a0;
+    font-weight: bold;
+}
+
+td {
+    background: #1d2228;
+    color: #95c9ad;
+}
+
+/* Utility classes */
+.text-center {
+    text-align: center;
+}
+
+.mt-1 { margin-top: 10px; }
+.mt-2 { margin-top: 20px; }
+.mt-3 { margin-top: 30px; }
+
+.mb-1 { margin-bottom: 10px; }
+.mb-2 { margin-bottom: 20px; }
+.mb-3 { margin-bottom: 30px; }
+
+.p-1 { padding: 10px; }
+.p-2 { padding: 20px; }
+.p-3 { padding: 30px; }
