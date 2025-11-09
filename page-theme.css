@@ -1345,7 +1345,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .control-group label {
     display: block;
-    font-size: 0.6em;
+    font-size: 0.8em;
     color: #7dd3a0;
     margin-bottom: 10px;
     font-weight: bold;
@@ -1354,7 +1354,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .control-group small {
     display: block;
     margin-top: 8px;
-    font-size: 0.5em;
+    font-size: 0.7em;
     color: #95c9ad;
     font-style: italic;
 }
@@ -1394,7 +1394,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .leg-number {
-    font-size: 0.7em;
+    font-size: 0.9em;
     color: #7dd3a0;
     font-weight: bold;
     margin-bottom: 12px;
@@ -1416,7 +1416,7 @@ input[type="range"]::-moz-range-thumb:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.6em;
+    font-size: 0.8em;
     color: #1a1d23;
     font-weight: bold;
     transition: width 0.5s ease;
@@ -1434,14 +1434,14 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .stat-item .stat-label {
-    font-size: 0.45em;
+    font-size: 0.65em;
     color: #95c9ad;
     margin-bottom: 5px;
     text-transform: uppercase;
 }
 
 .stat-item .stat-value {
-    font-size: 0.7em;
+    font-size: 0.9em;
     color: #7dd3a0;
     font-weight: bold;
 }
@@ -1474,7 +1474,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .summary-odds {
-    font-size: 0.6em;
+    font-size: 0.8em;
     color: #252a32;
     font-weight: bold;
 }
@@ -1499,6 +1499,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .doc-section p {
+    font-size: 0.7em;
     color: #95c9ad;
     line-height: 1.8;
     margin-bottom: 15px;
@@ -1511,7 +1512,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .doc-list li {
     color: #95c9ad;
-    font-size: 0.6em;
+    font-size: 0.7em;
     line-height: 1.8;
     margin-bottom: 12px;
     padding-left: 25px;
@@ -1536,7 +1537,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .insight-box strong {
     color: #7dd3a0;
-    font-size: 0.7em;
+    font-size: 0.8em;
     display: block;
     margin-bottom: 10px;
 }
@@ -1551,7 +1552,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .warning-box strong {
     color: #f44336;
-    font-size: 0.7em;
+    font-size: 0.8em;
     display: block;
     margin-bottom: 10px;
 }
@@ -1559,7 +1560,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .insight-box p,
 .warning-box p {
     color: #95c9ad;
-    font-size: 0.6em;
+    font-size: 0.7em;
     line-height: 1.8;
     margin: 0;
 }
