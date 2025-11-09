@@ -461,11 +461,22 @@ async function updateIndexWithPage(pageName, description) {
             throw new Error('Could not find closing brace of projectMetadata');
         }
 
-        // Check if we need a comma before insertion
-        const beforeClosing = indexContent.substring(0, closingBracePos).trim();
-        const needsComma = !beforeClosing.endsWith('{') && !beforeClosing.endsWith(',');
+        // Check if we need a comma - look at the last non-whitespace character before closing brace
+        const beforeClosing = indexContent.substring(0, closingBracePos).trimEnd();
+        const needsComma = !beforeClosing.endsWith('{');
 
-        const newEntry = `${needsComma ? ',' : ''}\n            '${pageName}': {\n                icon: '${icon}',\n                description: '${description}'\n            }`;
+        // Build new entry with comma at the END of the previous entry, not on a new line
+        let newEntry;
+        if (needsComma) {
+            // Add comma to end of previous entry, then add new entry
+            const lastBrace = beforeClosing.lastIndexOf('}');
+            if (lastBrace !== -1) {
+                indexContent = indexContent.substring(0, lastBrace + 1) + ',' + indexContent.substring(lastBrace + 1);
+                closingBracePos++; // Adjust position after comma insertion
+            }
+        }
+
+        newEntry = `\n            '${pageName}': {\n                icon: '${icon}',\n                description: '${description}'\n            }`;
 
         // Insert before the closing brace
         indexContent = indexContent.substring(0, closingBracePos) + newEntry + '\n        ' + indexContent.substring(closingBracePos);
