@@ -71,7 +71,7 @@ The entire bot is contained in `index.js` (~1838 lines) with these key sections 
 - Current theme: Soft Arcade (mint green #7dd3a0, dark blue-gray background)
 - Press Start 2P font from Google Fonts
 - Subtle grid background with scanlines
-- Auto-discovers pages in `/games` directory via JavaScript
+- Auto-discovers pages in `/src` directory via JavaScript
 - All pages include home button linking back to arcade
 - Swappable themes via `/update-style` command
 
@@ -114,14 +114,14 @@ The bot uses OpenRouter's function calling to give the AI autonomous access to:
 1. User provides name + description
 2. AI generates complete HTML with embedded CSS/JavaScript
 3. Home link automatically injected if missing
-4. File saved to `games/{name}.html`
+4. File saved to `src/{name}.html`
 5. Live URL shown in Discord embed
 
 **`/add-function`**:
 1. User provides library name + function descriptions
 2. First AI call: Generate `.js` file with JSDoc comments
 3. Second AI call: Generate demo HTML page that imports the JS
-4. Both files saved to `games/` directory
+4. Both files saved to `src/` directory
 5. Live demo URL shown in Discord embed
 
 **Prompts are optimized for token efficiency** - concise, direct instructions with inline examples.
@@ -234,7 +234,7 @@ errorTracker.set(`${userId}-${commandName}`, {
 - Use Doc Sportello responses in descriptions
 
 **File Operations**:
-- All generated content goes to `games/` directory
+- All generated content goes to `src/` directory
 - Create directories with `{ recursive: true }`
 - Long responses saved to `responses/` directory with timestamps
 
