@@ -521,6 +521,7 @@ Requirements:
 - Include proper styling to make it look good
 - Add interactivity and dynamic behavior
 - Make it creative and fun to use
+- IMPORTANT: Include a "Back to Home" link at the top that links to ../index.html
 - Return ONLY the complete HTML code, no explanations or markdown
 
 Be creative and build something unique based on the description!`;
@@ -547,6 +548,17 @@ Be creative and build something unique based on the description!`;
 
         // Clean up markdown code blocks if present
         htmlContent = htmlContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+
+        // Ensure the page has a back to home link - inject if not present
+        if (!htmlContent.includes('index.html') && !htmlContent.includes('Back to Home')) {
+            // Find the opening body tag and inject a home link
+            const homeLink = `
+    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
+        <a href="../index.html" style="text-decoration: none; background: rgba(102, 126, 234, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-family: Arial, sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(102, 126, 234, 1)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.9)'">← Home</a>
+    </div>
+`;
+            htmlContent = htmlContent.replace(/<body([^>]*)>/, `<body$1>${homeLink}`);
+        }
 
         const fileName = `games/${name}.html`;
 
