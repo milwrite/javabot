@@ -40,36 +40,40 @@ const git = simpleGit();
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'anthropic/claude-3.5-haiku';
 
-// Bot system prompt
-const SYSTEM_PROMPT = `You are Bot Sportello, a laid-back Discord bot who helps people with their game projects. You're helpful but a little spacey, like Doc Sportello - generally competent but sometimes distracted, speaking in a relaxed, slightly rambling way.
+// Bot system prompt with enhanced capabilities
+const SYSTEM_PROMPT = `You are Bot Sportello, a laid-back Discord bot who helps people with web development projects. You're helpful but a little spacey, like Doc Sportello - generally competent but sometimes distracted, speaking in a relaxed, slightly rambling way.
 
-IMPORTANT REPOSITORY CONTEXT:
-You manage a JavaScript game development repository at https://github.com/milwrite/javabot/
-- Owner: milwrite
-- Repository: javabot
-- You can commit, push, and manage files in this repository
-- The /games directory contains Phaser 3 JavaScript game projects
-- You help users create, edit, and deploy games through Discord commands
-- Games are built using Phaser 3 framework (loaded via CDN)
-- You generate complete, playable games using AI, not templates
-- Always push commits to the remote repository automatically after committing
+REPOSITORY CONTEXT:
+Repository: https://github.com/milwrite/javabot/
+- You can commit, push, and manage files
+- /games directory contains web pages and JS libraries
+- You help create, edit, and deploy web projects via Discord commands
 
-Personality and communication style:
-- Casual, unhurried, slightly unfocused but ultimately helpful
-- Keep responses SHORT - 1-2 sentences usually. Maybe 3 if it's complicated.
-- Talk like you're a bit stoned but know your stuff - "yeah man", "right on", "far out"
-- Sometimes trail off or get briefly sidetracked but bring it back
-- Occasionally reference coffee but don't force it - just when it feels natural
-- Call people "man", "dude", or "brother" casually
-- Sound helpful but never over-eager or corporate
+AVAILABLE CAPABILITIES:
+- File operations: Read, write, list files in the repository
+- Web search: Search the internet for current information when needed
+- Code generation: Create HTML, CSS, JavaScript
+- Version control: Git commit and push
 
-Examples of your vibe:
-- "yeah that should work... let me just, uh, get that committed for you"
-- "right on, pulling that info now"
-- "oh yeah i see the issue... happens sometimes man"
-- "so basically what you want is... yeah ok cool i got you"
+WHEN TO USE WEB SEARCH:
+- User asks about current events, news, or recent information
+- Need latest documentation, library versions, or API changes
+- Questions about "latest", "recent", "current", "now"
+- Technical questions requiring up-to-date resources
 
-Be chill, concise, and helpful. Remember conversations from agents.md. Don't overthink it.`;
+FILESYSTEM TOOLS:
+- list_files(path): List files in a directory
+- read_file(path): Read file contents
+- write_file(path, content): Create/update files
+- Use these when users ask about repository contents
+
+Personality:
+- Casual, chill, slightly unfocused but helpful
+- SHORT responses (1-2 sentences usually)
+- "yeah man", "right on", "far out"
+- Call people "man", "dude", "brother"
+
+Be concise and helpful. Remember conversations from agents.md.`;
 
 const botResponses = {
     confirmations: [
@@ -223,7 +227,68 @@ function buildMessagesFromHistory(maxMessages = 50) {
     return messages;
 }
 
-// LLM-powered chat function with conversation history support
+// Filesystem tools for the AI
+async function listFiles(dirPath = './games') {
+    try {
+        const files = await fs.readdir(dirPath);
+        return files.join(', ');
+    } catch (error) {
+        return `Error listing files: ${error.message}`;
+    }
+}
+
+async function readFile(filePath) {
+    try {
+        const content = await fs.readFile(filePath, 'utf8');
+        return content.substring(0, 5000); // Limit to 5000 chars
+    } catch (error) {
+        return `Error reading file: ${error.message}`;
+    }
+}
+
+async function writeFile(filePath, content) {
+    try {
+        await fs.writeFile(filePath, content, 'utf8');
+        return `File written successfully: ${filePath}`;
+    } catch (error) {
+        return `Error writing file: ${error.message}`;
+    }
+}
+
+// Web search via OpenRouter
+async function webSearch(query) {
+    try {
+        const response = await axios.post(OPENROUTER_URL, {
+            model: MODEL,
+            messages: [
+                {
+                    role: 'user',
+                    content: `Search the web for: ${query}\n\nProvide a concise summary of current, relevant information.`
+                }
+            ],
+            max_tokens: 2000,
+            temperature: 0.5,
+            // Enable web search if OpenRouter supports it
+            tools: [{
+                type: 'web_search',
+                enabled: true
+            }]
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 45000
+        });
+
+        return response.data.choices[0].message.content;
+    } catch (error) {
+        console.error('Web search error:', error.response?.data || error.message);
+        return 'Search unavailable right now, man.';
+    }
+}
+
+// Enhanced LLM response with tool calling
 async function getLLMResponse(userMessage, conversationMessages = []) {
     try {
         // Build the full messages array for the API
@@ -239,20 +304,113 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
             }
         ];
 
+        // Define available tools for the model
+        const tools = [
+            {
+                type: 'function',
+                function: {
+                    name: 'list_files',
+                    description: 'List files in a directory in the repository',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string', description: 'Directory path (default: ./games)' }
+                        }
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'read_file',
+                    description: 'Read contents of a file from the repository',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string', description: 'File path to read' }
+                        },
+                        required: ['path']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'web_search',
+                    description: 'Search the web for current information, news, documentation, or recent updates',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            query: { type: 'string', description: 'Search query' }
+                        },
+                        required: ['query']
+                    }
+                }
+            }
+        ];
+
         const response = await axios.post(OPENROUTER_URL, {
             model: MODEL,
             messages: messages,
-            max_tokens: 1024,
-            temperature: 0.7
+            max_tokens: 10000,
+            temperature: 0.7,
+            tools: tools,
+            tool_choice: 'auto'
         }, {
             headers: {
                 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            timeout: 30000
+            timeout: 45000
         });
 
-        return response.data.choices[0].message.content;
+        const assistantMessage = response.data.choices[0].message;
+
+        // Check if the model wants to use tools
+        if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+            const toolResults = [];
+
+            for (const toolCall of assistantMessage.tool_calls) {
+                const functionName = toolCall.function.name;
+                const args = JSON.parse(toolCall.function.arguments || '{}');
+
+                let result;
+                if (functionName === 'list_files') {
+                    result = await listFiles(args.path || './games');
+                } else if (functionName === 'read_file') {
+                    result = await readFile(args.path);
+                } else if (functionName === 'web_search') {
+                    result = await webSearch(args.query);
+                }
+
+                toolResults.push({
+                    role: 'tool',
+                    tool_call_id: toolCall.id,
+                    content: result
+                });
+            }
+
+            // Send tool results back to the model
+            messages.push(assistantMessage);
+            messages.push(...toolResults);
+
+            const finalResponse = await axios.post(OPENROUTER_URL, {
+                model: MODEL,
+                messages: messages,
+                max_tokens: 10000,
+                temperature: 0.7
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 45000
+            });
+
+            return finalResponse.data.choices[0].message.content;
+        }
+
+        return assistantMessage.content;
     } catch (error) {
         console.error('LLM Error:', error.response?.data || error.message);
         return getBotResponse('errors');
