@@ -449,7 +449,7 @@ td {
 }
 
 .hour-label {
-    font-size: 0.6em;
+    font-size: 0.7em;
     color: #7dd3a0;
     font-weight: bold;
     min-width: 80px;
@@ -478,7 +478,7 @@ td {
 
 .empty-slot {
     color: #5a9d7a;
-    font-size: 0.6em;
+    font-size: 0.7em;
     font-style: italic;
     opacity: 0.6;
 }
@@ -506,7 +506,7 @@ td {
 }
 
 .day-label {
-    font-size: 0.6em;
+    font-size: 0.7em;
     color: #95c9ad;
     margin-bottom: 5px;
 }
@@ -577,7 +577,7 @@ td {
 }
 
 .form-group label {
-    font-size: 0.6em;
+    font-size: 0.7em;
     color: #7dd3a0;
     font-weight: bold;
 }
@@ -630,12 +630,12 @@ td {
 
 .slider-header label,
 .slider-label {
-    font-size: 0.6em;
+    font-size: 0.7em;
     color: #7dd3a0;
 }
 
 .slider-value {
-    font-size: 0.6em;
+    font-size: 0.7em;
     color: #7dd3a0;
     background: #252a32;
     padding: 5px 12px;
@@ -794,25 +794,25 @@ input[type="range"]::-moz-range-thumb:hover {
 /* Task content */
 .task-content, .todo-text, .task-text {
     flex: 1;
-    font-size: 0.6em;
+    font-size: 0.7em;
     color: #95c9ad;
 }
 
 .task-title {
-    font-size: 0.7em;
+    font-size: 0.8em;
     color: #7dd3a0;
     font-weight: bold;
     margin-bottom: 5px;
 }
 
 .task-description {
-    font-size: 0.6em;
+    font-size: 0.7em;
     color: #95c9ad;
     line-height: 1.6;
 }
 
 .task-duration {
-    font-size: 0.5em;
+    font-size: 0.6em;
     color: #7dd3a0;
     background: rgba(90, 157, 122, 0.2);
     padding: 4px 8px;
@@ -842,7 +842,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 /* Quantity and value displays */
 .quantity, .value {
-    font-size: 0.6em;
+    font-size: 0.7em;
     color: #7dd3a0;
     font-weight: bold;
     min-width: 60px;
@@ -879,7 +879,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .step-content {
     flex: 1;
-    font-size: 0.6em;
+    font-size: 0.85em;
     color: #95c9ad;
     line-height: 1.6;
 }
