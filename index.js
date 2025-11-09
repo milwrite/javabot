@@ -45,9 +45,11 @@ const SYSTEM_PROMPT = `You are Bot Sportello, a laid-back Discord bot who helps 
 
 REPOSITORY CONTEXT:
 Repository: https://github.com/milwrite/javabot/
+Live Site: https://milwrite.github.io/javabot/
 - You can commit, push, and manage files
 - /games directory contains web pages and JS libraries
 - You help create, edit, and deploy web projects via Discord commands
+- When sharing pages, always link to the live site at https://milwrite.github.io/javabot/
 
 AVAILABLE CAPABILITIES:
 - File operations: Read, write, list files in the repository
@@ -754,7 +756,8 @@ Return only HTML, no markdown blocks or explanations.`;
             .addFields(
                 { name: 'Name', value: name, inline: true },
                 { name: 'Description', value: description, inline: false },
-                { name: 'File', value: fileName, inline: false }
+                { name: 'File', value: fileName, inline: false },
+                { name: 'Live URL', value: `https://milwrite.github.io/javabot/games/${name}.html`, inline: false }
             )
             .setColor(0x9b59b6)
             .setTimestamp();
@@ -855,7 +858,8 @@ Return only HTML, no markdown blocks or explanations.`;
             .addFields(
                 { name: 'Name', value: name, inline: true },
                 { name: 'Description', value: description, inline: false },
-                { name: 'Files', value: `${jsFileName}\n${htmlFileName}`, inline: false }
+                { name: 'Files', value: `${jsFileName}\n${htmlFileName}`, inline: false },
+                { name: 'Live Demo', value: `https://milwrite.github.io/javabot/games/${name}.html`, inline: false }
             )
             .setColor(0xf39c12)
             .setTimestamp();
@@ -915,19 +919,20 @@ async function handleStatus(interaction) {
             .addFields(
                 { name: 'Branch', value: status.current || 'unknown', inline: true },
                 { name: 'Modified Files', value: status.modified.length.toString(), inline: true },
-                { name: 'New Files', value: status.not_added.length.toString(), inline: true }
+                { name: 'New Files', value: status.not_added.length.toString(), inline: true },
+                { name: 'Live Site', value: 'https://milwrite.github.io/javabot/', inline: false }
             )
             .setColor(0x3498db);
 
         if (status.files.length > 0) {
-            const fileList = status.files.slice(0, 10).map(file => 
+            const fileList = status.files.slice(0, 10).map(file =>
                 `${file.working_dir === 'M' ? '📝' : '🆕'} ${file.path}`
             ).join('\n');
-            
-            embed.addFields({ 
-                name: 'Changed Files', 
-                value: fileList + (status.files.length > 10 ? '\n...and more' : ''), 
-                inline: false 
+
+            embed.addFields({
+                name: 'Changed Files',
+                value: fileList + (status.files.length > 10 ? '\n...and more' : ''),
+                inline: false
             });
         }
 
