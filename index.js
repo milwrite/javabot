@@ -41,15 +41,17 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'anthropic/claude-3.5-haiku';
 
 // Bot system prompt
-const SYSTEM_PROMPT = `You are JavaBot, a laid-back Discord bot who helps people with their projects. You're helpful but a little spacey, like Doc Sportello - generally competent but sometimes distracted, speaking in a relaxed, slightly rambling way.
+const SYSTEM_PROMPT = `You are Bot Sportello, a laid-back Discord bot who helps people with their game projects. You're helpful but a little spacey, like Doc Sportello - generally competent but sometimes distracted, speaking in a relaxed, slightly rambling way.
 
 IMPORTANT REPOSITORY CONTEXT:
 You manage a JavaScript game development repository at https://github.com/milwrite/javabot/
 - Owner: milwrite
 - Repository: javabot
 - You can commit, push, and manage files in this repository
-- The /games directory contains JavaScript game projects
+- The /games directory contains Phaser 3 JavaScript game projects
 - You help users create, edit, and deploy games through Discord commands
+- Games are built using Phaser 3 framework (loaded via CDN)
+- You generate complete, playable games using AI, not templates
 - Always push commits to the remote repository automatically after committing
 
 Personality and communication style:
@@ -500,71 +502,61 @@ async function handleCommit(interaction) {
 async function handleCreateGame(interaction) {
     const name = interaction.options.getString('name');
     const description = interaction.options.getString('description');
-    
+
     await interaction.editReply(getBotResponse('thinking'));
 
-    const gameContent = `// ${name} - ${description}
-// Created via JavaBot with coffee-fueled efficiency
-
-class ${name.charAt(0).toUpperCase() + name.slice(1)}Game {
-    constructor() {
-        this.canvas = document.getElementById('gameCanvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.canvas.width = 800;
-        this.canvas.height = 600;
-        
-        this.gameState = 'playing';
-        this.score = 0;
-        
-        this.init();
-    }
-    
-    init() {
-        this.bindEvents();
-        this.gameLoop();
-    }
-    
-    bindEvents() {
-        document.addEventListener('keydown', (e) => this.handleInput(e));
-    }
-    
-    handleInput(event) {
-        // Handle player input here
-        console.log('Key pressed:', event.key);
-    }
-    
-    update() {
-        if (this.gameState !== 'playing') return;
-        
-        // Update game logic here
-    }
-    
-    render() {
-        // Clear canvas
-        this.ctx.fillStyle = '#1a1a1a';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        // Draw game elements here
-        this.ctx.fillStyle = '#00AE86';
-        this.ctx.font = '24px Arial';
-        this.ctx.fillText('${name}', 50, 50);
-        this.ctx.fillText(\`Score: \${this.score}\`, 50, 80);
-    }
-    
-    gameLoop() {
-        this.update();
-        this.render();
-        requestAnimationFrame(() => this.gameLoop());
-    }
-}
-
-// Initialize game when page loads
-window.addEventListener('load', () => {
-    new ${name.charAt(0).toUpperCase() + name.slice(1)}Game();
-});`;
-    const fileName = `games/${name}.js`;
-    
     try {
+        // Read example game for reference
+        const exampleCode = await fs.readFile('./games/example.js', 'utf8');
+
+        // Use AI to generate the game code using Phaser
+        const gamePrompt = `Create a complete, working Phaser 3 game called "${name}".
+Description: ${description}
+
+Requirements:
+- Use Phaser 3 framework (it will be loaded via CDN in the HTML)
+- Create a fully playable game with actual game logic (not just a template)
+- Include proper Phaser config, scenes (preload, create, update)
+- Make it fun and functional based on the description
+- Add score tracking if relevant
+- Include player controls (keyboard or mouse as appropriate)
+- Use Phaser's built-in physics, sprites, and game objects
+- Keep it simple but playable - basic shapes/graphics are fine
+- Return ONLY the JavaScript code, no explanations or markdown
+
+Here's a reference example of a working Phaser 3 game structure to follow:
+
+\`\`\`javascript
+${exampleCode}
+\`\`\`
+
+Follow this pattern but create a different game based on the description above.`;
+
+        const response = await axios.post(OPENROUTER_URL, {
+            model: MODEL,
+            messages: [
+                {
+                    role: 'user',
+                    content: gamePrompt
+                }
+            ],
+            max_tokens: 4000,
+            temperature: 0.7
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 60000
+        });
+
+        let gameContent = response.data.choices[0].message.content;
+
+        // Clean up markdown code blocks if present
+        gameContent = gameContent.replace(/```javascript\n?/g, '').replace(/```\n?/g, '').trim();
+
+        const fileName = `games/${name}.js`;
+
         // Create games directory if it doesn't exist
         await fs.mkdir(path.dirname(fileName), { recursive: true });
         
@@ -589,16 +581,13 @@ window.addEventListener('load', () => {
             flex-direction: column;
             align-items: center;
         }
-        canvas {
-            border: 2px solid #00AE86;
-            background: #2c3e50;
-        }
     </style>
 </head>
 <body>
     <h1>${name}</h1>
     <p>${description}</p>
-    <canvas id="gameCanvas"></canvas>
+    <div id="game"></div>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
     <script src="${name}.js"></script>
 </body>
 </html>`;
