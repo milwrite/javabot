@@ -322,35 +322,77 @@ function addToHistory(username, message, isBot = false) {
     }, CONFIG.AGENTS_UPDATE_DELAY);
 }
 
+async function summarizeConversation(messages) {
+    try {
+        // Build conversation text
+        const conversationText = messages.map(m => {
+            const speaker = m.isBot ? 'Bot Sportello' : m.username;
+            return `${speaker}: ${m.message}`;
+        }).join('\n');
+
+        const summaryPrompt = `Summarize this Discord conversation into concise bullet points. Focus on:
+- Projects created or discussed
+- User requests and preferences
+- Technical questions asked
+- Important context for future conversations
+
+Conversation:
+${conversationText}
+
+Return 3-5 bullet points maximum.`;
+
+        const response = await axios.post(OPENROUTER_URL, {
+            model: MODEL,
+            messages: [{ role: 'user', content: summaryPrompt }],
+            max_tokens: 500,
+            temperature: 0.3
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: CONFIG.API_TIMEOUT
+        });
+
+        return response.data.choices[0].message.content.trim();
+    } catch (error) {
+        console.error('Summarization failed:', error.message);
+        return null;
+    }
+}
+
 async function updateAgentsFile() {
     if (messageHistory.length === 0) return;
 
     try {
         let content = '# Bot Sportello Memory\n\n';
         content += `Last updated: ${new Date().toISOString()}\n\n`;
-        content += '## Recent Conversation History\n\n';
 
-        // Show last 50 messages for better context
-        const recentMessages = messageHistory.slice(-50);
+        // Keep last 15 messages verbatim for immediate context
+        const recentCount = 15;
+        const recentMessages = messageHistory.slice(-recentCount);
+        const olderMessages = messageHistory.slice(0, -recentCount);
+
+        // Summarize older messages if there are enough
+        if (olderMessages.length > 10) {
+            content += '## Conversation Summary\n\n';
+            const summary = await summarizeConversation(olderMessages);
+            if (summary) {
+                content += summary + '\n\n';
+            }
+        }
+
+        content += '## Recent Messages\n\n';
         recentMessages.forEach(entry => {
             const speaker = entry.isBot ? '**Bot Sportello**' : `**${entry.username}**`;
             const time = entry.timestamp.split('T')[1].split('.')[0];
             content += `${speaker} [${time}]: ${entry.message}\n\n`;
         });
 
-        content += '## Context & Memory\n\n';
-        content += '### Active Users\n';
+        content += '## Active Context\n\n';
         const users = [...new Set(messageHistory.filter(e => !e.isBot).map(e => e.username))];
-        users.forEach(user => {
-            const userMessages = messageHistory.filter(e => e.username === user && !e.isBot);
-            content += `- ${user} (${userMessages.length} messages)\n`;
-        });
-
-        content += '\n### Key Topics\n';
-        content += '- Track game requests and preferences\n';
-        content += '- Remember ongoing projects\n';
-        content += '- Note user coding styles and interests\n';
-        content += '- Keep context of what games were created\n\n';
+        content += `**Users**: ${users.join(', ')}\n`;
+        content += `**Total messages tracked**: ${messageHistory.length}\n`;
 
         await fs.writeFile(AGENTS_FILE, content, 'utf8');
     } catch (error) {

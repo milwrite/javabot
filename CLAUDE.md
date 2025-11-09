@@ -36,7 +36,7 @@ The entire bot is contained in `index.js` (~2536 lines) with these key sections 
 4. Discord client setup with specific intents
 5. GitHub integration (Octokit + simple-git)
 6. Bot personality system (`botResponses`, `SYSTEM_PROMPT`)
-7. Message history tracking (`agents.md`)
+7. Message history tracking with AI summarization (`agents.md`)
 8. Filesystem tools (list/read/write files)
 9. Web search functionality
 10. Enhanced LLM with function calling (tool use)
@@ -66,7 +66,7 @@ The entire bot is contained in `index.js` (~2536 lines) with these key sections 
 - Available: Claude Haiku/Sonnet 4.5, Kimi K2, GPT-5 Nano, Gemini 2.5
 - Function calling support (filesystem tools, web search)
 - 10,000 token output limit for detailed responses
-- Conversation history from `agents.md` (100 messages max)
+- Conversation history from `agents.md` (100 messages max, AI-summarized for efficiency)
 
 **Arcade Frontend Styling**:
 - **Main arcade page**: `index.html` + `style.css` (homepage styling)
@@ -228,12 +228,15 @@ errorTracker.set(`${userId}-${commandName}`, {
 
 ### Message History System
 
-**`agents.md` File**:
-- Stores last 100 messages from tracked channels
-- Format: timestamp, username, message, isBot flag
+**`agents.md` File with AI Summarization**:
+- Stores last 100 messages from tracked channels (in-memory)
+- **Recent messages (last 15)**: Shown verbatim with timestamps for immediate context
+- **Older messages**: Automatically summarized by AI into concise bullet points
+- Format: AI-generated summary + recent verbatim messages + active user list
 - Updated via `addToHistory()` and `updateAgentsFile()`
-- Provides context for `/chat` command
-- Shows last 50 messages in file, uses last 50 for AI context
+- Summarization happens via `summarizeConversation()` using current AI model
+- Provides efficient context for `/chat` command without excessive token usage
+- Focuses on: projects created, user preferences, technical questions, important context
 
 **Multi-Channel Monitoring**:
 - Parses `CHANNEL_ID` as comma-separated list
