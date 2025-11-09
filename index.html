@@ -35,77 +35,21 @@
     </div>
 
     <script>
-        // Map of known projects with metadata
-        const projectMetadata = {
-            'example': {
-                icon: '🎯',
-                description: 'Example game showing basic structure'
-            },
-            'frogger': {
-                icon: '🐸',
-                description: 'Classic frogger game'
-            },
-            'sudoku': {
-                icon: '🔢',
-                description: 'Sudoku puzzle game'
-            },
-            'cen-todo-list': {
-                icon: '✅',
-                description: 'A beautiful todo list app'
-            },
-            'cen-sunday-todo': {
-                icon: '✅',
-                description: 'Cen Sunday Todo'
-            },
-            'planner': {
-                icon: '📋',
-                description: 'Planner'
-            },
-            'snaker': {
-                icon: '🐍',
-                description: 'Snaker'
-            },
-            'weekend planner': {
-                icon: '📋',
-                description: 'Weekend planner'
-            },
-            'radish_love': {
-                icon: '🌐',
-                description: 'A love poem for Cen about radishes - celebrating the crisp, peppery beauty of radishes with romantic flair'
-            },
-            'alex_dog_mess': {
-                icon: '🌐',
-                description: 'A webpage visualization telling Alex to clean up his dog's mess with animated text and visual effects'
-            }
-        };
+        let projectMetadata = {};
 
         async function loadProjects() {
             const grid = document.getElementById('projectsGrid');
 
-            // Try to fetch the src directory listing
             try {
-                const response = await fetch('./src/');
-                const text = await response.text();
+                // Fetch the project metadata JSON file
+                const response = await fetch('./projectmetadata.json');
+                projectMetadata = await response.json();
 
-                // Parse HTML directory listing for .html files
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(text, 'text/html');
-                const links = doc.querySelectorAll('a');
-
-                const projects = [];
-                links.forEach(link => {
-                    const href = link.getAttribute('href');
-                    if (href && href.endsWith('.html')) {
-                        const name = href.replace('.html', '');
-                        projects.push(name);
-                    }
-                });
-
-                displayProjects(projects);
-            } catch (error) {
-                // Fallback to known projects if directory listing fails
-                console.log('Using fallback project list');
+                // Display all projects from metadata
                 displayProjects(Object.keys(projectMetadata));
+            } catch (error) {
+                console.error('Failed to load project metadata:', error);
+                grid.innerHTML = '<p style="color: #ff6b6b; text-align: center;">Failed to load projects. Please refresh.</p>';
             }
         }
 

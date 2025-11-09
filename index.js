@@ -422,78 +422,48 @@ function getIconForDescription(description) {
     return '🌐'; // Default
 }
 
-// Helper function to update index.html with new page
+// Helper function to update projectmetadata.json with new page
 async function updateIndexWithPage(pageName, description) {
     try {
-        const indexPath = './index.html';
-        let indexContent = await fs.readFile(indexPath, 'utf-8');
-
+        const metadataPath = './projectmetadata.json';
         const icon = getIconForDescription(description);
 
+        // Read existing metadata
+        let metadata = {};
+        try {
+            const content = await fs.readFile(metadataPath, 'utf-8');
+            metadata = JSON.parse(content);
+        } catch (error) {
+            // If file doesn't exist, start with empty object
+            console.log('Creating new projectmetadata.json file');
+        }
+
         // Check if page already exists
-        const pageCheckRegex = new RegExp(`'${pageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'\\s*:\\s*\\{`);
-        if (pageCheckRegex.test(indexContent)) {
-            console.log(`Page ${pageName} already exists in index.html`);
-            return `Page ${pageName} already in index.html`;
+        if (metadata[pageName]) {
+            console.log(`Page ${pageName} already exists in metadata`);
+            return `Page ${pageName} already in metadata`;
         }
 
-        // Find the projectMetadata closing brace
-        const metadataStart = indexContent.indexOf('const projectMetadata = {');
-        if (metadataStart === -1) {
-            throw new Error('Could not find projectMetadata in index.html');
-        }
+        // Add new page
+        metadata[pageName] = {
+            icon: icon,
+            description: description
+        };
 
-        // Find closing brace
-        let braceCount = 0;
-        let closingBracePos = -1;
-        for (let i = metadataStart; i < indexContent.length; i++) {
-            if (indexContent[i] === '{') braceCount++;
-            if (indexContent[i] === '}') {
-                braceCount--;
-                if (braceCount === 0) {
-                    closingBracePos = i;
-                    break;
-                }
-            }
-        }
-
-        if (closingBracePos === -1) {
-            throw new Error('Could not find closing brace of projectMetadata');
-        }
-
-        // Check if we need a comma - look at the last non-whitespace character before closing brace
-        const beforeClosing = indexContent.substring(0, closingBracePos).trimEnd();
-        const needsComma = !beforeClosing.endsWith('{');
-
-        // Build new entry with comma at the END of the previous entry, not on a new line
-        let newEntry;
-        if (needsComma) {
-            // Add comma to end of previous entry, then add new entry
-            const lastBrace = beforeClosing.lastIndexOf('}');
-            if (lastBrace !== -1) {
-                indexContent = indexContent.substring(0, lastBrace + 1) + ',' + indexContent.substring(lastBrace + 1);
-                closingBracePos++; // Adjust position after comma insertion
-            }
-        }
-
-        newEntry = `\n            '${pageName}': {\n                icon: '${icon}',\n                description: '${description}'\n            }`;
-
-        // Insert before the closing brace
-        indexContent = indexContent.substring(0, closingBracePos) + newEntry + '\n        ' + indexContent.substring(closingBracePos);
-
-        await fs.writeFile(indexPath, indexContent);
-        console.log(`✅ Updated index.html with ${pageName}`);
-        return `Updated index.html with ${pageName}`;
+        // Write updated metadata
+        await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+        console.log(`✅ Updated projectmetadata.json with ${pageName}`);
+        return `Updated projectmetadata.json with ${pageName}`;
     } catch (error) {
-        console.error(`Error updating index.html:`, error.message);
-        return `Error updating index.html: ${error.message}`;
+        console.error(`Error updating projectmetadata.json:`, error.message);
+        return `Error updating projectmetadata.json: ${error.message}`;
     }
 }
 
-// Sync all HTML files in /src to index.html
+// Sync all HTML files in /src to projectmetadata.json
 async function syncIndexWithSrcFiles() {
     try {
-        console.log('🔄 Syncing index.html with /src directory...');
+        console.log('🔄 Syncing projectmetadata.json with /src directory...');
 
         // Read all HTML files in src directory
         const srcFiles = await fs.readdir('./src');
@@ -501,71 +471,17 @@ async function syncIndexWithSrcFiles() {
 
         console.log(`Found ${htmlFiles.length} HTML files in /src`);
 
-        // Read current index.html
-        const indexPath = './index.html';
-        let indexContent = await fs.readFile(indexPath, 'utf-8');
-
-        // Extract existing projectMetadata - need to handle nested braces
-        const metadataStart = indexContent.indexOf('const projectMetadata = {');
-        if (metadataStart === -1) {
-            console.error('Could not find projectMetadata in index.html');
-            return;
+        // Read current metadata
+        const metadataPath = './projectmetadata.json';
+        let metadata = {};
+        try {
+            const content = await fs.readFile(metadataPath, 'utf-8');
+            metadata = JSON.parse(content);
+        } catch (error) {
+            console.log('No existing metadata file, creating new one');
         }
 
-        // Find the closing brace by counting braces
-        let braceCount = 0;
-        let metadataEnd = -1;
-        let inString = false;
-        let stringChar = null;
-
-        for (let i = metadataStart; i < indexContent.length; i++) {
-            const char = indexContent[i];
-
-            // Track string state
-            if ((char === '"' || char === "'") && indexContent[i-1] !== '\\') {
-                if (!inString) {
-                    inString = true;
-                    stringChar = char;
-                } else if (char === stringChar) {
-                    inString = false;
-                    stringChar = null;
-                }
-            }
-
-            // Count braces only outside strings
-            if (!inString) {
-                if (char === '{') braceCount++;
-                if (char === '}') {
-                    braceCount--;
-                    if (braceCount === 0) {
-                        metadataEnd = i + 1;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (metadataEnd === -1) {
-            console.error('Could not find end of projectMetadata');
-            return;
-        }
-
-        const metadataSection = indexContent.substring(metadataStart, metadataEnd);
-        const metadataMatch = [null, metadataSection];
-
-        if (!metadataMatch) {
-            console.error('Could not parse projectMetadata');
-            return;
-        }
-
-        const existingMetadata = metadataMatch[1];
-        const existingPages = new Set();
-
-        // Parse existing pages
-        const pageMatches = existingMetadata.matchAll(/'([^']+)':/g);
-        for (const match of pageMatches) {
-            existingPages.add(match[1]);
-        }
+        const existingPages = new Set(Object.keys(metadata));
 
         // Find missing pages
         const missingPages = [];
@@ -577,7 +493,7 @@ async function syncIndexWithSrcFiles() {
         }
 
         if (missingPages.length === 0) {
-            console.log('✅ All pages are already in index.html');
+            console.log('✅ All pages are already in projectmetadata.json');
             return;
         }
 
@@ -591,10 +507,10 @@ async function syncIndexWithSrcFiles() {
             await updateIndexWithPage(pageName, description);
         }
 
-        console.log('✅ Index sync complete!');
+        console.log('✅ Metadata sync complete!');
 
     } catch (error) {
-        console.error('Error syncing index.html:', error);
+        console.error('Error syncing projectmetadata.json:', error);
     }
 }
 
