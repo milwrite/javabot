@@ -1,7 +1,7 @@
 {
   "name": "javabot",
   "version": "1.0.0",
-  "description": "Discord bot with David Lynch personality that handles GitHub commits for game development",
+  "description": "Discord bot with Doc Sportello personality that generates Phaser 3 games and handles GitHub commits",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

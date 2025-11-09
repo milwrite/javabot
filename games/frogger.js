@@ -1,5 +1,5 @@
 // frogger - A JavaScript Game
-// Created via Discord bot with Lynch-like efficiency
+// Created via Bot Sportello
 
 class FroggerGame {
     constructor() {
