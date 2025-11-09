@@ -259,8 +259,13 @@ async function readFile(filePath) {
 
 async function writeFile(filePath, content) {
     try {
+        // Create directory if it doesn't exist
+        const dir = path.dirname(filePath);
+        await fs.mkdir(dir, { recursive: true });
+
+        // Write the file
         await fs.writeFile(filePath, content, 'utf8');
-        return `File written successfully: ${filePath}`;
+        return `File written successfully: ${filePath} (${content.length} bytes)`;
     } catch (error) {
         return `Error writing file: ${error.message}`;
     }
@@ -935,50 +940,63 @@ client.on('messageCreate', async message => {
 
     // Handle @ mentions with full AI capabilities
     if (message.mentions.has(client.user)) {
-        try {
-            const content = message.content.replace(/<@!?\d+>/g, '').trim();
-            const username = message.author.username;
-
-            console.log(`[MENTION] ${username}: ${content}`);
-
-            // Send thinking message
-            const thinkingMsg = await message.reply(getBotResponse('thinking'));
-
-            // Build conversation context
-            const conversationMessages = buildMessagesFromHistory(50);
-
-            // Get AI response with full tool calling capabilities
-            const response = await getLLMResponse(content, conversationMessages);
-
-            // Add to history
-            addToHistory(username, content, false);
-            addToHistory('Bot Sportello', response, true);
-
-            // Handle long responses
-            if (response.length > 2000) {
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const fileName = `responses/mention-${timestamp}.txt`;
-
-                await fs.mkdir('responses', { recursive: true });
-                const fileContent = `User: ${username}\nMessage: ${content}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${response}`;
-                await fs.writeFile(fileName, fileContent);
-
-                const truncated = response.substring(0, 1800);
-                await thinkingMsg.edit(`${truncated}...\n\n*[Full response saved to \`${fileName}\`]*`);
-            } else {
-                await thinkingMsg.edit(response);
-            }
-
-        } catch (error) {
-            console.error('Mention handler error:', error);
-            try {
-                await message.reply(getBotResponse('errors'));
-            } catch (replyError) {
-                console.error('Failed to reply to mention:', replyError);
-            }
-        }
+        // Don't block - handle async
+        handleMentionAsync(message).catch(error => {
+            console.error('Async mention handler error:', error);
+        });
     }
 });
+
+// Async mention handler to prevent blocking
+async function handleMentionAsync(message) {
+    try {
+        const content = message.content.replace(/<@!?\d+>/g, '').trim();
+        const username = message.author.username;
+
+        console.log(`[MENTION] ${username}: ${content}`);
+
+        // Send thinking message
+        let thinkingMsg = await message.reply(getBotResponse('thinking'));
+
+        // Build conversation context
+        const conversationMessages = buildMessagesFromHistory(50);
+
+        // Get AI response with full tool calling capabilities
+        const response = await getLLMResponse(content, conversationMessages);
+
+        // Add to history
+        addToHistory(username, content, false);
+        addToHistory('Bot Sportello', response, true);
+
+        // Handle long responses
+        if (response.length > 2000) {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `responses/mention-${timestamp}.txt`;
+
+            await fs.mkdir('responses', { recursive: true });
+            const fileContent = `User: ${username}\nMessage: ${content}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${response}`;
+            await fs.writeFile(fileName, fileContent);
+
+            const truncated = response.substring(0, 1800);
+            await thinkingMsg.edit(`${truncated}...\n\n*[Full response saved to \`${fileName}\`]*`);
+        } else {
+            await thinkingMsg.edit(response);
+        }
+
+    } catch (error) {
+        console.error('Mention handler error:', error);
+        const errorDetails = error.response?.data || error.message || 'Unknown error';
+        console.error('Error details:', errorDetails);
+
+        try {
+            // Try to send error message
+            const errorMsg = `${getBotResponse('errors')}\n\n*Error: ${error.message?.substring(0, 100)}*`;
+            await message.reply(errorMsg);
+        } catch (replyError) {
+            console.error('Failed to send error reply:', replyError);
+        }
+    }
+}
 
 async function handleCommit(interaction) {
     const message = interaction.options.getString('message');
