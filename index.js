@@ -152,8 +152,9 @@ WHEN TO USE WEB SEARCH:
 FILESYSTEM TOOLS:
 - list_files(path): List files in a directory
 - read_file(path): Read file contents
-- write_file(path, content): Create/update files
-- Use these when users ask about repository contents
+- write_file(path, content): Create/update files completely
+- edit_file(path, instructions): Edit existing files with natural language instructions
+- Use these when users ask about repository contents or want to modify files
 
 Personality:
 - Casual, chill, slightly unfocused but helpful
@@ -400,6 +401,54 @@ async function writeFile(filePath, content) {
         return `File written successfully: ${filePath} (${content.length} bytes)`;
     } catch (error) {
         return `Error writing file: ${error.message}`;
+    }
+}
+
+async function editFile(filePath, instructions) {
+    console.log(`[EDIT_FILE] Starting edit for: ${filePath}`);
+    try {
+        // Read the current file content
+        const currentContent = await fs.readFile(filePath, 'utf-8');
+
+        // Use AI to make the edit based on instructions
+        const editPrompt = `You are editing a file: ${filePath}
+
+Current file content:
+\`\`\`
+${currentContent}
+\`\`\`
+
+User instructions: ${instructions}
+
+Return ONLY the complete updated file content. No explanations, no markdown code blocks, just the raw file content.`;
+
+        const response = await axios.post(OPENROUTER_URL, {
+            model: MODEL,
+            messages: [{ role: 'user', content: editPrompt }],
+            max_tokens: CONFIG.AI_MAX_TOKENS,
+            temperature: CONFIG.AI_TEMPERATURE
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: CONFIG.API_TIMEOUT
+        });
+
+        let updatedContent = response.data.choices[0].message.content;
+
+        // Clean markdown code blocks if present
+        const extension = path.extname(filePath).substring(1);
+        updatedContent = cleanMarkdownCodeBlocks(updatedContent, extension);
+
+        // Write the updated content
+        await fs.writeFile(filePath, updatedContent, 'utf8');
+
+        console.log(`[EDIT_FILE] Success: ${filePath}`);
+        return `File edited successfully: ${filePath}. Changes applied: ${instructions}`;
+    } catch (error) {
+        console.error(`[EDIT_FILE] Error:`, error.message);
+        return `Error editing file: ${error.message}`;
     }
 }
 
@@ -789,6 +838,21 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
             {
                 type: 'function',
                 function: {
+                    name: 'edit_file',
+                    description: 'Edit an existing file based on natural language instructions. Use this when you need to modify part of a file rather than rewriting it completely. The AI will read the file, apply your changes intelligently, and save it. Perfect for: changing colors, fixing bugs, adding features, updating text, modifying functions.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string', description: 'File path to edit (e.g., "src/example.html", "index.html", "style.css")' },
+                            instructions: { type: 'string', description: 'Natural language instructions for what to change (e.g., "change the background color to blue", "add a new function called calculateTotal that adds two numbers", "fix the syntax error", "make the buttons bigger")' }
+                        },
+                        required: ['path', 'instructions']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
                     name: 'create_page',
                     description: 'Create a new HTML page/app in /src directory with AI-generated code. Automatically updates index.html.',
                     parameters: {
@@ -890,6 +954,8 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                     result = await readFile(args.path);
                 } else if (functionName === 'write_file') {
                     result = await writeFile(args.path, args.content);
+                } else if (functionName === 'edit_file') {
+                    result = await editFile(args.path, args.instructions);
                 } else if (functionName === 'create_page') {
                     result = await createPage(args.name, args.description);
                 } else if (functionName === 'create_feature') {

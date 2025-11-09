@@ -24,6 +24,8 @@ npm run dev
 npm start
 ```
 
+**No testing, linting, or build commands** - This project uses direct Node.js execution without build steps or formal testing frameworks.
+
 ## Architecture Overview
 
 ### Single-File Architecture
@@ -98,7 +100,8 @@ The bot uses OpenRouter's function calling to give the AI autonomous access to:
 **Filesystem Tools**:
 - `list_files(path)` - List files in repository directories
 - `read_file(path)` - Read file contents (5000 char limit)
-- `write_file(path, content)` - Create/update files
+- `write_file(path, content)` - Create/update files completely
+- `edit_file(path, instructions)` - Edit existing files using AI with natural language instructions (e.g., "change background to blue", "fix syntax error", "add new function")
 
 **Web Search**:
 - `web_search(query)` - Search internet for current information
@@ -169,7 +172,7 @@ All presets include complete CSS for all site elements (body, header, cards, but
 Required in `.env`:
 ```
 DISCORD_TOKEN          # Discord bot token
-DISCORD_CLIENT_ID      # Bot application ID
+DISCORD_CLIENT_ID      # Bot application ID (1436782482967101491)
 GITHUB_TOKEN           # GitHub PAT with repo permissions
 GITHUB_REPO_OWNER      # Repository owner (milwrite)
 GITHUB_REPO_NAME       # Repository name (javabot)
@@ -177,6 +180,11 @@ GITHUB_REPO_URL        # Full repository URL
 CHANNEL_ID             # Comma-separated Discord channel IDs
 OPENROUTER_API_KEY     # OpenRouter API key
 ```
+
+**Discord Bot Setup**:
+- Public Key: `5c35faa34f67859b7ae2ffe7f5923344e4fee369cc85238385d70b2887e81f3d`
+- Required permissions: Send Messages, Use Slash Commands, Embed Links
+- Required intents: Guilds, Guild Messages, Message Content, Guild Message Reactions
 
 ### Error Handling Pattern
 
@@ -403,3 +411,34 @@ When creating or updating any page, the bot MUST verify:
 - [ ] Consistent spacing and padding patterns
 
 The bot should reference `frogger.html` and `sudoku.html` as exemplary implementations of mobile responsiveness.
+
+## Key Configuration Constants
+
+**Performance Settings** (defined in `index.js`):
+```javascript
+const CONFIG = {
+    FILE_READ_LIMIT: 5000,           // Max chars for file reading
+    RESPONSE_LENGTH_LIMIT: 2000,     // Discord message limit
+    RESPONSE_TRUNCATE_LENGTH: 1800,  // Truncate before limit
+    AI_MAX_TOKENS: 10000,            // OpenRouter token limit
+    AI_TEMPERATURE: 0.7,             // AI creativity setting
+    GIT_TIMEOUT: 30000,              // Git operation timeout
+    PUSH_TIMEOUT: 60000,             // Git push timeout
+    API_TIMEOUT: 60000,              // API request timeout
+};
+```
+
+**Error Prevention**:
+- Error tracking prevents infinite loops (3 errors = 5min cooldown)
+- Automatic cleanup of error tracking entries every 5 minutes
+- All git operations wrapped with timeout protection
+- Graceful fallbacks for failed Discord interactions
+
+## Important Dependencies
+
+- **discord.js v14**: Discord bot framework
+- **@octokit/rest**: GitHub API integration
+- **simple-git**: Git operations
+- **axios + axios-retry**: HTTP requests with retry logic
+- **dotenv**: Environment variable management
+- **nodemon** (dev): Auto-restart during development
