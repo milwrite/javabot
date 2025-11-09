@@ -283,7 +283,19 @@ const commands = [
             option.setName('description')
                 .setDescription('What should this page do?')
                 .setRequired(true)),
-                
+
+    new SlashCommandBuilder()
+        .setName('add-function')
+        .setDescription('Create a JavaScript function library with demo page')
+        .addStringOption(option =>
+            option.setName('name')
+                .setDescription('Function library name')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('description')
+                .setDescription('What functions should this library provide?')
+                .setRequired(true)),
+
     new SlashCommandBuilder()
         .setName('status')
         .setDescription('Check repository status'),
@@ -346,6 +358,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'add-page':
                 await handleAddPage(interaction);
+                break;
+            case 'add-function':
+                await handleAddFunction(interaction);
                 break;
             case 'status':
                 await handleStatus(interaction);
@@ -579,6 +594,107 @@ Return only HTML, no markdown blocks or explanations.`;
 
     } catch (error) {
         throw new Error(`Page creation failed: ${error.message}`);
+    }
+}
+
+async function handleAddFunction(interaction) {
+    const name = interaction.options.getString('name');
+    const description = interaction.options.getString('description');
+
+    await interaction.editReply(getBotResponse('thinking'));
+
+    try {
+        // Use AI to generate JavaScript function library
+        const jsPrompt = `Create a JavaScript function library called "${name}".
+Functions needed: ${description}
+
+Output clean, well-documented JavaScript with:
+- Pure functions (no dependencies)
+- JSDoc comments for each function
+- Export functions as a module
+- Practical, reusable code
+
+Return only JavaScript, no markdown blocks or explanations.`;
+
+        const jsResponse = await axios.post(OPENROUTER_URL, {
+            model: MODEL,
+            messages: [{ role: 'user', content: jsPrompt }],
+            max_tokens: 10000,
+            temperature: 0.7
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 60000
+        });
+
+        let jsContent = jsResponse.data.choices[0].message.content;
+        jsContent = jsContent.replace(/```javascript\n?/g, '').replace(/```js\n?/g, '').replace(/```\n?/g, '').trim();
+
+        // Generate demo HTML page
+        const htmlPrompt = `Create a demo HTML page for "${name}" JavaScript library.
+Library functions: ${description}
+
+Output a single HTML file that:
+- Loads ${name}.js via <script src="${name}.js"></script>
+- Demonstrates each function with interactive examples
+- Modern, clean UI with embedded CSS
+- Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
+
+Return only HTML, no markdown blocks or explanations.`;
+
+        const htmlResponse = await axios.post(OPENROUTER_URL, {
+            model: MODEL,
+            messages: [{ role: 'user', content: htmlPrompt }],
+            max_tokens: 10000,
+            temperature: 0.7
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 60000
+        });
+
+        let htmlContent = htmlResponse.data.choices[0].message.content;
+        htmlContent = htmlContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+
+        // Ensure home link is present
+        if (!htmlContent.includes('index.html') && !htmlContent.includes('Home</a>')) {
+            const homeLink = `
+    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
+        <a href="../index.html" style="text-decoration: none; background: rgba(102, 126, 234, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-family: Arial, sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(102, 126, 234, 1)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.9)'">← Home</a>
+    </div>
+`;
+            htmlContent = htmlContent.replace(/<body([^>]*)>/, `<body$1>${homeLink}`);
+        }
+
+        // Create games directory if it doesn't exist
+        await fs.mkdir('games', { recursive: true });
+
+        // Write both files
+        const jsFileName = `games/${name}.js`;
+        const htmlFileName = `games/${name}.html`;
+
+        await fs.writeFile(jsFileName, jsContent);
+        await fs.writeFile(htmlFileName, htmlContent);
+
+        const embed = new EmbedBuilder()
+            .setTitle('⚡ Function Library Added')
+            .setDescription(getBotResponse('success'))
+            .addFields(
+                { name: 'Name', value: name, inline: true },
+                { name: 'Description', value: description, inline: false },
+                { name: 'Files', value: `${jsFileName}\n${htmlFileName}`, inline: false }
+            )
+            .setColor(0xf39c12)
+            .setTimestamp();
+
+        await interaction.editReply({ content: '', embeds: [embed] });
+
+    } catch (error) {
+        throw new Error(`Function library creation failed: ${error.message}`);
     }
 }
 
