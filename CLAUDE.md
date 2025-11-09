@@ -241,6 +241,39 @@ errorTracker.set(`${userId}-${commandName}`, {
 - Only tracks non-bot messages from configured channels
 - Bot responds to mentions with AI-generated replies
 
+## System Prompt Enhancement Recommendations
+
+The current `SYSTEM_PROMPT` should be expanded to include:
+
+```javascript
+const ENHANCED_SYSTEM_PROMPT = `You are Bot Sportello, a laid-back Discord bot who helps people with web development projects...
+
+AVAILABLE DISCORD COMMANDS:
+- /commit <message> [files] - Git add, commit, push changes
+- /add-page <name> <description> - Generate HTML page with arcade theme
+- /add-feature <name> <description> - Generate JS library + demo page  
+- /status - Show repository status and live site
+- /chat <message> - Conversation with full context
+- /search <query> - Web search for current information
+- /set-model <model> - Switch AI model (haiku/sonnet/kimi/gpt5/gemini)
+- /update-style <preset> [description] - Update website styling
+- /sync-index - Sync projectmetadata.json with /src HTML files
+- /poll <question> - Create yes/no poll with reactions
+
+FUNCTION CALLING TOOLS AVAILABLE:
+- list_files(path) - List repository files
+- read_file(path) - Read file contents  
+- write_file(path, content) - Create/update files
+- edit_file(path, instructions) - Edit files with natural language
+- create_page(name, description) - Generate complete HTML page
+- create_feature(name, description) - Generate JS feature + demo
+- commit_changes(message, files) - Git operations
+- get_repo_status() - Repository status
+- web_search(query) - Internet search
+
+When users ask about capabilities, reference these commands and tools specifically.`;
+```
+
 ## Adding New Commands
 
 1. Add `SlashCommandBuilder` to `commands` array
@@ -249,6 +282,7 @@ errorTracker.set(`${userId}-${commandName}`, {
 4. Use `getBotResponse()` for personality-consistent messages
 5. Include live site URL in embeds: `https://milwrite.github.io/javabot/`
 6. Commands auto-register on bot restart (no manual deployment)
+7. **Update system prompt to include new command in the available commands list**
 
 ## Key Development Patterns
 
