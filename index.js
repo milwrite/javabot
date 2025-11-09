@@ -273,15 +273,15 @@ const commands = [
                 .setRequired(false)),
                 
     new SlashCommandBuilder()
-        .setName('create-game')
-        .setDescription('Create a new JavaScript game file')
+        .setName('add-page')
+        .setDescription('Create a new web page/app')
         .addStringOption(option =>
             option.setName('name')
-                .setDescription('Game name')
+                .setDescription('Page name (will be the filename)')
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('description')
-                .setDescription('Brief description of what the game does')
+                .setDescription('What should this page do?')
                 .setRequired(true)),
                 
     new SlashCommandBuilder()
@@ -344,8 +344,8 @@ client.on('interactionCreate', async interaction => {
             case 'commit':
                 await handleCommit(interaction);
                 break;
-            case 'create-game':
-                await handleCreateGame(interaction);
+            case 'add-page':
+                await handleAddPage(interaction);
                 break;
             case 'status':
                 await handleStatus(interaction);
@@ -503,48 +503,37 @@ async function handleCommit(interaction) {
     }
 }
 
-async function handleCreateGame(interaction) {
+async function handleAddPage(interaction) {
     const name = interaction.options.getString('name');
     const description = interaction.options.getString('description');
 
     await interaction.editReply(getBotResponse('thinking'));
 
     try {
-        // Read example game for reference
-        const exampleCode = await fs.readFile('./games/example.js', 'utf8');
-
-        // Use AI to generate the game code using Phaser
-        const gamePrompt = `Create a complete, working Phaser 3 game called "${name}".
+        // Use AI to generate pure web development project
+        const webPrompt = `Create a complete, functional web page/app called "${name}".
 Description: ${description}
 
 Requirements:
-- Use Phaser 3 framework (it will be loaded via CDN in the HTML)
-- Create a fully playable game with actual game logic (not just a template)
-- Include proper Phaser config, scenes (preload, create, update)
-- Make it fun and functional based on the description
-- Add score tracking if relevant
-- Include player controls (keyboard or mouse as appropriate)
-- Use Phaser's built-in physics, sprites, and game objects
-- Keep it simple but playable - basic shapes/graphics are fine
-- Return ONLY the JavaScript code, no explanations or markdown
+- Create a self-contained HTML file with embedded CSS and JavaScript
+- Make it fully functional and interactive based on the description
+- Use vanilla JavaScript (no frameworks required, but you can use CDN libraries if helpful)
+- Include proper styling to make it look good
+- Add interactivity and dynamic behavior
+- Make it creative and fun to use
+- Return ONLY the complete HTML code, no explanations or markdown
 
-Here's a reference example of a working Phaser 3 game structure to follow:
-
-\`\`\`javascript
-${exampleCode}
-\`\`\`
-
-Follow this pattern but create a different game based on the description above.`;
+Be creative and build something unique based on the description!`;
 
         const response = await axios.post(OPENROUTER_URL, {
             model: MODEL,
             messages: [
                 {
                     role: 'user',
-                    content: gamePrompt
+                    content: webPrompt
                 }
             ],
-            max_tokens: 4000,
+            max_tokens: 10000,
             temperature: 0.7
         }, {
             headers: {
@@ -554,57 +543,26 @@ Follow this pattern but create a different game based on the description above.`
             timeout: 60000
         });
 
-        let gameContent = response.data.choices[0].message.content;
+        let htmlContent = response.data.choices[0].message.content;
 
         // Clean up markdown code blocks if present
-        gameContent = gameContent.replace(/```javascript\n?/g, '').replace(/```\n?/g, '').trim();
+        htmlContent = htmlContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
 
-        const fileName = `games/${name}.js`;
+        const fileName = `games/${name}.html`;
 
         // Create games directory if it doesn't exist
-        await fs.mkdir(path.dirname(fileName), { recursive: true });
-        
-        // Write the game file
-        await fs.writeFile(fileName, gameContent);
-        
-        // Also create an HTML file
-        const htmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${name} - ${description}</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            background: #1a1a1a;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-    </style>
-</head>
-<body>
-    <h1>${name}</h1>
-    <p>${description}</p>
-    <div id="game"></div>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
-    <script src="${name}.js"></script>
-</body>
-</html>`;
-        
-        await fs.writeFile(`games/${name}.html`, htmlContent);
+        await fs.mkdir('games', { recursive: true });
+
+        // Write the HTML file
+        await fs.writeFile(fileName, htmlContent);
 
         const embed = new EmbedBuilder()
-            .setTitle('🎮 Game Created')
+            .setTitle('🌐 Page Added')
             .setDescription(getBotResponse('success'))
             .addFields(
-                { name: 'Game Name', value: name, inline: true },
+                { name: 'Name', value: name, inline: true },
                 { name: 'Description', value: description, inline: false },
-                { name: 'Files', value: `${fileName}\ngames/${name}.html`, inline: false }
+                { name: 'File', value: fileName, inline: false }
             )
             .setColor(0x9b59b6)
             .setTimestamp();
@@ -612,7 +570,7 @@ Follow this pattern but create a different game based on the description above.`
         await interaction.editReply({ content: '', embeds: [embed] });
 
     } catch (error) {
-        throw new Error(`Game creation failed: ${error.message}`);
+        throw new Error(`Page creation failed: ${error.message}`);
     }
 }
 
