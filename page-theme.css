@@ -64,7 +64,7 @@ body::after {
     border-radius: 25px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     font-family: 'Press Start 2P', cursive;
-    font-size: 0.6em;
+    font-size: 0.7em;
     border: 2px solid #7dd3a0;
     transition: all 0.3s ease;
 }
@@ -81,6 +81,46 @@ body::after {
     margin: 0 auto;
     position: relative;
     z-index: 1;
+}
+
+/* Content wrapper for main page content */
+.content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Input section container */
+.input-section {
+    background: rgba(90, 157, 122, 0.1);
+    border: 2px solid #5a9d7a;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* Todos section container */
+.todos-section {
+    margin: 20px 0;
+}
+
+/* Filter section for filter buttons */
+.filter-section {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Footer section */
+.footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px;
+    border-top: 2px solid #5a9d7a;
+    font-size: 0.7em;
+    color: #95c9ad;
 }
 
 /* Headers */
@@ -110,7 +150,7 @@ h3 {
 p {
     color: #95c9ad;
     line-height: 1.8;
-    font-size: 0.6em;
+    font-size: 0.7em;
 }
 
 /* Links */
@@ -131,7 +171,7 @@ button, .btn {
     border: 2px solid #5a9d7a;
     padding: 12px 24px;
     cursor: pointer;
-    font-size: 0.6em;
+    font-size: 0.7em;
     font-family: 'Press Start 2P', cursive;
     transition: all 0.3s ease;
     border-radius: 4px;
@@ -155,7 +195,7 @@ input, textarea, select {
     color: #7dd3a0;
     border: 2px solid #5a9d7a;
     padding: 12px;
-    font-size: 0.6em;
+    font-size: 0.7em;
     font-family: 'Press Start 2P', cursive;
     border-radius: 4px;
     transition: all 0.3s ease;
@@ -338,7 +378,7 @@ td {
 }
 
 .stat-label, .label {
-    font-size: 0.5em;
+    font-size: 0.6em;
     color: #95c9ad;
     text-transform: uppercase;
 }
@@ -766,7 +806,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .task-description {
-    font-size: 0.5em;
+    font-size: 0.6em;
     color: #95c9ad;
     line-height: 1.6;
 }
@@ -833,7 +873,7 @@ input[type="range"]::-moz-range-thumb:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.5em;
+    font-size: 0.6em;
     flex-shrink: 0;
 }
 
@@ -981,6 +1021,56 @@ input[type="range"]::-moz-range-thumb:hover {
 .clear-all-btn:hover, .btn-print:hover {
     background: #42a5f5;
     border-color: #42a5f5;
+}
+
+/* Add button variant */
+.btn-add {
+    background: #4caf50;
+    color: white;
+    border-color: #4caf50;
+}
+
+.btn-add:hover {
+    background: #66bb6a;
+    border-color: #66bb6a;
+}
+
+/* Clear completed button */
+.btn-clear-completed {
+    background: #ff9800;
+    color: #1a1d23;
+    border-color: #ff9800;
+    padding: 12px 24px;
+    font-size: 0.7em;
+}
+
+.btn-clear-completed:hover {
+    background: #ffa726;
+    border-color: #ffa726;
+}
+
+/* Filter button */
+.filter-btn {
+    background: #252a32;
+    color: #7dd3a0;
+    border: 2px solid #5a9d7a;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 0.7em;
+    font-family: 'Press Start 2P', cursive;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+.filter-btn:hover {
+    border-color: #7dd3a0;
+    transform: translateY(-2px);
+}
+
+.filter-btn.active {
+    background: #5a9d7a;
+    color: #1a1d23;
+    border-color: #7dd3a0;
 }
 
 /* Action buttons (inline/small) */
@@ -1593,6 +1683,103 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 /* ========================================
+   POETRY & CREATIVE CONTENT
+   ======================================== */
+
+/* Poem container */
+.poem {
+    background: rgba(90, 157, 122, 0.05);
+    border: 2px solid #5a9d7a;
+    border-radius: 12px;
+    padding: 30px;
+    margin: 30px 0;
+    line-height: 2;
+}
+
+/* Individual stanzas */
+.stanza {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(90, 157, 122, 0.2);
+    font-size: 0.7em;
+    color: #95c9ad;
+    line-height: 2;
+}
+
+.stanza:last-child {
+    border-bottom: none;
+}
+
+/* Radish/poem icons */
+.radish-icon {
+    font-size: 1.5em;
+    margin: 0 5px;
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+}
+
+.radish-icon:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+.radish-icon:nth-child(3) {
+    animation-delay: 1s;
+}
+
+/* Interactive sections */
+.interactive-section {
+    background: linear-gradient(135deg, #252a32 0%, #1d2228 100%);
+    border: 2px solid #5a9d7a;
+    border-radius: 12px;
+    padding: 30px;
+    margin: 30px 0;
+    text-align: center;
+}
+
+/* Radish garden grid */
+.radish-garden {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+    padding: 20px;
+}
+
+/* Individual radish items */
+.radish-item {
+    font-size: 3em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 10px;
+    border-radius: 8px;
+    background: rgba(90, 157, 122, 0.1);
+}
+
+.radish-item:hover {
+    transform: scale(1.2) rotate(10deg);
+    background: rgba(90, 157, 122, 0.2);
+}
+
+/* Signature text */
+.signature {
+    text-align: center;
+    font-size: 0.7em;
+    color: #95c9ad;
+    font-style: italic;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #5a9d7a;
+}
+
+/* Floating elements (hearts, radishes, etc) */
+.floating-radish {
+    position: fixed;
+    pointer-events: none;
+    z-index: 10;
+    animation: float 4s ease-in-out infinite;
+}
+
+/* ========================================
    GAME LAYOUTS
    ======================================== */
 
@@ -1678,6 +1865,80 @@ canvas {
 
 .info-panel strong {
     color: #7dd3a0;
+}
+
+/* Sudoku grid */
+.sudoku-grid {
+    background: #252a32;
+    border: 3px solid #7dd3a0;
+    padding: 10px;
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    gap: 2px;
+    max-width: 450px;
+    aspect-ratio: 1;
+    margin: 0 auto;
+}
+
+/* Grid cell (general - works for multiple games) */
+.cell {
+    background: #1a1d23;
+    border: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.8em;
+    color: #7dd3a0;
+    cursor: pointer;
+    transition: background 0.2s;
+    aspect-ratio: 1;
+    min-height: 40px;
+}
+
+.cell:hover {
+    background: #333;
+}
+
+.cell.selected {
+    background: #7dd3a0;
+    color: #1a1d23;
+}
+
+/* Given/pre-filled cells in puzzle games */
+.cell.given {
+    background: #252a32;
+    color: #fff;
+    cursor: default;
+    font-weight: bold;
+}
+
+.cell.given:hover {
+    background: #252a32;
+}
+
+/* Mobile-specific buttons */
+.mobile-btn {
+    background: #252a32;
+    color: #7dd3a0;
+    border: 2px solid #5a9d7a;
+    padding: 15px;
+    cursor: pointer;
+    font-size: 0.7em;
+    font-family: 'Press Start 2P', cursive;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-btn:hover, .mobile-btn:active {
+    background: #5a9d7a;
+    color: #1a1d23;
 }
 
 /* Game over modal */
@@ -2026,6 +2287,48 @@ canvas {
     .doc-list li {
         font-size: 0.55em;
     }
+
+    /* Poetry & creative mobile styles */
+    .content {
+        padding: 15px;
+    }
+
+    .poem {
+        padding: 20px;
+    }
+
+    .stanza {
+        font-size: 0.65em;
+    }
+
+    .radish-garden {
+        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+        gap: 10px;
+    }
+
+    .radish-item {
+        font-size: 2.5em;
+    }
+
+    /* Game mobile styles */
+    .sudoku-grid {
+        max-width: 90vw;
+        gap: 1px;
+    }
+
+    .cell {
+        font-size: 12px;
+        min-height: 30px;
+    }
+
+    /* Filter section mobile */
+    .filter-section {
+        flex-direction: column;
+    }
+
+    .filter-btn {
+        width: 100%;
+    }
 }
 
 @media (max-width: 480px) {
@@ -2076,5 +2379,23 @@ canvas {
         width: 45px;
         height: 45px;
         font-size: 0.8em;
+    }
+
+    /* Poetry mobile (480px) */
+    .stanza {
+        font-size: 0.6em;
+    }
+
+    .signature {
+        font-size: 0.6em;
+    }
+
+    .radish-item {
+        font-size: 2em;
+    }
+
+    /* Layout mobile (480px) */
+    .input-section, .todos-section {
+        padding: 15px;
     }
 }
