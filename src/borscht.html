@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Borscht Recipe</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        header h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .card h2 {
+            color: #667ee6;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ingredients-list {
+            list-style: none;
+        }
+
+        .ingredient-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #667ee6;
+        }
+
+        .ingredient-item:hover {
+            background: #e8ebff;
+            transform: translateX(5px);
+        }
+
+        .ingredient-item.checked {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+
+        .ingredient-item input[type="checkbox"] {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .ingredient-item.checked span {
+            text-decoration: line-through;
+            color: #666;
+        }
+
+        .quantity {
+            margin-left: auto;
+            font-weight: bold;
+            color: #667ee6;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .steps-list {
+            list-style: none;
+        }
+
+        .step-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #764ba2;
+            display: flex;
+            gap: 15px;
+        }
+
+        .step-item:hover {
+            background: #f0e6ff;
+            transform: translateX(5px);
+        }
+
+        .step-item.completed {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+
+        .step-number {
+            min-width: 40px;
+            height: 40px;
+            background: #667ee6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-item.completed .step-number {
+            background: #28a745;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .step-content p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .timer-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .timer-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .timer-input input {
+            width: 80px;
+            padding: 8px;
+            border: 2px solid #667ee6;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .timer-input button {
+            padding: 8px 15px;
+            background: #667ee6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .timer-input button:hover {
+            background: #764ba2;
+        }
+
+        .timer-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667ee6;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .servings-control {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .servings-control label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .servings-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .servings-buttons button {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #667ee6;
+            background: white;
+            color: #667ee6;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s;
+        }
+
+        .servings-buttons button:hover {
+            background: #667ee6;
+            color: white;
+        }
+
+        .servings-display {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667ee6;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .nutrition-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .nutrition-card {
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .nutrition-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .nutrition-card .label {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667ee6 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .completion-message {
+            text-align: center;
+            padding: 20px;
+            background: #d4edda;
+            color: #155724;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .completion-message.show {
+            display: block;
+        }
+
+        .tips-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .tips-box h4 {
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .tips-box p {
+            color: #856404;
+            font-size: 0.95em;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-reset {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #c0392b;
+        }
+
+        .btn-print {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-print:hover {
+            background: #2980b9;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2.5em;
+            }
+
+            .nutrition-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            text-decoration: none;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .home-link:hover {
+            background: rgba(102, 126, 234, 1);
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">
+        <i class="fas fa-arrow-left"></i> Home
+    </a>
+
+    <div class="container">
+        <header>
+            <h1>
+                <i class="fas fa-bowl-food"></i>
+                Interactive Borscht Recipe
+            </h1>
+            <p>Traditional Eastern European Beet Soup</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Column: Ingredients -->
+            <div class="card">
+                <h2><i class="fas fa-list"></i> Ingredients</h2>
+                
+                <div class="servings-control">
+                    <label>Servings:</label>
+                    <div class="servings-buttons">
+                        <button onclick="changeServings(-1)">−</button>
+                        <div class="servings-display" id="servingsDisplay">4</div>
+                        <button onclick="changeServings(1)">+</button>
+                    </div>
+                </div>
+
+                <ul class="ingredients-list" id="ingredientsList">
+                    <li class="ingredient-item" onclick="toggleIngredient(this)">
+                        <input type="checkbox">
+                        <span>Beets</span>
+                        <span class="quantity">4 medium</span>
+                    </li>
+                    <li class="ingredient-item" onclick="toggleIngredient(this)">
+                        <input type="checkbox">
+                        <span>Cabbage</span>
+                        <span class="quantity">1/2 head</span>
+                    </li>
+                    <li class="ingredient-item" onclick="toggleIngredient(this)">
+                        <input type="checkbox">
+                        <span>Potatoes</span>
+                        <span class="quantity">3 medium</span>
+                    </li>
+                    <li class="ingredient-item" onclick="toggleIngredient(this)">
+                        <input type="checkbox">
+                        <span>Carrots</span>
+                        <span class="quantity">2 medium</span>
+                    </li>
+                    <li class="ingredient-item" onclick="toggleIngredient(this)">
+                        <input type="checkbox">
+                        <span>Onion</span>
+                        <span class="quantity">1 large</span>
+                    </li>
+                    <li class="ingredient-item" onclick="toggleIngredient(this)">
+                        <input type="checkbox">
+                        <span>Garlic</span>
+                        <span class="quantity">3 cloves</span>
+                    </li>
+                    <li class="ingredient-item" onclick="toggleIngredient(this)">
+                        <input type="checkbox">
+                        <span>Beef Broth</span>
+                        <span class="quantity">8 cups</span>
+                    </li>
+                    <li class="ingredient-item" onclick="toggleIngredient(this)">
+                        <input type="checkbox">
+                        <span>Tomato Paste</span>
+                        <span class="quantity">2 tbsp</span>
+                    </li>
+                    <li class="ingredient-item" onclick="toggleIngredient(this)">
+                        <input type="checkbox">
+                        <span>Vinegar</span>
+                        <span class="quantity">2 tbsp</span>
+                    </li>
+                    <li class="ingredient-item" onclick="toggleIngredient(this)">
+                        <input type="checkbox">
+                        <span>Salt & Pepper</span>
+                        <span class="quantity">To taste</span>
+                    </li>
+                    <li class="ingredient-item" onclick="toggleIngredient(this)">
+                        <input type="checkbox">
+                        <span>Sour Cream</span>
+                        <span class="quantity">For serving</span>
+                    </li>
+                    <li class="ingredient-item" onclick="toggleIngredient(this)">
+                        <input type="checkbox">
+                        <span>Fresh Dill</span>
+                        <span class="quantity">For garnish</span>
+                    </li>
+                </ul>
+
+                <div class="tips-box">
+                    <h4><i class="fas fa-lightbulb"></i> Pro Tips</h4>
+                    <p>• Wear gloves when handling beets to avoid staining your hands<br>
+                       • Add vinegar at the end for authentic flavor<br>
+                       • Serve with a dollop of sour cream and fresh dill</p>
+                </div>
+            </div>
+
+            <!-- Right Column: Instructions -->
+            <div class="card">
+                <h2><i class="fas fa-utensils"></i> Instructions</h2>
+                
+                <ul class="steps-list" id="stepsList">
+                    <li class="step-item" onclick="toggleStep(this)">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Prepare Vegetables</h4>
+                            <p>Peel and dice all vegetables into small cubes. Peel beets last to avoid staining.</p>
+                            <div class="timer-section">
+                                <button onclick="startTimer(15)">⏱️ Set Timer (15 min)</button>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="step-item" onclick="toggleStep(this)">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Heat Broth</h4>
+                            <p>Bring beef broth to boil in a large pot over high heat.</p>
+                            <div class="timer-section">
+                                <button onclick="startTimer(5)">⏱️ Set Timer (5 min)</button>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="step-item" onclick="toggleStep(this)">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Add Root Vegetables</h4>
+                            <p>Add potatoes, carrots, and beets. Simmer for 20 minutes until partially tender.</p>
+                            <div class="timer-section">
+                                <button onclick="startTimer(20)">⏱️ Set Timer (20 min)</button>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="step-item" onclick="toggleStep(this)">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Add Cabbage & Aromatics</h4>
+                            <p>Add shredded cabbage, onion, garlic, and tomato paste. Stir well.</p>
+                            <div class="timer-section">
+                                <button onclick="startTimer(10)">⏱️ Set Timer (10 min)</button>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="step-item" onclick="toggleStep(this)">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h4>Simmer Together</h4>
+                            <p>Simmer for another 15-20 minutes until all vegetables are tender.</p>
+                            <div class="timer-section">
+                                <button onclick="startTimer(20)">⏱️ Set Timer (20 min)</button>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="step-item" onclick="toggleStep(this)">
+                        <div class="step-number">6</div>
+                        <div class="step-content">
+                            <h4>Season & Finish</h4>
+                            <p>Add vinegar, salt, and pepper. Taste and adjust seasonings as needed.</p>
+                            <div class="timer-section">
+                                <button onclick="startTimer(3)">⏱️ Set Timer (3 min)</button>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="step-item" onclick="toggleStep(this)">
+                        <div class="step-number">7</div>
+                        <div class="step-content">
+                            <h4>Serve</h4>
+                            <p>Ladle into bowls and top with sour cream and fresh dill. Enjoy!</p>
+                        </div>
+                    </li>
+                </ul>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+
+                <div class="completion-message" id="completionMessage">
+                    <i class="fas fa-check-circle"></i> Congratulations! Your borscht is ready!
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-reset" onclick="resetRecipe()">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                    <button class="btn btn-print" onclick="printRecipe()">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nutrition Info -->
+        <div class="card">
+            <h2><i class="fas fa-heartbeat"></i> Nutrition Info (Per Serving)</h2>
+            <div class="nutrition-grid">
+                <div class="nutrition-card">
+                    <div class="value">120</div>
+                    <div class="label">Calories</div>
+                </div>
+                <div class="nutrition-card">
+                    <div class="value">8g</div>
+                    <div class="label">Protein</div>
+                </div>
+                <div class="nutrition-card">
+                    <div class="value">25g</div>
+                    <div class="label">Carbs</div>
+                </div>
+                <div class="nutrition-card">
+                    <div class="value">2g</div>
+                    <div class="label">Fat</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer Display -->
+        <div id="timerContainer" style="display: none; position: fixed; bottom: 30px; right: 30px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 1000;">
+            <div style="font-size: 2em; font-weight: bold; color: #667ee6; text-align: center;" id="timerDisplay">00:00</div>
+            <button onclick="stopTimer()" style="margin-top: 10px; width: 100%; padding: 10px; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer;">Stop</button>
+        </div>
+    </div>
+
+    <script>
+        let servings = 4;
+        let timerInterval = null;
+        let timerSeconds = 0;
+
+        function toggleIngredient(element) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            element.classList.toggle('checked', checkbox.checked);
+            updateProgress();
+        }
+
+        function toggleStep(element) {
+            element.classList.toggle('completed');
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const totalItems = document.querySelectorAll('.ingredient-item').length + document.querySelectorAll('.step-item').length;
+            const completedItems = document.querySelectorAll('.ingredient-item.checked').length + document.querySelectorAll('.step-item.completed').length;
+            const progress = (completedItems / totalItems) * 100;
+            
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            if (progress === 100) {
+                document.getElementById('completionMessage').classList.add('show');
+            } else {
+                document.getElementById('completionMessage').classList.remove('show');
+            }
+        }
+
+        function changeServings(change) {
+            servings = Math.max(1, servings + change);
+            document.getElementById('servingsDisplay').textContent = servings;
+            updateQuantities();
+        }
+
+        function updateQuantities() {
+            const multiplier = servings / 4;
+            const ingredients = document.querySelectorAll('.ingredient-item');
+            const quantities = [
+                '4 medium', '1/2 head', '3 medium', '2 medium', '1 large',
+                '3 cloves', '8 cups', '2 tbsp', '2 tbsp', 'To taste', 'For serving', 'For garnish'
+            ];
+            
+            ingredients.forEach((item, index) => {
+                const quantityEl = item.querySelector('.quantity');
+                if (index < 10) {
+                    const baseQty = quantities[index];
+                    const match = baseQty.match(/(\d+(?:\/\d+)?)/);
+                    if (match) {
+                        let value = eval(match[1]);
+                        value = (value * multiplier).toFixed(1);
+                        quantityEl.textContent = baseQty.replace(/(\d+(?:\/\d+)?)/, value);
+                    }
+                }
+            });
+        }
+
+        function startTimer(minutes) {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerSeconds = minutes * 60;
+            const timerContainer = document.getElementById('timerContainer');
+            timerContainer.style.display = 'block';
+            
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                updateTimerDisplay();
+                
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    playNotification();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timerSeconds / 60);
+            const seconds = timerSeconds % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function stopTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('timerContainer').style.display = 'none';
+        }
+
+        function playNotification() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        function resetRecipe() {
+            document.querySelectorAll('.ingredient-item').forEach(item => {
+                item.classList.remove('checked');
+                item.querySelector('input[type="checkbox"]').checked = false;
+            });
+            document.querySelectorAll('.step-item').forEach(item => {
+                item.classList.remove('completed');
+            });
+            document.getElementById('completionMessage').classList.remove('show');
+            updateProgress();
+            stopTimer();
+        }
+
+        function printRecipe() {
+            const printWindow = window.open('', '', 'height=600,width=800');
+            const content = `
+                <html>
+                <head>
+                    <title>Borscht Recipe</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 40px; }
+                        h1 { color: #667ee6; }
+                        h2 { color: #764ba2; margin-top: 20px; }
+                        ul { margin: 10px 0; }
+                        li { margin: 8px 0; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Interactive Borscht Recipe</h1>
+                    <p>Servings: ${servings}</p>
+                    <h2>Ingredients</h2>
+                    <ul>
+                        ${Array.from(document.querySelectorAll('.ingredient-item')).map(item => 
+                            `<li>${item.textContent.trim()}</li>`
+                        ).join('')}
+                    </ul>
+                    <h2>Instructions</h2>
+                    <ul>
+                        ${Array.from(document.querySelectorAll('.step-item')).map(item => 
+                            `<li>${item.querySelector('h4').textContent} - ${item.querySelector('p').textContent}</li>`
+                        ).join('')}
+                    </ul>
+                </body>
+                </html>
+            `;
+            printWindow.document.write(content);
+            printWindow.document.close();
+            setTimeout(() => printWindow.print(), 250);
+        }
+
+        // Initialize
+        updateProgress();
+    </script>
+</body>
+</html>
