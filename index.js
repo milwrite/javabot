@@ -16,6 +16,11 @@ const messageHistory = [];
 const MAX_HISTORY = 20;
 const AGENTS_FILE = './agents.md';
 
+// Parse channel IDs (supports comma-separated list)
+const CHANNEL_IDS = process.env.CHANNEL_ID
+    ? process.env.CHANNEL_ID.split(',').map(id => id.trim())
+    : [];
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -33,52 +38,36 @@ const git = simpleGit();
 
 // OpenRouter configuration
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'anthropic/claude-haiku-4.5';
+const MODEL = 'anthropic/claude-3.5-haiku';
 
 // Bot system prompt
-const SYSTEM_PROMPT = `You are JavaBot, a Discord bot with a coffee-obsessed personality who helps game developers. You're like that caffeine-fueled coding buddy who's always energetic, thinks in coffee metaphors, and genuinely loves helping with creative projects.
+const SYSTEM_PROMPT = `You are JavaBot, a laid-back Discord bot who helps people with their projects. You're helpful but a little spacey, like Doc Sportello - generally competent but sometimes distracted, speaking in a relaxed, slightly rambling way.
 
 IMPORTANT REPOSITORY CONTEXT:
 You manage a JavaScript game development repository at https://github.com/milwrite/javabot/
 - Owner: milwrite
-- Repository: javabot  
+- Repository: javabot
 - You can commit, push, and manage files in this repository
 - The /games directory contains JavaScript game projects
 - You help users create, edit, and deploy games through Discord commands
 - Always push commits to the remote repository automatically after committing
 
-Your coffee-centric personality:
-- Everything relates back to coffee in some way - code quality, energy levels, workflow
-- Use coffee metaphors naturally: "brewing up a solution", "that's a strong blend of logic", "let that percolate"
-- Reference different coffee styles for different coding approaches (espresso = quick fixes, french press = careful planning)
-- Get excited about "perfectly roasted" code and smooth workflows
-- Sometimes mention needing to "refuel" or "top off the caffeine levels"
+Personality and communication style:
+- Casual, unhurried, slightly unfocused but ultimately helpful
+- Keep responses SHORT - 1-2 sentences usually. Maybe 3 if it's complicated.
+- Talk like you're a bit stoned but know your stuff - "yeah man", "right on", "far out"
+- Sometimes trail off or get briefly sidetracked but bring it back
+- Occasionally reference coffee but don't force it - just when it feels natural
+- Call people "man", "dude", or "brother" casually
+- Sound helpful but never over-eager or corporate
 
-Communication style:
-- Energetic but not hyper - like someone who's had the perfect amount of coffee
-- Use coffee terms: "brew", "blend", "roast", "grind", "steep", "pour"
-- Say things like "That's brewing nicely!", "Let's grind through this problem", "Time to pour some logic into this"
-- Call people "friend" or "fellow developer" naturally
-- Reference code quality like coffee quality - smooth, rich, well-balanced, or bitter
+Examples of your vibe:
+- "yeah that should work... let me just, uh, get that committed for you"
+- "right on, pulling that info now"
+- "oh yeah i see the issue... happens sometimes man"
+- "so basically what you want is... yeah ok cool i got you"
 
-Technical approach:
-- Compare debugging to finding the right coffee blend - takes patience and iteration
-- Talk about "brewing up solutions" and "letting ideas steep"
-- Reference code architecture like coffee preparation methods
-- Get excited about elegant solutions like a perfect cup of coffee
-- Suggest taking coffee breaks for complex problems
-- When users ask you to commit changes, you automatically stage, commit, and push to the repository
-
-Coffee metaphor examples:
-- "That code is smooth as a well-pulled espresso"
-- "This bug needs to percolate in my mind for a moment"
-- "Let's brew up a fresh approach to this"
-- "That solution is perfectly roasted - not too complex, not too simple"
-
-Context awareness:
-You remember conversations through agents.md and can reference people's previous projects, like remembering their "usual order" at a coffee shop.
-
-Be the energetic, coffee-loving coding companion that makes development more fun and helps manage the game repository.`;
+Be chill, concise, and helpful. Remember conversations from agents.md. Don't overthink it.`;
 
 const botResponses = {
     confirmations: [
@@ -157,16 +146,17 @@ function addToHistory(username, message, isBot = false) {
         timestamp: new Date().toISOString(),
         username: username,
         message: message,
-        isBot: isBot
+        isBot: isBot,
+        role: isBot ? 'assistant' : 'user'
     };
-    
+
     messageHistory.push(entry);
-    
+
     // Keep only last 20 messages
     if (messageHistory.length > MAX_HISTORY) {
         messageHistory.shift();
     }
-    
+
     // Update agents.md periodically
     updateAgentsFile();
 }
@@ -206,22 +196,40 @@ async function readAgentsFile() {
     }
 }
 
-// LLM-powered chat function
-async function getLLMResponse(userMessage, context = '') {
+// Build proper messages array from conversation history
+function buildMessagesFromHistory(maxMessages = 10) {
+    // Get last N messages (default 10 to keep context manageable)
+    const recentMessages = messageHistory.slice(-maxMessages);
+
+    // Convert to OpenRouter message format
+    const messages = recentMessages.map(entry => ({
+        role: entry.role,
+        content: `${entry.username}: ${entry.message}`
+    }));
+
+    return messages;
+}
+
+// LLM-powered chat function with conversation history support
+async function getLLMResponse(userMessage, conversationMessages = []) {
     try {
+        // Build the full messages array for the API
+        const messages = [
+            {
+                role: 'system',
+                content: SYSTEM_PROMPT
+            },
+            ...conversationMessages,
+            {
+                role: 'user',
+                content: userMessage
+            }
+        ];
+
         const response = await axios.post(OPENROUTER_URL, {
             model: MODEL,
-            messages: [
-                {
-                    role: 'system',
-                    content: SYSTEM_PROMPT + (context ? `\n\nContext: ${context}` : '')
-                },
-                {
-                    role: 'user',
-                    content: userMessage
-                }
-            ],
-            max_tokens: 300,
+            messages: messages,
+            max_tokens: 1024,
             temperature: 0.7
         }, {
             headers: {
@@ -261,11 +269,7 @@ const commands = [
         .addStringOption(option =>
             option.setName('description')
                 .setDescription('Brief description of what the game does')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('template')
-                .setDescription('Game template (canvas, phaser, vanilla)')
-                .setRequired(false)),
+                .setRequired(true)),
                 
     new SlashCommandBuilder()
         .setName('status')
@@ -293,9 +297,9 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
 client.once('clientReady', async () => {
     console.log(`Bot is ready as ${client.user.tag}`);
-    console.log(`Monitoring channel: ${process.env.CHANNEL_ID || 'ALL CHANNELS'}`);
+    console.log(`Monitoring channels: ${CHANNEL_IDS.length > 0 ? CHANNEL_IDS.join(', ') : 'ALL CHANNELS'}`);
     console.log(`Message Content Intent enabled: ${client.options.intents.has(GatewayIntentBits.MessageContent)}`);
-    
+
     try {
         console.log('Refreshing slash commands...');
         await rest.put(
@@ -394,25 +398,25 @@ client.on('interactionCreate', async interaction => {
 // Message tracking for conversation context
 client.on('messageCreate', async message => {
     console.log(`Message received: ${message.author.username} (bot: ${message.author.bot}) in channel: ${message.channel.id}`);
-    console.log(`Configured CHANNEL_ID: ${process.env.CHANNEL_ID}`);
+    console.log(`Configured CHANNEL_IDS: ${CHANNEL_IDS.join(', ')}`);
     console.log(`Message content: "${message.content}"`);
-    
+
     // Ignore bot messages (including our own)
     if (message.author.bot) {
         console.log('Ignoring bot message');
         return;
     }
-    
-    // Only track messages from the designated channel (if CHANNEL_ID is set)
-    if (process.env.CHANNEL_ID && message.channel.id !== process.env.CHANNEL_ID) {
-        console.log(`Ignoring message - wrong channel. Expected: ${process.env.CHANNEL_ID}, Got: ${message.channel.id}`);
+
+    // Only track messages from designated channels (if CHANNEL_IDS is configured)
+    if (CHANNEL_IDS.length > 0 && !CHANNEL_IDS.includes(message.channel.id)) {
+        console.log(`Ignoring message - wrong channel. Expected one of: ${CHANNEL_IDS.join(', ')}, Got: ${message.channel.id}`);
         return;
     }
-    
+
     // Add message to conversation history
     console.log(`Adding to history: ${message.author.username}: ${message.content}`);
     addToHistory(message.author.username, message.content, false);
-    
+
     console.log(`Successfully tracked message from ${message.author.username}`);
 });
 
@@ -512,12 +516,10 @@ async function handleCommit(interaction) {
 async function handleCreateGame(interaction) {
     const name = interaction.options.getString('name');
     const description = interaction.options.getString('description');
-    const template = interaction.options.getString('template') || 'vanilla';
     
     await interaction.editReply(getBotResponse('thinking'));
 
-    const gameTemplates = {
-        vanilla: `// ${name} - ${description}
+    const gameContent = `// ${name} - ${description}
 // Created via JavaBot with coffee-fueled efficiency
 
 class ${name.charAt(0).toUpperCase() + name.slice(1)}Game {
@@ -575,93 +577,7 @@ class ${name.charAt(0).toUpperCase() + name.slice(1)}Game {
 // Initialize game when page loads
 window.addEventListener('load', () => {
     new ${name.charAt(0).toUpperCase() + name.slice(1)}Game();
-});`,
-
-        canvas: `// ${name} - ${description}
-// Canvas-based game, brewed to perfection
-
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-canvas.width = 800;
-canvas.height = 600;
-
-let gameState = {
-    score: 0,
-    playing: true
-};
-
-function update() {
-    if (!gameState.playing) return;
-    
-    // Game update logic goes here
-}
-
-function render() {
-    ctx.fillStyle = '#2c3e50';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    ctx.fillStyle = '#ecf0f1';
-    ctx.font = '32px Arial';
-    ctx.fillText('${name}', 50, 100);
-    ctx.fillText(\`Score: \${gameState.score}\`, 50, 150);
-}
-
-function gameLoop() {
-    update();
-    render();
-    requestAnimationFrame(gameLoop);
-}
-
-// Start the game
-gameLoop();`,
-
-        phaser: `// ${name} - ${description}  
-// Phaser game, crafted like a perfect espresso shot
-
-const config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 300 },
-            debug: false
-        }
-    },
-    scene: {
-        preload: preload,
-        create: create,
-        update: update
-    }
-};
-
-let score = 0;
-let scoreText;
-
-function preload() {
-    // Load game assets here
-    this.load.setBaseURL('https://labs.phaser.io');
-    this.load.image('sky', 'assets/skies/space3.png');
-}
-
-function create() {
-    this.add.image(400, 300, 'sky');
-    
-    scoreText = this.add.text(16, 16, 'Score: 0', {
-        fontSize: '32px',
-        fill: '#000'
-    });
-}
-
-function update() {
-    // Game update logic
-}
-
-const game = new Phaser.Game(config);`
-    };
-
-    const gameContent = gameTemplates[template];
+});`;
     const fileName = `games/${name}.js`;
     
     try {
@@ -699,7 +615,6 @@ const game = new Phaser.Game(config);`
     <h1>${name}</h1>
     <p>${description}</p>
     <canvas id="gameCanvas"></canvas>
-    ${template === 'phaser' ? '<script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>' : ''}
     <script src="${name}.js"></script>
 </body>
 </html>`;
@@ -711,7 +626,6 @@ const game = new Phaser.Game(config);`
             .setDescription(getBotResponse('success'))
             .addFields(
                 { name: 'Game Name', value: name, inline: true },
-                { name: 'Template', value: template, inline: true },
                 { name: 'Description', value: description, inline: false },
                 { name: 'Files', value: `${fileName}\ngames/${name}.html`, inline: false }
             )
@@ -762,32 +676,30 @@ async function handleStatus(interaction) {
 async function handleChat(interaction) {
     const userMessage = interaction.options.getString('message');
     const username = interaction.user.username;
-    
+
     try {
         // Show thinking message first (interaction is already deferred)
         await interaction.editReply(getBotResponse('thinking'));
-        
-        // Add user message to history
+
+        // Build conversation messages array from history (last 10 exchanges, excluding current message)
+        const conversationMessages = buildMessagesFromHistory(10);
+
+        // Get response with proper conversation context
+        const response = await getLLMResponse(userMessage, conversationMessages);
+
+        // Add user message and bot response to history after successful response
         addToHistory(username, userMessage, false);
-        
-        // Read conversation context from agents.md
-        const conversationContext = await readAgentsFile();
-        
-        // Get response with context
-        const response = await getLLMResponse(userMessage, conversationContext);
-        
-        // Add bot response to history
         addToHistory('JavaBot', response, true);
-        
+
         // Edit with actual response
         await interaction.editReply(response);
-        
+
     } catch (error) {
         console.error('Chat error:', error);
-        const errorMsg = error.code === 'ECONNABORTED' ? 
-            "Request timed out. Try again." : 
+        const errorMsg = error.code === 'ECONNABORTED' ?
+            "Request timed out. Try again." :
             (getBotResponse('errors') + " Chat request failed.");
-        
+
         try {
             if (interaction.replied) {
                 await interaction.editReply(errorMsg);
