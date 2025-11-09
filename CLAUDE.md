@@ -29,7 +29,7 @@ npm start
 ## Architecture Overview
 
 ### Single-File Architecture
-The entire bot is contained in `index.js` (~1838 lines) with these key sections in order:
+The entire bot is contained in `index.js` (~2536 lines) with these key sections in order:
 1. Environment configuration and imports
 2. Error tracking system (prevents infinite error loops)
 3. OpenRouter configuration with model presets
@@ -91,6 +91,7 @@ The entire bot is contained in `index.js` (~1838 lines) with these key sections 
 | `/search <query>` | `handleSearch` | Web search via OpenRouter |
 | `/set-model <model>` | `handleSetModel` | Switch AI model at runtime |
 | `/update-style <preset> [description]` | `handleUpdateStyle` | Update website styling with presets or AI-generated custom CSS |
+| `/sync-index` | `handleSyncIndex` | Sync projectmetadata.json with all HTML files in /src |
 | `/poll <question>` | `handlePoll` | Yes/no poll with reactions |
 
 ### AI Function Calling System
@@ -132,14 +133,15 @@ The bot uses OpenRouter's function calling to give the AI autonomous access to:
 6. Flexible enough for libraries, UI components, interactive elements, utilities
 
 **Styling Consistency**:
-- All new pages link to `page-theme.css` for uniform arcade aesthetic
+- All new pages automatically link to `page-theme.css` for uniform arcade aesthetic via `ensureStylesheetInHTML()` function
 - Prompts specify arcade color palette: mint green (#7dd3a0), dark backgrounds (#1a1d23, #252a32)
 - Available CSS classes: `.container`, `.card`, `.btn`, `.panel`, `.home-link`, etc.
+- Automatic inclusion of Press Start 2P font from Google Fonts
 - Prompts optimized for token efficiency with inline examples
 
 **`/update-style`**:
 1. User selects preset or "Custom" with description
-2. Built-in presets stored in `stylePresets` object (lines 1140-1771):
+2. Built-in presets stored in `stylePresets` object (around line 1837):
    - `soft-arcade` - Current style (mint green, dark blue-gray)
    - `neon-arcade` - Intense bright green with animations
    - `dark-minimal` - Clean modern dark theme
@@ -150,6 +152,20 @@ The bot uses OpenRouter's function calling to give the AI autonomous access to:
 
 All presets include complete CSS for all site elements (body, header, cards, buttons, footer).
 
+**`/sync-index`**:
+1. Automatically scans `/src` directory for all HTML files  
+2. Updates `projectmetadata.json` to include any missing files with default metadata
+3. Uses `getIconForDescription()` to assign appropriate emoji icons
+4. Generates proper descriptions from filename (e.g., "weekend-planner" → "Weekend Planner")
+5. Runs automatically on bot startup to keep metadata in sync
+6. Can be triggered manually when new files are added outside the bot commands
+
+**Project Metadata System**:
+- `projectmetadata.json` serves as the central registry for all pages in the arcade
+- `index.html` dynamically loads and displays projects from this file via JavaScript
+- Missing files are automatically detected and added with reasonable defaults
+- Supports custom icons and descriptions for each project
+
 ### Doc Sportello Personality System
 
 **Response Categories** (`botResponses` object):
@@ -159,11 +175,16 @@ All presets include complete CSS for all site elements (body, header, cards, but
 - `thinking` - "let me think about this for a sec..."
 
 **System Prompt** (`SYSTEM_PROMPT`):
-- Defines laid-back, slightly spacey personality
-- Lists available capabilities (file ops, web search, git)
-- Instructs AI when to use each tool
-- Mandates short responses (1-2 sentences)
+- Defines laid-back, slightly spacey Doc Sportello personality
+- **Should include complete list of available Discord slash commands** (`/commit`, `/add-page`, `/add-feature`, `/status`, `/chat`, `/search`, `/set-model`, `/update-style`, `/sync-index`, `/poll`)
+- **Should list all function calling tools with descriptions** (filesystem tools, web search, git operations, page creation)
+- Instructs AI when to use each tool appropriately
+- Repository context with live site and GitHub URLs
+- Mandates short responses (1-2 sentences) consistent with personality
 - Always links to live site when sharing pages
+- Includes web search guidelines for current information
+- File operation instructions for repository management
+- **Note**: Current system prompt should be expanded to include awareness of all available commands and capabilities for better AI assistance
 
 **Usage**: Call `getBotResponse(category)` for random selection from category.
 
@@ -253,6 +274,12 @@ errorTracker.set(`${userId}-${commandName}`, {
 - All generated content goes to `src/` directory
 - Create directories with `{ recursive: true }`
 - Long responses saved to `responses/` directory with timestamps
+
+**HTML Generation Pipeline**:
+- `cleanMarkdownCodeBlocks()` removes code fences from AI responses
+- `ensureStylesheetInHTML()` automatically injects `page-theme.css` and Google Fonts
+- `ensureHomeLinkInHTML()` adds navigation home button if missing
+- All functions work together to ensure consistent page structure
 
 ## Model Switching
 

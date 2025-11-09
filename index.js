@@ -271,12 +271,23 @@ function cleanMarkdownCodeBlocks(content, type = 'html') {
 
 function ensureHomeLinkInHTML(htmlContent) {
     if (!htmlContent.includes('index.html') && !htmlContent.includes('Home</a>')) {
-        const homeLink = `
-    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
-        <a href="../index.html" style="text-decoration: none; background: rgba(102, 126, 234, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-family: Arial, sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(102, 126, 234, 1)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.9)'">← Home</a>
-    </div>
-`;
-        return htmlContent.replace(/<body([^>]*)>/, `<body$1>${homeLink}`);
+        const homeLink = `<a href="../index.html" class="home-link">← HOME</a>`;
+        return htmlContent.replace(/<body([^>]*)>/, `<body$1>\n    ${homeLink}`);
+    }
+    return htmlContent;
+}
+
+function ensureStylesheetInHTML(htmlContent) {
+    // Check if page-theme.css is already linked
+    if (!htmlContent.includes('page-theme.css')) {
+        const stylesheetLinks = `
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">`;
+
+        // Insert before closing </head> tag
+        if (htmlContent.includes('</head>')) {
+            return htmlContent.replace('</head>', `${stylesheetLinks}\n</head>`);
+        }
     }
     return htmlContent;
 }
@@ -593,6 +604,7 @@ Return only HTML, no markdown blocks or explanations.`;
 
         let htmlContent = response.data.choices[0].message.content;
         htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
+        htmlContent = ensureStylesheetInHTML(htmlContent);
         htmlContent = ensureHomeLinkInHTML(htmlContent);
 
         const fileName = `src/${name}.html`;
@@ -670,6 +682,7 @@ Return only HTML code, no markdown blocks or explanations.`;
 
         let htmlContent = htmlResponse.data.choices[0].message.content;
         htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
+        htmlContent = ensureStylesheetInHTML(htmlContent);
         htmlContent = ensureHomeLinkInHTML(htmlContent);
 
         await fs.mkdir('src', { recursive: true });
@@ -1427,6 +1440,7 @@ Return only HTML, no markdown blocks or explanations.`;
 
         let htmlContent = response.data.choices[0].message.content;
         htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
+        htmlContent = ensureStylesheetInHTML(htmlContent);
         htmlContent = ensureHomeLinkInHTML(htmlContent);
 
         const fileName = `src/${name}.html`;
@@ -1527,6 +1541,7 @@ Return only HTML code, no markdown blocks or explanations.`;
 
         let htmlContent = htmlResponse.data.choices[0].message.content;
         htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
+        htmlContent = ensureStylesheetInHTML(htmlContent);
         htmlContent = ensureHomeLinkInHTML(htmlContent);
 
         // Create src directory if it doesn't exist

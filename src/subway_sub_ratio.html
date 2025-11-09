@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subway Sub Ratio - Perfect Composition Calculator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" class="home-link">← HOME</a>
+
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-sandwich icon"></i>
+                Subway Sub Ratio Calculator
+            </h1>
+            <p>Find your perfect meat, veggie, and bread balance</p>
+        </div>
+
+        <div class="main-content">
+            <div class="controls">
+                <div class="slider-group meat-slider">
+                    <div class="slider-header">
+                        <label class="slider-label">
+                            <i class="fas fa-drumstick-bite" style="color: #ff6b6b;"></i>
+                            Meat
+                        </label>
+                        <span class="slider-value" id="meatValue">33</span>
+                    </div>
+                    <input type="range" id="meatSlider" min="0" max="100" value="33">
+                </div>
+
+                <div class="slider-group veggie-slider">
+                    <div class="slider-header">
+                        <label class="slider-label">
+                            <i class="fas fa-leaf" style="color: #51cf66;"></i>
+                            Vegetables
+                        </label>
+                        <span class="slider-value" id="veggieValue">33</span>
+                    </div>
+                    <input type="range" id="veggieSlider" min="0" max="100" value="33">
+                </div>
+
+                <div class="slider-group bread-slider">
+                    <div class="slider-header">
+                        <label class="slider-label">
+                            <i class="fas fa-bread-slice" style="color: #ffa94d;"></i>
+                            Bread
+                        </label>
+                        <span class="slider-value" id="breadValue">34</span>
+                    </div>
+                    <input type="range" id="breadSlider" min="0" max="100" value="34">
+                </div>
+
+                <button class="reset-button" onclick="resetSliders()">
+                    <i class="fas fa-redo"></i> Reset to Perfect Balance
+                </button>
+            </div>
+
+            <div class="visualization">
+                <div class="sub-container">
+                    <div class="sub">
+                        <div class="bread" id="breadLeft"></div>
+                        <div class="meat" id="meatSection">
+                            <span id="meatPercentage">33%</span>
+                        </div>
+                        <div class="veggie" id="veggieSection">
+                            <span id="veggiePercentage">33%</span>
+                        </div>
+                        <div class="bread-right" id="breadRight"></div>
+                    </div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-card meat">
+                        <div class="stat-value" id="meatPercent">33%</div>
+                        <div class="stat-label">Meat</div>
+                    </div>
+                    <div class="stat-card veggie">
+                        <div class="stat-value" id="veggiePercent">33%</div>
+                        <div class="stat-label">Vegetables</div>
+                    </div>
+                    <div class="stat-card bread">
+                        <div class="stat-value" id="breadPercent">34%</div>
+                        <div class="stat-label">Bread</div>
+                    </div>
+                </div>
+
+                <div class="rating">
+                    <div class="rating-title">Sub Quality Rating</div>
+                    <div class="rating-stars" id="ratingStars">⭐⭐⭐⭐⭐</div>
+                    <div class="rating-message" id="ratingMessage">Perfect balance! Your sub is absolutely delicious!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const meatSlider = document.getElementById('meatSlider');
+        const veggieSlider = document.getElementById('veggieSlider');
+        const breadSlider = document.getElementById('breadSlider');
+
+        const meatValue = document.getElementById('meatValue');
+        const veggieValue = document.getElementById('veggieValue');
+        const breadValue = document.getElementById('breadValue');
+
+        const meatPercent = document.getElementById('meatPercent');
+        const veggiePercent = document.getElementById('veggiePercent');
+        const breadPercent = document.getElementById('breadPercent');
+
+        const meatSection = document.getElementById('meatSection');
+        const veggieSection = document.getElementById('veggieSection');
+        const breadLeft = document.getElementById('breadLeft');
+        const breadRight = document.getElementById('breadRight');
+
+        const meatPercentage = document.getElementById('meatPercentage');
+        const veggiePercentage = document.getElementById('veggiePercentage');
+
+        const ratingStars = document.getElementById('ratingStars');
+        const ratingMessage = document.getElementById('ratingMessage');
+
+        function updateVisualization() {
+            const meat = parseInt(meatSlider.value);
+            const veggie = parseInt(veggieSlider.value);
+            const bread = parseInt(breadSlider.value);
+
+            const total = meat + veggie + bread;
+
+            const meatPercent = (meat / total * 100).toFixed(1);
+            const veggiePercent = (veggie / total * 100).toFixed(1);
+            const breadPercent = (bread / total * 100).toFixed(1);
+
+            meatValue.textContent = meat;
+            veggieValue.textContent = veggie;
+            breadValue.textContent = bread;
+
+            document.getElementById('meatPercent').textContent = meatPercent + '%';
+            document.getElementById('veggiePercent').textContent = veggiePercent + '%';
+            document.getElementById('breadPercent').textContent = breadPercent + '%';
+
+            meatSection.style.flex = meat;
+            veggieSection.style.flex = veggie;
+            breadLeft.style.flex = bread / 2;
+            breadRight.style.flex = bread / 2;
+
+            meatPercentage.textContent = meatPercent + '%';
+            veggiePercentage.textContent = veggiePercent + '%';
+
+            updateRating(meat, veggie, bread);
+        }
+
+        function updateRating(meat, veggie, bread) {
+            const total = meat + veggie + bread;
+            const meatRatio = meat / total;
+            const veggieRatio = veggie / total;
+            const breadRatio = bread / total;
+
+            let rating = 5;
+            let message = "Perfect balance! Your sub is absolutely delicious!";
+
+            const idealMeat = 0.33;
+            const idealVeggie = 0.33;
+            const idealBread = 0.34;
+
+            const meatDiff = Math.abs(meatRatio - idealMeat);
+            const veggieDiff = Math.abs(veggieRatio - idealVeggie);
+            const breadDiff = Math.abs(breadRatio - idealBread);
+
+            const totalDiff = meatDiff + veggieDiff + breadDiff;
+
+            if (totalDiff < 0.05) {
+                rating = 5;
+                message = "Perfect balance! Your sub is absolutely delicious!";
+            } else if (totalDiff < 0.1) {
+                rating = 4;
+                message = "Excellent! Very close to the perfect ratio!";
+            } else if (totalDiff < 0.15) {
+                rating = 3;
+                message = "Good! But could use some adjustments.";
+            } else if (totalDiff < 0.25) {
+                rating = 2;
+                message = "Not bad, but quite unbalanced.";
+            } else {
+                rating = 1;
+                message = "Very unbalanced! Try adjusting the sliders.";
+            }
+
+            if (meat === 0) {
+                message = "No meat? That's not a real sub!";
+                rating = 1;
+            } else if (veggie === 0) {
+                message = "No veggies? You need some greens!";
+                rating = 2;
+            } else if (bread === 0) {
+                message = "No bread? How is this even a sub?";
+                rating = 1;
+            }
+
+            ratingStars.textContent = '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
+            ratingMessage.textContent = message;
+        }
+
+        function resetSliders() {
+            meatSlider.value = 33;
+            veggieSlider.value = 33;
+            breadSlider.value = 34;
+            updateVisualization();
+        }
+
+        meatSlider.addEventListener('input', updateVisualization);
+        veggieSlider.addEventListener('input', updateVisualization);
+        breadSlider.addEventListener('input', updateVisualization);
+
+        updateVisualization();
+    </script>
+</body>
+</html>
