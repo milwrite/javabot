@@ -753,7 +753,7 @@ Output a single HTML file with embedded CSS and JavaScript. Requirements:
 - Modern, attractive styling
 - Vanilla JS (CDN libraries allowed)
 - Creative implementation
-- Include: <a href="/index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
+- Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
 
 Return only HTML, no markdown blocks or explanations.`;
 
@@ -891,7 +891,7 @@ Output a single HTML file that:
 - Loads ${name}.js via <script src="${name}.js"></script>
 - Demonstrates each function with interactive examples
 - Modern, clean UI with embedded CSS
-- Include: <a href="/index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
+- Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
 
 Return only HTML, no markdown blocks or explanations.`;
 
