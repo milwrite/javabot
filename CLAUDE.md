@@ -126,6 +126,19 @@ The bot uses OpenRouter's function calling to give the AI autonomous access to:
 
 **Prompts are optimized for token efficiency** - concise, direct instructions with inline examples.
 
+**`/update-style`**:
+1. User selects preset or "Custom" with description
+2. Built-in presets stored in `stylePresets` object (lines 1140-1771):
+   - `soft-arcade` - Current style (mint green, dark blue-gray)
+   - `neon-arcade` - Intense bright green with animations
+   - `dark-minimal` - Clean modern dark theme
+   - `retro-terminal` - Classic green terminal style
+3. For custom: AI generates complete CSS based on description
+4. Writes to `style.css`, commits, pushes to GitHub
+5. Shows confirmation with live site link
+
+All presets include complete CSS for all site elements (body, header, cards, buttons, footer).
+
 ### Doc Sportello Personality System
 
 **Response Categories** (`botResponses` object):
