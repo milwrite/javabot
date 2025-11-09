@@ -511,20 +511,16 @@ async function handleAddPage(interaction) {
 
     try {
         // Use AI to generate pure web development project
-        const webPrompt = `Create a complete, functional web page/app called "${name}".
-Description: ${description}
+        const webPrompt = `Build "${name}": ${description}
 
-Requirements:
-- Create a self-contained HTML file with embedded CSS and JavaScript
-- Make it fully functional and interactive based on the description
-- Use vanilla JavaScript (no frameworks required, but you can use CDN libraries if helpful)
-- Include proper styling to make it look good
-- Add interactivity and dynamic behavior
-- Make it creative and fun to use
-- IMPORTANT: Include a "Back to Home" link at the top that links to ../index.html
-- Return ONLY the complete HTML code, no explanations or markdown
+Output a single HTML file with embedded CSS and JavaScript. Requirements:
+- Fully functional and interactive
+- Modern, attractive styling
+- Vanilla JS (CDN libraries allowed)
+- Creative implementation
+- Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
 
-Be creative and build something unique based on the description!`;
+Return only HTML, no markdown blocks or explanations.`;
 
         const response = await axios.post(OPENROUTER_URL, {
             model: MODEL,
