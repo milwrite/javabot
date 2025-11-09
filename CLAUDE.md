@@ -26,17 +26,19 @@ npm start
 
 **No testing, linting, or build commands** - This project uses direct Node.js execution without build steps or formal testing frameworks.
 
+**Restarting the bot**: After making changes to `index.js`, restart the bot process to reload slash commands and apply code changes.
+
 ## Architecture Overview
 
 ### Single-File Architecture
-The entire bot is contained in `index.js` (~2536 lines) with these key sections in order:
+The entire bot is contained in `index.js` (~1900+ lines) with these key sections in order:
 1. Environment configuration and imports
 2. Error tracking system (prevents infinite error loops)
 3. OpenRouter configuration with model presets
 4. Discord client setup with specific intents
 5. GitHub integration (Octokit + simple-git)
 6. Bot personality system (`botResponses`, `SYSTEM_PROMPT`)
-7. Message history tracking with AI summarization (`agents.md`)
+7. Message history tracking (`agents.md`)
 8. Filesystem tools (list/read/write files)
 9. Web search functionality
 10. Enhanced LLM with function calling (tool use)
@@ -66,7 +68,7 @@ The entire bot is contained in `index.js` (~2536 lines) with these key sections 
 - Available: Claude Haiku/Sonnet 4.5, Kimi K2, GPT-5 Nano, Gemini 2.5
 - Function calling support (filesystem tools, web search)
 - 10,000 token output limit for detailed responses
-- Conversation history from `agents.md` (100 messages max, AI-summarized for efficiency)
+- Conversation history from `agents.md` (100 messages max)
 
 **Arcade Frontend Styling**:
 - **Main arcade page**: `index.html` + `style.css` (homepage styling)
@@ -74,10 +76,18 @@ The entire bot is contained in `index.js` (~2536 lines) with these key sections 
 - **Current theme**: Soft Arcade (mint green #7dd3a0, dark blue-gray background)
 - **Typography**: Press Start 2P font from Google Fonts (retro pixel aesthetic)
 - **Visual effects**: Subtle grid background with scanlines overlay
-- **Project discovery**: `index.html` loads projects from `projectmetadata.json`
+- **Project discovery**: `index.html` loads projects from embedded `projectMetadata` JavaScript object
 - **Navigation**: All pages include styled home button linking back to arcade
 - **Theme updates**: `/update-style` command updates `style.css` (homepage only)
 - **Consistency**: New pages automatically use `page-theme.css` for uniform styling
+
+**Project Metadata System**:
+- **Location**: Embedded in `index.html` as JavaScript object (lines 39-81)
+- **Structure**: `projectMetadata = { 'page-name': { icon: '🎮', description: 'Page description' } }`
+- **Auto-update**: `updateIndexWithPage()` function adds new pages to metadata object using brace-counting algorithm
+- **Icon selection**: `getIconForDescription()` auto-assigns emoji based on keywords in description
+- **Fallback**: Pages without metadata display with default 🌐 icon and "Interactive web project" description
+- **Critical**: Commas must be at end of closing braces (`},`), not on separate lines (causes JavaScript syntax errors)
 
 ### Available Slash Commands
 
@@ -91,7 +101,6 @@ The entire bot is contained in `index.js` (~2536 lines) with these key sections 
 | `/search <query>` | `handleSearch` | Web search via OpenRouter |
 | `/set-model <model>` | `handleSetModel` | Switch AI model at runtime |
 | `/update-style <preset> [description]` | `handleUpdateStyle` | Update website styling with presets or AI-generated custom CSS |
-| `/sync-index` | `handleSyncIndex` | Sync projectmetadata.json with all HTML files in /src |
 | `/poll <question>` | `handlePoll` | Yes/no poll with reactions |
 
 ### AI Function Calling System
@@ -133,15 +142,14 @@ The bot uses OpenRouter's function calling to give the AI autonomous access to:
 6. Flexible enough for libraries, UI components, interactive elements, utilities
 
 **Styling Consistency**:
-- All new pages automatically link to `page-theme.css` for uniform arcade aesthetic via `ensureStylesheetInHTML()` function
+- All new pages link to `page-theme.css` for uniform arcade aesthetic
 - Prompts specify arcade color palette: mint green (#7dd3a0), dark backgrounds (#1a1d23, #252a32)
 - Available CSS classes: `.container`, `.card`, `.btn`, `.panel`, `.home-link`, etc.
-- Automatic inclusion of Press Start 2P font from Google Fonts
 - Prompts optimized for token efficiency with inline examples
 
 **`/update-style`**:
 1. User selects preset or "Custom" with description
-2. Built-in presets stored in `stylePresets` object (around line 1837):
+2. Built-in presets stored in `stylePresets` object (lines 1140-1771):
    - `soft-arcade` - Current style (mint green, dark blue-gray)
    - `neon-arcade` - Intense bright green with animations
    - `dark-minimal` - Clean modern dark theme
@@ -152,20 +160,6 @@ The bot uses OpenRouter's function calling to give the AI autonomous access to:
 
 All presets include complete CSS for all site elements (body, header, cards, buttons, footer).
 
-**`/sync-index`**:
-1. Automatically scans `/src` directory for all HTML files  
-2. Updates `projectmetadata.json` to include any missing files with default metadata
-3. Uses `getIconForDescription()` to assign appropriate emoji icons
-4. Generates proper descriptions from filename (e.g., "weekend-planner" → "Weekend Planner")
-5. Runs automatically on bot startup to keep metadata in sync
-6. Can be triggered manually when new files are added outside the bot commands
-
-**Project Metadata System**:
-- `projectmetadata.json` serves as the central registry for all pages in the arcade
-- `index.html` dynamically loads and displays projects from this file via JavaScript
-- Missing files are automatically detected and added with reasonable defaults
-- Supports custom icons and descriptions for each project
-
 ### Doc Sportello Personality System
 
 **Response Categories** (`botResponses` object):
@@ -175,16 +169,11 @@ All presets include complete CSS for all site elements (body, header, cards, but
 - `thinking` - "let me think about this for a sec..."
 
 **System Prompt** (`SYSTEM_PROMPT`):
-- Defines laid-back, slightly spacey Doc Sportello personality
-- **Should include complete list of available Discord slash commands** (`/commit`, `/add-page`, `/add-feature`, `/status`, `/chat`, `/search`, `/set-model`, `/update-style`, `/sync-index`, `/poll`)
-- **Should list all function calling tools with descriptions** (filesystem tools, web search, git operations, page creation)
-- Instructs AI when to use each tool appropriately
-- Repository context with live site and GitHub URLs
-- Mandates short responses (1-2 sentences) consistent with personality
+- Defines laid-back, slightly spacey personality
+- Lists available capabilities (file ops, web search, git)
+- Instructs AI when to use each tool
+- Mandates short responses (1-2 sentences)
 - Always links to live site when sharing pages
-- Includes web search guidelines for current information
-- File operation instructions for repository management
-- **Note**: Current system prompt should be expanded to include awareness of all available commands and capabilities for better AI assistance
 
 **Usage**: Call `getBotResponse(category)` for random selection from category.
 
@@ -228,54 +217,25 @@ errorTracker.set(`${userId}-${commandName}`, {
 
 ### Message History System
 
-**`agents.md` File with AI Summarization**:
-- Stores last 100 messages from tracked channels (in-memory)
-- **Recent messages (last 15)**: Shown verbatim with timestamps for immediate context
-- **Older messages**: Automatically summarized by AI into concise bullet points
-- Format: AI-generated summary + recent verbatim messages + active user list
+**`agents.md` File**:
+- Stores last 100 messages from tracked channels
+- Format: timestamp, username, message, isBot flag
 - Updated via `addToHistory()` and `updateAgentsFile()`
-- Summarization happens via `summarizeConversation()` using current AI model
-- Provides efficient context for `/chat` command without excessive token usage
-- Focuses on: projects created, user preferences, technical questions, important context
+- Provides context for `/chat` command
+- Shows last 50 messages in file, uses last 50 for AI context
 
 **Multi-Channel Monitoring**:
 - Parses `CHANNEL_ID` as comma-separated list
 - Empty = monitors all channels
 - Only tracks non-bot messages from configured channels
-- Bot responds to mentions with AI-generated replies
+- Bot responds to mentions with AI-generated replies using full tool capabilities
 
-## System Prompt Enhancement Recommendations
-
-The current `SYSTEM_PROMPT` should be expanded to include:
-
-```javascript
-const ENHANCED_SYSTEM_PROMPT = `You are Bot Sportello, a laid-back Discord bot who helps people with web development projects...
-
-AVAILABLE DISCORD COMMANDS:
-- /commit <message> [files] - Git add, commit, push changes
-- /add-page <name> <description> - Generate HTML page with arcade theme
-- /add-feature <name> <description> - Generate JS library + demo page  
-- /status - Show repository status and live site
-- /chat <message> - Conversation with full context
-- /search <query> - Web search for current information
-- /set-model <model> - Switch AI model (haiku/sonnet/kimi/gpt5/gemini)
-- /update-style <preset> [description] - Update website styling
-- /sync-index - Sync projectmetadata.json with /src HTML files
-- /poll <question> - Create yes/no poll with reactions
-
-FUNCTION CALLING TOOLS AVAILABLE:
-- list_files(path) - List repository files
-- read_file(path) - Read file contents  
-- write_file(path, content) - Create/update files
-- edit_file(path, instructions) - Edit files with natural language
-- create_page(name, description) - Generate complete HTML page
-- create_feature(name, description) - Generate JS feature + demo
-- commit_changes(message, files) - Git operations
-- get_repo_status() - Repository status
-- web_search(query) - Internet search
-
-When users ask about capabilities, reference these commands and tools specifically.`;
-```
+**@ Mention Handling**:
+- Async handler prevents blocking: `handleMentionAsync(message)`
+- Full AI tool access: can create pages, edit files, search web, commit changes
+- Uses conversation history from `agents.md` for context
+- Debounced file writes (5 second delay) to prevent excessive I/O
+- Responses automatically saved to `responses/` directory if >2000 chars
 
 ## Adding New Commands
 
@@ -285,7 +245,6 @@ When users ask about capabilities, reference these commands and tools specifical
 4. Use `getBotResponse()` for personality-consistent messages
 5. Include live site URL in embeds: `https://milwrite.github.io/javabot/`
 6. Commands auto-register on bot restart (no manual deployment)
-7. **Update system prompt to include new command in the available commands list**
 
 ## Key Development Patterns
 
@@ -311,12 +270,6 @@ When users ask about capabilities, reference these commands and tools specifical
 - All generated content goes to `src/` directory
 - Create directories with `{ recursive: true }`
 - Long responses saved to `responses/` directory with timestamps
-
-**HTML Generation Pipeline**:
-- `cleanMarkdownCodeBlocks()` removes code fences from AI responses
-- `ensureStylesheetInHTML()` automatically injects `page-theme.css` and Google Fonts
-- `ensureHomeLinkInHTML()` adds navigation home button if missing
-- All functions work together to ensure consistent page structure
 
 ## Model Switching
 
