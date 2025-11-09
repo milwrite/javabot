@@ -6,10 +6,61 @@ const fs = require('fs').promises;
 const path = require('path');
 const axios = require('axios');
 
+// Validate required environment variables
+const REQUIRED_ENV_VARS = [
+    'DISCORD_TOKEN',
+    'DISCORD_CLIENT_ID',
+    'GITHUB_TOKEN',
+    'GITHUB_REPO_OWNER',
+    'GITHUB_REPO_NAME',
+    'GITHUB_REPO_URL',
+    'OPENROUTER_API_KEY'
+];
+
+const missingVars = REQUIRED_ENV_VARS.filter(varName => !process.env[varName]);
+if (missingVars.length > 0) {
+    console.error('❌ Missing required environment variables:', missingVars.join(', '));
+    console.error('Please check your .env file');
+    process.exit(1);
+}
+console.log('✅ All required environment variables loaded');
+
+// Configuration constants
+const CONFIG = {
+    FILE_READ_LIMIT: 5000,
+    RESPONSE_LENGTH_LIMIT: 2000,
+    RESPONSE_TRUNCATE_LENGTH: 1800,
+    POLL_DURATION: 60000,
+    AI_MAX_TOKENS: 10000,
+    AI_TEMPERATURE: 0.7,
+    GIT_TIMEOUT: 30000,
+    PUSH_TIMEOUT: 60000,
+    API_TIMEOUT: 60000,
+    AGENTS_UPDATE_DELAY: 5000
+};
+
 // Error tracking to prevent loops
 const errorTracker = new Map();
 const MAX_ERROR_COUNT = 3;
 const ERROR_RESET_TIME = 5 * 60 * 1000; // 5 minutes
+
+// Periodic cleanup of error tracker to prevent memory leaks
+setInterval(() => {
+    const now = Date.now();
+    const expiredKeys = [];
+
+    for (const [key, data] of errorTracker.entries()) {
+        if (now - data.lastError > ERROR_RESET_TIME) {
+            expiredKeys.push(key);
+        }
+    }
+
+    expiredKeys.forEach(key => errorTracker.delete(key));
+
+    if (expiredKeys.length > 0) {
+        console.log(`🧹 Cleaned up ${expiredKeys.length} expired error tracking entries`);
+    }
+}, ERROR_RESET_TIME);
 
 // Message history tracking
 const messageHistory = [];
@@ -35,6 +86,16 @@ const octokit = new Octokit({
 });
 
 const git = simpleGit();
+
+// Git operation wrapper with timeout
+async function gitWithTimeout(operation, timeoutMs = CONFIG.GIT_TIMEOUT) {
+    return Promise.race([
+        operation(),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`Git operation timeout after ${timeoutMs}ms`)), timeoutMs)
+        )
+    ]);
+}
 
 // OpenRouter configuration
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -157,7 +218,55 @@ function clearErrorTracking(userId, commandName) {
     errorTracker.delete(key);
 }
 
+// Utility functions
+function sanitizeFileName(name) {
+    return name
+        .replace(/\.\./g, '')
+        .replace(/[\/\\]/g, '')
+        .replace(/[^a-zA-Z0-9-_]/g, '-')
+        .toLowerCase()
+        .substring(0, 100);
+}
+
+function validateInput(input, maxLength = 500) {
+    if (!input || typeof input !== 'string') {
+        throw new Error('Invalid input');
+    }
+    if (input.length > maxLength) {
+        throw new Error(`Input too long (max ${maxLength} characters)`);
+    }
+    return input.trim();
+}
+
+function cleanMarkdownCodeBlocks(content, type = 'html') {
+    const patterns = {
+        html: /```html\n?/g,
+        javascript: /```javascript\n?/g,
+        js: /```js\n?/g,
+        css: /```css\n?/g
+    };
+
+    return content
+        .replace(patterns[type] || /```\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+}
+
+function ensureHomeLinkInHTML(htmlContent) {
+    if (!htmlContent.includes('index.html') && !htmlContent.includes('Home</a>')) {
+        const homeLink = `
+    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
+        <a href="../index.html" style="text-decoration: none; background: rgba(102, 126, 234, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-family: Arial, sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(102, 126, 234, 1)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.9)'">← Home</a>
+    </div>
+`;
+        return htmlContent.replace(/<body([^>]*)>/, `<body$1>${homeLink}`);
+    }
+    return htmlContent;
+}
+
 // Message history and agents.md management
+let agentsFileUpdateTimer = null;
+
 function addToHistory(username, message, isBot = false) {
     const entry = {
         timestamp: new Date().toISOString(),
@@ -169,13 +278,20 @@ function addToHistory(username, message, isBot = false) {
 
     messageHistory.push(entry);
 
-    // Keep only last 20 messages
-    if (messageHistory.length > MAX_HISTORY) {
+    // Enforce strict limit
+    while (messageHistory.length > MAX_HISTORY) {
         messageHistory.shift();
     }
 
-    // Update agents.md periodically
-    updateAgentsFile();
+    // Debounce file writes to prevent excessive I/O
+    if (agentsFileUpdateTimer) {
+        clearTimeout(agentsFileUpdateTimer);
+    }
+    agentsFileUpdateTimer = setTimeout(() => {
+        updateAgentsFile().catch(err =>
+            console.error('Failed to update agents file:', err)
+        );
+    }, CONFIG.AGENTS_UPDATE_DELAY);
 }
 
 async function updateAgentsFile() {
@@ -251,7 +367,7 @@ async function listFiles(dirPath = './src') {
 async function readFile(filePath) {
     try {
         const content = await fs.readFile(filePath, 'utf8');
-        return content.substring(0, 5000); // Limit to 5000 chars
+        return content.substring(0, CONFIG.FILE_READ_LIMIT);
     } catch (error) {
         return `Error reading file: ${error.message}`;
     }
@@ -306,6 +422,7 @@ async function updateIndexWithPage(pageName, description) {
 
 // Tool functions that AI can call via @ mentions
 async function createPage(name, description) {
+    console.log(`[CREATE_PAGE] Starting: ${name}`);
     try {
         const webPrompt = `Build "${name}": ${description}
 
@@ -321,28 +438,19 @@ Return only HTML, no markdown blocks or explanations.`;
         const response = await axios.post(OPENROUTER_URL, {
             model: MODEL,
             messages: [{ role: 'user', content: webPrompt }],
-            max_tokens: 10000,
-            temperature: 0.7
+            max_tokens: CONFIG.AI_MAX_TOKENS,
+            temperature: CONFIG.AI_TEMPERATURE
         }, {
             headers: {
                 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            timeout: 60000
+            timeout: CONFIG.API_TIMEOUT
         });
 
         let htmlContent = response.data.choices[0].message.content;
-        htmlContent = htmlContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
-
-        // Ensure home link
-        if (!htmlContent.includes('index.html') && !htmlContent.includes('Back to Home')) {
-            const homeLink = `
-    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
-        <a href="../index.html" style="text-decoration: none; background: rgba(102, 126, 234, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-family: Arial, sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(102, 126, 234, 1)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.9)'">← Home</a>
-    </div>
-`;
-            htmlContent = htmlContent.replace(/<body([^>]*)>/, `<body$1>${homeLink}`);
-        }
+        htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
+        htmlContent = ensureHomeLinkInHTML(htmlContent);
 
         const fileName = `src/${name}.html`;
         await fs.mkdir('src', { recursive: true });
@@ -351,13 +459,16 @@ Return only HTML, no markdown blocks or explanations.`;
         // Update index.html
         await updateIndexWithPage(name, description);
 
+        console.log(`[CREATE_PAGE] Success: ${fileName}`);
         return `Created ${fileName} and updated index.html. Live at: https://milwrite.github.io/javabot/src/${name}.html`;
     } catch (error) {
+        console.error(`[CREATE_PAGE] Error:`, error.message);
         return `Error creating page: ${error.message}`;
     }
 }
 
 async function createFunction(name, description) {
+    console.log(`[CREATE_FUNCTION] Starting: ${name}`);
     try {
         // Generate JS library
         const jsPrompt = `Create a JavaScript function library called "${name}".
@@ -374,18 +485,18 @@ Return only JavaScript, no markdown blocks or explanations.`;
         const jsResponse = await axios.post(OPENROUTER_URL, {
             model: MODEL,
             messages: [{ role: 'user', content: jsPrompt }],
-            max_tokens: 10000,
-            temperature: 0.7
+            max_tokens: CONFIG.AI_MAX_TOKENS,
+            temperature: CONFIG.AI_TEMPERATURE
         }, {
             headers: {
                 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            timeout: 60000
+            timeout: CONFIG.API_TIMEOUT
         });
 
         let jsContent = jsResponse.data.choices[0].message.content;
-        jsContent = jsContent.replace(/```javascript\n?/g, '').replace(/```js\n?/g, '').replace(/```\n?/g, '').trim();
+        jsContent = cleanMarkdownCodeBlocks(jsContent, 'javascript');
 
         // Generate demo HTML
         const htmlPrompt = `Create a demo HTML page for "${name}" JavaScript library.
@@ -402,28 +513,19 @@ Return only HTML, no markdown blocks or explanations.`;
         const htmlResponse = await axios.post(OPENROUTER_URL, {
             model: MODEL,
             messages: [{ role: 'user', content: htmlPrompt }],
-            max_tokens: 10000,
-            temperature: 0.7
+            max_tokens: CONFIG.AI_MAX_TOKENS,
+            temperature: CONFIG.AI_TEMPERATURE
         }, {
             headers: {
                 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            timeout: 60000
+            timeout: CONFIG.API_TIMEOUT
         });
 
         let htmlContent = htmlResponse.data.choices[0].message.content;
-        htmlContent = htmlContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
-
-        // Ensure home link
-        if (!htmlContent.includes('index.html') && !htmlContent.includes('Home</a>')) {
-            const homeLink = `
-    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
-        <a href="../index.html" style="text-decoration: none; background: rgba(102, 126, 234, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-family: Arial, sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(102, 126, 234, 1)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.9)'">← Home</a>
-    </div>
-`;
-            htmlContent = htmlContent.replace(/<body([^>]*)>/, `<body$1>${homeLink}`);
-        }
+        htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
+        htmlContent = ensureHomeLinkInHTML(htmlContent);
 
         await fs.mkdir('src', { recursive: true });
         const jsFileName = `src/${name}.js`;
@@ -434,32 +536,48 @@ Return only HTML, no markdown blocks or explanations.`;
         // Update index.html
         await updateIndexWithPage(name, description);
 
+        console.log(`[CREATE_FUNCTION] Success: ${jsFileName}, ${htmlFileName}`);
         return `Created ${jsFileName} and ${htmlFileName}, updated index.html. Live demo: https://milwrite.github.io/javabot/src/${name}.html`;
     } catch (error) {
+        console.error(`[CREATE_FUNCTION] Error:`, error.message);
         return `Error creating function library: ${error.message}`;
     }
 }
 
 async function commitChanges(message, files = '.') {
+    console.log(`[COMMIT] Starting: "${message}"`);
     try {
-        const status = await git.status();
+        const status = await gitWithTimeout(() => git.status());
+
+        console.log(`[COMMIT] Status:`, {
+            branch: status.current,
+            filesChanged: status.files.length
+        });
+
         if (status.files.length === 0) {
+            console.log('[COMMIT] No changes to commit');
             return 'Nothing to commit';
         }
 
+        console.log('[COMMIT] Staging files...');
         if (files === '.') {
-            await git.add('.');
+            await gitWithTimeout(() => git.add('.'));
         } else {
             const fileList = files.split(',').map(f => f.trim());
-            await git.add(fileList);
+            await gitWithTimeout(() => git.add(fileList));
         }
 
-        const commit = await git.commit(message);
-        const currentBranch = status.current || 'main';
-        await git.push('origin', currentBranch);
+        console.log('[COMMIT] Creating commit...');
+        const commit = await gitWithTimeout(() => git.commit(message));
 
+        console.log('[COMMIT] Pushing to remote...');
+        const currentBranch = status.current || 'main';
+        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+
+        console.log(`[COMMIT] Success: ${commit.commit.substring(0, 7)}`);
         return `Committed and pushed: ${commit.commit.substring(0, 7)} - ${message}`;
     } catch (error) {
+        console.error('[COMMIT] Error:', error.message);
         return `Error committing: ${error.message}`;
     }
 }
