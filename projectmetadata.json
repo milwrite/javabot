@@ -46,9 +46,5 @@
   "subway_sub_ratio": {
     "icon": "🌐",
     "description": "Subway_sub_ratio"
-  },
-  "noodle_inventory": {
-    "icon": "🌐",
-    "description": "A retro arcade-themed noodle inventory tracker where you can add, track, and manage different types of noodles with quantities, types, and expiration dates"
   }
 }

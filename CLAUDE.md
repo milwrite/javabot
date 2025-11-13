@@ -105,10 +105,10 @@ The entire bot is contained in `index.js` (~1900+ lines) with these key sections
 
 ### AI Function Calling System
 
-The bot uses OpenRouter's function calling to give the AI autonomous access to:
+The bot uses OpenRouter's function calling with an **agentic loop** to give the AI autonomous multi-step capabilities:
 
 **Filesystem Tools**:
-- `list_files(path)` - List files in repository directories
+- `list_files(path)` - Recursively list all files with paths, types, sizes organized by category (HTML, CSS, JS, JSON). Automatically discovers subdirectories.
 - `read_file(path)` - Read file contents (5000 char limit)
 - `write_file(path, content)` - Create/update files completely
 - `edit_file(path, instructions)` - Edit existing files using AI with natural language instructions (e.g., "change background to blue", "fix syntax error", "add new function")
@@ -117,6 +117,13 @@ The bot uses OpenRouter's function calling to give the AI autonomous access to:
 - `web_search(query)` - Search internet for current information
 - Automatically triggered for questions about "latest", "recent", "current"
 - Used for documentation, library versions, news
+
+**Agentic Loop (Multi-Step Execution)**:
+- AI can chain multiple tool calls across iterations (max 10 rounds)
+- Example flow: read file → edit based on contents → commit changes
+- Tools remain available after each step, enabling complex multi-step tasks
+- Console logs show iteration count and tools used per step
+- Safety limit prevents infinite loops
 
 **Response Handling**:
 - Long responses (>2000 chars) saved to `responses/` directory
