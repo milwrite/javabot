@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>frogger</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        body {
+            padding: 10px;
+            min-height: 100vh;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 100%;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+        canvas {
+            border: 2px solid #7dd3a0;
+            background: #2c3e50;
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        .controls {
+            text-align: center;
+            color: #7dd3a0;
+            margin-top: 10px;
+        }
+        .mobile-controls {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 200px;
+            margin: 20px auto;
+        }
+        .mobile-btn {
+            background: #7dd3a0;
+            color: #1a1d23;
+            border: none;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .mobile-btn:active {
+            background: #5bb885;
+        }
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: grid;
+            }
+            canvas {
+                max-width: 95vw;
+                max-height: 60vh;
+            }
+            .game-container {
+                padding: 10px;
+            }
+        }
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 24px;
+            }
+            canvas {
+                max-width: 90vw;
+                max-height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">← Home</a>
+    
+    <div class="game-container">
+        <h1>Frogger</h1>
+        <canvas id="gameCanvas"></canvas>
+        <div class="controls">
+            Use arrow keys to move the frog!<br>
+            Avoid cars, use logs to cross water
+        </div>
+        <div class="mobile-controls">
+            <div></div>
+            <button class="mobile-btn" data-key="ArrowUp">↑</button>
+            <div></div>
+            <button class="mobile-btn" data-key="ArrowLeft">←</button>
+            <button class="mobile-btn" data-key="ArrowDown">↓</button>
+            <button class="mobile-btn" data-key="ArrowRight">→</button>
+        </div>
+    </div>
+
+    <script src="frogger.js"></script>
+</body>
+</html>

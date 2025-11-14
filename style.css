@@ -1,0 +1,212 @@
+/* Bot Sportello Arcade - Softer Retro Style */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Press Start 2P', cursive, monospace;
+    background: linear-gradient(to bottom, #1a1d23 0%, #0f1419 100%);
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 49px,
+            rgba(100, 200, 150, 0.08) 49px,
+            rgba(100, 200, 150, 0.08) 50px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 49px,
+            rgba(100, 200, 150, 0.08) 49px,
+            rgba(100, 200, 150, 0.08) 50px
+        );
+    background-size: 50px 50px;
+    min-height: 100vh;
+    padding: 40px 20px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+@keyframes gridMove {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 50px; }
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+header {
+    text-align: center;
+    color: #7dd3a0;
+    margin-bottom: 50px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.tagline {
+    font-size: 0.6em;
+    color: #95c9ad;
+    margin-top: 10px;
+    opacity: 0.85;
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.project-card {
+    background: linear-gradient(135deg, #252a32 0%, #1d2228 100%);
+    border: 2px solid #5a9d7a;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: #7dd3a0;
+    display: block;
+    position: relative;
+    overflow: hidden;
+}
+
+.project-card::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #5a9d7a, #7dd3a0, #5a9d7a);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(93, 157, 122, 0.3);
+    border-color: #7dd3a0;
+}
+
+.project-card:hover::before {
+    opacity: 0.15;
+}
+
+.project-icon {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.project-title {
+    font-size: 0.9em;
+    margin-bottom: 15px;
+    color: #a8e6c1;
+    line-height: 1.4;
+}
+
+.project-description {
+    color: #95c9ad;
+    line-height: 1.6;
+    font-size: 0.5em;
+    opacity: 0.9;
+}
+
+.add-project {
+    background: linear-gradient(135deg, #2a4035 0%, #1f3028 100%);
+    border-color: #6bb88f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.add-project:hover {
+    background: linear-gradient(135deg, #325442 0%, #2a4035 100%);
+    box-shadow: 0 8px 20px rgba(107, 184, 143, 0.25);
+}
+
+footer {
+    text-align: center;
+    color: #95c9ad;
+    margin-top: 60px;
+    font-size: 0.5em;
+    line-height: 1.8;
+    opacity: 0.8;
+}
+
+footer a {
+    color: #7dd3a0;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+footer a:hover {
+    color: #a8e6c1;
+}
+
+footer code {
+    background: #252a32;
+    padding: 3px 8px;
+    border: 1px solid #5a9d7a;
+    border-radius: 3px;
+    color: #7dd3a0;
+}
+
+.refresh-btn {
+    background: #252a32;
+    color: #7dd3a0;
+    border: 2px solid #5a9d7a;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 0.6em;
+    font-family: 'Press Start 2P', cursive;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    background: #5a9d7a;
+    color: #1a1d23;
+    border-color: #7dd3a0;
+    transform: translateY(-2px);
+}
+
+.refresh-btn:active {
+    transform: translateY(0);
+}
+
+/* Subtle scanline effect */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.05) 0px,
+        transparent 1px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.05) 3px
+    );
+    pointer-events: none;
+    z-index: 999;
+}

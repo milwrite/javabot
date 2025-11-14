@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Bot Sportello's Arcade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>BOT SPORTELLO'S<br>ARCADE</h1>
+            <p class="tagline">INSERT COIN TO CONTINUE</p>
+            <button class="refresh-btn" onclick="loadProjects()">[ REFRESH ]</button>
+        </header>
+
+        <div class="projects-grid" id="projectsGrid">
+            <!-- Projects will be loaded here -->
+        </div>
+
+        <footer>
+            <p>BUILT WITH BOT SPORTELLO</p>
+            <p style="margin-top: 10px;">
+                <a href="https://milwrite.github.io/javabot/" style="color: #00ff64; text-decoration: none; text-shadow: 0 0 5px #00ff64;" target="_blank">VISIT ARCADE →</a>
+            </p>
+            <p style="margin-top: 10px;">USE <code>/add-page</code> IN DISCORD TO ADD NEW PROJECTS</p>
+            <p style="margin-top: 10px; opacity: 0.5;">© 1985 SPORTELLO SYSTEMS</p>
+        </footer>
+    </div>
+
+    <script>
+        let projectMetadata = {};
+
+        async function loadProjects() {
+            const grid = document.getElementById('projectsGrid');
+
+            try {
+                // Fetch the project metadata JSON file
+                const response = await fetch('./projectmetadata.json');
+                projectMetadata = await response.json();
+
+                // Display all projects from metadata
+                displayProjects(Object.keys(projectMetadata));
+            } catch (error) {
+                console.error('Failed to load project metadata:', error);
+                grid.innerHTML = '<p style="color: #ff6b6b; text-align: center;">Failed to load projects. Please refresh.</p>';
+            }
+        }
+
+        function displayProjects(projects) {
+            const grid = document.getElementById('projectsGrid');
+            grid.innerHTML = '';
+
+            // Display each project
+            projects.forEach(project => {
+                const metadata = projectMetadata[project] || {
+                    icon: '🌐',
+                    description: 'Interactive web project'
+                };
+
+                const card = document.createElement('a');
+                card.className = 'project-card';
+                card.href = `./src/${project}.html`;
+                card.innerHTML = `
+                    <div class="project-icon">${metadata.icon}</div>
+                    <div class="project-title">${formatProjectName(project).toUpperCase()}</div>
+                    <div class="project-description">${metadata.description.toUpperCase()}</div>
+                `;
+                grid.appendChild(card);
+            });
+
+            // Add "Create New" card
+            const addCard = document.createElement('div');
+            addCard.className = 'project-card add-project';
+            addCard.innerHTML = `
+                <div class="project-icon">➕</div>
+                <div class="project-title">ADD NEW PAGE</div>
+                <div class="project-description">USE /ADD-PAGE IN DISCORD</div>
+            `;
+            grid.appendChild(addCard);
+        }
+
+        function formatProjectName(name) {
+            // Convert "example-game" to "Example Game"
+            return name
+                .split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        // Load projects on page load
+        loadProjects();
+    </script>
+</body>
+</html>

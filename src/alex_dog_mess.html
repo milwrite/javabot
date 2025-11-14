@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alex's Dog Mess - Clean Up!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;700&family=Bangers&display=swap" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" class="home-link">← HOME</a>
+    
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="title">ALEX! 🚨</div>
+            <div class="subtitle">Your Dog Made a Mess!</div>
+            
+            <div class="dog-container">
+                <div class="dog-emoji">🐕</div>
+            </div>
+
+            <div class="mess-container">
+                <div class="mess-item">💩</div>
+                <div class="mess-item">🦴</div>
+                <div class="mess-item">🧦</div>
+                <div class="mess-item">📰</div>
+                <div class="mess-item">🥫</div>
+                <div class="mess-item">🧻</div>
+            </div>
+
+            <div class="message">
+                Your adorable pup has created quite the masterpiece around the house!<br>
+                <strong>Time to clean it up, buddy! 🧹</strong>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                🎉 THANK YOU! The house is clean! 🎉
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-yes" onclick="handleYes()">I'll Clean It! ✓</button>
+                <button class="btn btn-no" onclick="handleNo()">Not Now...</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function createConfetti() {
+            const confettiPieces = ['🎉', '🎊', '✨', '⭐', '🌟', '💫'];
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.textContent = confettiPieces[Math.floor(Math.random() * confettiPieces.length)];
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.top = '-50px';
+                document.body.appendChild(confetti);
+
+                const duration = Math.random() * 2 + 2;
+                const xMove = (Math.random() - 0.5) * 400;
+                
+                confetti.animate([
+                    { transform: 'translateY(0) translateX(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(${window.innerHeight + 100}px) translateX(${xMove}px) rotate(720deg)`, opacity: 0 }
+                ], {
+                    duration: duration * 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                });
+
+                setTimeout(() => confetti.remove(), duration * 1000);
+            }
+        }
+
+        function handleYes() {
+            const mainContent = document.querySelector('.main-content');
+            const successMsg = document.getElementById('successMessage');
+            
+            mainContent.style.animation = 'scaleIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+            
+            document.querySelector('.dog-emoji').textContent = '🐕‍🦺';
+            document.querySelector('.title').textContent = 'AWESOME! 🌟';
+            document.querySelector('.subtitle').textContent = 'You\'re the best pet owner ever!';
+            
+            const messContainer = document.querySelector('.mess-container');
+            messContainer.style.opacity = '0';
+            messContainer.style.transition = 'opacity 0.5s ease';
+            
+            successMsg.style.display = 'block';
+            document.querySelector('.message').innerHTML = 'Your pup is so happy! 🐕💕<br>The house looks spotless!';
+            document.querySelector('.button-group').style.display = 'none';
+            
+            createConfetti();
+            
+            setTimeout(() => {
+                createParticles();
+            }, 500);
+        }
+
+        function handleNo() {
+            const subtitle = document.querySelector('.subtitle');
+            const message = document.querySelector('.message');
+            const dogEmoji = document.querySelector('.dog-emoji');
+            
+            subtitle.textContent = 'Your dog is very disappointed... 😢';
+            message.innerHTML = 'The mess is getting worse!<br>Your pup is waiting... 🥺';
+            
+            dogEmoji.classList.add('sad-face');
+            dogEmoji.textContent = '🐕😢';
+            
+            setTimeout(() => {
+                dogEmoji.classList.remove('sad-face');
+            }, 500);
+
+            const messContainer = document.querySelector('.mess-container');
+            const newMess = document.createElement('div');
+            newMess.className = 'mess-item';
+            newMess.textContent = '💩';
+            newMess.style.animationDelay = '0s';
+            messContainer.appendChild(newMess);
+
+            if (messContainer.children.length > 10) {
+                messContainer.removeChild(messContainer.firstChild);
+            }
+        }
+
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * window.innerWidth + 'px';
+                particle.style.top = Math.random() * window.innerHeight + 'px';
+                particle.style.width = Math.random() * 10 + 5 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.background = `hsl(${Math.random() * 60 + 280}, 100%, 60%)`;
+                particle.style.borderRadius = '50%';
+                particle.style.opacity = Math.random() * 0.5 + 0.5;
+                
+                particlesContainer.appendChild(particle);
+                
+                const duration = Math.random() * 3 + 2;
+                particle.animate([
+                    { transform: 'translate(0, 0)', opacity: Math.random() * 0.5 + 0.5 },
+                    { transform: `translate(${(Math.random() - 0.5) * 200}px, ${(Math.random() - 0.5) * 200}px)`, opacity: 0 }
+                ], {
+                    duration: duration * 1000,
+                    easing: 'ease-out'
+                });
+                
+                setTimeout(() => particle.remove(), duration * 1000);
+            }
+        }
+
+        // Initial animation on page load
+        window.addEventListener('load', () => {
+            createParticles();
+        });
+    </script>
+</body>
+</html>
