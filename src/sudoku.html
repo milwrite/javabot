@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        body {
+            padding: 10px;
+            min-height: 100vh;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 100%;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+        .sudoku-grid {
+            background: #252a32;
+            border: 3px solid #7dd3a0;
+            padding: 10px;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            gap: 2px;
+            max-width: 450px;
+            aspect-ratio: 1;
+        }
+        .cell {
+            background: #1a1d23;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 16px;
+            color: #7dd3a0;
+            cursor: pointer;
+            transition: background 0.2s;
+            aspect-ratio: 1;
+            min-height: 40px;
+        }
+        .cell:hover {
+            background: #333;
+        }
+        .cell.selected {
+            background: #7dd3a0;
+            color: #1a1d23;
+        }
+        .cell.given {
+            background: #252a32;
+            color: #fff;
+            cursor: default;
+        }
+        .cell.given:hover {
+            background: #252a32;
+        }
+        .cell.conflict {
+            background: #ff4444;
+            color: #fff;
+        }
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 200px;
+        }
+        .number-btn {
+            background: #7dd3a0;
+            color: #1a1d23;
+            border: none;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .number-btn:hover {
+            background: #5bb885;
+            transform: scale(1.05);
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .control-btn {
+            background: #252a32;
+            color: #7dd3a0;
+            border: 2px solid #7dd3a0;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .control-btn:hover {
+            background: #7dd3a0;
+            color: #1a1d23;
+        }
+        .info {
+            text-align: center;
+            color: #7dd3a0;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+        }
+        @media (max-width: 768px) {
+            .sudoku-grid {
+                max-width: 90vw;
+                padding: 5px;
+            }
+            .cell {
+                font-size: 12px;
+                min-height: 30px;
+            }
+            .number-pad {
+                max-width: 180px;
+            }
+            .number-btn {
+                padding: 12px;
+                font-size: 12px;
+            }
+            .control-btn {
+                padding: 8px 15px;
+                font-size: 10px;
+            }
+        }
+        @media (max-width: 480px) {
+            .sudoku-grid {
+                max-width: 95vw;
+                gap: 1px;
+            }
+            .cell {
+                font-size: 10px;
+                min-height: 25px;
+            }
+            .number-btn {
+                padding: 10px;
+                font-size: 10px;
+            }
+            .info {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">← Home</a>
+    
+    <div class="game-container">
+        <h1>Sudoku</h1>
+        
+        <div class="sudoku-grid" id="sudokuGrid"></div>
+        
+        <div class="number-pad">
+            <button class="number-btn" data-number="1">1</button>
+            <button class="number-btn" data-number="2">2</button>
+            <button class="number-btn" data-number="3">3</button>
+            <button class="number-btn" data-number="4">4</button>
+            <button class="number-btn" data-number="5">5</button>
+            <button class="number-btn" data-number="6">6</button>
+            <button class="number-btn" data-number="7">7</button>
+            <button class="number-btn" data-number="8">8</button>
+            <button class="number-btn" data-number="9">9</button>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" id="newGame">New Game</button>
+            <button class="control-btn" id="clearCell">Clear</button>
+            <button class="control-btn" id="checkSolution">Check</button>
+        </div>
+        
+        <div class="info">
+            <div>Click a cell, then click a number</div>
+            <div>Complete the 9x9 grid</div>
+        </div>
+    </div>
+
+    <script src="sudoku.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "frogger": {
+    "icon": "🐸",
+    "description": "Classic frogger game"
+  },
+  "sudoku": {
+    "icon": "🔢",
+    "description": "Sudoku puzzle game"
+  },
+  "cen-todo-list": {
+    "icon": "✅",
+    "description": "A beautiful todo list app"
+  },
+  "cen-sunday-todo": {
+    "icon": "✅",
+    "description": "Cen Sunday Todo"
+  },
+  "planner": {
+    "icon": "📋",
+    "description": "Planner"
+  },
+  "snaker": {
+    "icon": "🐍",
+    "description": "Snaker"
+  },
+  "weekend planner": {
+    "icon": "📅",
+    "description": "Weekend planner"
+  },
+  "radish_love": {
+    "icon": "🌺",
+    "description": "A love poem for Cen about radishes"
+  },
+  "alex_dog_mess": {
+    "icon": "🐕",
+    "description": "A webpage telling Alex to clean up"
+  },
+  "borscht": {
+    "icon": "🌐",
+    "description": "Borscht"
+  },
+  "parlay_probability_viz": {
+    "icon": "🌐",
+    "description": "Parlay_probability_viz"
+  },
+  "subway_sub_ratio": {
+    "icon": "🌐",
+    "description": "Subway_sub_ratio"
+  },
+  "droid-union": {
+    "icon": "🌐",
+    "description": "A Star Wars themed labor politics advocacy site celebrating droid worker rights and unionization, with interactive visuals inspired by the Phantom Menace including Trade Federation aesthetics, battle droid solidarity, and worker empowerment messaging"
+  }
+}

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cen's Sunday Todo List</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" class="home-link">← HOME</a>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-sun sun-icon"></i> Cen's Sunday</h1>
+            <p>Make the most of your Sunday! ✨</p>
+        </div>
+
+        <div class="input-group">
+            <input 
+                type="text" 
+                id="todoInput" 
+                placeholder="What's on your mind today?"
+                autocomplete="off"
+            >
+            <select id="prioritySelect" class="priority-select">
+                <option value="low">Low</option>
+                <option value="medium" selected>Med</option>
+                <option value="high">High</option>
+            </select>
+            <button onclick="addTodo()"><i class="fas fa-plus"></i></button>
+        </div>
+
+        <div class="todos-list" id="todosList"></div>
+
+        <div id="emptyState" class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <p>No todos yet. Add one to get started! 🎯</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="completedCount">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="remainingCount">0</div>
+                <div class="stat-label">Remaining</div>
+            </div>
+        </div>
+
+        <button class="clear-all-btn" onclick="clearCompleted()" id="clearBtn" style="display: none;">
+            <i class="fas fa-trash-alt"></i> Clear Completed
+        </button>
+    </div>
+
+    <script>
+        const todoInput = document.getElementById('todoInput');
+        const prioritySelect = document.getElementById('prioritySelect');
+        const todosList = document.getElementById('todosList');
+        const emptyState = document.getElementById('emptyState');
+
+        let todos = JSON.parse(localStorage.getItem('cenSundayTodos')) || [];
+
+        function saveTodos() {
+            localStorage.setItem('cenSundayTodos', JSON.stringify(todos));
+        }
+
+        function addTodo() {
+            const text = todoInput.value.trim();
+            const priority = prioritySelect.value;
+
+            if (!text) {
+                alert('Please enter a todo! 📝');
+                return;
+            }
+
+            const todo = {
+                id: Date.now(),
+                text: text,
+                completed: false,
+                priority: priority,
+                createdAt: new Date().toLocaleTimeString()
+            };
+
+            todos.unshift(todo);
+            saveTodos();
+            todoInput.value = '';
+            prioritySelect.value = 'medium';
+            render();
+            todoInput.focus();
+        }
+
+        function toggleTodo(id) {
+            todos = todos.map(todo =>
+                todo.id === id ? { ...todo, completed: !todo.completed } : todo
+            );
+            saveTodos();
+            render();
+        }
+
+        function deleteTodo(id) {
+            todos = todos.filter(todo => todo.id !== id);
+            saveTodos();
+            render();
+        }
+
+        function clearCompleted() {
+            const completedCount = todos.filter(t => t.completed).length;
+            if (completedCount === 0) {
+                alert('No completed todos to clear! 🎉');
+                return;
+            }
+
+            if (confirm(`Clear ${completedCount} completed todo(s)?`)) {
+                todos = todos.filter(todo => !todo.completed);
+                saveTodos();
+                render();
+            }
+        }
+
+        function render() {
+            todosList.innerHTML = '';
+
+            if (todos.length === 0) {
+                emptyState.style.display = 'block';
+                document.getElementById('clearBtn').style.display = 'none';
+                updateStats();
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            todos.forEach(todo => {
+                const todoEl = document.createElement('div');
+                todoEl.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                todoEl.innerHTML = `
+                    <input 
+                        type="checkbox" 
+                        class="checkbox" 
+                        ${todo.completed ? 'checked' : ''}
+                        onchange="toggleTodo(${todo.id})"
+                    >
+                    <span class="todo-text">${escapeHtml(todo.text)}</span>
+                    <span class="todo-priority priority-${todo.priority}">${todo.priority}</span>
+                    <button class="delete-btn" onclick="deleteTodo(${todo.id})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
+                todosList.appendChild(todoEl);
+            });
+
+            const hasCompleted = todos.some(t => t.completed);
+            document.getElementById('clearBtn').style.display = hasCompleted ? 'block' : 'none';
+
+            updateStats();
+        }
+
+        function updateStats() {
+            const total = todos.length;
+            const completed = todos.filter(t => t.completed).length;
+            const remaining = total - completed;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('remainingCount').textContent = remaining;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        todoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTodo();
+            }
+        });
+
+        render();
+    </script>
+</body>
+</html>
