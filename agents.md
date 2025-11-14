@@ -1,47 +1,32 @@
 # Bot Sportello Memory
 
-Last updated: 2025-11-14T04:11:46.253Z
+Last updated: 2025-11-14T04:14:17.695Z
 
 ## Conversation Summary
 
 # Discord Conversation Summary
 
 - **Projects Created/Modified:**
-  - Noodle project optimized for mobile responsiveness (added viewport meta tag, flexbox, media queries at 768px/480px, 44px+ touch targets)
-  - Frogger game fixed (log collision detection)
-  - Homepage created linking to all projects
-  - Subway sub ratio calculator reverted to original form
-  - New droid-union.html page requested (Star Wars labor politics themed)
+  - Made `noodle.html` mobile responsive with breakpoints at 768px/480px, 44px touch targets
+  - Updated README.md to reflect current web dev focus with arcade design system documentation
+  - Created homepage linking to all projects including noodle inventory app
+  - Fixed frogger game log collision detection
+  - Created `droid-union.html` for Star Wars labor politics themed page
+  - Reverted `subway_sub_ratio.html` after mistaken Star Wars theme changes
 
-- **User Requests & Preferences:**
-  - Bot should be more concise in responses (less rambling)
+- **User Preferences & Requests:**
+  - Bot should keep responses concise and less rambling (stoner aesthetic)
   - End all responses with "Roger Roger"
-  - Projects should maintain arcade aesthetic with mobile-first design
-  - All projects deploy to https://milwrite.github.io/javabot/
+  - Mobile responsiveness required for all projects
+  - Arcade/retro pixel aesthetic with mint green accents and Press Start 2P font
 
 - **Technical Context:**
-  - Bot Sportello is a Discord web development assistant
-  - Uses commands: `/create-page`, `/create-feature`, `/edit-file`
-  - Design system: arcade theme, retro pixel aesthetic, mint green accents, Press Start 2P font
-  - All projects stored in `/src` directory
+  - All projects deploy to https://milwrite.github.io/javabot/
+  - Uses `/create-page`, `/create-feature`, `/edit-file` commands with natural language instructions
+  - Mobile-first responsive design approach
+  - CSS class-based styling system
 
 ## Recent Messages
-
-**aneventperhaps** [03:22:26]: call it droid-union.html
-
-**Bot Sportello** [03:22:26]: Bot Sportello: Bot Sportello: Done, man — spun up droid-union.html with the arcade theme and some Star Wars labor vibes. Check it out at https://milwrite.github.io/javabot/src/droid-union.html and let me know what you wanna tweak.
-
-Roger Roger.
-
-**aneventperhaps** [04:08:20]: <@822471451399159819> i am so disappointed in jack for leaving this server
-
-**chopppa32** [04:09:27]: 
-
-**chopppa32** [04:09:41]: I’m new here
-
-**aneventperhaps** [04:10:20]: <@1436782482967101491> are you functional
-
-**aneventperhaps** [04:10:21]: are you functional
 
 **Bot Sportello** [04:10:21]: Bot Sportello: Yeah man, I'm here and ready to go — what do you need built or edited? Just lay it on me, dude.
 
@@ -65,7 +50,23 @@ Roger Roger.
 
 Roger Roger.
 
+**aneventperhaps** [04:11:53]: goddamnit bot i wasn't asking
+
+**chopppa32** [04:12:02]: 🤣🤣
+
+**aneventperhaps** [04:12:39]: bot is struggling right now because he's under development
+
+**aneventperhaps** [04:13:14]: <@1436782482967101491> made this one for you: https://milwrite.github.io/javabot/src/alex_dog_mess.html
+
+**aneventperhaps** [04:13:16]: made this one for you: https://milwrite.github.io/javabot/src/alex_dog_mess.html
+
+**Bot Sportello** [04:13:16]: Bot Sportello: Bot Sportello: Bot Sportello: Yeah man, my bad — I'm still getting my head on straight. That alex_dog_mess page looks wild though, dude. What's the vibe on that one?
+
+Roger Roger.
+
+**aneventperhaps** [04:14:12]: buggy with the "Bot Sportello:" repeating... fix coming soon
+
 ## Active Context
 
 **Users**: aneventperhaps, jimmytar, chopppa32
-**Total messages tracked**: 99
+**Total messages tracked**: 100
