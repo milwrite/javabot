@@ -1421,8 +1421,14 @@ async function handleMentionAsync(message) {
         addToHistory(username, content, false);
         addToHistory('Bot Sportello', response, true);
 
-        // Check for local git changes after AI response
-        const gitStatus = await gitWithTimeout(() => git.status());
+        // Check for local git changes after AI response (with timeout protection)
+        let gitStatus;
+        try {
+            gitStatus = await gitWithTimeout(() => git.status(), 5000);
+        } catch (error) {
+            logEvent('GIT', `Skipping git status check: ${error.message}`);
+            gitStatus = { files: [] }; // Empty status to skip commit prompt
+        }
         
         if (gitStatus.files.length > 0) {
             // AI made local changes - show commit confirmation
