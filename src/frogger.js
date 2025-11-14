@@ -26,6 +26,7 @@ class FroggerGame {
         this.cars = [];
         this.logs = [];
         this.water = [];
+        this.frogOnLog = false;
         
         this.init();
     }
@@ -40,6 +41,7 @@ class FroggerGame {
         this.cars = [];
         this.logs = [];
         this.water = [];
+        this.frogOnLog = false;
         
         // Create water rows (rows 1-5)
         for (let row = 1; row <= 5; row++) {
@@ -172,9 +174,10 @@ class FroggerGame {
         if (frogRow >= 1 && frogRow <= 5) {
             // Check if on a log
             this.logs.forEach(log => {
-                if (this.frog.x >= log.x &&
-                    this.frog.x + this.frog.size <= log.x + log.width &&
-                    Math.abs(this.frog.y - log.y) < this.gridSize / 2) {
+                if (this.frog.x + this.frog.size > log.x &&
+                    this.frog.x < log.x + log.width &&
+                    this.frog.y + this.frog.size > log.y &&
+                    this.frog.y < log.y + log.height) {
                     onLog = true;
                     // Move frog with log
                     this.frog.x += log.speed;
@@ -206,6 +209,7 @@ class FroggerGame {
     resetFrog() {
         this.frog.x = Math.floor(this.cols / 2) * this.gridSize;
         this.frog.y = (this.rows - 1) * this.gridSize;
+        this.frogOnLog = false;
     }
     
     render() {

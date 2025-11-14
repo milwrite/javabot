@@ -1,6 +1,6 @@
-# Bot Sportello - Discord Game Development Bot
+# Bot Sportello - Web Development Discord Bot
 
-A Discord bot with Doc Sportello's personality that generates Phaser 3 games and manages a JavaScript game development repository.
+A laid-back Discord bot with Doc Sportello's personality that helps create and manage web projects in a JavaScript repository. Generates HTML pages, interactive features, and web apps with a retro arcade aesthetic.
 
 ## Setup
 
@@ -15,7 +15,7 @@ A Discord bot with Doc Sportello's personality that generates Phaser 3 games and
      - `DISCORD_TOKEN`: Your Discord bot token
      - `GITHUB_TOKEN`: GitHub personal access token with repo permissions
      - `CHANNEL_ID`: Comma-separated Discord channel IDs for bot monitoring (e.g., "123,456,789")
-     - `OPENROUTER_API_KEY`: OpenRouter API key for AI game generation
+     - `OPENROUTER_API_KEY`: OpenRouter API key for AI code generation
 
 3. **Discord Bot Setup:**
    - Application ID: `1436782482967101491` (already configured)
@@ -26,21 +26,24 @@ A Discord bot with Doc Sportello's personality that generates Phaser 3 games and
 4. **GitHub Setup:**
    - Create a personal access token with `repo` permissions
    - Repository: https://github.com/milwrite/javabot/
+   - Live site: https://milwrite.github.io/javabot/
 
 ## Commands
 
+- `/create-page <name> <description>` - Generate a new HTML page with styling
+- `/create-feature <name> <description>` - Generate an interactive JavaScript feature
 - `/commit <message> [files]` - Commit and push changes to GitHub
-- `/create-game <name> <description>` - Generate a new Phaser 3 game with AI
 - `/status` - Check repository status
 - `/chat <message>` - Have a conversation with Bot Sportello
 - `/poll <question>` - Create a yes/no poll
 
 ## Features
 
-- **AI-Generated Games**: Uses Claude Haiku to generate complete, playable Phaser 3 games
-- **Multi-Channel Monitoring**: Tracks conversations across multiple Discord channels
+- **AI-Generated Pages & Features**: Uses Claude to generate complete, responsive web projects
+- **Arcade Aesthetic**: Retro pixel design system with mint green accent colors
+- **Mobile Responsive**: All pages built with mobile-first approach (768px, 480px breakpoints)
+- **Auto-Deployment**: Automatically commits and pushes to GitHub Pages
 - **Conversation Memory**: Remembers last 100 messages for context
-- **Auto-Commit**: Automatically stages, commits, and pushes to GitHub
 - **Doc Sportello Personality**: Laid-back, slightly spacey but helpful vibe
 
 ## Running
@@ -54,9 +57,42 @@ For development with auto-restart:
 npm run dev
 ```
 
-## Game Development
+## Design System
 
-Games are created using the Phaser 3 framework and stored in the `/games` directory. Each game includes:
-- JavaScript file with complete game logic
-- HTML file with Phaser CDN and game container
-- Working example: `games/example.js`
+All projects use the arcade theme with:
+- **Color Palette**: Mint green (#7dd3a0), dark backgrounds (#1a1d23, #252a32), lighter green text (#95c9ad)
+- **Typography**: Press Start 2P font for retro pixel aesthetic
+- **CSS Framework**: Shared `page-theme.css` with pre-built component classes
+- **Mobile First**: Touch targets minimum 44px, responsive layouts
+
+## Project Structure
+
+```
+/src
+  ├── index.html              - Main hub page
+  ├── page-theme.css          - Shared arcade design system
+  ├── [page-name].html        - Individual web pages
+  ├── [feature-name].js       - Interactive features & libraries
+  └── [feature-name].html     - Feature demo pages
+```
+
+## Creating Projects
+
+### Pages
+Generate a full HTML page with styling:
+```
+/create-page <name> <description>
+```
+
+### Features
+Generate a reusable JavaScript component or library:
+```
+/create-feature <name> <description>
+```
+
+Both automatically:
+- Link to the arcade theme CSS
+- Include responsive mobile design
+- Add navigation back to index.html
+- Update the index.html hub
+- Deploy to GitHub Pages
