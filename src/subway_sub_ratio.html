@@ -8,8 +8,621 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        :root {
+            --naboo-green: #00d084;
+            --naboo-blue: #1a9fff;
+            --naboo-purple: #a855f7;
+            --trade-fed-red: #ff1744;
+            --droid-gold: #ffd700;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 50%, #0a0e27 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .star-field {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            background: rgba(10, 14, 39, 0.8);
+            border: 3px solid var(--naboo-green);
+            box-shadow: 0 0 30px rgba(0, 208, 132, 0.5), inset 0 0 20px rgba(26, 159, 255, 0.2);
+        }
+
+        .header {
+            background: linear-gradient(90deg, rgba(0, 208, 132, 0.2), rgba(26, 159, 255, 0.2));
+            border-bottom: 2px solid var(--naboo-green);
+            box-shadow: 0 0 20px rgba(0, 208, 132, 0.3);
+        }
+
+        .header h1 {
+            text-shadow: 0 0 10px var(--naboo-green), 0 0 20px var(--naboo-blue);
+            animation: headerPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes headerPulse {
+            0%, 100% { text-shadow: 0 0 10px var(--naboo-green), 0 0 20px var(--naboo-blue); }
+            50% { text-shadow: 0 0 20px var(--naboo-green), 0 0 40px var(--naboo-blue), 0 0 60px var(--naboo-purple); }
+        }
+
+        .threat-meter {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--trade-fed-red);
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(255, 23, 68, 0.4);
+        }
+
+        .threat-title {
+            font-size: 12px;
+            color: var(--trade-fed-red);
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px var(--trade-fed-red);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .threat-bar {
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(90deg, rgba(0, 208, 132, 0.3), rgba(168, 85, 247, 0.3));
+            border: 1px solid var(--naboo-purple);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .threat-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--naboo-green), var(--naboo-purple), var(--trade-fed-red));
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.8);
+            position: relative;
+        }
+
+        .threat-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .threat-level {
+            font-size: 10px;
+            color: var(--naboo-green);
+            margin-top: 8px;
+            text-shadow: 0 0 5px var(--naboo-green);
+        }
+
+        .midi-chlorian-indicator {
+            margin: 15px 0;
+            padding: 12px;
+            background: rgba(0, 208, 132, 0.1);
+            border: 2px solid var(--naboo-green);
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0, 208, 132, 0.3);
+        }
+
+        .midi-chlorian-label {
+            font-size: 10px;
+            color: var(--naboo-green);
+            margin-bottom: 8px;
+            text-shadow: 0 0 5px var(--naboo-green);
+        }
+
+        .midi-chlorian-value {
+            font-size: 16px;
+            color: var(--naboo-blue);
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--naboo-blue);
+            animation: midiPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes midiPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .droid-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .droid {
+            width: 50px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--droid-gold), #ffed4e);
+            border: 2px solid var(--droid-gold);
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            animation: droidFloat 2s ease-in-out infinite;
+        }
+
+        .droid:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .droid:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes droidFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .droid-eye {
+            width: 8px;
+            height: 8px;
+            background: var(--trade-fed-red);
+            border-radius: 50%;
+            position: absolute;
+            top: 15px;
+            animation: droidBlink 2s infinite;
+        }
+
+        .droid-eye:first-of-type {
+            left: 12px;
+        }
+
+        .droid-eye:last-of-type {
+            right: 12px;
+        }
+
+        @keyframes droidBlink {
+            0%, 10%, 15%, 100% { opacity: 1; }
+            5%, 12% { opacity: 0; }
+        }
+
+        .controls {
+            background: rgba(26, 159, 255, 0.05);
+            border: 2px solid var(--naboo-blue);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(26, 159, 255, 0.2);
+        }
+
+        .slider-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 4px solid var(--naboo-green);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .slider-group:hover {
+            background: rgba(0, 208, 132, 0.1);
+            box-shadow: 0 0 15px rgba(0, 208, 132, 0.3);
+            transform: translateX(5px);
+        }
+
+        .slider-group input[type="range"] {
+            accent-color: var(--naboo-green);
+            filter: drop-shadow(0 0 5px rgba(0, 208, 132, 0.5));
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            box-shadow: 0 0 10px var(--naboo-green);
+        }
+
+        .slider-value {
+            color: var(--naboo-blue);
+            text-shadow: 0 0 5px var(--naboo-blue);
+            font-weight: bold;
+        }
+
+        .reset-button {
+            background: linear-gradient(135deg, var(--naboo-green), var(--naboo-blue));
+            border: 2px solid var(--naboo-green);
+            color: #000;
+            padding: 12px 20px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 208, 132, 0.5);
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .reset-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 208, 132, 0.8), 0 0 15px rgba(26, 159, 255, 0.5);
+            animation: forcePulse 0.5s ease;
+        }
+
+        @keyframes forcePulse {
+            0%, 100% { transform: scale(1.05); }
+            50% { transform: scale(1.1); }
+        }
+
+        .reset-button::before {
+            content: '⚡ ';
+        }
+
+        .sub-container {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid var(--naboo-purple);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+        }
+
+        .sub {
+            display: flex;
+            height: 80px;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 208, 132, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .sub:hover {
+            box-shadow: 0 0 30px rgba(0, 208, 132, 0.6), 0 0 15px rgba(26, 159, 255, 0.4);
+            transform: scaleY(1.1);
+        }
+
+        .meat {
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .meat::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: meatSizzle 0.6s infinite;
+        }
+
+        @keyframes meatSizzle {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .veggie {
+            background: linear-gradient(135deg, #51cf66, #37b24d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .veggie::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            animation: veggieGlow 0.8s infinite;
+        }
+
+        @keyframes veggieGlow {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .bread {
+            background: linear-gradient(135deg, #ffa94d, #ff922b);
+            flex: 0.5;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bread::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 255, 255, 0.1) 10px,
+                rgba(255, 255, 255, 0.1) 20px
+            );
+        }
+
+        .bread-right {
+            background: linear-gradient(135deg, #ffa94d, #ff922b);
+            flex: 0.5;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bread-right::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 255, 255, 0.1) 10px,
+                rgba(255, 255, 255, 0.1) 20px
+            );
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 100px;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: statGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes statGlow {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(10px, 10px); }
+        }
+
+        .stat-card.meat {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 71, 87, 0.2));
+            border-color: #ff6b6b;
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .stat-card.meat:hover {
+            transform: scale(1.05) rotate(2deg);
+            box-shadow: 0 0 25px rgba(255, 107, 107, 0.6);
+        }
+
+        .stat-card.veggie {
+            background: linear-gradient(135deg, rgba(81, 207, 102, 0.2), rgba(55, 178, 77, 0.2));
+            border-color: #51cf66;
+            box-shadow: 0 0 15px rgba(81, 207, 102, 0.4);
+        }
+
+        .stat-card.veggie:hover {
+            transform: scale(1.05) rotate(-2deg);
+            box-shadow: 0 0 25px rgba(81, 207, 102, 0.6);
+        }
+
+        .stat-card.bread {
+            background: linear-gradient(135deg, rgba(255, 169, 77, 0.2), rgba(255, 146, 43, 0.2));
+            border-color: #ffa94d;
+            box-shadow: 0 0 15px rgba(255, 169, 77, 0.4);
+        }
+
+        .stat-card.bread:hover {
+            transform: scale(1.05) rotate(2deg);
+            box-shadow: 0 0 25px rgba(255, 169, 77, 0.6);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+
+        .rating {
+            background: rgba(168, 85, 247, 0.1);
+            border: 2px solid var(--naboo-purple);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+        }
+
+        .rating-title {
+            font-size: 14px;
+            color: var(--naboo-purple);
+            margin-bottom: 12px;
+            text-shadow: 0 0 5px var(--naboo-purple);
+            text-transform: uppercase;
+        }
+
+        .rating-stars {
+            font-size: 32px;
+            margin-bottom: 15px;
+            animation: ratingTwinkle 1s ease-in-out infinite;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+        }
+
+        @keyframes ratingTwinkle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .rating-message {
+            color: var(--naboo-green);
+            font-size: 12px;
+            text-shadow: 0 0 5px var(--naboo-green);
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .easter-egg {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 20px;
+            cursor: pointer;
+            animation: easterEggFloat 3s ease-in-out infinite;
+            z-index: 100;
+            filter: drop-shadow(0 0 5px rgba(0, 208, 132, 0.5));
+        }
+
+        @keyframes easterEggFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .easter-egg:hover {
+            animation: easterEggBounce 0.5s ease;
+        }
+
+        @keyframes easterEggBounce {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .laser-effect {
+            position: fixed;
+            pointer-events: none;
+            font-size: 20px;
+            animation: laserShot 0.5s ease-out forwards;
+        }
+
+        @keyframes laserShot {
+            0% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.5) translateY(-50px);
+            }
+        }
+
+        .sound-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: 14px;
+            color: var(--naboo-blue);
+            text-shadow: 0 0 5px var(--naboo-blue);
+            opacity: 0;
+            animation: soundPop 0.6s ease-out;
+            pointer-events: none;
+            z-index: 101;
+        }
+
+        @keyframes soundPop {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(2);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats {
+                flex-direction: column;
+            }
+
+            .stat-card {
+                min-width: auto;
+            }
+
+            .droid {
+                width: 40px;
+                height: 50px;
+                font-size: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="star-field" id="starField"></div>
     <a href="../index.html" class="home-link">← HOME</a>
 
     <div class="container">
@@ -19,6 +632,37 @@
                 Subway Sub Ratio Calculator
             </h1>
             <p>Find your perfect meat, veggie, and bread balance</p>
+            
+            <div class="threat-meter">
+                <div class="threat-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Trade Federation Threat Level
+                </div>
+                <div class="threat-bar">
+                    <div class="threat-fill" id="threatFill"></div>
+                </div>
+                <div class="threat-level" id="threatLevel">Threat Level: MINIMAL</div>
+            </div>
+
+            <div class="midi-chlorian-indicator">
+                <div class="midi-chlorian-label">🔮 MIDI-CHLORIAN BALANCE 🔮</div>
+                <div class="midi-chlorian-value" id="midiValue">Perfect Harmony</div>
+            </div>
+
+            <div class="droid-indicator" id="droidIndicator">
+                <div class="droid">
+                    <div class="droid-eye"></div>
+                    <div class="droid-eye"></div>
+                </div>
+                <div class="droid">
+                    <div class="droid-eye"></div>
+                    <div class="droid-eye"></div>
+                </div>
+                <div class="droid">
+                    <div class="droid-eye"></div>
+                    <div class="droid-eye"></div>
+                </div>
+            </div>
         </div>
 
         <div class="main-content">
@@ -57,7 +701,7 @@
                 </div>
 
                 <button class="reset-button" onclick="resetSliders()">
-                    <i class="fas fa-redo"></i> Reset to Perfect Balance
+                    May the Force Guide Your Sub
                 </button>
             </div>
 
@@ -99,7 +743,24 @@
         </div>
     </div>
 
+    <div class="easter-egg" id="easterEgg" title="Click me!">🤖</div>
+
     <script>
+        // Initialize star field
+        function initStarField() {
+            const starField = document.getElementById('starField');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starField.appendChild(star);
+            }
+        }
+
+        initStarField();
+
         const meatSlider = document.getElementById('meatSlider');
         const veggieSlider = document.getElementById('veggieSlider');
         const breadSlider = document.getElementById('breadSlider');
@@ -123,44 +784,123 @@
         const ratingStars = document.getElementById('ratingStars');
         const ratingMessage = document.getElementById('ratingMessage');
 
-        function updateVisualization() {
-            const meat = parseInt(meatSlider.value);
-            const veggie = parseInt(veggieSlider.value);
-            const bread = parseInt(breadSlider.value);
+        const threatFill = document.getElementById('threatFill');
+        const threatLevel = document.getElementById('threatLevel');
+        const midiValue = document.getElementById('midiValue');
 
-            const total = meat + veggie + bread;
+        const easterEgg = document.getElementById('easterEgg');
 
-            const meatPercent = (meat / total * 100).toFixed(1);
-            const veggiePercent = (veggie / total * 100).toFixed(1);
-            const breadPercent = (bread / total * 100).toFixed(1);
+        const easterEggMessages = [
+            "Meesa no like imbalanced subs! 🤖",
+            "Battle droids incoming! ⚔️",
+            "The phantom menace approaches! 👻",
+            "Naboo is in danger! 🌍",
+            "Pew pew! Laser sounds! 🔫",
+            "A surprise to be sure! 😱",
+            "General Kenobi! 🗡️",
+            "The Force is strong with this sub! ✨",
+            "This is where the fun begins! 🎮",
+            "Hello there! 👋"
+        ];
 
-            meatValue.textContent = meat;
-            veggieValue.textContent = veggie;
-            breadValue.textContent = bread;
+        let easterEggClicks = 0;
 
-            document.getElementById('meatPercent').textContent = meatPercent + '%';
-            document.getElementById('veggiePercent').textContent = veggiePercent + '%';
-            document.getElementById('breadPercent').textContent = breadPercent + '%';
+        easterEgg.addEventListener('click', () => {
+            easterEggClicks++;
+            const message = easterEggMessages[easterEggClicks % easterEggMessages.length];
+            showSoundIndicator(message);
+            createLaserEffect(event.clientX, event.clientY);
+            
+            if (easterEggClicks % 3 === 0) {
+                easterEgg.textContent = '💥';
+                setTimeout(() => {
+                    easterEgg.textContent = '🤖';
+                }, 300);
+            }
+        });
 
-            meatSection.style.flex = meat;
-            veggieSection.style.flex = veggie;
-            breadLeft.style.flex = bread / 2;
-            breadRight.style.flex = bread / 2;
-
-            meatPercentage.textContent = meatPercent + '%';
-            veggiePercentage.textContent = veggiePercent + '%';
-
-            updateRating(meat, veggie, bread);
+        function createLaserEffect(x, y) {
+            const laser = document.createElement('div');
+            laser.className = 'laser-effect';
+            laser.textContent = '⚡';
+            laser.style.left = x + 'px';
+            laser.style.top = y + 'px';
+            document.body.appendChild(laser);
+            
+            setTimeout(() => laser.remove(), 500);
         }
 
-        function updateRating(meat, veggie, bread) {
+        function showSoundIndicator(text) {
+            const indicator = document.createElement('div');
+            indicator.className = 'sound-indicator';
+            indicator.textContent = text;
+            indicator.style.left = Math.random() * 80 + 10 + '%';
+            indicator.style.top = Math.random() * 30 + 10 + '%';
+            document.body.appendChild(indicator);
+            
+            setTimeout(() => indicator.remove(), 600);
+        }
+
+        function updateThreatLevel(meat, veggie, bread) {
             const total = meat + veggie + bread;
+            
+            if (total === 0) {
+                threatFill.style.width = '100%';
+                threatLevel.textContent = 'Threat Level: CRITICAL - NO SUB!';
+                return;
+            }
+
             const meatRatio = meat / total;
             const veggieRatio = veggie / total;
             const breadRatio = bread / total;
 
-            let rating = 5;
-            let message = "Perfect balance! Your sub is absolutely delicious!";
+            const idealMeat = 0.33;
+            const idealVeggie = 0.33;
+            const idealBread = 0.34;
+
+            const meatDiff = Math.abs(meatRatio - idealMeat);
+            const veggieDiff = Math.abs(veggieRatio - idealVeggie);
+            const breadDiff = Math.abs(breadRatio - idealBread);
+
+            const totalDiff = meatDiff + veggieDiff + breadDiff;
+            let threatPercent = totalDiff * 100;
+
+            if (meat === 0 || veggie === 0 || bread === 0) {
+                threatPercent = 80;
+            }
+
+            threatPercent = Math.min(threatPercent, 100);
+            threatFill.style.width = threatPercent + '%';
+
+            let threatText = 'Threat Level: ';
+            if (threatPercent < 10) {
+                threatText += 'MINIMAL - Naboo is safe!';
+            } else if (threatPercent < 25) {
+                threatText += 'LOW - Trade Federation stirring';
+            } else if (threatPercent < 40) {
+                threatText += 'MODERATE - Droids mobilizing';
+            } else if (threatPercent < 60) {
+                threatText += 'HIGH - Battle droids approaching!';
+            } else if (threatPercent < 80) {
+                threatText += 'CRITICAL - Invasion imminent!';
+            } else {
+                threatText += 'CRITICAL - Planetary destruction!';
+            }
+
+            threatLevel.textContent = threatText;
+        }
+
+        function updateMidiChlorians(meat, veggie, bread) {
+            const total = meat + veggie + bread;
+            
+            if (total === 0) {
+                midiValue.textContent = 'No Life Force Detected';
+                return;
+            }
+
+            const meatRatio = meat / total;
+            const veggieRatio = veggie / total;
+            const breadRatio = bread / total;
 
             const idealMeat = 0.33;
             const idealVeggie = 0.33;
@@ -172,50 +912,86 @@
 
             const totalDiff = meatDiff + veggieDiff + breadDiff;
 
+            let midiCount = Math.max(0, 20000 - Math.round(totalDiff * 50000));
+
+            let midiText = midiCount.toLocaleString() + ' midi-chlorians';
+
             if (totalDiff < 0.05) {
-                rating = 5;
-                message = "Perfect balance! Your sub is absolutely delicious!";
+                midiText = '✨ PERFECT HARMONY ✨';
             } else if (totalDiff < 0.1) {
-                rating = 4;
-                message = "Excellent! Very close to the perfect ratio!";
-            } else if (totalDiff < 0.15) {
-                rating = 3;
-                message = "Good! But could use some adjustments.";
-            } else if (totalDiff < 0.25) {
-                rating = 2;
-                message = "Not bad, but quite unbalanced.";
+                midiText = 'Excellent Balance';
+            } else if (totalDiff < 0.2) {
+                midiText = 'Good Alignment';
+            } else if (totalDiff < 0.35) {
+                midiText = 'Needs Adjustment';
             } else {
-                rating = 1;
-                message = "Very unbalanced! Try adjusting the sliders.";
+                midiText = 'Severely Imbalanced';
             }
 
-            if (meat === 0) {
-                message = "No meat? That's not a real sub!";
-                rating = 1;
-            } else if (veggie === 0) {
-                message = "No veggies? You need some greens!";
-                rating = 2;
-            } else if (bread === 0) {
-                message = "No bread? How is this even a sub?";
-                rating = 1;
+            midiValue.textContent = midiText;
+        }
+
+        function updateDroidStatus(meat, veggie, bread) {
+            const droids = document.querySelectorAll('.droid');
+            const total = meat + veggie + bread;
+
+            if (total === 0) {
+                droids.forEach(droid => {
+                    droid.style.opacity = '0.3';
+                });
+                return;
             }
 
-            ratingStars.textContent = '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
-            ratingMessage.textContent = message;
+            const meatRatio = meat / total;
+            const veggieRatio = veggie / total;
+            const breadRatio = bread / total;
+
+            const idealMeat = 0.33;
+            const idealVeggie = 0.33;
+            const idealBread = 0.34;
+
+            const meatDiff = Math.abs(meatRatio - idealMeat);
+            const veggieDiff = Math.abs(veggieRatio - idealVeggie);
+            const breadDiff = Math.abs(breadRatio - idealBread);
+
+            const diffs = [meatDiff, veggieDiff, breadDiff];
+
+            droids.forEach((droid, index) => {
+                const opacity = Math.max(0.3, 1 - diffs[index] * 3);
+                droid.style.opacity = opacity;
+                
+                const eyes = droid.querySelectorAll('.droid-eye');
+                if (diffs[index] < 0.1) {
+                    eyes.forEach(eye => eye.style.background = '#00d084');
+                } else if (diffs[index] < 0.2) {
+                    eyes.forEach(eye => eye.style.background = '#ffd700');
+                } else {
+                    eyes.forEach(eye => eye.style.background = '#ff1744');
+                }
+            });
         }
 
-        function resetSliders() {
-            meatSlider.value = 33;
-            veggieSlider.value = 33;
-            breadSlider.value = 34;
-            updateVisualization();
-        }
+        function updateVisualization() {
+            const meat = parseInt(meatSlider.value);
+            const veggie = parseInt(veggieSlider.value);
+            const bread = parseInt(breadSlider.value);
 
-        meatSlider.addEventListener('input', updateVisualization);
-        veggieSlider.addEventListener('input', updateVisualization);
-        breadSlider.addEventListener('input', updateVisualization);
+            const total = meat + veggie + bread;
 
-        updateVisualization();
-    </script>
-</body>
-</html>
+            const meatPercent = total > 0 ? (meat / total * 100).toFixed(1) : 0;
+            const veggiePercent = total > 0 ? (veggie / total * 100).toFixed(1) : 0;
+            const breadPercent = total > 0 ? (bread / total * 100).toFixed(1) : 0;
+
+            meatValue.textContent = meat;
+            veggieValue.textContent = veggie;
+            breadValue.textContent = bread;
+
+            document.getElementById('meatPercent').textContent = meatPercent + '%';
+            document.getElementById('veggiePercent').textContent = veggiePercent + '%';
+            document.getElementById('breadPercent').textContent = breadPercent + '%';
+
+            if (total > 0) {
+                meatSection.style.flex = meat;
+                veggieSection.style.flex = veggie;
+                breadLeft.style.flex = bread / 2;
+                breadRight.style.flex = bread / 2;
