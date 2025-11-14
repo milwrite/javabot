@@ -1445,8 +1445,17 @@ async function handleMentionAsync(message) {
             logEvent('GIT', `Skipping git status check: ${error.message}`);
             gitStatus = { files: [] }; // Empty status to skip commit prompt
         }
-        
-        if (gitStatus.files.length > 0) {
+
+        // Filter out bot-managed files (agents.md, projectmetadata.json)
+        // Only prompt for commits if AI made actual code/content changes
+        const meaningfulChanges = gitStatus.files.filter(f =>
+            !f.path.includes('agents.md') &&
+            !f.path.includes('projectmetadata.json')
+        );
+
+        if (meaningfulChanges.length > 0) {
+            // Update gitStatus to only show meaningful changes
+            gitStatus = { ...gitStatus, files: meaningfulChanges };
             // AI made local changes - show commit confirmation
             const commitEmbed = new EmbedBuilder()
                 .setTitle('🔧 Local Changes Made')
