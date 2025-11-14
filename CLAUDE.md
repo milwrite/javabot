@@ -6,10 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Bot Sportello is a Discord bot with a laid-back Doc Sportello personality that manages a web development repository. The bot integrates Discord slash commands with GitHub operations and AI-powered content generation through OpenRouter's API.
 
-**Core Purpose**: Help users create, commit, and manage web pages and JavaScript libraries through Discord commands while maintaining a chill, slightly spacey but helpful personality.
+**Core Purpose**: Help users create, commit, and manage web pages and JavaScript libraries through Discord commands while maintaining a chill, slightly spacey but helpful personality. All generated projects use a retro arcade aesthetic with mobile-responsive design.
 
 **Live Site**: https://milwrite.github.io/javabot/
 **Repository**: https://github.com/milwrite/javabot/
+
+**Key Features**:
+- AI-generated HTML pages & JavaScript features using OpenRouter
+- Automatic GitHub commits and deployment to GitHub Pages
+- Conversation memory (last 100 messages in `agents.md`)
+- Retro arcade design system with Press Start 2P font
+- Mobile-first responsive design (768px, 480px breakpoints, 44px touch targets)
 
 ## Development Commands
 
@@ -28,23 +35,39 @@ npm start
 
 **Restarting the bot**: After making changes to `index.js`, restart the bot process to reload slash commands and apply code changes.
 
+**Environment Setup**:
+- Copy `.env.example` to `.env` before first run
+- All required environment variables must be present or bot will exit with error message
+- Bot validates all `REQUIRED_ENV_VARS` on startup (see index.js:11-26)
+
 ## Architecture Overview
 
 ### Single-File Architecture
 The entire bot is contained in `index.js` (~2000+ lines) with these key sections in order:
-1. Environment configuration and imports
-2. Error tracking system (prevents infinite error loops)
-3. OpenRouter configuration with model presets
-4. Discord client setup with specific intents
-5. GitHub integration (Octokit + simple-git)
-6. Bot personality system (`botResponses`, `SYSTEM_PROMPT`)
-7. Message history tracking (`agents.md`)
-8. Filesystem tools (list/read/write files)
-9. Web search functionality
-10. Enhanced LLM with function calling (tool use)
-11. Slash command definitions array
-12. Command handlers (one `handle*` function per command)
-13. Message tracking and mention responses
+1. Environment configuration and imports (lines 1-27)
+2. Configuration constants in `CONFIG` object (lines 29-41)
+3. Error tracking system (prevents infinite error loops, lines 43-70)
+4. Message history tracking setup (lines 72-76)
+5. Channel ID parsing for multi-channel support (lines 77-80)
+6. Discord client and GitHub (Octokit + simple-git) setup (lines 82-95)
+7. Git timeout wrapper and logging utilities
+8. OpenRouter configuration with model presets
+9. Bot personality system (`botResponses`, `SYSTEM_PROMPT`)
+10. Conversation history management (`agents.md` file operations)
+11. Filesystem tools (list/read/write/edit files)
+12. Web search functionality
+13. Enhanced LLM with function calling (agentic loop, max 10 iterations)
+14. Slash command definitions array
+15. Command handlers (one `handle*` function per command)
+16. Message tracking, @ mention responses, and bot ready event
+
+**File Organization**:
+- `/src/` - All generated HTML pages, JS features, and demos
+- `/responses/` - AI responses >2000 chars saved with timestamps
+- `agents.md` - Conversation history (last 100 messages)
+- `index.html` - Main hub page with embedded `projectMetadata` object
+- `page-theme.css` - Shared arcade theme for all pages
+- `style.css` - Homepage-specific styling
 
 ### Key Integrations
 

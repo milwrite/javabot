@@ -30,12 +30,23 @@ A laid-back Discord bot with Doc Sportello's personality that helps create and m
 
 ## Commands
 
-- `/create-page <name> <description>` - Generate a new HTML page with styling
-- `/create-feature <name> <description>` - Generate an interactive JavaScript feature
+### Content Generation
+- `/add-page <name> <description>` - Generate a new HTML page with arcade styling
+- `/add-feature <name> <description>` - Generate an interactive JavaScript feature with demo page
+- `/update-style <preset> [description]` - Update website styling (presets: soft-arcade, neon-arcade, dark-minimal, retro-terminal, or custom)
+
+### Git Operations
 - `/commit <message> [files]` - Commit and push changes to GitHub
-- `/status` - Check repository status
-- `/chat <message>` - Have a conversation with Bot Sportello
-- `/poll <question>` - Create a yes/no poll
+- `/status` - Check repository status and view live site link
+
+### AI Interaction
+- `/chat <message>` - Have a conversation with Bot Sportello (uses conversation history and can perform file operations)
+- `/search <query>` - Search the web for current information
+- `/set-model <model>` - Switch AI model (haiku, sonnet, kimi, gpt5, gemini)
+- `/set-prompt <action> [content]` - View, reset, add to, or replace the bot's system prompt
+
+### Utility
+- `/poll <question>` - Create a yes/no poll with reactions
 
 ## Features
 
