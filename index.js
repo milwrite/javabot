@@ -2404,8 +2404,6 @@ async function executeMentionCommit(interaction, commitData) {
                 { name: 'Commit Message', value: commitMessage, inline: false },
                 { name: 'Commit Hash', value: commit.commit.substring(0, 7), inline: true },
                 { name: 'Files Changed', value: commitData.status.files.length.toString(), inline: true },
-                { name: 'Original Request', value: commitData.originalContent.substring(0, 100) + (commitData.originalContent.length > 100 ? '...' : ''), inline: false },
-                { name: 'AI Response', value: commitData.response.substring(0, 800) + (commitData.response.length > 800 ? '...' : ''), inline: false },
                 { name: 'Live Site', value: '[View Changes](https://milwrite.github.io/javabot/)', inline: false }
             )
             .setColor(0x7dd3a0) // Mint green
