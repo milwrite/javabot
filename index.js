@@ -1397,9 +1397,25 @@ client.on('messageCreate', async message => {
     }
 });
 
+// Track processed mentions to prevent duplicates
+const processedMentions = new Set();
+
 // Async mention handler to prevent blocking
 async function handleMentionAsync(message) {
     try {
+        // Prevent duplicate processing of the same message
+        if (processedMentions.has(message.id)) {
+            console.log(`[MENTION] Skipping duplicate message ${message.id}`);
+            return;
+        }
+        processedMentions.add(message.id);
+
+        // Clean up old message IDs (keep last 100)
+        if (processedMentions.size > 100) {
+            const toDelete = Array.from(processedMentions).slice(0, 50);
+            toDelete.forEach(id => processedMentions.delete(id));
+        }
+
         const content = message.content.replace(/<@!?\d+>/g, '').trim();
         const username = message.author.username;
 
