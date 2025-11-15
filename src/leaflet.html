@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet.js Interactive Demo</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #1a1d23;
+            color: #7dd3a0;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #7dd3a0;
+            text-decoration: none;
+            font-size: 14px;
+            z-index: 1000;
+            border: 2px solid #7dd3a0;
+            padding: 8px 12px;
+            background-color: #252a32;
+            transition: all 0.3s ease;
+        }
+
+        .home-link:hover {
+            background-color: #7dd3a0;
+            color: #1a1d23;
+            box-shadow: 0 0 10px #7dd3a0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #7dd3a0;
+            margin-bottom: 30px;
+            font-size: 24px;
+            text-shadow: 0 0 10px #7dd3a0;
+        }
+
+        h2 {
+            color: #7dd3a0;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            border-bottom: 2px solid #7dd3a0;
+            padding-bottom: 10px;
+        }
+
+        .card {
+            background-color: #252a32;
+            border: 2px solid #7dd3a0;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(125, 211, 160, 0.3);
+        }
+
+        .btn {
+            background-color: #7dd3a0;
+            color: #1a1d23;
+            border: 2px solid #7dd3a0;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background-color: #1a1d23;
+            color: #7dd3a0;
+            box-shadow: 0 0 15px #7dd3a0;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .map-container {
+            height: 400px;
+            border: 2px solid #7dd3a0;
+            margin: 15px 0;
+            box-shadow: 0 0 10px rgba(125, 211, 160, 0.3);
+            position: relative;
+        }
+
+        .leaflet-container {
+            background-color: #1a1d23;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .leaflet-popup-content {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            color: #1a1d23;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background-color: #7dd3a0;
+            border: 2px solid #1a1d23;
+        }
+
+        .leaflet-popup-tip {
+            background-color: #7dd3a0;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .info-box {
+            background-color: #1a1d23;
+            border: 2px solid #7dd3a0;
+            padding: 15px;
+            margin: 15px 0;
+            color: #7dd3a0;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #7dd3a0;
+        }
+
+        .feature-list li:before {
+            content: "▶ ";
+            color: #7dd3a0;
+            margin-right: 10px;
+        }
+
+        .example-section {
+            margin: 20px 0;
+        }
+
+        .status {
+            color: #7dd3a0;
+            font-size: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #1a1d23;
+            border-left: 2px solid #7dd3a0;
+        }
+
+        .leaflet-control-zoom {
+            border: 2px solid #7dd3a0;
+            background-color: #252a32;
+        }
+
+        .leaflet-control-zoom a {
+            background-color: #252a32;
+            color: #7dd3a0;
+            border: 1px solid #7dd3a0;
+            font-weight: bold;
+        }
+
+        .leaflet-control-zoom a:hover {
+            background-color: #7dd3a0;
+            color: #1a1d23;
+        }
+
+        .leaflet-control-attribution {
+            background-color: rgba(37, 42, 50, 0.8);
+            color: #7dd3a0;
+            border: 1px solid #7dd3a0;
+        }
+
+        .leaflet-control-attribution a {
+            color: #7dd3a0;
+        }
+
+        .code-block {
+            background-color: #1a1d23;
+            border: 1px solid #7dd3a0;
+            padding: 10px;
+            margin: 10px 0;
+            overflow-x: auto;
+            font-size: 9px;
+            color: #7dd3a0;
+        }
+
+        .coordinates {
+            color: #7dd3a0;
+            font-size: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #1a1d23;
+            border: 1px solid #7dd3a0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            border-top: 2px solid #7dd3a0;
+            color: #7dd3a0;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">← HOME</a>
+
+    <div class="container">
+        <h1>🗺️ LEAFLET.JS INTERACTIVE DEMO</h1>
+
+        <div class="card">
+            <h2>Welcome to Leaflet Maps!</h2>
+            <p>Leaflet is a lightweight JavaScript library for creating interactive maps. This demo showcases its core features and capabilities.</p>
+        </div>
+
+        <!-- Basic Map Example -->
+        <div class="card">
+            <h2>Basic Map Display</h2>
+            <p>A simple interactive map with default tiles and zoom controls.</p>
+            <div class="map-container" id="basicMap"></div>
+            <div class="controls">
+                <button class="btn" onclick="resetBasicMap()">Reset Map</button>
+                <button class="btn" onclick="centerMap()">Center View</button>
+            </div>
+            <div class="status" id="basicStatus">Map loaded. Click and drag to pan, scroll to zoom.</div>
+        </div>
+
+        <!-- Markers and Popups -->
+        <div class="card">
+            <h2>Markers & Popups</h2>
+            <p>Add interactive markers with popups to your map.</p>
+            <div class="map-container" id="markerMap"></div>
+            <div class="controls">
+                <button class="btn" onclick="addRandomMarker()">Add Marker</button>
+                <button class="btn" onclick="clearMarkers()">Clear Markers</button>
+            </div>
+            <div class="status" id="markerStatus">Click the map to add markers</div>
+            <div class="code-block">
+// Create a marker<br>
+L.marker([lat, lng]).addTo(map)<br>
+&nbsp;&nbsp;.bindPopup('Popup text')
+            </div>
+        </div>
+
+        <!-- Circles and Shapes -->
+        <div class="card">
+            <h2>Shapes & Layers</h2>
+            <p>Draw circles, polygons, and other geometric shapes on the map.</p>
+            <div class="map-container" id="shapeMap"></div>
+            <div class="controls">
+                <button class="btn" onclick="addCircle()">Add Circle</button>
+                <button class="btn" onclick="addPolygon()">Add Polygon</button>
+                <button class="btn" onclick="clearShapes()">Clear Shapes</button>
+            </div>
+            <div class="status" id="shapeStatus">Shapes added to map</div>
+        </div>
+
+        <!-- Polylines and Routes -->
+        <div class="card">
+            <h2>Polylines & Routes</h2>
+            <p>Draw lines and routes between multiple points.</p>
+            <div class="map-container" id="routeMap"></div>
+            <div class="controls">
+                <button class="btn" onclick="drawRoute()">Draw Route</button>
+                <button class="btn" onclick="addWaypoint()">Add Waypoint</button>
+                <button class="btn" onclick="clearRoute()">Clear Route</button>
+            </div>
+            <div class="status" id="routeStatus">Route visualization</div>
+        </div>
+
+        <!-- Interactive Features -->
+        <div class="card">
+            <h2>Interactive Features</h2>
+            <p>Explore advanced Leaflet capabilities.</p>
+            <div class="map-container" id="interactiveMap"></div>
+            <div class="controls">
+                <button class="btn" onclick="toggleHeatmap()">Toggle Heatmap</button>
+                <button class="btn" onclick="toggleClusters()">Toggle Clusters</button>
+                <button class="btn" onclick="fitBounds()">Fit Bounds</button>
+            </div>
+            <div class="coordinates" id="coordStatus">Click on the map to see coordinates</div>
+        </div>
+
+        <!-- Documentation -->
+        <div class="card">
+            <h2>Key Features</h2>
+            <ul class="feature-list">
+                <li>Lightweight and fast performance</li>
+                <li>Support for multiple tile providers</li>
+                <li>Interactive markers with popups</li>
+                <li>Drawing tools for shapes and lines</li>
+                <li>Layer management and grouping</li>
+                <li>Geolocation support</li>
+                <li>Custom styling and theming</li>
+                <li>Mobile-friendly and responsive</li>
+                <li>Plugin ecosystem for extensions</li>
+                <li>Open source and free to use</li>
+            </ul>
+        </div>
+
+        <!-- API Examples -->
+        <div class="card">
+            <h2>Common API Methods</h2>
+            <div class="code-block">
+// Initialize map<br>
+const map = L.map('mapId').setView([lat, lng], zoom);<br>
+<br>
+// Add tile layer<br>
+L.tileLayer('url/{z}/{x}/{y}.png').addTo(map);<br>
+<br>
+// Add marker<br>
+L.marker([lat, lng]).addTo(map);<br>
+<br>
+// Add circle<br>
+L.circle([lat, lng], {radius: 500}).addTo(map);<br>
+<br>
+// Add polyline<br>
+L.polyline([[lat1, lng1], [lat2, lng2]]).addTo(map);<br>
+<br>
+// Map events<br>
+map.on('click', function(e) { console.log(e.latlng); });
+            </div>
+        </div>
+
+        <!-- Getting Started -->
+        <div class="card">
+            <h2>Getting Started</h2>
+            <div class="info-box">
+                <p><strong>Step 1:</strong> Include Leaflet CSS and JS files in your HTML</p>
+                <p style="margin-top: 10px;"><strong>Step 2:</strong> Create a container div with an ID and height</p>
+                <p style="margin-top: 10px;"><strong>Step 3:</strong> Initialize the map with L.map()</p>
+                <p style="margin-top: 10px;"><strong>Step 4:</strong> Add a tile layer for the map background</p>
+                <p style="margin-top: 10px;"><strong>Step 5:</strong> Add markers, shapes, and interact with events</p>
+            </div>
+        </div>
+
+        <footer>
+            Made with 💚 using Leaflet.js | Arcade Theme Edition
+        </footer>
+    </div>
+
+    <script>
+        // Initialize all maps
+        let basicMap, markerMap, shapeMap, routeMap, interactiveMap;
+        let markers = [];
+        let shapes = [];
+        let routePoints = [];
+
+        // Tile layer URL
+        const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        const attribution = '© OpenStreetMap contributors';
+
+        // Initialize Basic Map
+        function initBasicMap() {
+            basicMap = L.map('basicMap').setView([20, 0], 2);
+            L.tileLayer(tileUrl, { attribution }).addTo(basicMap);
+            basicMap.on('click', function(e) {
+                document.getElementById('basicStatus').textContent = `Clicked at: ${e.latlng.lat.toFixed(2)}, ${e.latlng.lng.toFixed(2)}`;
+            });
+        }
+
+        function resetBasicMap() {
+            basicMap.setView([20, 0], 2);
+            document.getElementById('basicStatus').textContent = 'Map reset to default view';
+        }
+
+        function centerMap() {
+            basicMap.setView([0, 0], 3);
+            document.getElementById('basicStatus').textContent = 'Map centered at equator';
+        }
+
+        // Initialize Marker Map
+        function initMarkerMap() {
+            markerMap = L.map('markerMap').setView([40, -95], 4);
+            L.tileLayer(tileUrl, { attribution }).addTo(markerMap);
+            markerMap.on('click', function(e) {
+                addMarkerAtLocation(e.latlng, markerMap);
+            });
+        }
+
+        function addMarkerAtLocation(latlng, map) {
+            const marker = L.marker(latlng).addTo(map)
+                .bindPopup(`📍 Marker at<br>${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`);
+            markers.push(marker);
+            document.getElementById('markerStatus').textContent = `Markers: ${markers.length}`;
+        }
+
+        function addRandomMarker() {
+            const lat = 20 + Math.random() * 60;
+            const lng = -130 + Math.random() * 100;
+            addMarkerAtLocation(L.latLng(lat, lng), markerMap);
+        }
+
+        function clearMarkers() {
+            markers.forEach(marker => markerMap.removeLayer(marker));
+            markers = [];
+            document.getElementById('markerStatus').textContent = 'All markers cleared';
+        }
+
+        // Initialize Shape Map
+        function initShapeMap() {
+            shapeMap = L.map('shapeMap').setView([35, -100], 4);
+            L.tileLayer(tileUrl, { attribution }).addTo(shapeMap);
+        }
+
+        function addCircle() {
+            const lat = 25 + Math.random() * 40;
+            const lng = -120 + Math.random() * 80;
+            const circle = L.circle([lat, lng], {
+                color: '#7dd3a0',
+                fillColor: '#7dd3a0',
+                fillOpacity: 0.3,
+                radius: 50000 + Math.random() * 100000
+            }).addTo(shapeMap)
+                .bindPopup(`Circle at ${lat.toFixed(2)}, ${lng.toFixed(2)}`);
+            shapes.push(circle);
+            document.getElementById('shapeStatus').textContent = `Shapes: ${shapes.length}`;
+        }
+
+        function addPolygon() {
+            const lat = 30 + Math.random() * 30;
+            const lng = -110 + Math.random() * 60;
+            const polygon = L.polygon([
+                [lat, lng],
+                [lat + 5, lng],
+                [lat + 5, lng + 5],
+                [lat, lng + 5]
+            ], {
+                color: '#7dd3a0',
+                fillColor: '#7dd3a0',
+                fillOpacity: 0.2
+            }).addTo(shapeMap)
+                .bindPopup('Polygon area');
+            shapes.push(polygon);
+            document.getElementById('shapeStatus').textContent = `Shapes: ${shapes.length}`;
+        }
+
+        function clearShapes() {
+            shapes.forEach(shape => shapeMap.removeLayer(shape));
+            shapes = [];
+            document.getElementById('shapeStatus').textContent = 'All shapes cleared';
+        }
+
+        // Initialize Route Map
+        function initRouteMap() {
+            routeMap = L.map('routeMap').setView([39, -98], 4);
+            L.tileLayer(tileUrl, { attribution }).addTo(routeMap);
+            routePoints = [];
+        }
+
+        function drawRoute() {
+            if (routePoints.length > 0) {
+                routePoints.forEach(point => routeMap.removeLayer(point));
+            }
+            routePoints = [];
+
+            const route = [
+                [40.7128, -74.0060],
+                [34.0522, -118.2437],
+                [41.8781, -87.6298]
+            ];
+
+            route.forEach((point, index) => {
+                const marker = L.marker(point).addTo(routeMap)
+                    .bindPopup(`Stop ${index + 1}`);
+                routePoints.push(marker);
+            });
+
+            L.polyline(route, {
+                color: '#7dd3a0',
+                weight: 3,
+                opacity: 0.8,
+                dashArray: '5, 5'
+            }).addTo(routeMap);
+
+            document.getElementById('routeStatus').textContent = 'Route with 3 stops drawn';
+        }
+
+        function addWaypoint() {
+            const lat = 25 + Math.random() * 40;
+            const lng = -120 + Math.random() * 80;
+            const marker = L.circleMarker([lat, lng], {
+                radius: 5,
+                fillColor: '#7dd3a0',
+                color: '#7dd3a0',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(routeMap)
+                .bindPopup(`Waypoint at ${lat.toFixed(2)}, ${lng.toFixed(2)}`);
+            routePoints.push(marker);
+            document.getElementById('routeStatus').textContent = `Waypoints: ${routePoints.length}`;
+        }
+
+        function clearRoute() {
+            routePoints.forEach(point => routeMap.removeLayer(point));
+            routePoints = [];
+            document.getElementById('routeStatus').textContent = 'Route cleared';
+        }
+
+        // Initialize Interactive Map
+        function initInteractiveMap() {
+            interactiveMap = L.map('interactiveMap').setView([35, -100], 4);
+            L.tileLayer(tileUrl, { attribution }).addTo(interactiveMap);
+
+            interactiveMap.on('click', function(e) {
+                const lat = e.latlng.lat.toFixed(4);
+                const lng = e.latlng.lng.toFixed(4);
+                document.getElementById('coordStatus').textContent = `Coordinates: ${lat}, ${lng}`;
+            });
+        }
+
+        function toggleHeatmap() {
+            document.getElementById('coordStatus').textContent = 'Heatmap toggled (Requires additional library)';
+        }
+
+        function toggleClusters() {
+            document.getElementById('coordStatus').textContent = 'Clusters toggled (Requires Leaflet.markercluster)';
+        }
+
+        function fitBounds() {
+            const bounds = L.latLngBounds([
+                [25, -120],
+                [45, -80]
+            ]);
+            interactiveMap.fitBounds(bounds);
+            document.getElementById('coordStatus').textContent = 'Map fitted to bounds';
+        }
+
+        // Initialize all maps when page loads
+        window.addEventListener('load', function() {
+            initBasicMap();
+            initMarkerMap();
+            initShapeMap();
+            initRouteMap();
+            initInteractiveMap();
+            document.getElementById('basicStatus').textContent = 'Maps initialized successfully!';
+        });
+    </script>
+</body>
+</html>

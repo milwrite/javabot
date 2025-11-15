@@ -62,5 +62,9 @@
   "bushwick_run_map": {
     "icon": "🌐",
     "description": "Interactive map of Cen's running route around Bushwick with distance tracking, elevation data, pace information, and route visualization. Features a leaflet map with the route path, markers for start/end points and notable locations, distance breakdown by segment, and running stats."
+  },
+  "leaflet": {
+    "icon": "🌐",
+    "description": "embed leaflet functionality in running map"
   }
 }
