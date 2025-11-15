@@ -70,5 +70,13 @@
   "cen_veggie_haul": {
     "icon": "🌐",
     "description": "Interactive visualization of Cen's veggie haul from the farmer's market - greenbeans, radishes, celery, daikon, three potatoes, ginger, green onion, garlic for $22. Shows each veggie with icons and pricing breakdown."
+  },
+  "index": {
+    "icon": "🌐",
+    "description": "Index"
+  },
+  "bushwick": {
+    "icon": "🌐",
+    "description": "edit /src/leaflet.js to zoom in on bushwick"
   }
 }
