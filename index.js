@@ -1340,7 +1340,7 @@ client.on('interactionCreate', async interaction => {
                 if (interaction.deferred) {
                     await interaction.editReply(unknownMsg);
                 } else {
-                    await interaction.reply({ content: unknownMsg, ephemeral: true });
+                    await interaction.reply({ content: unknownMsg, flags: 64 }); // MessageFlags.Ephemeral
                 }
         }
 
@@ -1360,7 +1360,7 @@ client.on('interactionCreate', async interaction => {
             if (interaction.deferred && !interaction.replied) {
                 await interaction.editReply(errorMsg);
             } else if (!interaction.replied && !interaction.deferred) {
-                await interaction.reply({ content: errorMsg, ephemeral: true });
+                await interaction.reply({ content: errorMsg, flags: 64 }); // MessageFlags.Ephemeral
             }
             // If already replied or deferred but replied, silently fail
         } catch (replyError) {
@@ -1429,9 +1429,15 @@ async function handleMentionAsync(message) {
 
         // Get AI response with full tool calling capabilities
         let response = await getLLMResponse(content, conversationMessages);
-        
+
         // Clean duplicate Bot Sportello prefixes
         response = cleanBotResponse(response);
+
+        // Validate response is not empty
+        if (!response || response.trim().length === 0) {
+            response = getBotResponse('errors') + ' Got an empty response from the AI.';
+            logEvent('MENTION', 'Empty AI response received');
+        }
 
         // Add to history
         addToHistory(username, content, false);
@@ -1524,11 +1530,22 @@ async function handleMentionAsync(message) {
         console.error('Error details:', errorDetails);
 
         try {
-            // Try to send error message
+            // Try to edit thinking message with error, or send new error message
             const errorMsg = `${getBotResponse('errors')}\n\n*Error: ${error.message?.substring(0, 100)}*`;
-            await message.reply(errorMsg);
+
+            if (thinkingMsg) {
+                await thinkingMsg.edit(errorMsg);
+            } else {
+                await message.reply(errorMsg);
+            }
         } catch (replyError) {
             console.error('Failed to send error reply:', replyError);
+            // Last resort - try one more time with a simple message
+            try {
+                await message.reply(getBotResponse('errors'));
+            } catch (finalError) {
+                console.error('All error reply attempts failed:', finalError);
+            }
         }
     }
 }
@@ -1686,7 +1703,7 @@ async function handleButtonInteraction(interaction) {
     
     // Ensure only the original user can interact with their buttons
     if (userId !== interaction.user.id) {
-        await interaction.reply({ content: 'You can only interact with your own buttons.', ephemeral: true });
+        await interaction.reply({ content: 'You can only interact with your own buttons.', flags: 64 }); // MessageFlags.Ephemeral
         return;
     }
     
@@ -1696,7 +1713,7 @@ async function handleButtonInteraction(interaction) {
                 // Get stored commit data
                 const commitData = global.commitPendingData?.get(interaction.user.id);
                 if (!commitData) {
-                    await interaction.reply({ content: 'Commit data expired. Please run the command again.', ephemeral: true });
+                    await interaction.reply({ content: 'Commit data expired. Please run the command again.', flags: 64 }); // MessageFlags.Ephemeral
                     return;
                 }
                 
@@ -1730,7 +1747,7 @@ async function handleButtonInteraction(interaction) {
                 // Get stored style data
                 const styleData = global.stylePendingData?.get(interaction.user.id);
                 if (!styleData) {
-                    await interaction.reply({ content: 'Style data expired. Please run the command again.', ephemeral: true });
+                    await interaction.reply({ content: 'Style data expired. Please run the command again.', flags: 64 }); // MessageFlags.Ephemeral
                     return;
                 }
                 
@@ -1764,7 +1781,7 @@ async function handleButtonInteraction(interaction) {
                 // Get stored mention commit data
                 const commitData = global.mentionCommitData?.get(interaction.user.id);
                 if (!commitData) {
-                    await interaction.reply({ content: 'Commit data expired. Please run the command again.', ephemeral: true });
+                    await interaction.reply({ content: 'Commit data expired. Please run the command again.', flags: 64 }); // MessageFlags.Ephemeral
                     return;
                 }
                 
@@ -1811,7 +1828,7 @@ async function handleButtonInteraction(interaction) {
             if (interaction.deferred) {
                 await interaction.editReply({ content: 'An error occurred processing your request.', embeds: [], components: [] });
             } else {
-                await interaction.reply({ content: 'An error occurred processing your request.', ephemeral: true });
+                await interaction.reply({ content: 'An error occurred processing your request.', flags: 64 }); // MessageFlags.Ephemeral
             }
         } catch (replyError) {
             console.error('Failed to send button error reply:', replyError);
