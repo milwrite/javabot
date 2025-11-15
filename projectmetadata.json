@@ -66,5 +66,9 @@
   "leaflet": {
     "icon": "🌐",
     "description": "embed leaflet functionality in running map"
+  },
+  "cen_veggie_haul": {
+    "icon": "🌐",
+    "description": "Interactive visualization of Cen's veggie haul from the farmer's market - greenbeans, radishes, celery, daikon, three potatoes, ginger, green onion, garlic for $22. Shows each veggie with icons and pricing breakdown."
   }
 }
