@@ -58,5 +58,9 @@
   "rat_bushwick": {
     "icon": "🌐",
     "description": "A humorous guide to things to do in Bushwick for a hungry rat, featuring funny rat visualizations, ASCII art, and pixel animations. Includes rat-themed activities like dumpster diving, pizza rat expeditions, bodega raids, and more with interactive elements and retro arcade styling."
+  },
+  "bushwick_run_map": {
+    "icon": "🌐",
+    "description": "Interactive map of Cen's running route around Bushwick with distance tracking, elevation data, pace information, and route visualization. Features a leaflet map with the route path, markers for start/end points and notable locations, distance breakdown by segment, and running stats."
   }
 }

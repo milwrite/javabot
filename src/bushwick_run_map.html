@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bushwick Run Map - Cen's Route</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.6.0/leaflet.polylinedecorator.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        .map-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats-card h3 {
+            color: #667ee6;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .stats-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stats-unit {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .stats-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .segments-container {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .segments-container h3 {
+            color: #667ee6;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .segment-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #667ee6;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .segment-item:hover {
+            background: #e8ecff;
+            transform: translateX(5px);
+        }
+
+        .segment-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .segment-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .legend {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .legend h3 {
+            color: #667ee6;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .leaflet-popup-content-wrapper {
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .popup-content {
+            padding: 10px;
+        }
+
+        .popup-content h4 {
+            color: #667ee6;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .popup-content p {
+            color: #666;
+            font-size: 12px;
+            margin: 3px 0;
+        }
+
+        .marker-icon-custom {
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .sidebar {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                max-height: 200px;
+            }
+
+            .segments-container {
+                grid-column: 1 / -1;
+            }
+
+            .legend {
+                grid-column: 1 / -1;
+            }
+        }
+
+        .pace-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .pace-fast {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .pace-moderate {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .pace-slow {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .elevation-chart {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .elevation-chart h3 {
+            color: #667ee6;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .elevation-bars {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 80px;
+            gap: 4px;
+        }
+
+        .elevation-bar {
+            flex: 1;
+            background: linear-gradient(180deg, #667ee6 0%, #764ba2 100%);
+            border-radius: 4px 4px 0 0;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+
+        .elevation-bar:hover {
+            opacity: 1;
+        }
+
+        .info-banner {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid #667ee6;
+        }
+
+        .info-banner h4 {
+            color: #667ee6;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .info-banner p {
+            color: #666;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+    
+    <div class="container">
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+
+        <div class="sidebar">
+            <div class="info-banner">
+                <h4><i class="fas fa-running"></i> Bushwick Run</h4>
+                <p>Cen's favorite running route through Bushwick, Brooklyn</p>
+            </div>
+
+            <div class="stats-card">
+                <div class="stats-icon"><i class="fas fa-road"></i></div>
+                <h3>Total Distance</h3>
+                <div class="stats-value" id="totalDistance">5.2</div>
+                <div class="stats-unit">kilometers</div>
+            </div>
+
+            <div class="stats-card">
+                <div class="stats-icon"><i class="fas fa-clock"></i></div>
+                <h3>Estimated Time</h3>
+                <div class="stats-value" id="estimatedTime">38</div>
+                <div class="stats-unit">minutes</div>
+            </div>
+
+            <div class="stats-card">
+                <div class="stats-icon"><i class="fas fa-tachometer-alt"></i></div>
+                <h3>Average Pace</h3>
+                <div class="stats-value" id="averagePace">7:20</div>
+                <div class="stats-unit">min/km</div>
+            </div>
+
+            <div class="stats-card">
+                <div class="stats-icon"><i class="fas fa-mountain"></i></div>
+                <h3>Elevation Gain</h3>
+                <div class="stats-value" id="elevationGain">45</div>
+                <div class="stats-unit">meters</div>
+            </div>
+
+            <div class="elevation-chart">
+                <h3><i class="fas fa-chart-bar"></i> Elevation Profile</h3>
+                <div class="elevation-bars" id="elevationBars"></div>
+            </div>
+
+            <div class="segments-container">
+                <h3><i class="fas fa-map-marker-alt"></i> Route Segments</h3>
+                <div id="segmentsList"></div>
+            </div>
+
+            <div class="legend">
+                <h3><i class="fas fa-palette"></i> Legend</h3>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #667ee6;"></div>
+                    <span>Main Route</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #764ba2;"></div>
+                    <span>Elevation Gain</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #28a745;"></div>
+                    <span>Start Point</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #dc3545;"></div>
+                    <span>End Point</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([40.6842, -73.9493], 14);
+
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19,
+            className: 'map-tiles'
+        }).addTo(map);
+
+        // Define route with coordinates and elevation data
+        const routeSegments = [
+            {
+                name: 'Williamsburg Bridge Start',
+                coordinates: [
+                    [40.6842, -73.9493],
+                    [40.6865, -73.9475],
+                    [40.6880, -73.9450]
+                ],
+                elevation: [5, 8, 12],
+                distance: 0.45,
+                pace: '7:10'
+            },
+            {
+                name: 'Bedford Avenue Loop',
+                coordinates: [
+                    [40.6880, -73.9450],
+                    [40.6920, -73.9420],
+                    [40.6945, -73.9380],
+                    [40.6960, -73.9350]
+                ],
+                elevation: [12, 18, 22, 28],
+                distance: 0.82,
+                pace: '7:25'
+            },
+            {
+                name: 'Greenpoint Avenue',
+                coordinates: [
+                    [40.6960, -73.9350],
+                    [40.6985, -73.9380],
+                    [40.7010, -73.9420],
+                    [40.7025, -73.9450]
+                ],
+                elevation: [28, 35, 40, 45],
+                distance: 0.95,
+                pace: '7:35'
+            },
+            {
+                name: 'McCarren Park Circuit',
+                coordinates: [
+                    [40.7025, -73.9450],
+                    [40.7050, -73.9480],
+                    [40.7070, -73.9510],
+                    [40.7080, -73.9540]
+                ],
+                elevation: [45, 42, 38, 35],
+                distance: 0.78,
+                pace: '7:20'
+            },
+            {
+                name: 'Broadway Return',
+                coordinates: [
+                    [40.7080, -73.9540],
+                    [40.7040, -73.9560],
+                    [40.6980, -73.9520],
+                    [40.6920, -73.9480],
+                    [40.6850, -73.9500]
+                ],
+                elevation: [35, 30, 20, 15, 8],
+                distance: 1.2,
+                pace: '7:15'
+            }
+        ];
+
+        // Flatten all coordinates for the main route
+        const allCoordinates = routeSegments.reduce((acc, segment) => {
+            return acc.concat(segment.coordinates);
+        }, []);
+
+        // Convert coordinates to [lat, lng] format for Leaflet
+        const routePath = allCoordinates.map(coord => [coord[0], coord[1]]);
+
+        // Draw main route polyline
+        const mainRoute = L.polyline(routePath, {
+            color: '#667ee6',
+            weight: 4,
+            opacity: 0.8,
+            lineCap: 'round',
+            lineJoin: 'round'
+        }).addTo(map);
+
+        // Add direction arrows to the route
+        const decorator = L.polylineDecorator(mainRoute, {
+            patterns: [
+                {
+                    offset: '10%',
+                    repeat: '15%',
+                    symbol: L.Symbol.arrowHead({
+                        pixelSize: 15,
+                        polygon: false,
+                        pathOptions: {
+                            color: '#667ee6',
+                            weight: 2
+                        }
+                    })
+                }
+            ]
+        }).addTo(map);
+
+        // Add start marker
+        const startMarker = L.circleMarker([routePath[0][0], routePath[0][1]], {
+            radius: 12,
+            fillColor: '#28a745',
+            color: '#fff',
+            weight: 3,
+            opacity: 1,
+            fillOpacity: 0.9
+        }).addTo(map);
+
+        startMarker.bindPopup(`
+            <div class="popup-content">
+                <h4><i class="fas fa-play-circle"></i> Start Point</h4>
+                <p><strong>Williamsburg Bridge</strong></p>
+                <p>Elevation: 5m</p>
+            </div>
+        `);
+
+        // Add end marker
+        const endMarker = L.circleMarker([routePath[routePath.length - 1][0], routePath[routePath.length - 1][1]], {
+            radius: 12,
+            fillColor: '#dc3545',
+            color: '#fff',
+            weight: 3,
+            opacity: 1,
+            fillOpacity: 0.9
+        }).addTo(map);
+
+        endMarker.bindPopup(`
+            <div class="popup-content">
+                <h4><i class="fas fa-flag-checkered"></i> End Point</h4>
+                <p><strong>Broadway & Division</strong></p>
+                <p>Elevation: 8m</p>
+            </div>
+        `);
+
+        // Add notable location markers
+        const notableLocations = [
+            {
+                name: 'McCarren Park',
+                coords: [40.7050, -73.9480],
+                icon: 'leaf',
+                desc: 'Beautiful park with scenic views'
+            },
+            {
+                name: 'Bedford Ave Shops',
+                coords: [40.6945, -73.9380],
+                icon: 'shopping-bag',
+                desc: 'Great for post-run refreshments'
+            },
+            {
+                name: 'Greenpoint Avenue',
+                coords: [40.7010, -73.9420],
+                icon: 'road',
+                desc: 'Scenic street with local flavor'
+            }
+        ];
+
+        notableLocations.forEach(location => {
+            const marker = L.circleMarker([location.coords[0], location.coords[1]], {
+                radius: 8,
+                fillColor: '#764ba2',
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.7
+            }).addTo(map);
+
+            marker.bindPopup(`
+                <div class="popup-content">
+                    <h4><i class="fas fa-${location.icon}"></i> ${location.name}</h4>
+                    <p>${location.desc}</p>
+                </div>
+            `);
+        });
+
+        // Fit map to route bounds
+        map.fitBounds(mainRoute.getBounds(), { padding: [50, 50] });
+
+        // Calculate total stats
+        const totalDistance = routeSegments.reduce((sum, seg) => sum + seg.distance, 0);
+        const totalElevationGain = Math.max(...routeSegments[routeSegments.length - 1].elevation);
+        const averagePace = (routeSegments.reduce((sum, seg) => sum + parseFloat(seg.pace.replace(':', '.')), 0) / routeSegments.length).toFixed(2);
+        const estimatedTime = Math.round((totalDistance / 5.2) * 38); // 5.2km in 38 min baseline
+
+        // Update stats display
+        document.getElementById('totalDistance').textContent = totalDistance.toFixed(1);
+        document.getElementById('elevationGain').textContent = totalElevationGain;
+        document.getElementById('estimatedTime').textContent = estimatedTime;
+
+        // Format pace
+        const paceMinutes = Math.floor(averagePace);
+        const paceSeconds = Math.round((averagePace - paceMinutes) * 60);
+        document.getElementById('averagePace').textContent = `${paceMinutes}:${paceSeconds.toString().padStart(2, '0')}`;
+
+        // Populate segments list
+        const segmentsList = document.getElementById('segmentsList');
+        routeSegments.forEach((segment, index) => {
+            const segmentDiv = document.createElement('div');
+            segmentDiv.className = 'segment-item';
+            
+            let paceClass = 'pace-moderate';
+            if (parseFloat(segment.pace) < 7.2) paceClass = 'pace-fast';
+            else if (parseFloat(segment.pace) > 7.4) paceClass = 'pace-slow';
+
+            segmentDiv.innerHTML = `
+                <div class="segment-name">${index + 1}. ${segment.name}</div>
+                <div class="segment-stats">
+                    <span>${segment.distance.toFixed(2)}km</span>
+                    <span>${segment.pace} /km</span>
+                </div>
+                <div class="pace-indicator ${paceClass}">${segment.pace} min/km</div>
+            `;
+
+            segmentDiv.addEventListener('click', () => {
+                const segmentPath = L.polyline(segment.coordinates.map(c => [c[0], c[1]]), {
+                    color: '#764ba2',
+                    weight: 6,
+                    opacity: 0.9,
+                    lineCap: 'round',
+                    lineJoin: 'round'
+                }).addTo(map);
+
+                map.fitBounds(segmentPath.getBounds(), { padding: [50, 50] });
+
+                setTimeout(() => {
+                    map.removeLayer(segmentPath);
+                }, 3000);
+            });
+
+            segmentsList.appendChild(segmentDiv);
+        });
+
+        // Create elevation profile visualization
+        const allElevations = routeSegments.reduce((acc, seg) => acc.concat(seg.elevation), []);
+        const maxElevation = Math.max(...allElevations);
+        const elevationBars = document.getElementById('elevationBars');
+
+        allElevations.forEach((elevation, index) => {
+            const bar = document.createElement('div');
+            bar.className = 'elevation-bar';
+            bar.style.height = (elevation / maxElevation) * 100 + '%';
+            bar.title = `${elevation}m`;
+            elevationBars.appendChild(bar);
+        });
+
+        // Add some interactivity
+        map.on('click', function(e) {
+            console.log('Clicked at:', e.latlng);
+        });
+
+        // Highlight route on hover
+        mainRoute.on('mouseover', function() {
+            this.setStyle({
+                weight: 6,
+                opacity: 1
+            });
+        });
+
+        mainRoute.on('mouseout', function() {
+            this.setStyle({
+                weight: 4,
+                opacity: 0.8
+            });
+        });
+    </script>
+</body>
+</html>
