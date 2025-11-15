@@ -78,5 +78,9 @@
   "bushwick": {
     "icon": "🌐",
     "description": "edit /src/leaflet.js to zoom in on bushwick"
+  },
+  "terminal-memory": {
+    "icon": "🎮",
+    "description": "Interactive memory matching game to learn terminal commands. Flip cards to match terminal commands with their descriptions. Includes common commands like ls, cd, mkdir, rm, grep, chmod, etc. Track score and time. Retro arcade aesthetic with flip animations."
   }
 }

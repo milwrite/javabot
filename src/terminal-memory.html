@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Memory - Command Match</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'VT323', monospace;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #00ff00;
+            overflow-x: hidden;
+        }
+        
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .container {
+            max-width: 1200px;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: glitch 3s infinite;
+        }
+        
+        h1 {
+            font-size: 4em;
+            text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00;
+            margin-bottom: 10px;
+            letter-spacing: 4px;
+        }
+        
+        .subtitle {
+            font-size: 1.5em;
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-box {
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px solid #00ff00;
+            padding: 15px 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            min-width: 150px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 1.2em;
+            color: #00ffff;
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+            perspective: 1000px;
+        }
+        
+        .card {
+            aspect-ratio: 1;
+            position: relative;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card.matched {
+            animation: matchPulse 0.6s ease-out;
+        }
+        
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            text-align: center;
+            border: 3px solid;
+            box-shadow: 0 0 20px;
+        }
+        
+        .card-back {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-color: #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+        
+        .card-back::before {
+            content: '>';
+            font-size: 3em;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            animation: blink 1.5s infinite;
+        }
+        
+        .card-front {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            transform: rotateY(180deg);
+            font-size: 1.3em;
+            overflow: hidden;
+        }
+        
+        .card-front.command {
+            background: linear-gradient(135deg, #1a472a, #0d2818);
+            border-color: #00ff00;
+        }
+        
+        .card-front.description {
+            background: linear-gradient(135deg, #2a1a47, #18152d);
+            border-color: #ff00ff;
+        }
+        
+        .card-content {
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+            word-wrap: break-word;
+        }
+        
+        .card-front.command .card-content {
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .card-front.description .card-content {
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff;
+            font-size: 1em;
+            line-height: 1.3;
+        }
+        
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            font-family: 'VT323', monospace;
+            font-size: 1.8em;
+            padding: 15px 40px;
+            background: rgba(0, 255, 0, 0.2);
+            border: 3px solid #00ff00;
+            color: #00ff00;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            transition: all 0.3s;
+            text-shadow: 0 0 5px #00ff00;
+        }
+        
+        .btn:hover {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.8);
+            transform: scale(1.05);
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        .message {
+            text-align: center;
+            font-size: 2em;
+            min-height: 40px;
+            color: #ffff00;
+            text-shadow: 0 0 10px #ffff00;
+            margin-bottom: 20px;
+        }
+        
+        .victory {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .victory.show {
+            display: flex;
+            animation: fadeIn 0.5s;
+        }
+        
+        .victory-content {
+            background: linear-gradient(135deg, #0f0c29, #302b63);
+            border: 5px solid #00ff00;
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.8);
+            animation: victoryPulse 2s infinite;
+        }
+        
+        .victory-title {
+            font-size: 4em;
+            color: #00ff00;
+            text-shadow: 0 0 20px #00ff00;
+            margin-bottom: 20px;
+        }
+        
+        .victory-stats {
+            font-size: 2em;
+            color: #00ffff;
+            margin-bottom: 30px;
+        }
+        
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0.3; }
+        }
+        
+        @keyframes glitch {
+            0%, 90%, 100% { transform: translate(0); }
+            92% { transform: translate(-2px, 2px); }
+            94% { transform: translate(2px, -2px); }
+            96% { transform: translate(-2px, -2px); }
+            98% { transform: translate(2px, 2px); }
+        }
+        
+        @keyframes matchPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); box-shadow: 0 0 40px rgba(0, 255, 0, 1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes victoryPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        @media (max-width: 768px) {
+            .game-board {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            
+            h1 {
+                font-size: 2.5em;
+            }
+            
+            .card-front {
+                font-size: 1em;
+            }
+            
+            .stat-box {
+                min-width: 120px;
+                padding: 10px 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .game-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .stats {
+                gap: 15px;
+            }
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+    
+    <div class="scanlines"></div>
+    
+    <div class="container">
+        <header>
+            <h1>TERMINAL MEMORY</h1>
+            <div class="subtitle">&gt; Match Commands with Descriptions_</div>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">TIME</div>
+                <div class="stat-value" id="timer">0:00</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">MOVES</div>
+                <div class="stat-value" id="moves">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">MATCHES</div>
+                <div class="stat-value" id="matches">0/12</div>
+            </div>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="game-board" id="gameBoard"></div>
+        
+        <div class="controls">
+            <button class="btn" id="resetBtn">NEW GAME</button>
+        </div>
+    </div>
+    
+    <div class="victory" id="victory">
+        <div class="victory-content">
+            <div class="victory-title">LEVEL COMPLETE!</div>
+            <div class="victory-stats">
+                <div>Time: <span id="finalTime"></span></div>
+                <div>Moves: <span id="finalMoves"></span></div>
+            </div>
+            <button class="btn" onclick="resetGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+    
+    <script>
+        const commands = [
+            { command: 'ls', description: 'List directory contents' },
+            { command: 'cd', description: 'Change directory' },
+            { command: 'mkdir', description: 'Make directory' },
+            { command: 'rm', description: 'Remove files or directories' },
+            { command: 'cp', description: 'Copy files or directories' },
+            { command: 'mv', description: 'Move or rename files' },
+            { command: 'grep', description: 'Search text patterns' },
+            { command: 'chmod', description: 'Change file permissions' },
+            { command: 'cat', description: 'Display file contents' },
+            { command: 'pwd', description: 'Print working directory' },
+            { command: 'touch', description: 'Create empty file' },
+            { command: 'sudo', description: 'Execute as superuser' }
+        ];
+        
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let timer = 0;
+        let timerInterval = null;
+        let gameStarted = false;
+        
+        function initGame() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            cards = [];
+            flippedCards = [];
+            matchedPairs = 0;
+            moves = 0;
+            timer = 0;
+            gameStarted = false;
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            updateStats();
+            document.getElementById('message').textContent = '';
+            
+            // Create card pairs
+            const cardPairs = [];
+            commands.forEach((cmd, index) => {
+                cardPairs.push({
+                    id: index,
+                    type: 'command',
+                    content: cmd.command,
+                    pairId: index
+                });
+                cardPairs.push({
+                    id: index + commands.length,
+                    type: 'description',
+                    content: cmd.description,
+                    pairId: index
+                });
+            });
+            
+            // Shuffle cards
+            cardPairs.sort(() => Math.random() - 0.5);
+            
+            // Create card elements
+            cardPairs.forEach((cardData, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.id = cardData.id;
+                card.dataset.pairId = cardData.pairId;
+                card.dataset.type = cardData.type;
+                
+                card.innerHTML = `
+                    <div class="card-face card-back"></div>
+                    <div class="card-face card-front ${cardData.type}">
+                        <div class="card-content">${cardData.content}</div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => flipCard(card));
+                gameBoard.appendChild(card);
+                cards.push(card);
+            });
+        }
+        
+        function flipCard(card) {
+            if (!gameStarted) {
+                gameStarted = true;
+                startTimer();
+            }
+            
+            if (flippedCards.length >= 2) return;
+            if (card.classList.contains('flipped')) return;
+            if (card.classList.contains('matched')) return;
+            
+            card.classList.add('flipped');
+            flippedCards.push(card);
+            
+            if (flippedCards.length === 2) {
+                moves++;
+                updateStats();
+                checkMatch();
+            }
+        }
+        
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            const pairId1 = card1.dataset.pairId;
+            const pairId2 = card2.dataset.pairId;
+            
+            if (pairId1 === pairId2) {
+                // Match found
+                setTimeout(() => {
+                    card1.classList.add('matched');
+                    card2.classList.add('matched');
+                    matchedPairs++;
+                    updateStats();
+                    showMessage('MATCH! ✓', '#00ff00');
+                    
+                    if (matchedPairs === commands.length) {
+                        endGame();
+                    }
+                    
+                    flippedCards = [];
+                }, 600);
+            } else {
+                // No match
+                showMessage('TRY AGAIN...', '#ff0000');
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    flippedCards = [];
+                }, 1000);
+            }
+        }
+        
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timer++;
+                updateStats();
+            }, 1000);
+        }
+        
+        function updateStats() {
+            const minutes = Math.floor(timer / 60);
+            const seconds = timer % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('matches').textContent = `${matchedPairs}/${commands.length}`;
+        }
+        
+        function showMessage(text, color) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.style.color = color;
+            messageEl.style.textShadow = `0 0 10px ${color}`;
+            
+            setTimeout(() => {
+                messageEl.textContent = '';
+            }, 1500);
+        }
+        
+        function endGame() {
+            clearInterval(timerInterval);
+            
+            const minutes = Math.floor(timer / 60);
+            const seconds = timer % 60;
+            const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            document.getElementById('finalTime').textContent = timeStr;
+            document.getElementById('finalMoves').textContent = moves;
+            
+            setTimeout(() => {
+                document.getElementById('victory').classList.add('show');
+            }, 1000);
+        }
+        
+        function resetGame() {
+            document.getElementById('victory').classList.remove('show');
+            initGame();
+        }
+        
+        document.getElementById('resetBtn').addEventListener('click', resetGame);
+        
+        // Initialize game on load
+        initGame();
+    </script>
+</body>
+</html>
