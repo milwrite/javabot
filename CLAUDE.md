@@ -65,9 +65,9 @@ The entire bot is contained in `index.js` (~2000+ lines) with these key sections
 - `/src/` - All generated HTML pages, JS features, and demos
 - `/responses/` - AI responses >2000 chars saved with timestamps
 - `agents.md` - Conversation history (last 100 messages)
-- `index.html` - Main hub page with embedded `projectMetadata` object
-- `page-theme.css` - Shared arcade theme for all pages
-- `style.css` - Homepage-specific styling
+- `index.html` - Main hub page with embedded CSS (no longer uses style.css)
+- `page-theme.css` - Shared arcade theme for all /src/ pages
+- `projectmetadata.json` - Project metadata (icon, description) loaded dynamically by index.html
 
 ### Key Integrations
 
@@ -94,23 +94,22 @@ The entire bot is contained in `index.js` (~2000+ lines) with these key sections
 - Conversation history from `agents.md` (100 messages max)
 
 **Arcade Frontend Styling**:
-- **Main arcade page**: `index.html` + `style.css` (homepage styling)
-- **Individual pages**: Link to `page-theme.css` (shared arcade theme for all pages)
+- **Main arcade page**: `index.html` with embedded CSS (self-contained, no external stylesheet)
+- **Individual pages**: Link to `page-theme.css` (shared arcade theme for all /src/ pages)
 - **Current theme**: Soft Arcade (mint green #7dd3a0, dark blue-gray background)
 - **Typography**: Press Start 2P font from Google Fonts (retro pixel aesthetic)
-- **Visual effects**: Subtle grid background with scanlines overlay
-- **Project discovery**: `index.html` loads projects from embedded `projectMetadata` JavaScript object
-- **Navigation**: All pages include styled home button linking back to arcade
-- **Theme updates**: `/update-style` command updates `style.css` (homepage only)
-- **Consistency**: New pages automatically use `page-theme.css` for uniform styling
+- **Visual effects**: Simple gradient background on main page, grid + scanlines on individual pages
+- **Project discovery**: `index.html` dynamically loads projects from `projectmetadata.json`
+- **Navigation**: All pages include styled home button linking back to index.html
+- **Theme consistency**: Both index.html and page-theme.css use matching color palette
 
 **Project Metadata System**:
-- **Location**: Embedded in `index.html` as JavaScript object (lines 39-81)
-- **Structure**: `projectMetadata = { 'page-name': { icon: '🎮', description: 'Page description' } }`
-- **Auto-update**: `updateIndexWithPage()` function adds new pages to metadata object using brace-counting algorithm
+- **Location**: `projectmetadata.json` (separate file, loaded via fetch)
+- **Structure**: `{ "page-name": { "icon": "🎮", "description": "Page description" } }`
+- **Auto-update**: `updateIndexWithPage()` function adds new pages to projectmetadata.json
 - **Icon selection**: `getIconForDescription()` auto-assigns emoji based on keywords in description
 - **Fallback**: Pages without metadata display with default 🌐 icon and "Interactive web project" description
-- **Critical**: Commas must be at end of closing braces (`},`), not on separate lines (causes JavaScript syntax errors)
+- **Dynamic loading**: index.html fetches projectmetadata.json on page load and generates cards
 
 ### Available Slash Commands
 
@@ -180,16 +179,16 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 
 **`/update-style`**:
 1. User selects preset or "Custom" with description
-2. Built-in presets stored in `stylePresets` object (lines 1140-1771):
+2. Built-in presets stored in `stylePresets` object:
    - `soft-arcade` - Current style (mint green, dark blue-gray)
    - `neon-arcade` - Intense bright green with animations
    - `dark-minimal` - Clean modern dark theme
    - `retro-terminal` - Classic green terminal style
 3. For custom: AI generates complete CSS based on description
-4. Writes to `style.css`, commits, pushes to GitHub
+4. Updates embedded CSS in `index.html`, commits, pushes to GitHub
 5. Shows confirmation with live site link
 
-All presets include complete CSS for all site elements (body, header, cards, buttons, footer).
+**Note**: This command was originally designed to update `style.css`, but now modifies the embedded CSS in `index.html` directly since the main page is self-contained.
 
 ### Doc Sportello Personality System
 
@@ -265,10 +264,13 @@ errorTracker.set(`${userId}-${commandName}`, {
 
 **@ Mention Handling**:
 - Async handler prevents blocking: `handleMentionAsync(message)`
+- **Message deduplication**: Tracks processed message IDs to prevent duplicate responses (common Discord API issue)
 - Full AI tool access: can create pages, edit files, search web, commit changes
 - Uses conversation history from `agents.md` for context
 - Debounced file writes (5 second delay) to prevent excessive I/O
 - Responses automatically saved to `responses/` directory if >2000 chars
+- **Commit filtering**: Only prompts for commits if AI changes actual code files (filters out `agents.md` and `projectmetadata.json` updates)
+- **Git timeout protection**: Git status checks have 5-second timeout to prevent hanging
 
 ## Adding New Commands
 
@@ -481,11 +483,35 @@ const CONFIG = {
 **Error Prevention & Performance**:
 - Error tracking prevents infinite loops (3 errors = 5min cooldown)
 - Automatic cleanup of error tracking entries every 5 minutes
-- All git operations wrapped with timeout protection
+- All git operations wrapped with timeout protection (5-30 seconds depending on operation)
 - Graceful fallbacks for failed Discord interactions
 - Memory optimizations: aggressive message history pruning, garbage collection triggers
 - Efficient logging system with development-only details
 - Response deduplication prevents "Bot Sportello: Bot Sportello:" patterns
+- Message deduplication in mention handler prevents duplicate responses from Discord API glitches
+
+## Critical Bug Fixes & Lessons Learned
+
+**Discord.js Event Names**:
+- Use `client.once('ready', ...)` NOT `client.once('clientReady', ...)`
+- The `clientReady` event name is deprecated and causes bot startup hangs
+- Discord.js v14 uses `'ready'`, v15 will rename to `'clientReady'`
+
+**iCloud Drive Corruption**:
+- **Never run the bot from an iCloud-synced directory** (e.g., ~/Desktop on macOS)
+- iCloud offloads .git files causing "Stale NFS file handle" errors and git hangs
+- Symptoms: git operations timeout, "dataless" file attributes, Operation timed out errors
+- Solution: Move project to non-iCloud location (e.g., ~/projects/)
+
+**Git Remote URL Management**:
+- Never embed GITHUB_TOKEN in git remote URL permanently
+- Use token only during push operations, then remove: `git remote set-url origin https://github.com/...`
+- Embedded tokens in .git/config can cause authentication issues and security risks
+
+**Mention Handler Deduplication**:
+- Discord's messageCreate event can fire twice for same message (network issues, API quirks)
+- Always track processed message IDs in a Set to prevent duplicate AI responses
+- Clean up old IDs periodically to prevent memory leaks (keep last 100)
 
 ## Important Dependencies
 
