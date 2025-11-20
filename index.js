@@ -121,15 +121,16 @@ axiosRetry(axios, {
 
 // OpenRouter configuration
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-let MODEL = 'anthropic/claude-haiku-4.5'; // Default to latest Haiku
+let MODEL = 'google/gemini-3-pro-preview'; // Default to latest Haiku
 
 // Available models (2025 latest)
 const MODEL_PRESETS = {
     'haiku': 'anthropic/claude-haiku-4.5',
     'sonnet': 'anthropic/claude-sonnet-4.5',
-    'kimi': 'moonshotai/kimi-k2-thinking',
-    'gpt5': 'openai/gpt-5-nano',
-    'gemini': 'google/gemini-2.5-flash-lite-preview-09-2025'
+    'kimi': 'moonshotai/kimi-k2-0905:exacto',
+    'gpt5': 'openai/gpt-5.1-codex',
+    'gemini-3-pro': 'google/gemini-3-pro-preview',
+    'glm': 'z-ai/glm-4.6:exacto'
 };
 
 // Bot system prompt with enhanced capabilities
@@ -1199,9 +1200,10 @@ const commands = [
                 .addChoices(
                     { name: 'Claude Haiku 4.5 (Fast, Cheap)', value: 'haiku' },
                     { name: 'Claude Sonnet 4.5 (Balanced)', value: 'sonnet' },
-                    { name: 'Kimi K2 Thinking (Reasoning)', value: 'kimi' },
-                    { name: 'GPT-5 Nano (Latest OpenAI)', value: 'gpt5' },
-                    { name: 'Gemini 2.5 Flash Lite (Google)', value: 'gemini' }
+                    { name: 'Kimi K2 Exacto (Moonshot AI)', value: 'kimi' },
+                    { name: 'GPT-5.1 Codex (Latest OpenAI)', value: 'gpt5' },
+                    { name: 'Gemini 3 Pro Preview (Google)', value: 'gemini-3-pro' },
+                    { name: 'GLM-4.6 Exacto (Z-AI)', value: 'glm' }
                 )),
 
     new SlashCommandBuilder()
@@ -2062,9 +2064,10 @@ async function handleSetModel(interaction) {
         const modelNames = {
             'haiku': 'Claude Haiku 4.5',
             'sonnet': 'Claude Sonnet 4.5',
-            'kimi': 'Kimi K2 Thinking',
-            'gpt5': 'GPT-5 Nano',
-            'gemini': 'Gemini 2.5 Flash Lite'
+            'kimi': 'Kimi K2 Exacto',
+            'gpt5': 'GPT-5.1 Codex',
+            'gemini-3-pro': 'Gemini 3 Pro Preview',
+            'glm': 'GLM-4.6 Exacto'
         };
 
         const embed = new EmbedBuilder()

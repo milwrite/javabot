@@ -1,6 +1,6 @@
 # Bot Sportello Memory
 
-Last updated: 2025-11-18T22:45:34.731Z
+Last updated: 2025-11-19T00:51:14.232Z
 
 ## Recent Messages
 
@@ -24,7 +24,17 @@ Last updated: 2025-11-18T22:45:34.731Z
 
 **Bot Sportello** [22:45:29]: Right on! Game's live, dude. That wide-eyed frog's popping up all over the place—smash 'em before they disappear! 🐸💥
 
+**aneventperhaps** [00:50:50]: Link the frog game <@1436782482967101491>
+
+**aneventperhaps** [00:50:52]: Link the frog game
+
+**Bot Sportello** [00:50:52]: Yeah man, here's your frog game: https://milwrite.github.io/javabot/frog-whack-a-mole.html
+
+Go get those frogs! 🐸
+
+**aneventperhaps** [00:51:09]: <@1439799466218754168> try it out
+
 ## Active Context
 
 **Users**: aneventperhaps
-**Total messages tracked**: 10
+**Total messages tracked**: 14
