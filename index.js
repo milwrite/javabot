@@ -1258,20 +1258,33 @@ const commands = [
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
-client.once('ready', async () => {
+// Validate commands are properly constructed
+console.log(`Loaded ${commands.length} slash commands`);
+commands.forEach((cmd, idx) => {
+    const json = cmd.toJSON();
+    if (!json.name || !json.description) {
+        console.error(`Command ${idx} is invalid:`, json);
+    }
+});
+
+client.once('clientReady', async () => {
     console.log(`Bot is ready as ${client.user.tag}`);
     console.log(`Monitoring channels: ${CHANNEL_IDS.length > 0 ? CHANNEL_IDS.join(', ') : 'ALL CHANNELS'}`);
     console.log(`Message Content Intent enabled: ${client.options.intents.has(GatewayIntentBits.MessageContent)}`);
 
     try {
         console.log('Refreshing slash commands...');
+        const commandsJSON = commands.map(command => command.toJSON());
+        console.log(`Registering ${commandsJSON.length} commands`);
+
         await rest.put(
             Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-            { body: commands.map(command => command.toJSON()) }
+            { body: commandsJSON }
         );
         console.log('Slash commands registered successfully.');
     } catch (error) {
         console.error('Error registering slash commands:', error);
+        console.error('Full error details:', JSON.stringify(error.rawError, null, 2));
     }
 
     // Sync index.html with all HTML files in /src
