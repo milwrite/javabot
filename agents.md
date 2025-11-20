@@ -1,40 +1,16 @@
 # Bot Sportello Memory
 
-Last updated: 2025-11-19T00:51:14.232Z
+Last updated: 2025-11-20T23:48:36.044Z
 
 ## Recent Messages
 
-**aneventperhaps** [00:32:21]: <@1436782482967101491> what’s up
+**aneventperhaps** [23:48:17]: <@1436782482967101491> what’s the new coolest LLM?
 
-**aneventperhaps** [00:32:23]: what’s up
+**aneventperhaps** [23:48:31]: what’s the new coolest LLM?
 
-**Bot Sportello** [00:32:23]: Yo, what's up man! 🎮 Just hanging here, ready to help you build some cool stuff on the site. You working on something new, or just checking in? Right on to see you around!
-
-**aneventperhaps** [00:32:41]: <@1436782482967101491> introduce yourself to sperkthejerk
-
-**aneventperhaps** [00:32:44]: introduce yourself to sperkthejerk
-
-**Bot Sportello** [00:32:44]: Hey there, sperkthejerk! 👋 I'm Bot Sportello, your laid-back web dev helper around here. I hang out and help folks build pages, create JavaScript features, edit code—basically anything to get your project vibes right on the live site at https://milwrite.github.io/javabot/. Think of me like a chill tech guide who's generally got it together, just sometimes a little spacey about the details. What can I help you build, dude?
-
-**aneventperhaps** [04:57:39]: Someone give bot an @ he wants a job
-
-**aneventperhaps** [22:44:36]: <@1436782482967101491> create a whack a mole game where the mole is that one frog meme
-
-**aneventperhaps** [22:45:29]: create a whack a mole game where the mole is that one frog meme
-
-**Bot Sportello** [22:45:29]: Right on! Game's live, dude. That wide-eyed frog's popping up all over the place—smash 'em before they disappear! 🐸💥
-
-**aneventperhaps** [00:50:50]: Link the frog game <@1436782482967101491>
-
-**aneventperhaps** [00:50:52]: Link the frog game
-
-**Bot Sportello** [00:50:52]: Yeah man, here's your frog game: https://milwrite.github.io/javabot/frog-whack-a-mole.html
-
-Go get those frogs! 🐸
-
-**aneventperhaps** [00:51:09]: <@1439799466218754168> try it out
+**Bot Sportello** [23:48:31]: hmm that's weird man, let me check what happened Got an empty response from the AI.
 
 ## Active Context
 
 **Users**: aneventperhaps
-**Total messages tracked**: 14
+**Total messages tracked**: 3

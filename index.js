@@ -1122,10 +1122,10 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                 timeout: 45000
             });
 
-            return finalResponse.data.choices[0].message.content;
+            return finalResponse.data.choices[0].message.content || '';
         }
 
-        return assistantMessage.content;
+        return assistantMessage.content || '';
     } catch (error) {
         console.error('LLM Error:', error.response?.data || error.message);
         return getBotResponse('errors');
@@ -1258,7 +1258,7 @@ const commands = [
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
-client.once('clientReady', async () => {
+client.once('ready', async () => {
     console.log(`Bot is ready as ${client.user.tag}`);
     console.log(`Monitoring channels: ${CHANNEL_IDS.length > 0 ? CHANNEL_IDS.join(', ') : 'ALL CHANNELS'}`);
     console.log(`Message Content Intent enabled: ${client.options.intents.has(GatewayIntentBits.MessageContent)}`);
@@ -1267,7 +1267,7 @@ client.once('clientReady', async () => {
         console.log('Refreshing slash commands...');
         await rest.put(
             Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-            { body: commands }
+            { body: commands.map(command => command.toJSON()) }
         );
         console.log('Slash commands registered successfully.');
     } catch (error) {
