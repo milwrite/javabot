@@ -121,7 +121,7 @@ axiosRetry(axios, {
 
 // OpenRouter configuration
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-let MODEL = 'google/gemini-3-pro-preview'; // Default to latest Haiku
+let MODEL = 'anthropic/claude-haiku-4.5'; // Default to Haiku 4.5
 
 // Available models (2025 latest)
 const MODEL_PRESETS = {
@@ -1122,10 +1122,20 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                 timeout: 45000
             });
 
-            return finalResponse.data.choices[0].message.content || '';
+            const finalContent = finalResponse.data.choices[0].message.content;
+            if (!finalContent) {
+                logEvent('LLM', 'Empty response after tool use');
+                console.error('Final response data:', JSON.stringify(finalResponse.data, null, 2));
+            }
+            return finalContent || '';
         }
 
-        return assistantMessage.content || '';
+        const content = assistantMessage.content;
+        if (!content) {
+            logEvent('LLM', 'Empty initial response');
+            console.error('Assistant message:', JSON.stringify(assistantMessage, null, 2));
+        }
+        return content || '';
     } catch (error) {
         console.error('LLM Error:', error.response?.data || error.message);
         return getBotResponse('errors');
@@ -1276,6 +1286,7 @@ client.once('clientReady', async () => {
         console.log('Refreshing slash commands...');
         const commandsJSON = commands.map(command => command.toJSON());
         console.log(`Registering ${commandsJSON.length} commands`);
+        console.log('First command sample:', JSON.stringify(commandsJSON[0], null, 2));
 
         await rest.put(
             Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
@@ -1283,8 +1294,13 @@ client.once('clientReady', async () => {
         );
         console.log('Slash commands registered successfully.');
     } catch (error) {
-        console.error('Error registering slash commands:', error);
-        console.error('Full error details:', JSON.stringify(error.rawError, null, 2));
+        console.error('Error registering slash commands:', error.message);
+        if (error.rawError) {
+            console.error('Full error details:', JSON.stringify(error.rawError, null, 2));
+        }
+        if (error.requestBody) {
+            console.error('Request body was:', JSON.stringify(error.requestBody.json, null, 2));
+        }
     }
 
     // Sync index.html with all HTML files in /src
