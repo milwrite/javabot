@@ -1445,85 +1445,19 @@ async function handleMentionAsync(message) {
         addToHistory(username, content, false);
         addToHistory('Bot Sportello', response, true);
 
-        // Check for local git changes after AI response (with timeout protection)
-        let gitStatus;
-        try {
-            gitStatus = await gitWithTimeout(() => git.status(), 5000);
-        } catch (error) {
-            logEvent('GIT', `Skipping git status check: ${error.message}`);
-            gitStatus = { files: [] }; // Empty status to skip commit prompt
-        }
+        // Send response directly (no commit prompts in mentions)
+        if (response.length > 2000) {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `responses/mention-${timestamp}.txt`;
 
-        // Filter out bot-managed files (agents.md, projectmetadata.json)
-        // Only prompt for commits if AI made actual code/content changes
-        const meaningfulChanges = gitStatus.files.filter(f =>
-            !f.path.includes('agents.md') &&
-            !f.path.includes('projectmetadata.json')
-        );
+            await fs.mkdir('responses', { recursive: true });
+            const fileContent = `User: ${username}\nMessage: ${content}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${response}`;
+            await fs.writeFile(fileName, fileContent);
 
-        if (meaningfulChanges.length > 0) {
-            // Update gitStatus to only show meaningful changes
-            gitStatus = { ...gitStatus, files: meaningfulChanges };
-            // AI made local changes - show commit confirmation
-            const commitEmbed = new EmbedBuilder()
-                .setTitle('🔧 Local Changes Made')
-                .setDescription(`The AI made changes to **${gitStatus.files.length} file(s)**. Would you like to commit and push these changes?`)
-                .addFields(
-                    { name: 'Changed Files', value: gitStatus.files.slice(0, 10).map(f => `• ${f.path}`).join('\n') + (gitStatus.files.length > 10 ? `\n... and ${gitStatus.files.length - 10} more` : ''), inline: false },
-                    { name: 'AI Response', value: response.length > 1000 ? response.substring(0, 1000) + '...' : response, inline: false }
-                )
-                .setColor(0x7dd3a0) // Mint green
-                .setTimestamp();
-
-            // Create commit buttons
-            const commitRow = new ActionRowBuilder()
-                .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`mention_commit_${message.author.id}`)
-                        .setLabel('✅ Commit & Push Changes')
-                        .setStyle(ButtonStyle.Success),
-                    new ButtonBuilder()
-                        .setCustomId(`mention_discard_${message.author.id}`)
-                        .setLabel('❌ Discard Changes')
-                        .setStyle(ButtonStyle.Danger)
-                );
-
-            await thinkingMsg.edit({ 
-                content: '', 
-                embeds: [commitEmbed], 
-                components: [commitRow] 
-            });
-
-            // Store mention commit data
-            if (!global.mentionCommitData) global.mentionCommitData = new Map();
-            global.mentionCommitData.set(message.author.id, {
-                status: gitStatus,
-                response: response,
-                messageId: thinkingMsg.id,
-                originalContent: content,
-                username: username
-            });
-
-            // Set timeout to clean up pending data
-            setTimeout(() => {
-                global.mentionCommitData?.delete(message.author.id);
-            }, 300000); // 5 minutes
-
+            const truncated = response.substring(0, 1800);
+            await thinkingMsg.edit(`${truncated}...\n\n*[Full response saved to \`${fileName}\`]*`);
         } else {
-            // No local changes - just send the response normally
-            if (response.length > 2000) {
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const fileName = `responses/mention-${timestamp}.txt`;
-
-                await fs.mkdir('responses', { recursive: true });
-                const fileContent = `User: ${username}\nMessage: ${content}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${response}`;
-                await fs.writeFile(fileName, fileContent);
-
-                const truncated = response.substring(0, 1800);
-                await thinkingMsg.edit(`${truncated}...\n\n*[Full response saved to \`${fileName}\`]*`);
-            } else {
-                await thinkingMsg.edit(response);
-            }
+            await thinkingMsg.edit(response);
         }
 
     } catch (error) {
