@@ -78,5 +78,9 @@
   "index": {
     "icon": "🌐",
     "description": "Index"
+  },
+  "basket-jam": {
+    "icon": "🎮",
+    "description": "A 2-on-2 arcade basketball game tribute to NBA Jam. Features simple controls (move, shoot/dunk, pass/steal), a turbo meter, and an 'On Fire' mechanic where making 3 shots in a row gives you infinite turbo and high accuracy. Uses HTML5 Canvas for rendering. Retro arcade aesthetic with mint green colors. Single player vs CPU."
   }
 }

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BASKET-JAM: Mint Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #111;
+            font-family: 'Press Start 2P', cursive;
+            color: #00FA9A;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle, #1a2a25 0%, #000000 100%);
+        }
+
+        canvas {
+            box-shadow: 0 0 20px #00FA9A;
+            border: 4px solid #00FA9A;
+            background-color: #202020;
+            image-rendering: pixelated;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            text-shadow: 2px 2px 0 #000;
+            z-index: 10;
+        }
+
+        .score-box {
+            text-align: center;
+        }
+
+        .score {
+            font-size: 40px;
+            color: #fff;
+        }
+
+        .team-name {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        #timer {
+            font-size: 30px;
+            color: #FFD700;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #start-screen, #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+
+        h1 {
+            font-size: 60px;
+            color: #00FA9A;
+            text-shadow: 4px 4px #FF00FF;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+        }
+
+        p {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #ccc;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .btn {
+            margin-top: 30px;
+            padding: 15px 30px;
+            background: #FF00FF;
+            color: white;
+            border: none;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 #00FA9A;
+            transition: transform 0.1s;
+        }
+
+        .btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 #00FA9A;
+        }
+
+        .controls {
+            margin-top: 20px;
+            color: #00FA9A;
+            font-size: 10px;
+            border: 1px solid #00FA9A;
+            padding: 15px;
+            background: rgba(0, 250, 154, 0.1);
+        }
+
+        .key {
+            background: #fff;
+            color: #000;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        #turbo-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 200px;
+        }
+        
+        .bar-label { font-size: 10px; margin-bottom: 2px; }
+        .bar-bg { width: 100%; height: 10px; background: #333; border: 1px solid #fff; }
+        .bar-fill { height: 100%; background: #00FA9A; width: 100%; transition: width 0.1s; }
+        
+        .fire-text {
+            position: absolute;
+            font-size: 24px;
+            color: orange;
+            font-weight: bold;
+            animation: flash 0.2s infinite alternate;
+            display: none;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        @keyframes flash { from { opacity: 1; } to { opacity: 0.5; } }
+
+        /* CRT Scanline effect */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="960" height="540"></canvas>
+        
+        <div id="ui-layer">
+            <div class="score-box">
+                <div class="team-name" style="color:#00FA9A">P1 MINT</div>
+                <div class="score" id="score-p1">00</div>
+            </div>
+            <div id="timer">2:00</div>
+            <div class="score-box">
+                <div class="team-name" style="color:#FF00FF">CPU PINK</div>
+                <div class="score" id="score-p2">00</div>
+            </div>
+        </div>
+
+        <div id="turbo-container">
+            <div class="bar-label">TURBO</div>
+            <div class="bar-bg"><div class="bar-fill" id="turbo-bar"></div></div>
+        </div>
+
+        <div id="start-screen">
+            <h1>BASKET-JAM</h1>
+            <p>2-on-2 Arcade Basketball</p>
+            <div class="controls">
+                <p>ARROWS / WASD : Move</p>
+                <p><span class="key">Z</span> or <span class="key">J</span> : Shoot / Dunk / Block</p>
+                <p><span class="key">X</span> or <span class="key">K</span> : Pass / Steal</p>
+                <p><span class="key">SHIFT</span> or <span class="key">SPACE</span> : Turbo</p>
+            </div>
+            <p style="margin-top:20px; color:#FF4500; font-size: 12px;">Make 3 shots in a row to catch FIRE!</p>
+            <button class="btn" onclick="startGame()">INSERT COIN</button>
+        </div>
+
+        <div id="game-over-screen" style="display:none;">
+            <h1>GAME OVER</h1>
+            <p id="winner-text">PLAYER WINS!</p>
+            <button class="btn" onclick="location.reload()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <div class="scanlines"></div>
+
+<script>
+/**
+ * BASKET-JAM
+ * A simple arcade basketball engine.
+ */
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// --- Constants & Config ---
+const COURT_WIDTH = 960;
+const COURT_HEIGHT = 540;
+const FLOOR_Y = 300; // Horizon line
+const GRAVITY = 0.6;
+const FRICTION = 0.9;
+const BALL_BOUNCE = 0.7;
+const HOOP_Y = 210; // Visual height of rim from ground
+const RIM_Z = 110;  // Physical height
+const LEFT_HOOP_X = 60;
+const RIGHT_HOOP_X = 900;
+
+// --- Game State ---
+let gameState = 'MENU'; // MENU, PLAY, OVER
+let frame = 0;
+let timeLeft = 120; // 2 minutes
+let lastTime = 0;
+let score = { p1: 0, p2: 0 };
+let particles = [];
+let texts = [];
+
+// --- Inputs ---
+const keys = {};
+window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keyup', e => keys[e.code] = false);
+
+// --- Audio (Synthesized placeholders) ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+    if (type === 'shoot') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+    } else if (type === 'dunk') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.linearRampToValueAtTime(50, now + 0.4);
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now);
+        osc.stop(now + 0.4);
+    } else if (type === 'steal') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    } else if (type === 'fire') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.linearRampToValueAtTime(600, now + 0.5);
+        gain.gain.setValueAtTime(0.3, now);
+        osc.start(now);
+        osc.stop(now + 0.5);
+    }
+}
+
+// --- Classes ---
+
+class Vector {
+    constructor(x, y, z = 0) { this.x = x; this.y = y; this.z = z; }
+}
+
+class Particle {
+    constructor(x, y, z, color) {
+        this.pos = new Vector(x, y, z);
+        this.vel = new Vector((Math.random()-0.5)*4, (Math.random()-0.5)*2, (Math.random())*3);
+        this.life = 1.0;
+        this.color = color;
+    }
+    update() {
+        this.pos.x += this.vel.x;
+        this.pos.y += this.vel.y;
+        this.pos.z += this.vel.z;
+        this.vel.z -= 0.2; // gravity
+        if(this.pos.z < 0) { this.pos.z = 0; this.vel.z *= -0.5; }
+        this.life -= 0.03;
+    }
+    draw(ctx) {
+        if(this.life <= 0) return;
+        ctx.globalAlpha = this.life;
+        ctx.fillStyle = this.color;
+        // Project 3D to 2D
+        const scale = 1 + (this.pos.y / COURT_HEIGHT);
+        const drawY = this.pos.y - this.pos.z;
+        ctx.beginPath();
+        ctx.arc(this.pos.x, drawY, 3, 0, Math.PI*2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+}
+
+class FloatingText {
+    constructor(text, x, y, color) {
+        this.text = text;
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.life = 60;
+        this.vy = -1;
+    }
+    update() {
+        this.y += this.vy;
+        this.life--;
+    }
+    draw(ctx) {
+        ctx.fillStyle = this.color;
+        ctx.font = "20px 'Press Start 2P'";
+        ctx.fillText(this.text, this.x, this.y);
+    }
+}
+
+class Ball {
+    constructor() {
+        this.pos = new Vector(COURT_WIDTH/2, COURT_HEIGHT/2 + 50, 200);
+        this.vel = new Vector(0, 0, 0);
+        this.radius = 10;
+        this.owner = null; // Player object if held
+        this.state = 'AIR'; // HELD, AIR, FREE
+    }
+
+    update() {
+        if (this.owner) {
+            this.pos.x = this.owner.pos.x + (this.owner.facingRight ? 15 : -15);
+            this.pos.y = this.owner.pos.y + 5;
+            this.pos.z = this.owner.pos.z + 35; // Waist/Chest height
+            this.vel.x = this.owner.vel.x;
+            this.vel.y = this.owner.vel.y;
+            this.vel.z = this.owner.vel.z;
+            this.state = 'HELD';
+        } else {
+            // Physics
+            this.pos.x += this.vel.x;
+            this.pos.y += this.vel.y;
+            this.pos.z += this.vel.z;
+            
+            // Gravity
+            this.vel.z -= GRAVITY;
+            
+            // Floor collision
+            if (this.pos.z <= 0) {
+                this.pos.z = 0;
+                this.vel.z *= -BALL_BOUNCE;
+                this.vel.x *= 0.95;
+                this.vel.y *= 0.95;
+                
+                // Stop bouncing if slow
+                if (Math.abs(this.vel.z) < 2) this.vel.z = 0;
+            }
+
+            // Wall collision
+            if (this.pos.x < 0 || this.pos.x > COURT_WIDTH) this.vel.x *= -1;
+            if (this.pos.y < FLOOR_Y - 50 || this.pos.y > COURT_HEIGHT) this.vel.y *= -1;
+
+            // Hoop Collision (Scoring)
+            this.checkHoop(LEFT_HOOP_X, 1); // 1 is Team 1 (Pink) hoop (Mint scores here? No, switch sides logic)
+            this.checkHoop(RIGHT_HOOP_X, 0);
+        }
+    }
+
+    checkHoop(hoopX, defendingTeam) {
+        // Simple distance check for entering hoop
+        // Hoop is at z=110. Ball must be coming down.
+        let dx = this.pos.x - hoopX;
+        let dy = Math.abs(this.pos.y - 325); // Hoop depth center
+        let dz = Math.abs(this.pos.z - RIM_Z);
+
+        if (this.vel.z < 0 && dx*dx + dy*dy < 600 && dz < 15) {
+            // Scored!
+            scorePoint(defendingTeam === 0 ? 1 : 0);
+            // Reset ball
+            this.vel = new Vector(0,0,0);
+            this.pos.z = RIM_Z - 20; // Fall through net
+            // Push ball away slightly
+            this.vel.x = (hoopX < 400) ? 2 : -2;
+        }
+    }
+
+    draw(ctx) {
+        // Shadow
+        if (this.pos.z > 1) {
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.beginPath();
+            let sScale = 10 + (this.pos.z/10);
+            ctx.ellipse(this.pos.x, this.pos.y, sScale, sScale/2, 0, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        // Ball
+        let drawY = this.pos.y - this.pos.z;
+        ctx.fillStyle = '#FF4500'; // Orange
+        ctx.beginPath();
+        ctx.arc(this.pos.x, drawY, this.radius + (this.pos.y/200), 0, Math.PI*2);
+        ctx.fill();
+        // Detail
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(this.pos.x, drawY, this.radius + (this.pos.y/200), 0, Math.PI*2);
+        ctx.stroke();
+        
+        // Spin lines
+        ctx.beginPath();
+        ctx.moveTo(this.pos.x - 8, drawY - 4);
+        ctx.quadraticCurveTo(this.pos.x, drawY + 8, this.pos.x + 8, drawY - 4);
+        ctx.stroke();
+    }
+}
+
+class Player {
+    constructor(id, team, x, y, isHuman) {
+        this.id = id;
+        this.team = team; // 0 = Mint, 1 = Pink
+        this.pos = new Vector(x, y, 0);
+        this.vel = new Vector(0, 0, 0);
+        this.isHuman = isHuman;
+        
+        // Stats
+        this.speed = 6;
+        this.turboSpeed = 9;
+        this.jumpPower = 14;
+        
+        // State
+        this.facingRight = (team === 0);
+        this.state = 'IDLE'; // IDLE, RUN, JUMP, FALL, STUN
+        this.stunTimer = 0;
+        
+        // Mechanics
+        this.turbo = 100;
+        this.fireCount = 0;
+        this.onFire = false;
+        this.canSteal = true;
+    }
+
+    update() {
+        if (this.stunTimer > 0) {
+            this.stunTimer--;
+            return;
+        }
+
+        let input = { x: 0, y: 0, shoot: false, pass: false, turbo: false };
+
+        if (this.isHuman) {
+            // Keyboard input
+            if (keys['ArrowLeft'] || keys['KeyA']) input.x = -1;
+            if (keys['ArrowRight'] || keys['KeyD']) input.x = 1;
+            if (keys['ArrowUp'] || keys['KeyW']) input.y = -1;
+            if (keys['ArrowDown'] || keys['KeyS']) input.y = 1;
+            if (keys['KeyZ'] || keys['KeyJ']) input.shoot = true;
+            if (keys['KeyX'] || keys['KeyK']) input.pass = true;
+            if (keys['ShiftLeft'] || keys['Space']) input.turbo = true;
+        } else {
+            // AI Logic
+            input = this.getAIInput();
+        }
+
+        // Turbo Logic
+        let currentSpeed = this.speed;
+        if (input.turbo && (this.turbo > 0 || this.onFire)) {
+            currentSpeed = this.turboSpeed;
+            if (!this.onFire) this.turbo -= 1;
+            // Fire trail
+            if (this.onFire || input.turbo) {
+                if(Math.random() > 0.5) {
+                    particles.push(new Particle(this.pos.x, this.pos.y, this.pos.z, this.onFire ? '#FF00FF' : '#FFF'));
+                }
+            }
+        } else {
+            if (this.turbo < 100) this.turbo += 0.2;
+        }
+
+        // Movement
+        if (this.pos.z === 0) {
+            this.vel.x = input.x * currentSpeed;
+            this.vel.y = input.y * currentSpeed;
+            
+            if (input.x !== 0) this.facingRight = input.x > 0;
+
+            // Jump / Shoot
+            if (input.shoot && !this.prevShoot) {
+                if (ball.owner === this) {
+                    this.vel.z = this.jumpPower;
+                    if (this.onFire) this.vel.z += 4; // Higher jump on fire
+                    this.state = 'JUMP';
+                    // If driving hard, maybe dunk?
+                } else {
+                    // Block attempt
+                    this.vel.z = this.jumpPower;
+                    this.state = 'JUMP';
+                }
+            }
+            
+            // Pass / Steal
+            if (input.pass && !this.prevPass) {
+                if (ball.owner === this) {
+                    this.passBall();
+                } else {
+                    this.attemptSteal();
+                }
+            }
+        } else {
+            // In Air
+            this.vel.z -= GRAVITY;
+            
+            // Release shot at peak(ish)
+            if (ball.owner === this && input.shoot === false && this.prevShoot === true) {
+                this.shootBall();
+            }
+            // Auto dunk if close and holding shoot
+            if (ball.owner === this && input.shoot && this.vel.z < 0) {
+                 // Check dunk distance
+                 let targetX = (this.team === 0) ? RIGHT_HOOP_X : LEFT_HOOP_X;
+                 if (Math.abs(this.pos.x - targetX) < 100) {
+                     this.dunkBall();
+                 } else {
+                     this.shootBall();
+                 }
+            }
+        }
+
+        // Apply Velocity
+        this.pos.x += this.vel.x;
+        this.pos.y += this.vel.y;
+        this.pos.z += this.vel.z;
+
+        // Floor Collision
+        if (this.pos.z <= 0) {
+            this.pos.z = 0;
+            this.vel.z = 0;
+            this.state = 'IDLE';
+        }
+
+        // Bounds
+        this.pos.x = Math.max(0, Math.min(COURT_WIDTH, this.pos.x));
+        this.pos.y = Math.max(FLOOR_Y, Math.min(COURT_HEIGHT, this.pos.y));
+
+        // Ball Collision (Pickup)
+        if (!ball.owner && ball.pos.z < 50 && ball.state !== 'HELD') {
+            let dx = this.pos.x - ball.pos.x;
+            let dy = this.pos.y - ball.pos.y;
+            if (dx*dx + dy*dy < 900) { // 30px radius
+                ball.owner = this;
+            }
+        }
+
+        this.prevShoot = input.shoot;
+        this.prevPass = input.pass;
+    }
+
+    getAIInput() {
+        let input = { x: 0, y: 0, shoot: false, pass: false, turbo: false };
+        let targetX = (this.team === 0) ? RIGHT_HOOP_X : LEFT_HOOP_X;
+        let hoopDist = Math.abs(this.pos.x - targetX);
+
+        if (ball.owner === this) {
+            // Offense
+            if (hoopDist > 150) {
+                // Move to hoop
+                input.x = (targetX > this.pos.x) ? 1 : -1;
+                // Align Y with center
+                if (this.pos.y < 325 - 50) input.y = 1;
+                else if (this.pos.y > 325 + 50) input.y = -1;
+                input.turbo = (Math.random() > 0.9);
+            } else {
+                // Shoot
+                if (Math.random() > 0.05) input.shoot = true; // Hold button to jump
+                else input.shoot = false; // Release to shoot
+            }
+        } else if (ball.owner && ball.owner.team !== this.team) {
+            // Defense - Chase ball
+            let dx = ball.pos.x - this.pos.x;
+            let dy = ball.pos.y - this.pos.y;
+            if (Math.abs(dx) > 10) input.x = Math.sign(dx);
+            if (Math.abs(dy) > 10) input.y = Math.sign(dy);
+            
+            if (Math.abs(dx) < 60 && Math.abs(dy) < 40) {
+                if (Math.random() > 0.95) input.pass = true; // Steal
+            }
+            input.turbo = (Math.abs(dx) > 200);
+        } else {
+            // Loose ball
+            let dx = ball.pos.x - this.pos.x;
+            let dy = ball.pos.y - this.pos.y;
+            if (Math.abs(dx) > 10) input.x = Math.sign(dx);
+            if (Math.abs(dy) > 10) input.y = Math.sign(dy);
+            input.turbo = true;
+        }
+        return input;
+    }
+
+    shootBall() {
+        if (ball.owner !== this) return;
+        
+        let targetX = (this.team === 0) ? RIGHT_HOOP_X : LEFT_HOOP_X;
+        let dist = Math.abs(this.pos.x - targetX);
+        
+        // Logic for accuracy
+        let basePower = 12;
+        let dx = targetX - this.pos.x;
+        
+        ball.owner = null;
+        ball.state = 'AIR';
+        ball.vel.x = (dx / 60); // Travel time approx 60 frames
+        ball.vel.y = 0;
+        ball.vel.z = 15; // Arc
+        
+        // On Fire = Perfect Shot
+        if (this.onFire) {
+            ball.vel.x = (dx / 45); // Faster
+            ball.vel.z = 12; // Laser
+            playSound('fire');
+        } else {
+             playSound('shoot');
+        }
+    }
+
+    dunkBall() {
+        if (ball.owner !== this) return;
+        
+        // Teleport to rim for visual jam
+        let targetX = (this.team === 0) ? RIGHT_HOOP_X : LEFT_HOOP_X;
+        
+        // Animation/Physics override
+        ball.owner = null;
+        ball.pos.x = targetX;
+        ball.pos.z = RIM_Z;
+        ball.vel = new Vector(0,0,-10); // Slam down
+        
+        playSound('dunk');
+        screenShake = 15;
+        
+        // Create explosion
+        for(let i=0; i<20; i++) {
+            particles.push(new Particle(targetX, 325, RIM_Z, '#FFF'));
+        }
+    }
+
+    passBall() {
+        // Find teammate
+        let teammate = players.find(p => p.team === this.team && p !== this);
+        if (teammate) {
+            ball.owner = null;
+            let dx = teammate.pos.x - this.pos.x;
+            let dy = teammate.pos.y - this.pos.y;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            ball.vel.x = (dx / dist) * 15;
+            ball.vel.y = (dy / dist) * 15;
+            ball.vel.z = 2;
+            playSound('shoot'); // Reuse sound
+        }
+    }
+
+    attemptSteal() {
+        // Check collision with ball owner
+        if (ball.owner && ball.owner.team !== this.team) {
+            let dx = this.pos.x - ball.owner.pos.x;
+            let dy = this.pos.y - ball.owner.pos.y;
+            if (Math.sqrt(dx*dx + dy*dy) < 50) {
+                // Steal success chance
+                ball.owner.stunTimer = 30; // Stun victim
+                ball.owner = this;
+                playSound('steal');
+                texts.push(new FloatingText("STOLEN!", this.pos.x, this.pos.y - 60, "#FFF"));
+            }
+        }
+    }
+
+    draw(ctx) {
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath();
+        ctx.ellipse(this.pos.x, this.pos.y, 20, 10, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        let drawY = this.pos.y - this.pos.z;
+        
+        // Fire Effect
+        if (this.onFire) {
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = 'orange';
+        } else {
+            ctx.shadowBlur = 0;
+        }
+
+        // Body
+        ctx.fillStyle = (this.team === 0) ? '#00FA9A' : '#FF00FF';
+        if (this.stunTimer > 0 && Math.floor(Date.now()/50)%2===0) ctx.fillStyle = '#FFF'; // Flash if stunned
+        
+        // Retro boxy player
+        ctx.fillRect(this.pos.x - 15, drawY - 60, 30, 60);
+        
+        // Head
+        ctx.fillStyle = '#FFD700'; // Skin tone placeholder
+        ctx.fillRect(this.pos.x - 10, drawY - 85, 20, 20);
+        
+        // Indicator for human
+        if (this.isHuman) {
+            ctx.fillStyle = '#FFF';
+            ctx.beginPath();
+            ctx.moveTo(this.pos.x - 5, drawY - 100);
+            ctx.lineTo(this.pos.x + 5, drawY - 100);
+            ctx.lineTo(this.pos.x, drawY - 90);
+            ctx.fill();
+        }
+        
+        ctx.shadowBlur = 0; // Reset
+    }
+}
+
+// --- Globals ---
+let players = [];
+let ball;
+let screenShake = 0;
+
+// --- Initialization ---
+function initGame() {
+    players = [
+        new Player(1, 0, 200, 300, true), // P1 (Human)
+        new Player(2, 0,
