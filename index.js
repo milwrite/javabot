@@ -129,7 +129,7 @@ const MODEL_PRESETS = {
     'sonnet': 'anthropic/claude-sonnet-4.5',
     'kimi': 'moonshotai/kimi-k2-0905:exacto',
     'gpt5': 'openai/gpt-5.1-codex',
-    'gemini-3-pro': 'google/gemini-3-pro-preview',
+    'gemini': 'google/gemini-2.5-pro',
     'glm': 'z-ai/glm-4.6:exacto'
 };
 
@@ -1230,7 +1230,7 @@ const commands = [
                     { name: 'Claude Sonnet 4.5 (Balanced)', value: 'sonnet' },
                     { name: 'Kimi K2 Exacto (Moonshot AI)', value: 'kimi' },
                     { name: 'GPT-5.1 Codex (Latest OpenAI)', value: 'gpt5' },
-                    { name: 'Gemini 3 Pro Preview (Google)', value: 'gemini-3-pro' },
+                    { name: 'Gemini 2.5 Pro (Google)', value: 'gemini' },
                     { name: 'GLM-4.6 Exacto (Z-AI)', value: 'glm' }
                 )),
 
@@ -2047,7 +2047,7 @@ async function handleSetModel(interaction) {
             'sonnet': 'Claude Sonnet 4.5',
             'kimi': 'Kimi K2 Exacto',
             'gpt5': 'GPT-5.1 Codex',
-            'gemini-3-pro': 'Gemini 3 Pro Preview',
+            'gemini': 'Gemini 2.5 Pro',
             'glm': 'GLM-4.6 Exacto'
         };
 

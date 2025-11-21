@@ -147,6 +147,7 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - Tools remain available after each step, enabling complex multi-step tasks
 - Console logs show iteration count and tools used per step
 - Safety limit prevents infinite loops
+- **Redundant edit prevention**: Files can only be edited once per conversation to prevent slow repeated edits
 
 **Response Handling**:
 - Long responses (>2000 chars) saved to `responses/` directory
