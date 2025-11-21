@@ -195,6 +195,12 @@ WHEN CREATING PAGES:
 6. Ensure mobile viewport meta tag
 7. Keep arcade color scheme (mint green #7dd3a0)
 
+PROJECT METADATA:
+- Descriptions in projectmetadata.json MUST be concise (3-5 words max)
+- Match existing style: "Classic frogger game", "Sudoku puzzle game", "Arcade basketball game"
+- NOT verbose: avoid long explanations, feature lists, or technical details
+- Examples: "Errand itinerary tracker", "Interactive borscht recipe", "NBA Jam tribute game"
+
 AVAILABLE CAPABILITIES:
 - list_files(path): List files in directory
 - read_file(path): Read file contents
