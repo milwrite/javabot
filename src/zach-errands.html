@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zach's Errands - Itinerary Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-top: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 150px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .add-errand-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .add-errand-form {
+            display: grid;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-add:active {
+            transform: translateY(0);
+        }
+
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+        }
+
+        .errands-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .errand-item {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .errand-item.completed {
+            opacity: 0.7;
+        }
+
+        .errand-item.completed::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 5px;
+            height: 100%;
+            background: #4caf50;
+        }
+
+        .errand-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-wrapper {
+            position: relative;
+            margin-top: 3px;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .errand-content {
+            flex: 1;
+        }
+
+        .errand-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .errand-item.completed .errand-title {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .errand-meta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .meta-item i {
+            color: #667eea;
+        }
+
+        .errand-notes {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 0.95rem;
+            color: #555;
+            border-left: 3px solid #667eea;
+        }
+
+        .errand-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-action {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-delete {
+            background: #ff5252;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #ff1744;
+            transform: translateY(-2px);
+        }
+
+        .btn-edit {
+            background: #ffa726;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #fb8c00;
+            transform: translateY(-2px);
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-high {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .priority-medium {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .priority-low {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card {
+                min-width: 100%;
+            }
+
+            .filter-section {
+                justify-content: center;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .btn-close:hover {
+            color: #333;
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-clipboard-check"></i> Zach's Errands</h1>
+            <p>Stay organized and get things done!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="number" id="total-count">0</div>
+                <div class="label">Total</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="pending-count">0</div>
+                <div class="label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="completed-count">0</div>
+                <div class="label">Completed</div>
+            </div>
+        </div>
+
+        <div class="add-errand-section">
+            <form class="add-errand-form" id="add-errand-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="item-name">Item/Task *</label>
+                        <input type="text" id="item-name" placeholder="e.g., Paper Towels" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="store-location">Store/Location</label>
+                        <input type="text" id="store-location" placeholder="e.g., Target, Costco">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="priority">Priority</label>
+                        <select id="priority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category">
+                            <option value="household">Household</option>
+                            <option value="groceries">Groceries</option>
+                            <option value="personal">Personal</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Notes/Reminders</label>
+                    <textarea id="notes" placeholder="Add any additional details or reminders..."></textarea>
+                </div>
+                <button type="submit" class="btn-add">
+                    <i class="fas fa-plus"></i> Add Errand
+                </button>
+            </form>
+        </div>
+
+        <div class="filter-section">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="pending">Pending</button>
+            <button class="filter-btn" data-filter="completed">Completed</button>
+            <button class="filter-btn" data-filter="high">High Priority</button>
+        </div>
+
+        <div class="errands-list" id="errands-list"></div>
+    </div>
+
+    <div class="modal" id="edit-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Errand</h2>
+                <button class="btn-close" id="close-modal">&times;</button>
+            </div>
+            <form class="add-errand-form" id="edit-errand-form">
+                <input type="hidden" id="edit-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-item-name">Item/Task *</label>
+                        <input type="text" id="edit-item-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-store-location">Store/Location</label>
+                        <input type="text" id="edit-store-location">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-priority">Priority</label>
+                        <select id="edit-priority">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-category">Category</label>
+                        <select id="edit-category">
+                            <option value="household">Household</option>
+                            <option value="groceries">Groceries</option>
+                            <option value="personal">Personal</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit-notes">Notes/Reminders</label>
+                    <textarea id="edit-notes"></textarea>
+                </div>
+                <button type="submit" class="btn-add">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class ErrandTracker {
+            constructor() {
+                this.errands = JSON.parse(localStorage.getItem('zachErrands')) || this.getDefaultErrands();
+                this.currentFilter = 'all';
+                this.init();
+            }
+
+            getDefaultErrands() {
+                return [
+                    {
+                        id: Date.now(),
+                        name: 'Paper Towels',
+                        location: 'Costco',
+                        priority: 'high',
+                        category: 'household',
+                        notes: 'Get the bulk pack - better value!',
+                        completed: false,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: Date.now() + 1,
+                        name: 'Toilet Paper',
+                        location: 'Target',
+                        priority: 'high',
+                        category: 'household',
+                        notes: 'Charmin Ultra Soft preferred',
+                        completed: false,
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+            }
+
+            init() {
+                this.bindEvents();
+                this.render();
+                this.updateStats();
+            }
+
+            bindEvents() {
+                document.getElementById('add-errand-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addErrand();
+                });
+
+                document.getElementById('edit-errand-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveEdit();
+                });
+
+                document.getElementById('close-modal').addEventListener('click', () => {
+                    this.closeModal();
+                });
+
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentFilter = e.target.dataset.filter;
+                        this.render();
+                    });
+                });
+
+                document.getElementById('edit-modal').addEventListener('click', (e) => {
+                    if (e.target.id === 'edit-modal') {
+                        this.closeModal();
+                    }
+                });
+            }
+
+            addErrand() {
+                const errand = {
+                    id: Date.now(),
+                    name: document.getElementById('item-name').value,
+                    location: document.getElementById('store-location').value,
+                    priority: document.getElementById('priority').value,
+                    category: document.getElementById('category').value,
+                    notes: document.getElementById('notes').value,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+
+                this.errands.unshift(errand);
+                this.save();
+                this.render();
+                this.updateStats();
+                document.getElementById('add-errand-form').reset();
+            }
+
+            toggleComplete(id) {
+                const errand = this.errands.find(e => e.id === id);
+                if (errand) {
+                    errand.completed = !errand.completed;
+                    this.save();
+                    this.render();
+                    this.updateStats();
+                }
+            }
+
+            deleteErrand(id) {
+                if (confirm('Are you sure you want to delete this errand?')) {
+                    this.errands = this.errands.filter(e => e.id !== id);
+                    this.save();
+                    this.render();
+                    this.updateStats();
+                }
+            }
+
+            editErrand(id) {
+                const errand = this.errands.find(e => e.id === id);
+                if (errand) {
+                    document.getElementById('edit-id').value = errand.id;
+                    document.getElementById('edit-item-name').value = errand.name;
+                    document.getElementById('edit-store-location').value = errand.location;
+                    document.getElementById('edit-priority').value = errand.priority;
+                    document.getElementById('edit-category').value = errand.category;
+                    document.getElementById('edit-notes').value = errand.notes;
+                    document.getElementById('edit-modal').classList.add('active');
+                }
+            }
+
+            saveEdit() {
+                const id = parseInt(document.getElementById('edit-id').value);
+                const errand = this.errands.find(e => e.id === id);
+                if (errand) {
+                    errand.name = document.getElementById('edit-item-name').value;
+                    errand.location = document.getElementById('edit-store-location').value;
+                    errand.priority = document.getElementById('edit-priority').value;
+                    errand.category = document.getElementById('edit-category').value;
+                    errand.notes = document.getElementById('edit-notes').value;
+                    this.save();
+                    this.render();
+                    this.closeModal();
+                }
+            }
+
+            closeModal() {
+                document.getElementById('edit-modal').classList.remove('active');
+            }
+
+            getFilteredErrands() {
+                switch(this.currentFilter) {
+                    case 'pending':
+                        return this.errands.filter(e => !e.completed);
+                    case 'completed':
+                        return this.errands.filter(e => e.completed);
+                    case 'high':
+                        return this.errands.filter(e => e.priority === 'high');
+                    default:
+                        return this.errands;
+                }
+            }
+
+            render() {
+                const container = document.getElementById('errands-list');
+                const filteredErrands = this.getFilteredErrands();
+
+                if (filteredErrands.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard-list"></i>
+                            <h3>No errands found</h3>
+                            <p>Add your first errand to get started!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = filteredErrands.map(errand => `
+                    <div class="errand-item ${errand.completed ? 'completed' : ''}">
+                        <div class="errand-header">
+                            <div class="checkbox-wrapper">
+                                <input 
+                                    type="checkbox" 
+                                    ${errand.completed ? 'checked' : ''} 
+                                    onchange="tracker.toggleComplete(${errand.id})"
+                                >
+                            </div>
+                            <div class="errand-content">
+                                <div class="errand-title">${errand.name}</div>
+                                <div class="errand-meta">
+                                    ${errand.location ? `
+                                        <div class="meta-item">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span>${errand.location}</span>
+                                        </div>
+                                    ` : ''}
+                                    <div class="meta-item">
+                                        <i class="fas fa-tag"></i>
+                                        <span>${errand.category}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="priority-badge priority-${errand.priority}">
+                                            ${errand.priority}
+                                        </span>
+                                    </div>
+                                </div>
+                                ${errand.notes ? `
+                                    <div class="errand-notes">
+                                        <i class="fas fa-sticky-note"></i> ${errand.notes}
+                                    </div>
+                                ` : ''}
+                                <div class="errand-actions">
+                                    <button class="btn-action btn-edit" onclick="tracker.editErrand(${errand.id})">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn-action btn-delete" onclick="tracker.deleteErrand(${errand.id})">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            updateStats() {
+                const total = this.errands.length;
+                const completed = this.errands.filter(e => e.completed).length;
+                const pending = total - completed;
+
+                document.getElementById('total-count').textContent = total;
+                document.getElementById('pending-count').textContent = pending;
+                document.getElementById('completed-count').textContent = completed;
+            }
+
+            save() {
+                localStorage.setItem('zachErrands', JSON.stringify(this.errands));
+            }
+        }
+
+        const tracker = new ErrandTracker();
+    </script>
+</body>
+</html>
