@@ -90,5 +90,9 @@
   "zach_work_schedule": {
     "icon": "✅",
     "description": "Work schedule for Zach to fix five articles in Manifold with HTML problems during work hours 10am to 2pm. Includes task breakdown, time allocation, and progress tracking."
+  },
+  "digital_sisyphus": {
+    "icon": "🌐",
+    "description": "An interactive absurdist visualization of digital Sisyphus - endlessly scrolling through loading states, buffering, and progress bars that never complete. Click to push the boulder (scroll), watch it roll back down. Commentary on the futility of infinite scrolling and digital labor."
   }
 }
