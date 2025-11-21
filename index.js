@@ -533,10 +533,17 @@ async function writeFile(filePath, content) {
 }
 
 async function editFile(filePath, instructions) {
+    const startTime = Date.now();
     console.log(`[EDIT_FILE] Starting edit for: ${filePath}`);
     try {
         // Read the current file content
         const currentContent = await fs.readFile(filePath, 'utf-8');
+        const fileSize = (currentContent.length / 1024).toFixed(1);
+        console.log(`[EDIT_FILE] File size: ${fileSize}KB`);
+
+        // Use Haiku for edits - much faster than other models
+        const editModel = MODEL_PRESETS['haiku'];
+        console.log(`[EDIT_FILE] Using ${editModel} for fast editing`);
 
         // Use AI to make the edit based on instructions
         const editPrompt = `You are editing a file: ${filePath}
@@ -550,18 +557,22 @@ User instructions: ${instructions}
 
 Return ONLY the complete updated file content. No explanations, no markdown code blocks, just the raw file content.`;
 
+        console.log(`[EDIT_FILE] Sending to AI for processing...`);
         const response = await axios.post(OPENROUTER_URL, {
-            model: MODEL,
+            model: editModel,
             messages: [{ role: 'user', content: editPrompt }],
-            max_tokens: CONFIG.AI_MAX_TOKENS,
+            max_tokens: 16000, // Increased for large files
             temperature: CONFIG.AI_TEMPERATURE
         }, {
             headers: {
                 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            timeout: CONFIG.API_TIMEOUT
+            timeout: 90000 // 90 seconds for large file edits
         });
+
+        const aiTime = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`[EDIT_FILE] AI processing completed in ${aiTime}s`);
 
         let updatedContent = response.data.choices[0].message.content;
 
@@ -572,10 +583,12 @@ Return ONLY the complete updated file content. No explanations, no markdown code
         // Write the updated content
         await fs.writeFile(filePath, updatedContent, 'utf8');
 
-        console.log(`[EDIT_FILE] Success: ${filePath}`);
+        const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`[EDIT_FILE] Success: ${filePath} (${totalTime}s total)`);
         return `File edited successfully: ${filePath}. Changes applied: ${instructions}`;
     } catch (error) {
-        console.error(`[EDIT_FILE] Error:`, error.message);
+        const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.error(`[EDIT_FILE] Error after ${totalTime}s:`, error.message);
         return `Error editing file: ${error.message}`;
     }
 }
