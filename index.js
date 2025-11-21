@@ -1052,28 +1052,41 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
             }
         ];
 
-        const response = await axios.post(OPENROUTER_URL, {
-            model: MODEL,
-            messages: messages,
-            max_tokens: 10000,
-            temperature: 0.7,
-            tools: tools,
-            tool_choice: 'auto'
-        }, {
-            headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: 45000
-        });
+        // Agentic loop - allow multiple rounds of tool calling
+        const MAX_ITERATIONS = 10;
+        let iteration = 0;
+        let lastResponse;
 
-        const assistantMessage = response.data.choices[0].message;
+        while (iteration < MAX_ITERATIONS) {
+            iteration++;
 
-        // Check if the model wants to use tools
-        if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+            const response = await axios.post(OPENROUTER_URL, {
+                model: MODEL,
+                messages: messages,
+                max_tokens: 10000,
+                temperature: 0.7,
+                tools: tools,
+                tool_choice: 'auto'
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 45000
+            });
+
+            lastResponse = response.data.choices[0].message;
+
+            // If no tool calls, we're done
+            if (!lastResponse.tool_calls || lastResponse.tool_calls.length === 0) {
+                break;
+            }
+
+            logEvent('LLM', `Iteration ${iteration}: Processing ${lastResponse.tool_calls.length} tool calls`);
+
+            // Execute all tool calls
             const toolResults = [];
-
-            for (const toolCall of assistantMessage.tool_calls) {
+            for (const toolCall of lastResponse.tool_calls) {
                 const functionName = toolCall.function.name;
                 const args = JSON.parse(toolCall.function.arguments || '{}');
 
@@ -1105,35 +1118,19 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                 });
             }
 
-            // Send tool results back to the model
-            messages.push(assistantMessage);
+            // Add assistant message and tool results to conversation
+            messages.push(lastResponse);
             messages.push(...toolResults);
-
-            const finalResponse = await axios.post(OPENROUTER_URL, {
-                model: MODEL,
-                messages: messages,
-                max_tokens: 10000,
-                temperature: 0.7
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                timeout: 45000
-            });
-
-            const finalContent = finalResponse.data.choices[0].message.content;
-            if (!finalContent) {
-                logEvent('LLM', 'Empty response after tool use');
-                console.error('Final response data:', JSON.stringify(finalResponse.data, null, 2));
-            }
-            return finalContent || '';
         }
 
-        const content = assistantMessage.content;
+        if (iteration >= MAX_ITERATIONS) {
+            logEvent('LLM', `Reached max iterations (${MAX_ITERATIONS})`);
+        }
+
+        const content = lastResponse?.content;
         if (!content) {
-            logEvent('LLM', 'Empty initial response');
-            console.error('Assistant message:', JSON.stringify(assistantMessage, null, 2));
+            logEvent('LLM', 'Empty response from AI');
+            console.error('Last response:', JSON.stringify(lastResponse, null, 2));
         }
         return content || '';
     } catch (error) {

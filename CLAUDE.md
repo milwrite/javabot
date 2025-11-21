@@ -493,9 +493,10 @@ const CONFIG = {
 ## Critical Bug Fixes & Lessons Learned
 
 **Discord.js Event Names**:
-- Use `client.once('ready', ...)` NOT `client.once('clientReady', ...)`
-- The `clientReady` event name is deprecated and causes bot startup hangs
-- Discord.js v14 uses `'ready'`, v15 will rename to `'clientReady'`
+- Use `client.once('clientReady', ...)` NOT `client.once('ready', ...)`
+- Discord.js v14 uses `'ready'` but shows deprecation warning that it will be renamed to `'clientReady'` in v15
+- Using `'ready'` works but triggers deprecation warnings
+- Use `'clientReady'` for forward compatibility and to avoid warnings
 
 **iCloud Drive Corruption**:
 - **Never run the bot from an iCloud-synced directory** (e.g., ~/Desktop on macOS)
