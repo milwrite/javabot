@@ -86,5 +86,9 @@
   "zach-errands": {
     "icon": "✅",
     "description": "Errand itinerary tracker"
+  },
+  "zach_work_schedule": {
+    "icon": "✅",
+    "description": "Work schedule for Zach to fix five articles in Manifold with HTML problems during work hours 10am to 2pm. Includes task breakdown, time allocation, and progress tracking."
   }
 }
