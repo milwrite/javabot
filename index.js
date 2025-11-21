@@ -1069,6 +1069,7 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
         const MAX_ITERATIONS = 10;
         let iteration = 0;
         let lastResponse;
+        const editedFiles = new Set(); // Track files already edited to prevent redundant edits
 
         while (iteration < MAX_ITERATIONS) {
             iteration++;
@@ -1111,7 +1112,14 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                 } else if (functionName === 'write_file') {
                     result = await writeFile(args.path, args.content);
                 } else if (functionName === 'edit_file') {
-                    result = await editFile(args.path, args.instructions);
+                    // Prevent editing the same file multiple times
+                    if (editedFiles.has(args.path)) {
+                        result = `File ${args.path} was already edited in this conversation. Skipping redundant edit to save time.`;
+                        logEvent('LLM', `Skipped redundant edit of ${args.path}`);
+                    } else {
+                        result = await editFile(args.path, args.instructions);
+                        editedFiles.add(args.path);
+                    }
                 } else if (functionName === 'create_page') {
                     result = await createPage(args.name, args.description);
                 } else if (functionName === 'create_feature') {
