@@ -94,5 +94,9 @@
   "digital_sisyphus": {
     "icon": "🌐",
     "description": "An interactive absurdist visualization of digital Sisyphus - endlessly scrolling through loading states, buffering, and progress bars that never complete. Click to push the boulder (scroll), watch it roll back down. Commentary on the futility of infinite scrolling and digital labor."
+  },
+  "anniversary": {
+    "icon": "🌐",
+    "description": "Zach & Cen's surreal Lynchian anniversary chronicle at Love's Club with interactive visualizations"
   }
 }
