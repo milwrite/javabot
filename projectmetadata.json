@@ -106,5 +106,9 @@
   "zach-sleep-letter": {
     "icon": "😴",
     "description": "Sleep importance letter"
+  },
+  "amtrak-journey": {
+    "icon": "🎮",
+    "description": "Interactive Amtrak journey from Penn Station to Rochester with games"
   }
 }

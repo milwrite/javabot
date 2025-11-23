@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amtrak Journey: Penn Station to Rochester</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            text-decoration: none;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .home-link:hover {
+            background: rgba(102, 126, 234, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .journey-map {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .station {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .station-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .station-circle.active {
+            transform: scale(1.2);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.8);
+        }
+
+        .station-name {
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .station-time {
+            font-size: 0.8em;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .journey-line {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, #667ee6 0%, #764ba2 100%);
+            top: 30px;
+            left: 60px;
+            right: 60px;
+            z-index: 1;
+        }
+
+        .journey-progress {
+            position: absolute;
+            height: 4px;
+            background: #4CAF50;
+            top: 30px;
+            left: 60px;
+            z-index: 1;
+            transition: width 0.5s ease;
+            border-radius: 2px;
+        }
+
+        .current-location {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 15px;
+            border-left: 5px solid #667ee6;
+        }
+
+        .current-location h3 {
+            color: #667ee6;
+            margin-bottom: 5px;
+        }
+
+        .current-location p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .game-section {
+            margin: 30px 0;
+            padding: 25px;
+            background: #f9f9f9;
+            border-radius: 15px;
+            border: 2px solid #667ee6;
+        }
+
+        .game-section h3 {
+            color: #667ee6;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .game-content {
+            display: none;
+        }
+
+        .game-content.active {
+            display: block;
+        }
+
+        .trivia-question {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .trivia-question p {
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .option-btn {
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .option-btn:hover {
+            border-color: #667ee6;
+            background: #f0f4ff;
+        }
+
+        .option-btn.correct {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .option-btn.incorrect {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .word-game {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .word-scramble {
+            font-size: 2em;
+            letter-spacing: 8px;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #667ee6;
+            font-family: 'Courier New', monospace;
+        }
+
+        .word-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1em;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            transition: border-color 0.3s ease;
+        }
+
+        .word-input:focus {
+            outline: none;
+            border-color: #667ee6;
+        }
+
+        .submit-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .memory-card {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 2em;
+            transition: all 0.3s ease;
+            color: white;
+            font-weight: bold;
+        }
+
+        .memory-card:hover {
+            transform: scale(1.05);
+        }
+
+        .memory-card.flipped {
+            background: #f0f4ff;
+            color: #667ee6;
+        }
+
+        .memory-card.matched {
+            background: #4CAF50;
+            color: white;
+            cursor: default;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f4ff;
+            color: #667ee6;
+            border: 2px solid #667ee6;
+        }
+
+        .btn-secondary:hover {
+            background: #667ee6;
+            color: white;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .arrival-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .arrival-modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h2 {
+            color: #667ee6;
+            margin-bottom: 15px;
+            font-size: 2em;
+        }
+
+        .modal-content p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .final-stats {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .final-stats p {
+            margin: 10px 0;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .journey-map {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .journey-line {
+                display: none;
+            }
+
+            .journey-progress {
+                display: none;
+            }
+
+            .options {
+                grid-template-columns: 1fr;
+            }
+
+            .memory-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .fun-fact {
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe6e6 100%);
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 0.95em;
+            color: #333;
+        }
+
+        .fun-fact strong {
+            color: #f57f17;
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" class="home-link">← Home</a>
+
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-train"></i>
+                Amtrak Journey
+            </h1>
+            <p>Penn Station to Rochester</p>
+        </div>
+
+        <div class="content">
+            <!-- Journey Map -->
+            <div class="journey-map">
+                <div class="journey-line"></div>
+                <div class="journey-progress" id="journeyProgress"></div>
+                
+                <div class="station">
+                    <div class="station-circle active" id="station-0">
+                        <i class="fas fa-train-subway"></i>
+                    </div>
+                    <div class="station-name">Penn Station</div>
+                    <div class="station-time">NYC</div>
+                </div>
+
+                <div class="station">
+                    <div class="station-circle" id="station-1">
+                        <i class="fas fa-map-pin"></i>
+                    </div>
+                    <div class="station-name">Albany-Rensselaer</div>
+                    <div class="station-time">2h 30m</div>
+                </div>
+
+                <div class="station">
+                    <div class="station-circle" id="station-2">
+                        <i class="fas fa-map-pin"></i>
+                    </div>
+                    <div class="station-name">Rochester</div>
+                    <div class="station-time">5h</div>
+                </div>
+            </div>
+
+            <!-- Current Location -->
+            <div class="current-location">
+                <h3 id="currentStation">Departing Penn Station</h3>
+                <p id="currentDescription">Get ready for an exciting journey through New York State!</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="scoreStat">0</div>
+                    <div class="stat-label">Points</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="gameStat">0/3</div>
+                    <div class="stat-label">Games Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="progressStat">0%</div>
+                    <div class="stat-label">Progress</div>
+                </div>
+            </div>
+
+            <!-- Game 1: Trivia -->
+            <div class="game-section">
+                <h3>
+                    <i class="fas fa-brain"></i>
+                    Trivia Challenge
+                </h3>
+                <div class="game-content" id="game1">
+                    <div class="trivia-question" id="triviaContainer"></div>
+                    <div class="fun-fact" id="funFact"></div>
+                </div>
+            </div>
+
+            <!-- Game 2: Word Scramble -->
+            <div class="game-section">
+                <h3>
+                    <i class="fas fa-puzzle-piece"></i>
+                    Word Scramble
+                </h3>
+                <div class="game-content" id="game2">
+                    <div class="word-game">
+                        <p>Unscramble the Amtrak-related word:</p>
+                        <div class="word-scramble" id="scrambledWord"></div>
+                        <input type="text" class="word-input" id="wordInput" placeholder="Type your answer...">
+                        <button class="submit-btn" id="wordSubmit">Submit</button>
+                        <div class="message" id="wordMessage"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game 3: Memory Game -->
+            <div class="game-section">
+                <h3>
+                    <i class="fas fa-gamepad"></i>
+                    Memory Match
+                </h3>
+                <div class="game-content" id="game3">
+                    <p style="text-align: center; margin-bottom: 15px;">Match the Amtrak stations with their locations!</p>
+                    <div class="memory-grid" id="memoryGrid"></div>
+                    <div class="message" id="memoryMessage"></div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="btn btn-secondary" id="prevBtn" onclick="previousStation()">
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <button class="btn btn-primary" id="nextBtn" onclick="nextStation()">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Arrival Modal -->
+    <div class="arrival-modal" id="arrivalModal">
+        <div class="modal-content">
+            <h2>🎉 Journey Complete!</h2>
+            <p>Welcome to Rochester!</p>
+            <div class="final-stats">
+                <p><strong>Final Score:</strong> <span id="finalScore">0</span> points</p>
+                <p><strong>Games Completed:</strong> <span id="finalGames">0</span>/3</p>
+                <p><strong>Distance Traveled:</strong> 230 miles</p>
+                <p><strong>Journey Time:</strong> 5 hours</p>
+            </div>
+            <button class="btn btn-primary" onclick="restartJourney()">Start New Journey</button>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            currentStation: 0,
+            score: 0,
+            gamesCompleted: 0,
+            gameStates: {
+                trivia: false,
+                wordScramble: false,
+                memory: false
+            },
+            stations: [
+                {
+                    name: 'Penn Station',
+                    location: 'New York City',
+                    description: 'Starting your journey at the iconic Penn Station in Manhattan!',
+                    facts: 'Penn Station serves over 600,000 passengers annually.'
+                },
+                {
+                    name: 'Albany-Rensselaer',
+                    location: 'Albany, NY',
+                    description: 'Halfway point! Enjoy the Hudson Valley views.',
+                    facts: 'The Amtrak Northeast Regional connects major cities along the East Coast.'
+                },
+                {
+                    name: 'Rochester',
+                    location: 'Rochester, NY',
+                    description: 'Destination reached! Welcome to Rochester!',
+                    facts: 'Rochester is known as the "Flower City" and home to Kodak and Xerox.'
+                }
+            ],
+            trivia: [
+                {
+                    question: 'What year was Amtrak founded?',
+                    options: ['1971', '1960', '1985', '1950'],
+                    correct: 0,
+                    fact: 'Amtrak was created by the Rail Passenger Service Act signed by President Nixon in 1970.'
+                },
+                {
+                    question: 'How many states does Amtrak serve?',
+                    options: ['46', '35', '50', '30'],
+                    correct: 1,
+                    fact: 'Amtrak operates in 46 states, providing a vital transportation link across America.'
+                },
+                {
+                    question: 'What is the longest Amtrak route?',
+                    options: ['Coast Starlight', 'Empire Builder', 'Southwest Chief', 'Sunset Limited'],
+                    correct: 1,
+                    fact: 'The Empire Builder runs from Chicago to Seattle/Portland, covering 2,206 miles!'
+                }
+            ],
+            wordScrambles: [
+                { scrambled: 'LTRAE', answer: 'ALERT', hint: 'Be on ___ for your departure time' },
+                { scrambled: 'SSAPORP', answer: 'PASSPORT', hint: 'Document for international travel' },
+                { scrambled: 'GAACRRE', answer: 'CARRIAGE', hint: 'Another word for train car' }
+            ],
+            memoryPairs: [
+                { station: 'Penn Station', location: 'New York City', emoji: '🗽' },
+                { station: 'Albany-Rensselaer', location: 'State Capital', emoji: '🏛️' },
+                { station: 'Rochester', location: 'Flower City', emoji: '🌹' },
+                { station: 'Buffalo', location: 'Niagara Falls', emoji: '💧' }
+            ]
+        };
+
+        let triviaAnswered = false;
+        let wordAnswered = false;
+        let memoryMatched = 0;
+        let memoryFlipped = [];
+        let memoryPairs = [];
+
+        // Initialize
+        function init() {
+            updateUI();
+            initTrivia();
+            initWordScramble();
+            initMemoryGame();
+        }
+
+        // Update UI
+        function updateUI() {
+            const station = gameState.stations[gameState.currentStation];
+            document.getElementById('currentStation').textContent = `${station.name}`;
+            document.getElementById('currentDescription').textContent = station.description;
+            
+            // Update station circles
+            document.querySelectorAll('.station-circle').forEach((circle, index) => {
+                circle.classList.toggle('active', index <= gameState.currentStation);
+            });
+
+            // Update progress
+            const progress = (gameState.currentStation / 2) * 100;
+            document.getElementById('journeyProgress').style.width = progress + '%';
+            document.getElementById('progressStat').textContent = Math.round(progress) + '%';
+
+            // Update stats
+            document.getElementById('scoreStat').textContent = gameState.score;
+            document.getElementById('gameStat').textContent = `${gameState.gamesCompleted}/3`;
+
+            // Update buttons
+            document.getElementById('prevBtn').disabled = gameState.currentStation === 0;
+            document.getElementById('nextBtn').disabled = gameState.currentStation === 2;
+
+            // Show/hide games based on station
+            if (gameState.currentStation === 0) {
+                showGame(1);
+            } else if (gameState.currentStation === 1) {
+                showGame(2);
+            } else {
+                showGame(3);
+            }
+
+            // Check if journey complete
+            if (gameState.currentStation === 2 && gameState.gamesCompleted === 3) {
+                showArrivalModal();
+            }
+        }
+
+        function showGame(gameNum) {
+            document.getElementById('game1').classList.remove('active');
+            document.getElementById('game2').classList.remove('active');
+            document.getElementById('game3').classList.remove('active');
+            document.getElementById('game' + gameNum).classList.add('active');
+        }
+
+        // Trivia Game
+        function initTrivia() {
+            displayTrivia();
+        }
+
+        function displayTrivia() {
+            const trivia = gameState.trivia[gameState.currentStation];
+            let html = `<p>${trivia.question}</p><div class="options">`;
+            trivia.options.forEach((option, index) => {
+                html += `<button class="option-btn" onclick="answerTrivia(${index})" ${triviaAnswered ? 'disabled' : ''}>${option}</button>`;
+            });
+            html += `</div>`;
+            document.getElementById('triviaContainer').innerHTML = html;
+            document.getElementById('funFact').innerHTML = triviaAnswered ? `<strong>Fun Fact:</strong> ${trivia.fact}` : '';
+        }
+
+        function answerTrivia(index) {
+            const trivia = gameState.trivia[gameState.currentStation];
+            triviaAnswered = true;
+
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === trivia.correct) {
+                    btn.classList.add('correct');
+                } else if (i === index) {
+                    btn.classList.add('incorrect');
+                }
+            });
+
+            if (index === trivia.correct) {
+                gameState.score += 50;
+                if (!gameState.gameStates.trivia) {
+                    gameState.gameStates.trivia = true;
+                    gameState.gamesCompleted++;
+                }
+            }
+
+            document.getElementById('funFact').innerHTML = `<strong>Fun Fact:</strong> ${trivia.fact}`;
+            updateUI();
+        }
+
+        // Word Scramble Game
+        function initWordScramble() {
+            const scramble = gameState.wordScrambles[gameState.currentStation];
+            document.getElementById('scrambledWord').textContent = scramble.scrambled;
+            document.getElementById('wordInput').value = '';
+            document.getElementById('wordMessage').textContent = '';
+            document.getElementById('wordMessage').classList.remove('show', 'success', 'error');
+            wordAnswered = false;
+            document.getElementById('wordSubmit').disabled = false;
+        }
+
+        document.getElementById('wordSubmit').addEventListener('click', function() {
+            const scramble = gameState.wordScrambles[gameState.currentStation];
+            const answer = document.getElementById('wordInput').value.toUpperCase();
+            const messageEl = document.getElementById('wordMessage');
+
+            if (answer === scramble.answer) {
+                messageEl.textContent = '✓ Correct! The word was ' + scramble.answer;
+                messageEl.classList.add('success', 'show');
+                gameState.score += 30;
+                if (!gameState.gameStates.wordScramble) {
+                    gameState.gameStates.wordScramble = true;
+                    gameState.gamesCompleted++;
+                }
+                this.disabled = true;
+                wordAnswered = true;
+                updateUI();
+            } else {
+                messageEl.textContent = '✗ Incorrect. Hint: ' + scramble.hint;
+                messageEl.classList.remove('success');
+                messageEl.classList.add('error', 'show');
+            }
+        });
+
+        document.getElementById('wordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !wordAnswered) {
+                document.getElementById('wordSubmit').click();
+            }
+        });
+
+        // Memory Game
+        function initMemoryGame() {
+            memoryMatched = 0;
+            memoryFlipped = [];
+            memoryPairs = [];
+
+            // Create pairs
+            const pairs = gameState.memoryPairs;
+            pairs.forEach(pair => {
+                memoryPairs.push({ type: 'station', value: pair.station, emoji: pair.emoji });
+                memoryPairs.push({ type: 'location', value: pair.location, emoji: pair.emoji });
+            });
+
+            // Shuffle
+            memoryPairs.sort(() => Math.random() - 0.5);
+
+            // Create grid
+            const grid = document.getElementById('memoryGrid');
+            grid.innerHTML = '';
+            memoryPairs.forEach((pair, index) => {
+                const card = document.createElement('button');
+                card.className = 'memory-card';
+                card.textContent = '?';
+                card.onclick = () => flipCard(index, card);
+                grid.appendChild(card);
+            });
+
+            document.getElementById('memoryMessage').textContent = '';
+            document.getElementById('memoryMessage').classList.remove('show', 'success');
+        }
+
+        function flipCard(index, cardEl) {
+            if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched') || memoryFlipped.length === 2) {
+                return;
+            }
+
+            cardEl.classList.add('flipped');
+            cardEl.textContent = memoryPairs[index].emoji;
+            memoryFlipped.push({ index, cardEl });
+
+            if (memoryFlipped.length === 2) {
+                checkMemoryMatch();
+            }
+        }
+
+        function checkMemoryMatch() {
+            const [first, second] = memoryFlipped;
+            const match = memoryPairs[first.index].emoji === memoryPairs[second.index].emoji;
+
+            if (match) {
+                first.cardEl.classList.add('matched');
+                second.cardEl.classList.add('matched');
+                memoryMatched++;
+                gameState.score += 20;
+
+                if (memoryMatched === gameState.memoryPairs.length) {
+                    document.getElementById('memoryMessage').textContent = '✓ All pairs matched! Great job!';
+                    document.getElementById('memoryMessage').classList.add('success', 'show');
+                    if (!gameState.gameStates.memory) {
+                        gameState.gameStates.memory = true;
+                        gameState.gamesCompleted++;
+                    }
+                    updateUI();
+                }
+            } else {
+                setTimeout(() => {
+                    first.cardEl.classList.remove('flipped');
+                    second.cardEl.classList.remove('flipped');
+                    first.cardEl.textContent = '?';
+                    second.cardEl.textContent = '?';
+                }, 1000);
+            }
+
+            memoryFlipped = [];
+        }
+
+        // Navigation
+        function nextStation() {
+            if (gameState.currentStation < 2) {
+                gameState.currentStation++;
+                triviaAnswered = false;
+                wordAnswered = false;
+                updateUI();
+            }
+        }
+
+        function previousStation() {
+            if (gameState.currentStation > 0) {
+                gameState.currentStation--;
+                triviaAnswered = false;
+                wordAnswered = false;
+                updateUI();
+            }
+        }
+
+        // Arrival Modal
+        function showArrivalModal() {
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalGames').textContent = gameState.gamesCompleted;
+            document.getElementById('arrivalModal').classList.add('show');
+        }
+
+        function restartJourney() {
+            gameState.currentStation = 0;
+            gameState.score = 0;
+            gameState.gamesCompleted = 0;
+            gameState.gameStates = { trivia: false, wordScramble: false, memory: false };
+            triviaAnswered = false;
+            wordAnswered = false;
+            document.getElementById('arrivalModal').classList.remove('show');
+            init();
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
