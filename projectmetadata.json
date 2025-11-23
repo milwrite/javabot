@@ -130,5 +130,9 @@
   "rubi_infomercial": {
     "icon": "🌐",
     "description": "A noir-themed infomercial about Zachary"
+  },
+  "double_dragon_beatem_up": {
+    "icon": "🎮",
+    "description": "Beat-em-up arcade game similar to Double Dragon 2"
   }
 }

@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Double Dragon Beat-em-up - Interactive Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #00ff41;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* CRT Scanlines Effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            text-decoration: none;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .home-link:hover {
+            background: rgba(102, 126, 234, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid #00ff41;
+            background: rgba(10, 14, 39, 0.8);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ff41;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 0.9em;
+            color: #00cc33;
+            margin-bottom: 10px;
+        }
+
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+            font-size: 0.85em;
+        }
+
+        .status-item {
+            padding: 8px;
+            border: 1px solid #00ff41;
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        .demo-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid #00ff41;
+            background: rgba(10, 14, 39, 0.8);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            border-bottom: 1px solid #00ff41;
+            padding-bottom: 10px;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            aspect-ratio: 16 / 9;
+            background: linear-gradient(to bottom, #0a0e27, #1a1f3a);
+            border: 3px solid #00ff41;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .info-box {
+            padding: 10px;
+            border: 1px solid #00ff41;
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        .info-label {
+            color: #00cc33;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.2em;
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .control-group {
+            padding: 15px;
+            border: 1px solid #00ff41;
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        .control-title {
+            color: #00ff41;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .control-list {
+            list-style: none;
+            font-size: 0.9em;
+        }
+
+        .control-list li {
+            padding: 5px 0;
+            color: #00cc33;
+        }
+
+        .key-badge {
+            display: inline-block;
+            background: rgba(0, 255, 65, 0.2);
+            border: 1px solid #00ff41;
+            padding: 2px 6px;
+            margin: 0 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: rgba(0, 255, 65, 0.2);
+            border: 2px solid #00ff41;
+            color: #00ff41;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px #00ff41;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        button:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .mobile-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .mobile-btn {
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .direction-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            width: fit-content;
+            margin: 10px 0;
+        }
+
+        .direction-pad button {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .features-list li {
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #00cc33;
+        }
+
+        .features-list li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: #00ff41;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff41;
+            padding: 15px;
+            margin-top: 15px;
+            overflow-x: auto;
+            font-size: 0.85em;
+            color: #00ff41;
+        }
+
+        .health-bar-demo {
+            margin-top: 15px;
+        }
+
+        .health-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff41;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff41, #00cc33);
+            width: 100%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px #00ff41;
+        }
+
+        .combo-display {
+            font-size: 1.2em;
+            margin-top: 10px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #ff6600;
+        }
+
+        .wave-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .wave-box {
+            padding: 10px;
+            border: 1px solid #00ff41;
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        .difficulty-indicator {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .difficulty-bar {
+            width: 20px;
+            height: 10px;
+            border: 1px solid #00ff41;
+            background: rgba(0, 255, 65, 0.2);
+        }
+
+        .difficulty-bar.active {
+            background: #ff6600;
+            box-shadow: 0 0 5px #ff6600;
+        }
+
+        .instructions {
+            background: rgba(0, 255, 65, 0.05);
+            border-left: 3px solid #00ff41;
+            padding: 15px;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+
+        .warning {
+            color: #ff6600;
+        }
+
+        .success {
+            color: #00ff41;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            border-top: 1px solid #00ff41;
+            color: #00cc33;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .game-info {
+                grid-template-columns: 1fr;
+            }
+
+            .direction-pad button {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" class="home-link">← Home</a>
+
+    <div class="container">
+        <header>
+            <h1>⚔️ DOUBLE DRAGON BEAT-EM-UP</h1>
+            <p class="subtitle">Arcade-style action game with noir terminal aesthetic</p>
+            <div class="status-bar">
+                <div class="status-item">STATUS: <span class="success">READY</span></div>
+                <div class="status-item">MODE: ARCADE</div>
+                <div class="status-item">DIFFICULTY: VARIABLE</div>
+            </div>
+        </header>
+
+        <div class="demo-section">
+            <div class="section-title">🎮 GAME ARENA</div>
+            <div class="game-container">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+            <div class="game-info">
+                <div class="info-box">
+                    <div class="info-label">SCORE</div>
+                    <div class="info-value" id="scoreDisplay">0</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">WAVE</div>
+                    <div class="info-value" id="waveDisplay">1</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">COMBO</div>
+                    <div class="info-value" id="comboDisplay">0x</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="section-title">⌨️ CONTROLS</div>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <div class="control-title">KEYBOARD CONTROLS</div>
+                    <ul class="control-list">
+                        <li><span class="key-badge">A</span> Move Left</li>
+                        <li><span class="key-badge">D</span> Move Right</li>
+                        <li><span class="key-badge">W</span> Jump</li>
+                        <li><span class="key-badge">SPACE</span> Punch</li>
+                        <li><span class="key-badge">P</span> Pause Game</li>
+                    </ul>
+                </div>
+                <div class="control-group">
+                    <div class="control-title">GAME MECHANICS</div>
+                    <ul class="control-list">
+                        <li>• Defeat waves of enemies</li>
+                        <li>• Build combo for bonus points</li>
+                        <li>• Health regenerates slowly</li>
+                        <li>• Difficulty increases per wave</li>
+                        <li>• Survive as long as possible</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <div class="control-title">MOBILE TOUCH CONTROLS</div>
+                <div class="direction-pad">
+                    <button onclick="simulateKeyPress('ArrowLeft')">◄</button>
+                    <button onclick="simulateKeyPress('ArrowUp')" style="grid-column: 2;">▲</button>
+                    <button onclick="simulateKeyPress('ArrowRight')" style="grid-column: 3;">►</button>
+                </div>
+                <div class="button-group">
+                    <button onclick="simulateKeyPress(' ')" class="mobile-btn">PUNCH</button>
+                    <button onclick="simulateKeyPress('w')" class="mobile-btn">JUMP</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="section-title">❤️ PLAYER STATUS</div>
+            <div class="health-bar-demo">
+                <div style="margin-bottom: 10px;">HEALTH</div>
+                <div class="health-bar">
+                    <div class="health-fill" id="healthBar" style="width: 100%;"></div>
+                </div>
+                <div style="margin-top: 10px; text-align: right; color: #00cc33;">
+                    <span id="healthText">100 / 100 HP</span>
+                </div>
+            </div>
+            <div class="combo-display">
+                COMBO MULTIPLIER: <span id="comboMultiplier">1.0x</span>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="section-title">🌊 WAVE SYSTEM</div>
+            <div class="wave-info">
+                <div class="wave-box">
+                    <div class="info-label">CURRENT WAVE</div>
+                    <div class="info-value" id="waveNumber">1</div>
+                </div>
+                <div class="wave-box">
+                    <div class="info-label">ENEMIES REMAINING</div>
+                    <div class="info-value" id="enemiesRemaining">0</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div class="info-label">DIFFICULTY PROGRESSION</div>
+                <div class="difficulty-indicator" id="difficultyIndicator">
+                    <div class="difficulty-bar active"></div>
+                    <div class="difficulty-bar"></div>
+                    <div class="difficulty-bar"></div>
+                    <div class="difficulty-bar"></div>
+                    <div class="difficulty-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="section-title">🎯 GAME ACTIONS</div>
+            <div class="button-group">
+                <button onclick="startGame()">START GAME</button>
+                <button onclick="pauseGame()">PAUSE GAME</button>
+                <button onclick="resetGame()">RESET GAME</button>
+                <button onclick="toggleDebugMode()">DEBUG MODE</button>
+            </div>
+            <div class="instructions">
+                <p><strong>HOW TO PLAY:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Use keyboard or touch controls to move and attack</li>
+                    <li>Defeat all enemies in a wave to progress</li>
+                    <li>Consecutive hits without taking damage build your combo</li>
+                    <li>Higher combo multiplier increases points earned</li>
+                    <li>Each wave introduces more enemies and stronger attacks</li>
+                    <li>Game ends when health reaches zero</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="section-title">✨ FEATURES</div>
+            <ul class="features-list">
+                <li>Arcade-style beat-em-up gameplay with smooth animations</li>
+                <li>Progressive wave system with increasing difficulty</li>
+                <li>Combo system for bonus points and visual feedback</li>
+                <li>Health bar with regeneration mechanics</li>
+                <li>Enemy AI with varied attack patterns</li>
+                <li>Score tracking and statistics</li>
+                <li>CRT scanline visual effects</li>
+                <li>Responsive mobile touch controls</li>
+                <li>Keyboard and gamepad support</li>
+                <li>Debug mode for testing and analysis</li>
+            </ul>
+        </div>
+
+        <div class="demo-section">
+            <div class="section-title">📋 GAME STATE</div>
+            <div class="code-block" id="gameState">
+                <div>INITIALIZING GAME ENGINE...</div>
+                <div style="margin-top: 10px;">Ready to start. Click "START GAME" to begin.</div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Double Dragon Beat-em-up © 2024 | Arcade Classic Reimagined</p>
+            <p style="margin-top: 10px; color: #00cc33;">Press START GAME to begin your adventure</p>
+        </footer>
+    </div>
+
+    <script src="double_dragon_beatem_up.js"></script>
+    <script>
+        let gameInstance = null;
+        let gameRunning = false;
+        let debugMode = false;
+
+        // Initialize the game
+        function initGame() {
+            const canvas = document.getElementById('gameCanvas');
+            if (canvas && window.DoubleDragonGame) {
+                gameInstance = new window.DoubleDragonGame(canvas);
+                updateGameState();
+            }
+        }
+
+        // Start the game
+        function startGame() {
+            if (gameInstance) {
+                gameInstance.start();
+                gameRunning = true;
+                updateGameState();
+                console.log('Game started');
+            }
+        }
+
+        // Pause the game
+        function pauseGame() {
+            if (gameInstance) {
+                gameInstance.pause();
+                gameRunning = !gameRunning;
+                updateGameState();
+                console.log('Game paused');
+            }
+        }
+
+        // Reset the game
+        function resetGame() {
+            if (gameInstance) {
+                gameInstance.reset();
+                gameRunning = false;
+                updateGameState();
+                console.log('Game reset');
+            }
+        }
+
+        // Toggle debug mode
+        function toggleDebugMode() {
+            debugMode = !debugMode;
+            if (gameInstance) {
+                gameInstance.setDebugMode(debugMode);
+            }
+            console.log('Debug mode:', debugMode ? 'ON' : 'OFF');
+            updateGameState();
+        }
+
+        // Simulate key press for mobile controls
+        function simulateKeyPress(key) {
+            const event = new KeyboardEvent('keydown', {
+                key: key,
+                code: key === ' ' ? 'Space' : key,
+                keyCode: key === ' ' ? 32 : key.charCodeAt(0),
+                which: key === ' ' ? 32 : key.charCodeAt(0),
+                bubbles: true
+            });
+            document.dispatchEvent(event);
+        }
+
+        // Update game state display
+        function updateGameState() {
+            if (!gameInstance) return;
+
+            const state = gameInstance.getGameState();
+            
+            // Update score
+            document.getElementById('scoreDisplay').textContent = state.score || '0';
+            
+            // Update wave
+            document.getElementById('waveDisplay').textContent = state.wave || '1';
+            document.getElementById('waveNumber').textContent = state.wave || '1';
+            
+            // Update combo
+            document.getElementById('comboDisplay').textContent = (state.combo || 0) + 'x';
+            document.getElementById('comboMultiplier').textContent = (1 + (state.combo || 0) * 0.1).toFixed(1) + 'x';
+            
+            // Update health
+            const health = state.health || 100;
+            const maxHealth = state.maxHealth || 100;
+            const healthPercent = (health / maxHealth) * 100;
+            document.getElementById('healthBar').style.width = healthPercent + '%';
+            document.getElementById('healthText').textContent = health + ' / ' + maxHealth + ' HP';
+            
+            // Update enemies remaining
+            document.getElementById('enemiesRemaining').textContent = state.enemiesRemaining || '0';
+            
+            // Update difficulty indicator
+            const wave = state.wave || 1;
+            const diffIndicators = document.querySelectorAll('#difficultyIndicator .difficulty-bar');
+            diffIndicators.forEach((bar, index) => {
+                if (index < Math.min(wave, 5)) {
+                    bar.classList.add('active');
+                } else {
+                    bar.classList.remove('active');
+                }
+            });
+            
+            // Update game state display
+            const gameStateDiv = document.getElementById('gameState');
+            gameStateDiv.innerHTML = `
+                <div>GAME STATUS: ${gameRunning ? '<span class="success">RUNNING</span>' : '<span class="warning">PAUSED</span>'}</div>
+                <div>SCORE: ${state.score || 0}</div>
+                <div>WAVE: ${state.wave || 1}</div>
+                <div>HEALTH: ${health}/${maxHealth}</div>
+                <div>COMBO: ${state.combo || 0}x</div>
+                <div>ENEMIES: ${state.enemiesRemaining || 0}</div>
+                <div>DEBUG: ${debugMode ? '<span class="success">ON</span>' : '<span class="warning">OFF</span>'}</div>
+                <div style="margin-top: 10px; color: #00cc33;">Last Update: ${new Date().toLocaleTimeString()}</div>
+            `;
+        }
+
+        // Update game state periodically
+        setInterval(() => {
+            if (gameRunning && gameInstance) {
+                updateGameState();
+            }
+        }, 100);
+
+        // Handle keyboard input
+        document.addEventListener('keydown', (e) => {
+            if (gameInstance) {
+                if (e.key.toLowerCase() === 'p') {
+                    pauseGame();
+                }
+            }
+        });
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            initGame();
+            updateGameState();
+        });
+    </script>
+</body>
+</html>
