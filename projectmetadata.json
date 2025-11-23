@@ -122,5 +122,9 @@
   "zach_deodorant": {
     "icon": "🌐",
     "description": "A silly 90s-style infomercial visualization about"
+  },
+  "bills_qb_game": {
+    "icon": "🎮",
+    "description": "Buffalo Bills quarterback throwing game where"
   }
 }

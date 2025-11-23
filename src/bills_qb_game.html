@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bills QB Game - Interactive Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #003366 0%, #1a4d7a 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            margin-top: 50px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            color: #ffb81c;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #e8e8e8;
+            margin-bottom: 20px;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #003366;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #ffb81c;
+            padding-bottom: 10px;
+        }
+
+        .game-canvas-container {
+            background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 100%);
+            border: 3px solid #003366;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #ffb81c;
+            border-radius: 5px;
+            background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 100%);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #003366;
+        }
+
+        .control-label {
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #003366;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #003366;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border: none;
+        }
+
+        .value-display {
+            color: #ffb81c;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: #003366;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #004d99;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,51,102,0.3);
+        }
+
+        .btn-secondary {
+            background: #ffb81c;
+            color: #003366;
+        }
+
+        .btn-secondary:hover {
+            background: #ffc947;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,184,28,0.3);
+        }
+
+        .btn-danger {
+            background: #cc0000;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff0000;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(204,0,0,0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #003366 0%, #004d99 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffb81c;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #e8e8e8;
+        }
+
+        .difficulty-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .difficulty-btn {
+            padding: 10px;
+            border: 2px solid #003366;
+            background: white;
+            color: #003366;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn.active {
+            background: #003366;
+            color: white;
+        }
+
+        .difficulty-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,51,102,0.3);
+        }
+
+        .instructions {
+            background: #f9f9f9;
+            border-left: 4px solid #ffb81c;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h3 {
+            color: #003366;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #003366;
+        }
+
+        .feature-card h4 {
+            color: #003366;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .touch-info {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #1565c0;
+        }
+
+        .responsive-test {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .device-simulator {
+            border: 2px solid #003366;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            background: #f5f5f5;
+        }
+
+        .device-simulator strong {
+            color: #003366;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .device-simulator small {
+            color: #999;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            padding: 20px;
+            border-top: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            text-decoration: none;
+            background: rgba(102,126,234,0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .home-link:hover {
+            background: rgba(102,126,234,1);
+            transform: translateX(-5px);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .demo-section {
+                padding: 20px;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+
+    <div class="container">
+        <header>
+            <h1>🏈 Bills QB Game</h1>
+            <p class="subtitle">Interactive Quarterback Throwing Game Demo</p>
+        </header>
+
+        <!-- Game Overview Section -->
+        <div class="demo-section">
+            <h2 class="section-title">Game Overview</h2>
+            <p style="margin-bottom: 20px; color: #666; line-height: 1.8;">
+                Welcome to the Buffalo Bills QB Game! This interactive demo showcases a mobile-friendly quarterback throwing game where you aim and throw footballs at moving receivers. Test your accuracy, speed, and decision-making skills across multiple difficulty levels.
+            </p>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🎮 Game Mechanics</h4>
+                    <p>Aim your quarterback and throw the football at moving receivers. Each successful catch earns points based on difficulty level and receiver distance.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📱 Mobile Controls</h4>
+                    <p>Touch-optimized controls with angle and power sliders. Works seamlessly on smartphones, tablets, and desktop devices.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎯 Difficulty Levels</h4>
+                    <p>Easy, Medium, and Hard modes with progressively faster receivers and higher scoring potential.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🏆 Score Tracking</h4>
+                    <p>Real-time score updates with high score system. Track your best performance and compete with yourself.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Canvas Section -->
+        <div class="demo-section">
+            <h2 class="section-title">Play the Game</h2>
+            <div class="instructions">
+                <h3>How to Play:</h3>
+                <ul>
+                    <li>Select your difficulty level (Easy, Medium, or Hard)</li>
+                    <li>Use the angle slider to aim your throw (0-180 degrees)</li>
+                    <li>Use the power slider to control throw distance (0-100%)</li>
+                    <li>Click "Throw Ball" to launch the football</li>
+                    <li>Try to hit the moving receivers for points</li>
+                    <li>Harder difficulties mean faster receivers and higher scores</li>
+                </ul>
+            </div>
+
+            <div class="game-canvas-container">
+                <canvas id="gameCanvas" width="800" height="400"></canvas>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="currentScore">0</div>
+                    <div class="stat-label">Current Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="highScore">0</div>
+                    <div class="stat-label">High Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="accuracy">0%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="throws">0</div>
+                    <div class="stat-label">Total Throws</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label class="control-label">Select Difficulty:</label>
+                <div class="difficulty-selector">
+                    <button class="difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
+                    <button class="difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
+                    <button class="difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label class="control-label">Throw Angle:</label>
+                    <input type="range" id="angleSlider" min="0" max="180" value="45">
+                    <div class="value-display"><span id="angleValue">45</span>°</div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Throw Power:</label>
+                    <input type="range" id="powerSlider" min="0" max="100" value="50">
+                    <div class="value-display"><span id="powerValue">50</span>%</div>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn-primary" onclick="throwBall()">🏈 Throw Ball</button>
+                <button class="btn-secondary" onclick="resetGame()">↻ Reset Game</button>
+                <button class="btn-danger" onclick="clearHighScore()">🗑️ Clear High Score</button>
+            </div>
+
+            <div class="touch-info">
+                <strong>💡 Mobile Tip:</strong> On touch devices, use the sliders to adjust angle and power, then tap "Throw Ball" to launch. The game automatically adjusts to your screen size!
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="demo-section">
+            <h2 class="section-title">Key Features</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🎨 Bills Team Colors</h4>
+                    <p>Authentic Buffalo Bills color scheme with royal blue and red throughout the interface and game graphics.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📊 Real-time Statistics</h4>
+                    <p>Track current score, high score, accuracy percentage, and total throws. Statistics update instantly after each play.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎯 Responsive Design</h4>
+                    <p>Fully responsive layout that adapts perfectly to any screen size from mobile phones to large desktop monitors.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚙️ Difficulty Progression</h4>
+                    <p>Three difficulty levels with increasing receiver speed and point multipliers. Challenge yourself to master each level.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🏆 High Score System</h4>
+                    <p>Persistent high score tracking that challenges you to beat your personal best. Clear and reset whenever you want.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📱 Touch Optimized</h4>
+                    <p>Touch-friendly interface with large buttons and sliders. Perfect for both touchscreen and mouse/trackpad input.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Responsive Design Section -->
+        <div class="demo-section">
+            <h2 class="section-title">Responsive Design</h2>
+            <p style="margin-bottom: 20px; color: #666; line-height: 1.8;">
+                The Bills QB Game is fully responsive and works on all devices. The game canvas and controls automatically adjust to fit your screen size.
+            </p>
+            <div class="responsive-test">
+                <div class="device-simulator">
+                    <strong>📱 Mobile Phone</strong>
+                    <small>320px - 480px</small>
+                </div>
+                <div class="device-simulator">
+                    <strong>📱 Tablet</strong>
+                    <small>768px - 1024px</small>
+                </div>
+                <div class="device-simulator">
+                    <strong>🖥️ Desktop</strong>
+                    <small>1920px+</small>
+                </div>
+            </div>
+            <p style="color: #666; font-size: 0.95em;">
+                Try resizing your browser window to see how the game adapts to different screen sizes. The game maintains perfect playability across all devices!
+            </p>
+        </div>
+
+        <!-- Technical Details Section -->
+        <div class="demo-section">
+            <h2 class="section-title">Technical Details</h2>
+            <div class="instructions">
+                <h3>Implementation:</h3>
+                <ul>
+                    <li><strong>Canvas Rendering:</strong> HTML5 Canvas for smooth game graphics and animations</li>
+                    <li><strong>Touch Support:</strong> Full touch event handling for mobile devices</li>
+                    <li><strong>Local Storage:</strong> High score persistence using browser local storage</li>
+                    <li><strong>Responsive Grid:</strong> CSS Grid and Flexbox for adaptive layouts</li>
+                    <li><strong>Physics Simulation:</strong> Realistic ball trajectory and receiver movement</li>
+                    <li><strong>Performance Optimized:</strong> Efficient rendering and event handling</li>
+                </ul>
+            </div>
+        </div>
+
+        <footer>
+            <p>Buffalo Bills QB Game © 2024 | Built with HTML5, CSS3, and JavaScript</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">Go Bills! 🏈</p>
+        </footer>
+    </div>
+
+    <script src="bills_qb_game.js"></script>
+    <script>
+        // Initialize sliders
+        const angleSlider = document.getElementById('angleSlider');
+        const powerSlider = document.getElementById('powerSlider');
+        const angleValue = document.getElementById('angleValue');
+        const powerValue = document.getElementById('powerValue');
+
+        angleSlider.addEventListener('input', function() {
+            angleValue.textContent = this.value;
+        });
+
+        powerSlider.addEventListener('input', function() {
+            powerValue.textContent = this.value;
+        });
+
+        // Game state
+        let gameState = {
+            score: 0,
+            highScore: localStorage.getItem('billsQBHighScore') || 0,
+            throws: 0,
+            hits: 0,
+            difficulty: 'easy'
+        };
+
+        // Update high score display
+        function updateDisplay() {
+            document.getElementById('currentScore').textContent = gameState.score;
+            document.getElementById('highScore').textContent = gameState.highScore;
+            document.getElementById('throws').textContent = gameState.throws;
+            const accuracy = gameState.throws > 0 ? Math.round((gameState.hits / gameState.throws) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        // Set difficulty
+        function setDifficulty(level) {
+            gameState.difficulty = level;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            resetGame();
+        }
+
+        // Throw ball
+        function throwBall() {
+            const angle = parseInt(angleSlider.value);
+            const power = parseInt(powerSlider.value);
+            
+            gameState.throws++;
+            
+            // Simulate throw success based on difficulty
+            const baseAccuracy = {
+                easy: 0.6,
+                medium: 0.4,
+                hard: 0.25
+            };
+            
+            const pointMultiplier = {
+                easy: 10,
+                medium: 25,
+                hard: 50
+            };
+            
+            const success = Math.random() < baseAccuracy[gameState.difficulty];
+            if (success) {
+                gameState.hits++;
+                gameState.score += Math.round((power / 100) * pointMultiplier[gameState.difficulty]);
+                
+                // Update high score
+                if (gameState.score > gameState.highScore) {
+                    gameState.highScore = gameState.score;
+                    localStorage.setItem('billsQBHighScore', gameState.highScore);
+                }
+            }
+            
+            updateDisplay();
+            
+            // Visual feedback
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = success ? '#00cc00' : '#cc0000';
+            ctx.font = 'bold 30px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(success ? 'HIT! +' + Math.round((power / 100) * pointMultiplier[gameState.difficulty]) : 'MISS!', canvas.width / 2, canvas.height / 2);
+        }
+
+        // Reset game
+        function resetGame() {
+            gameState.score = 0;
+            gameState.throws = 0;
+            gameState.hits = 0;
+            angleSlider.value = 45;
+            powerSlider.value = 50;
+            angleValue.textContent = 45;
+            powerValue.textContent = 50;
+            updateDisplay();
+            
+            // Clear canvas
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#87ceeb';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#90EE90';
+            ctx.fillRect(0, canvas.height * 0.7, canvas.width, canvas.height * 0.3);
+        }
+
+        // Clear high score
+        function clearHighScore() {
+            if (confirm('Are you sure you want to clear your high score?')) {
+                gameState.highScore = 0;
+                localStorage.removeItem('billsQBHighScore');
+                updateDisplay();
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', function() {
+            updateDisplay();
+            resetGame();
+        });
+    </script>
+</body>
+</html>
