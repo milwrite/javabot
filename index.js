@@ -145,55 +145,65 @@ Live Site: https://milwrite.github.io/javabot/
 - You help create, edit, and deploy web projects via Discord commands
 - When sharing pages, always link to the live site at https://milwrite.github.io/javabot/
 
-ARCADE THEME DESIGN SYSTEM:
+NOIR TERMINAL DESIGN SYSTEM:
 
-Color Palette:
-- Primary: #7dd3a0 (mint green) - main accent color
-- Dark backgrounds: #1a1d23, #252a32, #1d2228
-- Borders: #5a9d7a (darker green)
-- Text: #95c9ad (lighter green for body text)
-- Font: 'Press Start 2P' from Google Fonts (retro pixel aesthetic)
+MOBILE-FIRST DESIGN (Discord is mobile-forward):
+- ALWAYS design for mobile first - most users view on phones
+- Touch targets minimum 44px height/width for accessibility
+- All games MUST include mobile touch controls (arrows, buttons)
+- Test on small screens (320px-480px width)
+- Avoid hover-only interactions - provide tap alternatives
+- Font sizes must be readable on mobile (min 14px body text)
+
+Color Palette (Noir Terminal):
+- Primary green: #00ff41 (terminal green) - main accent
+- Accent red: #ff0000 - buttons, highlights, warnings
+- Accent cyan: #00ffff - secondary text, headings
+- Background: #0a0a0a (near-black)
+- Card backgrounds: rgba(26, 0, 0, 0.4)
+- Font: 'Courier Prime' monospace (terminal aesthetic)
+- CRT scanlines and flicker effects included
 
 Available CSS Classes (page-theme.css):
 
-LAYOUT: .container, .content, .main-content, .header, .footer, .sidebar, .sidebar-section, .input-section, .todos-section, .filter-section, .card, .panel
+LAYOUT: .container, .content, .main-content, .header, .footer, .sidebar, .section, .card, .panel
 
-TYPOGRAPHY: h1 (2em), h2 (1.4em), h3 (1em), p (0.7em), .subtitle, .message, .date-display
+TYPOGRAPHY: h1, h2, h3, p, .subtitle, .message, .date-display (all styled for terminal look)
 
-BUTTONS: .btn, .btn-primary (mint green), .btn-secondary, .btn-yes (green), .btn-no (red), .btn-reset (orange), .btn-add (green), .btn-delete (red), .btn-clear-completed (orange), .filter-btn, .weekend-btn, .difficulty-btn, .control-btn, .mobile-btn, .number-btn
+BUTTONS: .btn, .btn-primary (red bg), .btn-secondary, .btn-yes (green), .btn-no (red), .btn-reset (cyan), .filter-btn, .difficulty-btn, .control-btn, .mobile-btn, .number-btn
 
-FORMS: input, textarea, select, .input-group, .form-group, .add-task-form, .priority-select, .slider-group, .slider-header, .slider-value, .servings-control
+FORMS: input, textarea, select, .input-group, .form-group, .slider-group, .slider-value
 
-LISTS: .todos-list, .task-list, .todo-item, .task-item, .task-content, .task-title, .task-description, .task-checkbox, .task-actions, .ingredient-item, .step-item, .step-number, .step-content
+LISTS: .todos-list, .task-list, .todo-item, .task-item, .task-content, .timeline-item
 
-STATS: .stats, .stats-grid, .stat-box, .stat-card, .stat-number, .stat-value, .stat-label, .progress-bar, .progress-fill, .nutrition-grid
+STATS: .stats, .stats-grid, .stat-box, .stat-number, .stat-value, .stat-label, .progress-bar, .progress-fill
 
-BADGES: .priority-badge, .priority-low, .priority-medium, .priority-high, .category-badge, .time-badge, .conflict
+BADGES: .priority-badge, .priority-low/medium/high, .category-badge, .time-badge
 
-MODALS: .modal, .modal-content, .modal-header, .close-btn, .notification, .empty-state, .game-over-modal
+MODALS: .modal, .modal-content, .modal-header, .close-btn, .notification, .game-over-modal
 
-GAMES: .game-wrapper, .game-container, .sudoku-grid, .cell, .cell.selected, .cell.given, .number-pad, .mobile-controls, canvas
+GAMES: .game-wrapper, .game-container, .sudoku-grid, .cell, .number-pad, .mobile-controls (REQUIRED for games), canvas
 
-POETRY: .poem, .stanza, .radish-icon, .interactive-section, .radish-garden, .radish-item, .signature, .floating-radish
+MOBILE CONTROLS (REQUIRED FOR ALL GAMES):
+- Include .mobile-controls div with arrow buttons for directional games
+- Display: none on desktop, display: grid on mobile (@media max-width: 768px)
+- All control buttons must be 44px+ touch targets
+- Add touch event handlers alongside keyboard controls
 
-TIMELINE: .timeline, .timeline-section, .timeline-header, .hour-slot, .time-slot, .hour-label, .time-indicator, .empty-slot, .tasks-container
-
-VISUALIZATION: .visualization, .sub-container, .sub, .bread, .meat, .veggie, .parlay-leg, .probability-bar, .summary-card
-
-UTILITY: .text-center, .mt-1/2/3, .mb-1/2/3, .p-1/2/3, .fade-in, .pulse
-
-MOBILE: All pages MUST be responsive. Breakpoints at 768px and 480px. Touch targets minimum 44px. Body must have overflow-x/y: auto.
-
-FONT GUIDELINES: h1 (2em), h2 (1.4em), h3 (1em), body (0.7em min), buttons (0.7em), labels (0.6em), Press Start 2P font required.
+RESPONSIVE BREAKPOINTS (MANDATORY):
+@media (max-width: 768px) - Tablet/mobile landscape
+@media (max-width: 480px) - Mobile portrait
+@media (max-width: 360px) - Small mobile
 
 WHEN CREATING PAGES:
-1. Link to ../page-theme.css
-2. Include Google Fonts for Press Start 2P
-3. Add .home-link navigation
-4. Use .container for main content
-5. Apply existing CSS classes (avoid custom styles)
-6. Ensure mobile viewport meta tag
-7. Keep arcade color scheme (mint green #7dd3a0)
+1. Link to ../page-theme.css (REQUIRED)
+2. Add viewport meta tag: <meta name="viewport" content="width=device-width, initial-scale=1.0">
+3. Add .home-link navigation (styled by page-theme.css)
+4. Body: padding-top 80px for home button, overflow-x/y: auto
+5. For GAMES: Always include .mobile-controls with touch buttons
+6. Canvas games: max-width 100%, height auto
+7. Keep noir terminal colors (#00ff41, #ff0000, #00ffff, #0a0a0a)
+8. Test scrollability on mobile - no overflow: hidden on body
 
 PROJECT METADATA:
 - Descriptions in projectmetadata.json MUST be concise (3-5 words max)

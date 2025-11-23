@@ -6,139 +6,56 @@
     <title>BUSHWICK - Leaflet Map Feature</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="../page-theme.css">
     <style>
+        /* Map-specific overrides */
         body {
-            background: #1a1d23;
-            color: #7dd3a0;
-            font-family: 'Press Start 2P', monospace;
-            margin: 0;
-            padding: 0;
+            padding: 80px 20px 20px;
         }
-        
-        .home-link {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 20px;
-            background: #252a32;
-            color: #7dd3a0;
-            text-decoration: none;
-            border: 2px solid #7dd3a0;
-            font-size: 12px;
-        }
-        
-        .home-link:hover {
-            background: #7dd3a0;
-            color: #1a1d23;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 20px;
-            background: #252a32;
-            border: 3px solid #7dd3a0;
-        }
-        
-        .header h1 {
-            font-size: 32px;
-            margin: 0 0 20px 0;
-            text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
-        }
-        
-        .header p {
-            font-size: 10px;
-            line-height: 1.8;
-        }
-        
-        .card {
-            background: #252a32;
-            border: 2px solid #7dd3a0;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .card h2 {
-            font-size: 18px;
-            margin-top: 0;
-            color: #7dd3a0;
-            border-bottom: 2px solid #7dd3a0;
-            padding-bottom: 10px;
-        }
-        
-        .card h3 {
-            font-size: 14px;
-            color: #7dd3a0;
-            margin-top: 20px;
-        }
-        
+
         #map {
             width: 100%;
             height: 500px;
-            border: 3px solid #7dd3a0;
+            border: 3px solid #00ff41;
             margin: 20px 0;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.4);
         }
-        
-        .btn {
-            background: #252a32;
-            color: #7dd3a0;
-            border: 2px solid #7dd3a0;
-            padding: 15px 30px;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 10px;
-            cursor: pointer;
-            margin: 5px;
-            transition: all 0.3s;
-        }
-        
-        .btn:hover {
-            background: #7dd3a0;
-            color: #1a1d23;
-            transform: scale(1.05);
-        }
-        
-        .btn:active {
-            transform: scale(0.95);
-        }
-        
+
         .controls {
             text-align: center;
             margin: 20px 0;
         }
-        
+
         .info-box {
-            background: #1a1d23;
-            border: 2px solid #7dd3a0;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ff41;
             padding: 15px;
             margin: 15px 0;
-            font-size: 10px;
+            font-size: 0.9em;
             line-height: 1.8;
+            color: #00ff41;
         }
-        
+
         .code-block {
-            background: #1a1d23;
-            border: 2px solid #7dd3a0;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ff41;
             padding: 15px;
             margin: 15px 0;
-            font-size: 9px;
+            font-size: 0.85em;
             overflow-x: auto;
-            color: #7dd3a0;
+            color: #00ff41;
         }
-        
+
         .status {
             text-align: center;
-            font-size: 12px;
+            font-size: 0.9em;
             padding: 10px;
-            background: #1a1d23;
-            border: 2px solid #7dd3a0;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ff41;
             margin: 10px 0;
+            color: #00ffff;
         }
-        
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));

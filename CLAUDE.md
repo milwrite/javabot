@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Bot Sportello is a Discord bot with a laid-back Doc Sportello personality that manages a web development repository. The bot integrates Discord slash commands with GitHub operations and AI-powered content generation through OpenRouter's API.
 
-**Core Purpose**: Help users create, commit, and manage web pages and JavaScript libraries through Discord commands while maintaining a chill, slightly spacey but helpful personality. All generated projects use a retro arcade aesthetic with mobile-responsive design.
+**Core Purpose**: Help users create, commit, and manage web pages and JavaScript libraries through Discord commands while maintaining a chill, slightly spacey but helpful personality. All generated projects use a noir terminal aesthetic with mobile-first responsive design.
 
 **Live Site**: https://milwrite.github.io/javabot/
 **Repository**: https://github.com/milwrite/javabot/
@@ -15,8 +15,9 @@ Bot Sportello is a Discord bot with a laid-back Doc Sportello personality that m
 - AI-generated HTML pages & JavaScript features using OpenRouter
 - Automatic GitHub commits and deployment to GitHub Pages
 - Conversation memory (last 100 messages in `agents.md`)
-- Retro arcade design system with Press Start 2P font
+- Noir terminal design system with Courier Prime font and CRT effects
 - Mobile-first responsive design (768px, 480px breakpoints, 44px touch targets)
+- All games require mobile touch controls for Discord's mobile-forward users
 
 ## Development Commands
 
@@ -93,11 +94,12 @@ The entire bot is contained in `index.js` (~2000+ lines) with these key sections
 - 10,000 token output limit for detailed responses
 - Conversation history from `agents.md` (100 messages max)
 
-**Arcade Frontend Styling**:
-- **Main arcade page**: `index.html` with embedded CSS (self-contained, no external stylesheet)
-- **Individual pages**: Link to `page-theme.css` (shared arcade theme for all /src/ pages)
-- **Current theme**: Soft Arcade (mint green #7dd3a0, dark blue-gray background)
-- **Typography**: Press Start 2P font from Google Fonts (retro pixel aesthetic)
+**Noir Terminal Frontend Styling**:
+- **Main page**: `index.html` with embedded CSS (self-contained, no external stylesheet)
+- **Individual pages**: Link to `page-theme.css` (shared noir theme for all /src/ pages)
+- **Current theme**: Noir Terminal (#00ff41 green, #ff0000 red, #00ffff cyan, #0a0a0a background)
+- **Typography**: Courier Prime monospace font (terminal aesthetic)
+- **Effects**: CRT scanlines, flicker animations, glitch effects
 - **Visual effects**: Simple gradient background on main page, grid + scanlines on individual pages
 - **Project discovery**: `index.html` dynamically loads projects from `projectmetadata.json`
 - **Navigation**: All pages include styled home button linking back to index.html
@@ -158,11 +160,12 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 
 **`/add-page`**:
 1. User provides name + description
-2. AI generates HTML that links to `page-theme.css` (shared arcade theme)
-3. Prompt specifies: arcade colors, Press Start 2P font, CSS classes to use
+2. AI generates HTML that links to `page-theme.css` (shared noir terminal theme)
+3. Prompt specifies: noir terminal colors, Courier Prime font, CSS classes to use
 4. Home link with `.home-link` class automatically included
-5. File saved to `src/{name}.html` and added to `projectmetadata.json`
-6. Live URL shown in Discord embed
+5. Mobile-responsive with touch controls for games
+6. File saved to `src/{name}.html` and added to `projectmetadata.json`
+7. Live URL shown in Discord embed
 
 **`/add-feature`**:
 1. User provides feature name + description of what it should do
@@ -173,15 +176,16 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 6. Flexible enough for libraries, UI components, interactive elements, utilities
 
 **Styling Consistency**:
-- All new pages link to `page-theme.css` for uniform arcade aesthetic
-- Prompts specify arcade color palette: mint green (#7dd3a0), dark backgrounds (#1a1d23, #252a32)
-- Available CSS classes: `.container`, `.card`, `.btn`, `.panel`, `.home-link`, etc.
+- All new pages link to `page-theme.css` for uniform noir terminal aesthetic
+- Color palette: terminal green (#00ff41), red (#ff0000), cyan (#00ffff), black (#0a0a0a)
+- Available CSS classes: `.container`, `.card`, `.btn`, `.panel`, `.home-link`, `.mobile-controls`, etc.
+- Games MUST include `.mobile-controls` with touch buttons (Discord is mobile-forward)
 - Prompts optimized for token efficiency with inline examples
 
 **`/update-style`**:
 1. User selects preset or "Custom" with description
 2. Built-in presets stored in `stylePresets` object:
-   - `soft-arcade` - Current style (mint green, dark blue-gray)
+   - `noir-terminal` - Current style (green #00ff41, red #ff0000, black #0a0a0a)
    - `neon-arcade` - Intense bright green with animations
    - `dark-minimal` - Clean modern dark theme
    - `retro-terminal` - Classic green terminal style
@@ -189,7 +193,7 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 4. Updates embedded CSS in `index.html`, commits, pushes to GitHub
 5. Shows confirmation with live site link
 
-**Note**: This command was originally designed to update `style.css`, but now modifies the embedded CSS in `index.html` directly since the main page is self-contained.
+**Note**: This command modifies embedded CSS in `index.html` directly since the main page is self-contained.
 
 ### Doc Sportello Personality System
 

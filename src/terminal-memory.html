@@ -4,25 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terminal Memory - Command Match</title>
+    <link rel="stylesheet" href="../page-theme.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        /* Game-specific overrides for Terminal Memory */
         body {
-            font-family: 'VT323', monospace;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            min-height: 100vh;
+            padding: 80px 20px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            color: #00ff00;
-            overflow-x: hidden;
+            justify-content: flex-start;
         }
         
         .scanlines {
@@ -330,7 +320,7 @@
 
 </head>
 <body>
-    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+    <a href="../index.html" class="home-link">HOME</a>
     
     <div class="scanlines"></div>
     

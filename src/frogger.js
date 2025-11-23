@@ -213,60 +213,60 @@ class FroggerGame {
     }
     
     render() {
-        // Clear canvas
-        this.ctx.fillStyle = '#1a1d23';
+        // Clear canvas - noir terminal background
+        this.ctx.fillStyle = '#0a0a0a';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         // Draw road
-        this.ctx.fillStyle = '#333';
+        this.ctx.fillStyle = '#1a0000';
         this.ctx.fillRect(0, 6 * this.gridSize, this.canvas.width, 5 * this.gridSize);
-        
-        // Draw water
-        this.ctx.fillStyle = '#4a90e2';
+
+        // Draw water - dark cyan
+        this.ctx.fillStyle = '#003333';
         this.water.forEach(water => {
             this.ctx.fillRect(0, water.y, this.canvas.width, water.height);
         });
-        
-        // Draw safe zones
-        this.ctx.fillStyle = '#7dd3a0';
+
+        // Draw safe zones - terminal green
+        this.ctx.fillStyle = 'rgba(0, 255, 65, 0.3)';
         this.ctx.fillRect(0, 0, this.canvas.width, this.gridSize); // Top safe zone
         this.ctx.fillRect(0, 6 * this.gridSize - this.gridSize, this.canvas.width, this.gridSize); // Middle safe zone
         this.ctx.fillRect(0, 11 * this.gridSize, this.canvas.width, this.gridSize); // Bottom safe zone
-        
-        // Draw logs
-        this.ctx.fillStyle = '#8b4513';
+
+        // Draw logs - brown with red tint
+        this.ctx.fillStyle = '#663300';
         this.logs.forEach(log => {
             this.ctx.fillRect(log.x, log.y + 2, log.width, log.height);
         });
-        
-        // Draw cars
-        this.ctx.fillStyle = '#ff4444';
+
+        // Draw cars - terminal red
+        this.ctx.fillStyle = '#ff0000';
         this.cars.forEach(car => {
             this.ctx.fillRect(car.x, car.y + 2, car.width, car.height);
         });
-        
-        // Draw frog
-        this.ctx.fillStyle = '#00ff00';
+
+        // Draw frog - terminal green
+        this.ctx.fillStyle = '#00ff41';
         this.ctx.fillRect(this.frog.x + 2, this.frog.y + 2, this.frog.size, this.frog.size);
-        
-        // Draw UI
-        this.ctx.fillStyle = '#7dd3a0';
-        this.ctx.font = '20px "Press Start 2P", monospace';
+
+        // Draw UI - terminal green
+        this.ctx.fillStyle = '#00ff41';
+        this.ctx.font = '20px "Courier Prime", monospace';
         this.ctx.fillText(`Score: ${this.score}`, 10, 30);
         this.ctx.fillText(`Lives: ${this.lives}`, 10, 55);
         this.ctx.fillText(`Level: ${this.level}`, 10, 80);
-        
+
         // Game over screen
         if (this.gameState === 'gameOver') {
-            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            
-            this.ctx.fillStyle = '#ff4444';
-            this.ctx.font = '30px "Press Start 2P", monospace';
+
+            this.ctx.fillStyle = '#ff0000';
+            this.ctx.font = '30px "Courier Prime", monospace';
             this.ctx.textAlign = 'center';
             this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2 - 50);
-            this.ctx.fillStyle = '#7dd3a0';
-            this.ctx.font = '16px "Press Start 2P", monospace';
+            this.ctx.fillStyle = '#00ff41';
+            this.ctx.font = '16px "Courier Prime", monospace';
             this.ctx.fillText(`Final Score: ${this.score}`, this.canvas.width / 2, this.canvas.height / 2);
             this.ctx.fillText('Refresh to play again', this.canvas.width / 2, this.canvas.height / 2 + 30);
             this.ctx.textAlign = 'start';

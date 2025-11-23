@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../page-theme.css">
     <style>
+        /* Override page-theme.css for sub-specific visualization */
         .visualization {
             display: flex;
             gap: 20px;
@@ -19,9 +20,8 @@
             flex: 1;
             min-width: 200px;
             padding: 15px;
-            background: rgba(37, 42, 50, 0.6);
-            border: 2px solid #5a9d7a;
-            border-radius: 8px;
+            background: rgba(26, 0, 0, 0.4);
+            border: 2px solid #ff0000;
             text-align: center;
         }
 
@@ -29,20 +29,19 @@
             display: flex;
             height: 40px;
             background: #d4a574;
-            border-radius: 20px;
             margin: 10px 0;
             overflow: hidden;
-            border: 2px solid #8b6f47;
+            border: 2px solid #00ff41;
         }
 
         .meat {
-            background: #c41e3a;
+            background: #ff0000;
             flex: var(--meat-ratio);
             position: relative;
         }
 
         .veggie {
-            background: #2ecc71;
+            background: #00ff41;
             flex: var(--veggie-ratio);
             position: relative;
         }
@@ -54,14 +53,14 @@
 
         .sub-label {
             font-size: 0.6em;
-            color: #95c9ad;
+            color: #00ffff;
             margin-bottom: 10px;
             display: block;
         }
 
         .ratio-text {
             font-size: 0.7em;
-            color: #7dd3a0;
+            color: #00ff41;
             margin-top: 10px;
         }
 
@@ -87,21 +86,20 @@
 
         .stat-box {
             padding: 15px;
-            background: rgba(37, 42, 50, 0.6);
-            border: 2px solid #5a9d7a;
-            border-radius: 8px;
+            background: rgba(26, 0, 0, 0.4);
+            border: 2px solid #00ff41;
             text-align: center;
         }
 
         .stat-value {
             font-size: 1.2em;
-            color: #7dd3a0;
+            color: #00ffff;
             font-weight: bold;
         }
 
         .stat-label {
             font-size: 0.6em;
-            color: #95c9ad;
+            color: #00ff41;
             margin-top: 8px;
         }
     </style>
@@ -202,13 +200,13 @@
 
             if (meat === 40 && veggie === 40) {
                 balance.textContent = 'Perfect!';
-                balance.style.color = '#7dd3a0';
+                balance.style.color = '#00ff41';
             } else if (Math.abs(meat - 40) <= 10 && Math.abs(veggie - 40) <= 10) {
                 balance.textContent = 'Good';
-                balance.style.color = '#95c9ad';
+                balance.style.color = '#00ffff';
             } else {
                 balance.textContent = 'Unbalanced';
-                balance.style.color = '#ff6b6b';
+                balance.style.color = '#ff0000';
             }
         }
 

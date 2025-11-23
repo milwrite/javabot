@@ -7,6 +7,46 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        /* Snaker game-specific overrides */
+        body {
+            padding: 80px 10px 20px;
+        }
+        .game-wrapper {
+            text-align: center;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border: 3px solid #00ff41;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.4);
+        }
+        @media (max-width: 768px) {
+            canvas {
+                max-width: 95vw;
+                max-height: 50vh;
+            }
+            .mobile-controls {
+                display: grid;
+            }
+            .stats {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            .difficulty-selector {
+                flex-direction: column;
+            }
+            .difficulty-btn {
+                width: 100%;
+            }
+        }
+        @media (max-width: 480px) {
+            canvas {
+                max-width: 90vw;
+                max-height: 40vh;
+            }
+        }
+    </style>
 </head>
 <body>
     <a href="../index.html" class="home-link">← HOME</a>
@@ -49,6 +89,16 @@
 
             <div class="info-panel">
                 <strong>Controls:</strong> Use <strong>Arrow Keys</strong> or <strong>WASD</strong> to move. Eat food to grow. Avoid walls and yourself!
+            </div>
+
+            <!-- Mobile Controls -->
+            <div class="mobile-controls" id="mobileControls">
+                <div class="control-btn empty"></div>
+                <button class="control-btn" id="btnUp">↑</button>
+                <div class="control-btn empty"></div>
+                <button class="control-btn" id="btnLeft">←</button>
+                <button class="control-btn" id="btnDown">↓</button>
+                <button class="control-btn" id="btnRight">→</button>
             </div>
         </div>
     </div>
@@ -113,6 +163,46 @@
 
         document.addEventListener('keydown', handleKeyPress);
         canvas.addEventListener('click', startGame);
+
+        // Mobile touch controls
+        document.getElementById('btnUp').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (direction.y === 0) nextDirection = { x: 0, y: -1 };
+            if (!gameRunning) startGame();
+        });
+        document.getElementById('btnDown').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (direction.y === 0) nextDirection = { x: 0, y: 1 };
+            if (!gameRunning) startGame();
+        });
+        document.getElementById('btnLeft').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (direction.x === 0) nextDirection = { x: -1, y: 0 };
+            if (!gameRunning) startGame();
+        });
+        document.getElementById('btnRight').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (direction.x === 0) nextDirection = { x: 1, y: 0 };
+            if (!gameRunning) startGame();
+        });
+
+        // Also handle click events for mobile buttons (fallback)
+        document.getElementById('btnUp').addEventListener('click', () => {
+            if (direction.y === 0) nextDirection = { x: 0, y: -1 };
+            if (!gameRunning) startGame();
+        });
+        document.getElementById('btnDown').addEventListener('click', () => {
+            if (direction.y === 0) nextDirection = { x: 0, y: 1 };
+            if (!gameRunning) startGame();
+        });
+        document.getElementById('btnLeft').addEventListener('click', () => {
+            if (direction.x === 0) nextDirection = { x: -1, y: 0 };
+            if (!gameRunning) startGame();
+        });
+        document.getElementById('btnRight').addEventListener('click', () => {
+            if (direction.x === 0) nextDirection = { x: 1, y: 0 };
+            if (!gameRunning) startGame();
+        });
 
         function handleKeyPress(e) {
             if (!gameRunning && e.key !== 'Enter') return;
