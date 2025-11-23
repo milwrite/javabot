@@ -126,5 +126,9 @@
   "bills_qb_game": {
     "icon": "🎮",
     "description": "Buffalo Bills quarterback throwing game where"
+  },
+  "rubi_infomercial": {
+    "icon": "🌐",
+    "description": "A noir-themed infomercial about Zachary"
   }
 }
