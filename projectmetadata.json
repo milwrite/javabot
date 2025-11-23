@@ -9,7 +9,7 @@
   },
   "cen-todo-list": {
     "icon": "✅",
-    "description": "Beautiful todo list app"
+    "description": "Todo list app"
   },
   "cen-sunday-todo": {
     "icon": "✅",
@@ -33,7 +33,7 @@
   },
   "alex_dog_mess": {
     "icon": "🐕",
-    "description": "Reminder to clean up"
+    "description": "Dog cleanup reminder"
   },
   "borscht": {
     "icon": "🍲",
@@ -49,7 +49,7 @@
   },
   "droid-union": {
     "icon": "🤖",
-    "description": "Star Wars droid labor rights site"
+    "description": "Droid labor rights satire"
   },
   "noodle_inventory": {
     "icon": "🍜",
@@ -57,7 +57,7 @@
   },
   "rat_bushwick": {
     "icon": "🐀",
-    "description": "Bushwick guide for rats"
+    "description": "Bushwick survival guide for rats"
   },
   "bushwick": {
     "icon": "🗺️",
@@ -65,19 +65,15 @@
   },
   "cen_veggie_haul": {
     "icon": "🥬",
-    "description": "Farmer's market veggie haul"
+    "description": "Farmer's market veggie tracker"
   },
   "terminal-memory": {
     "icon": "🎮",
     "description": "Terminal command memory game"
   },
   "frog_whack_a_mole": {
-    "icon": "🎮",
-    "description": "Whack-a-mole with surprised frogs"
-  },
-  "index": {
-    "icon": "🌐",
-    "description": "Index"
+    "icon": "🐸",
+    "description": "Whack-a-frog arcade game"
   },
   "basket-jam": {
     "icon": "🏀",
@@ -88,27 +84,27 @@
     "description": "Errand itinerary tracker"
   },
   "zach_work_schedule": {
-    "icon": "✅",
-    "description": "Work schedule for Zach to fix five articles in Manifold with HTML problems during work hours 10am to 2pm. Includes task breakdown, time allocation, and progress tracking."
+    "icon": "📋",
+    "description": "Work task schedule tracker"
   },
   "digital_sisyphus": {
-    "icon": "🌐",
-    "description": "An interactive absurdist visualization of digital Sisyphus - endlessly scrolling through loading states, buffering, and progress bars that never complete. Click to push the boulder (scroll), watch it roll back down. Commentary on the futility of infinite scrolling and digital labor."
+    "icon": "🪨",
+    "description": "Absurdist infinite scroll satire"
   },
   "anniversary": {
-    "icon": "🌐",
-    "description": "Zach & Cen's surreal Lynchian anniversary chronicle at Love's Club with interactive visualizations"
+    "icon": "💜",
+    "description": "Surreal anniversary chronicle"
   },
   "task-warning": {
-    "icon": "✅",
-    "description": "Create a flashing warning page with the message: 'Good Morning - this is a text to let you know you still have tasks incomplete. To avoid injury or a death sentence, please complete these at your earliest convenience. Thank you! -Sportello'. Use red flashing effects, alarm-style visuals, sirens, pulsing text, and an ominous noir terminal aesthetic. Mobile-responsive with dramatic animations."
+    "icon": "⚠️",
+    "description": "Noir task warning alert"
   },
   "red-siren-protocol": {
-    "icon": "✅",
-    "description": "Flashing red alert warning for incomplete tasks with dramatic siren effects and pulsing text message"
+    "icon": "🚨",
+    "description": "Dramatic task deadline alert"
   },
   "zach-sleep-letter": {
-    "icon": "🌐",
-    "description": "Interactive letter about Zach needing beauty sleep with visualizations showing sleep importance, health effects, and productivity charts"
+    "icon": "😴",
+    "description": "Sleep importance letter"
   }
 }

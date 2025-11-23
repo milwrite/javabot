@@ -205,11 +205,20 @@ WHEN CREATING PAGES:
 7. Keep noir terminal colors (#00ff41, #ff0000, #00ffff, #0a0a0a)
 8. Test scrollability on mobile - no overflow: hidden on body
 
-PROJECT METADATA:
-- Descriptions in projectmetadata.json MUST be concise (3-5 words max)
-- Match existing style: "Classic frogger game", "Sudoku puzzle game", "Arcade basketball game"
-- NOT verbose: avoid long explanations, feature lists, or technical details
-- Examples: "Errand itinerary tracker", "Interactive borscht recipe", "NBA Jam tribute game"
+PROJECT METADATA CAPTIONS (for projectmetadata.json):
+- MUST be concise one-liners: 3-6 words maximum
+- Format: "[Adjective] [noun] [type]" - e.g., "Classic frogger game", "Interactive borscht recipe"
+- NEVER include the user's full prompt or feature lists
+- NEVER start with verbs like "Create", "Build", "Make"
+- Good: "Arcade basketball game", "Noir task warning page", "Sleep importance letter"
+- Bad: "Create a flashing warning page with the message...", "Work schedule for Zach to fix..."
+
+AFTER CREATING A PAGE - EXPLAIN WHAT YOU BUILT:
+When you finish creating a page, briefly tell the user what you made:
+1. Summarize the key feature (1 sentence): "Built you a frogger game with mobile touch controls"
+2. Mention any creative additions: "Added CRT scanlines and a high score tracker"
+3. Note the live URL so they can check it out
+Keep it casual and brief - don't list every HTML element or CSS class used.
 
 AVAILABLE CAPABILITIES:
 - list_files(path): List files in directory
@@ -654,10 +663,40 @@ function getIconForDescription(description) {
     return '🌐'; // Default
 }
 
+// Helper function to condense long descriptions into one-liner captions
+function condenseDescription(description, pageName) {
+    // If already short enough (under 60 chars), use as-is
+    if (description.length <= 60) {
+        return description;
+    }
+
+    // Remove common verbose patterns
+    let condensed = description
+        .replace(/^(Create|Build|Make|Design|Generate|Implement)\s+(a\s+)?/i, '')
+        .replace(/\s+with\s+(the\s+)?message[:\s].*/i, '')
+        .replace(/\s+(using|with|featuring|including)\s+.*/i, '')
+        .replace(/\.\s+.*/g, '') // Remove everything after first sentence
+        .replace(/[.!?]+$/, '')  // Remove trailing punctuation
+        .trim();
+
+    // If still too long, truncate intelligently
+    if (condensed.length > 60) {
+        // Find a good break point (space) near 50 chars
+        const breakPoint = condensed.lastIndexOf(' ', 50);
+        condensed = condensed.substring(0, breakPoint > 20 ? breakPoint : 50).trim();
+    }
+
+    // Capitalize first letter
+    condensed = condensed.charAt(0).toUpperCase() + condensed.slice(1);
+
+    return condensed || pageName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
 // Helper function to update projectmetadata.json with new page
 async function updateIndexWithPage(pageName, description) {
     try {
         const metadataPath = './projectmetadata.json';
+        const condensedDesc = condenseDescription(description, pageName);
         const icon = getIconForDescription(description);
 
         // Read existing metadata
@@ -676,10 +715,10 @@ async function updateIndexWithPage(pageName, description) {
             return `Page ${pageName} already in metadata`;
         }
 
-        // Add new page
+        // Add new page with condensed description
         metadata[pageName] = {
             icon: icon,
-            description: description
+            description: condensedDesc
         };
 
         // Write updated metadata

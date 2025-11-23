@@ -2,56 +2,712 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Basket Jam</title>
+    <link rel="stylesheet" href="../page-theme.css">
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #202020;
-            overflow: hidden;
-            touch-action: none; /* Prevent default touch actions globally */
-            font-family: sans-serif;
-        }
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
+            padding-top: 80px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            min-height: 100vh;
         }
-        canvas {
-            background-color: #000;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+
+        .game-title {
+            text-align: center;
+            margin-bottom: 20px;
         }
-        #ui-layer {
+
+        .game-title h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-display {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ff41;
+            padding: 15px 25px;
+            text-align: center;
+        }
+
+        .stat-display .label {
+            font-size: 0.8em;
+            color: #00ffff;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-display .value {
+            font-size: 2em;
+            color: #00ff41;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .game-area {
+            position: relative;
+            width: 400px;
+            height: 500px;
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a0a0a 100%);
+            border: 3px solid #ff0000;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .backboard {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 80px;
+            background: rgba(255, 0, 0, 0.3);
+            border: 3px solid #ff0000;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
         }
-        .mobile-controls {
+
+        .rim {
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 8px;
+            background: #ff0000;
+            border-radius: 4px;
+        }
+
+        .net {
+            position: absolute;
+            bottom: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 35px;
+            border-left: 2px dashed rgba(255, 255, 255, 0.5);
+            border-right: 2px dashed rgba(255, 255, 255, 0.5);
+            border-bottom: 2px dashed rgba(255, 255, 255, 0.5);
+        }
+
+        .ball {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 30% 30%, #ff6600, #cc3300);
+            border-radius: 50%;
+            border: 2px solid #ff0000;
+            cursor: grab;
+            transition: transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .ball::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: #000;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .ball::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: #000;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .ball.dragging {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        .aim-line {
+            position: absolute;
+            width: 3px;
+            background: rgba(0, 255, 65, 0.6);
+            transform-origin: bottom center;
+            pointer-events: none;
             display: none;
+        }
+
+        .power-meter {
             position: absolute;
             bottom: 20px;
-            width: 100%;
+            left: 20px;
+            width: 20px;
             height: 150px;
-            pointer-events: none;
-            justify-content: space-between;
-            padding: 0 30px;
-            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ff41;
         }
-        @media (max-width: 800px) {
+
+        .power-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(180deg, #ff0000 0%, #00ff41 100%);
+            transition: height 0.1s;
+        }
+
+        .message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2em;
+            color: #00ffff;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            text-align: center;
+        }
+
+        .message.show {
+            opacity: 1;
+            animation: messagePopup 0.5s ease;
+        }
+
+        @keyframes messagePopup {
+            0% { transform: translate(-50%, -50%) scale(0.5); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .streak-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 0, 0, 0.8);
+            color: #00ff41;
+            padding: 10px 15px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .streak-indicator.show {
+            display: block;
+            animation: pulse 0.5s ease infinite;
+        }
+
+        .controls-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .mobile-controls {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .aim-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            gap: 10px;
+        }
+
+        .aim-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5em;
+        }
+
+        .shoot-btn {
+            width: 200px;
+            height: 60px;
+            font-size: 1.2em;
+            background: rgba(255, 0, 0, 0.8);
+        }
+
+        .instructions {
+            max-width: 400px;
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(26, 0, 0, 0.4);
+            border: 2px solid #ff0000;
+        }
+
+        .instructions p {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .instructions .desktop-hint {
+            color: #00ffff;
+        }
+
+        .instructions .mobile-hint {
+            display: none;
+            color: #00ffff;
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                width: 90vw;
+                max-width: 350px;
+                height: 450px;
+            }
+
+            .game-title h1 {
+                font-size: 1.8em;
+            }
+
+            .game-stats {
+                gap: 15px;
+            }
+
+            .stat-display {
+                padding: 10px 15px;
+            }
+
+            .stat-display .value {
+                font-size: 1.5em;
+            }
+
             .mobile-controls {
                 display: flex;
             }
+
+            .instructions .desktop-hint {
+                display: none;
+            }
+
+            .instructions .mobile-hint {
+                display: block;
+            }
+
+            .backboard {
+                width: 100px;
+                height: 70px;
+            }
+
+            .rim {
+                width: 50px;
+            }
+
+            .ball {
+                width: 35px;
+                height: 35px;
+            }
         }
-        .control-group {
-            pointer-events: auto;
+
+        @media (max-width: 480px) {
+            body {
+                padding-top: 70px;
+            }
+
+            .game-area {
+                width: 95vw;
+                height: 400px;
+            }
+
+            .game-title h1 {
+                font-size: 1.5em;
+            }
+
+            .stat-display .value {
+                font-size: 1.3em;
+            }
+
+            .aim-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2em;
+            }
+
+            .shoot-btn {
+                width: 160px;
+                height: 50px;
+                font-size: 1em;
+            }
         }
-        .dpad {
-            position: relative;
-            width: 120px;
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">HOME</a>
+
+    <div class="game-title">
+        <h1>BASKET JAM</h1>
+        <p class="subtitle">Arcade Hoops</p>
+    </div>
+
+    <div class="game-stats">
+        <div class="stat-display">
+            <div class="label">Score</div>
+            <div class="value" id="score">0</div>
+        </div>
+        <div class="stat-display">
+            <div class="label">Shots</div>
+            <div class="value" id="shots">0</div>
+        </div>
+        <div class="stat-display">
+            <div class="label">Streak</div>
+            <div class="value" id="streak">0</div>
+        </div>
+    </div>
+
+    <div class="game-area" id="gameArea">
+        <div class="backboard">
+            <div class="rim"></div>
+            <div class="net"></div>
+        </div>
+        <div class="ball" id="ball"></div>
+        <div class="aim-line" id="aimLine"></div>
+        <div class="power-meter">
+            <div class="power-fill" id="powerFill"></div>
+        </div>
+        <div class="message" id="message"></div>
+        <div class="streak-indicator" id="streakIndicator">ON FIRE!</div>
+    </div>
+
+    <div class="controls-container">
+        <button class="btn" id="resetBtn">RESET</button>
+    </div>
+
+    <div class="mobile-controls" id="mobileControls">
+        <div class="aim-controls">
+            <button class="btn aim-btn empty"></button>
+            <button class="btn aim-btn" id="aimUp">^</button>
+            <button class="btn aim-btn empty"></button>
+            <button class="btn aim-btn" id="aimLeft"><</button>
+            <button class="btn aim-btn" id="shootBtn">O</button>
+            <button class="btn aim-btn" id="aimRight">></button>
+            <button class="btn aim-btn empty"></button>
+            <button class="btn aim-btn" id="aimDown">v</button>
+            <button class="btn aim-btn empty"></button>
+        </div>
+        <button class="btn shoot-btn" id="mobileShoot">SHOOT!</button>
+    </div>
+
+    <div class="instructions">
+        <p class="desktop-hint">Drag the ball and release to shoot. Aim for the rim!</p>
+        <p class="mobile-hint">Use arrow buttons to aim, then tap SHOOT!</p>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const ball = document.getElementById('ball');
+        const aimLine = document.getElementById('aimLine');
+        const powerFill = document.getElementById('powerFill');
+        const messageEl = document.getElementById('message');
+        const streakIndicator = document.getElementById('streakIndicator');
+        const scoreEl = document.getElementById('score');
+        const shotsEl = document.getElementById('shots');
+        const streakEl = document.getElementById('streak');
+
+        let score = 0;
+        let shots = 0;
+        let streak = 0;
+        let maxStreak = 0;
+        let isDragging = false;
+        let startX, startY;
+        let ballStartX, ballStartY;
+        let isAnimating = false;
+
+        // Initial ball position
+        const initialBallX = gameArea.offsetWidth / 2 - 20;
+        const initialBallY = gameArea.offsetHeight - 80;
+
+        // Rim position (center of the rim)
+        const rimCenterX = gameArea.offsetWidth / 2;
+        const rimCenterY = 125; // Approximate y position of rim
+
+        function resetBall() {
+            ball.style.left = initialBallX + 'px';
+            ball.style.top = initialBallY + 'px';
+            ball.style.display = 'block';
+            isAnimating = false;
+        }
+
+        function showMessage(text, duration = 1000) {
+            messageEl.textContent = text;
+            messageEl.classList.add('show');
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, duration);
+        }
+
+        function updateStats() {
+            scoreEl.textContent = score;
+            shotsEl.textContent = shots;
+            streakEl.textContent = streak;
+
+            if (streak >= 3) {
+                streakIndicator.classList.add('show');
+            } else {
+                streakIndicator.classList.remove('show');
+            }
+        }
+
+        function checkScore(endX, endY) {
+            // Check if ball passes through the rim area
+            const rimLeft = rimCenterX - 30;
+            const rimRight = rimCenterX + 30;
+            const rimTop = rimCenterY - 10;
+            const rimBottom = rimCenterY + 20;
+
+            if (endX > rimLeft && endX < rimRight && endY > rimTop && endY < rimBottom) {
+                // Score!
+                const points = streak >= 3 ? 3 : 2;
+                score += points;
+                streak++;
+                if (streak > maxStreak) maxStreak = streak;
+
+                if (streak >= 3) {
+                    showMessage('ON FIRE! +' + points);
+                } else if (streak >= 2) {
+                    showMessage('SWISH! +' + points);
+                } else {
+                    showMessage('SCORE! +' + points);
+                }
+                return true;
+            }
+            return false;
+        }
+
+        function shootBall(velocityX, velocityY, power) {
+            if (isAnimating) return;
+            isAnimating = true;
+            shots++;
+
+            let x = parseFloat(ball.style.left) || initialBallX;
+            let y = parseFloat(ball.style.top) || initialBallY;
+
+            // Scale velocity by power
+            velocityX *= power * 0.15;
+            velocityY *= power * 0.15;
+
+            const gravity = 0.5;
+            let scored = false;
+            let hasPassedRim = false;
+
+            function animate() {
+                x += velocityX;
+                y += velocityY;
+                velocityY += gravity;
+
+                ball.style.left = x + 'px';
+                ball.style.top = y + 'px';
+
+                // Check scoring when ball is near rim height
+                if (!scored && y < rimCenterY + 30 && y > rimCenterY - 30) {
+                    if (checkScore(x + 20, y + 20)) {
+                        scored = true;
+                    }
+                    hasPassedRim = true;
+                }
+
+                // Ball out of bounds or stopped
+                if (y > gameArea.offsetHeight + 50 || x < -50 || x > gameArea.offsetWidth + 50) {
+                    if (!scored && hasPassedRim) {
+                        streak = 0;
+                        showMessage('MISS!');
+                    } else if (!scored && !hasPassedRim) {
+                        streak = 0;
+                        showMessage('AIR BALL!');
+                    }
+                    updateStats();
+                    setTimeout(resetBall, 500);
+                    return;
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        // Desktop drag controls
+        ball.addEventListener('mousedown', (e) => {
+            if (isAnimating) return;
+            isDragging = true;
+            ball.classList.add('dragging');
+            startX = e.clientX;
+            startY = e.clientY;
+            ballStartX = parseFloat(ball.style.left) || initialBallX;
+            ballStartY = parseFloat(ball.style.top) || initialBallY;
+            aimLine.style.display = 'block';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            const dx = startX - e.clientX;
+            const dy = startY - e.clientY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dx, dy);
+
+            // Update aim line
+            aimLine.style.height = Math.min(distance, 150) + 'px';
+            aimLine.style.left = (ballStartX + 20) + 'px';
+            aimLine.style.bottom = (gameArea.offsetHeight - ballStartY - 20) + 'px';
+            aimLine.style.transform = `rotate(${angle}rad)`;
+
+            // Update power meter
+            const power = Math.min(distance / 150, 1);
+            powerFill.style.height = (power * 100) + '%';
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            ball.classList.remove('dragging');
+            aimLine.style.display = 'none';
+
+            const dx = startX - e.clientX;
+            const dy = startY - e.clientY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 20) {
+                shootBall(dx / 10, dy / 10, distance);
+            }
+
+            powerFill.style.height = '0%';
+        });
+
+        // Touch controls
+        ball.addEventListener('touchstart', (e) => {
+            if (isAnimating) return;
+            isDragging = true;
+            ball.classList.add('dragging');
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            ballStartX = parseFloat(ball.style.left) || initialBallX;
+            ballStartY = parseFloat(ball.style.top) || initialBallY;
+            aimLine.style.display = 'block';
+            e.preventDefault();
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const touch = e.touches[0];
+
+            const dx = startX - touch.clientX;
+            const dy = startY - touch.clientY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dx, dy);
+
+            aimLine.style.height = Math.min(distance, 150) + 'px';
+            aimLine.style.left = (ballStartX + 20) + 'px';
+            aimLine.style.bottom = (gameArea.offsetHeight - ballStartY - 20) + 'px';
+            aimLine.style.transform = `rotate(${angle}rad)`;
+
+            const power = Math.min(distance / 150, 1);
+            powerFill.style.height = (power * 100) + '%';
+            e.preventDefault();
+        });
+
+        document.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            ball.classList.remove('dragging');
+            aimLine.style.display = 'none';
+
+            const touch = e.changedTouches[0];
+            const dx = startX - touch.clientX;
+            const dy = startY - touch.clientY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 20) {
+                shootBall(dx / 10, dy / 10, distance);
+            }
+
+            powerFill.style.height = '0%';
+        });
+
+        // Mobile button controls
+        let aimX = 0;
+        let aimY = -10; // Default aim upward
+        let power = 80;
+
+        document.getElementById('aimUp').addEventListener('click', () => {
+            aimY = Math.max(aimY - 2, -15);
+            updateAimDisplay();
+        });
+
+        document.getElementById('aimDown').addEventListener('click', () => {
+            aimY = Math.min(aimY + 2, -5);
+            updateAimDisplay();
+        });
+
+        document.getElementById('aimLeft').addEventListener('click', () => {
+            aimX = Math.max(aimX - 2, -8);
+            updateAimDisplay();
+        });
+
+        document.getElementById('aimRight').addEventListener('click', () => {
+            aimX = Math.min(aimX + 2, 8);
+            updateAimDisplay();
+        });
+
+        function updateAimDisplay() {
+            const angle = Math.atan2(aimX, -aimY);
+            const distance = Math.sqrt(aimX * aimX + aimY * aimY) * 10;
+            aimLine.style.display = 'block';
+            aimLine.style.height = distance + 'px';
+            aimLine.style.left = (initialBallX + 20) + 'px';
+            aimLine.style.bottom = (gameArea.offsetHeight - initialBallY - 20) + 'px';
+            aimLine.style.transform = `rotate(${angle}rad)`;
+        }
+
+        document.getElementById('mobileShoot').addEventListener('click', () => {
+            if (isAnimating) return;
+            aimLine.style.display = 'none';
+            shootBall(aimX, aimY, power);
+        });
+
+        document.getElementById('shootBtn').addEventListener('click', () => {
+            if (isAnimating) return;
+            aimLine.style.display = 'none';
+            shootBall(aimX, aimY, power);
+        });
+
+        // Reset button
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            score = 0;
+            shots = 0;
+            streak = 0;
+            updateStats();
+            resetBall();
+            showMessage('GAME RESET');
+        });
+
+        // Initialize
+        resetBall();
+        updateStats();
+
+        // Show initial aim on mobile
+        if (window.innerWidth <= 768) {
+            setTimeout(updateAimDisplay, 100);
+        }
+    </script>
+</body>
+</html>
