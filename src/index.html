@@ -85,6 +85,9 @@
             background: #ff0000;
             box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
         }
+        .featured-card {
+            grid-column: span 1;
+        }
         @media (max-width: 768px) {
             .projects-grid {
                 grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -121,6 +124,12 @@
         </div>
 
         <div class="projects-grid">
+            <div class="project-card featured-card">
+                <h3>Zach & Cen's Amtrak Journey</h3>
+                <p>Interactive journey from Penn Station to Rochester with games at each stop.</p>
+                <a href="amtrak-journey.html" class="project-link">PLAY →</a>
+            </div>
+
             <div class="project-card">
                 <h3>Noodle Inventory</h3>
                 <p>Track your noodle collection with style. Organize, categorize, and manage all your noodle types.</p>
