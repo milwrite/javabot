@@ -134,5 +134,9 @@
   "double_dragon_beatem_up": {
     "icon": "🎮",
     "description": "Beat-em-up arcade game similar to Double Dragon 2"
+  },
+  "jackson_biscuit_game": {
+    "icon": "🎮",
+    "description": "A wholesome pet-petting game where Jackson can pet"
   }
 }

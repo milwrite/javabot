@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jackson's Biscuit Game - Pet Care</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .happiness-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .happiness-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f);
+            width: 50%;
+            transition: width 0.3s ease;
+        }
+
+        .cat-container {
+            text-align: center;
+            margin: 40px 0;
+            position: relative;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cat {
+            font-size: 120px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            user-select: none;
+            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.1));
+        }
+
+        .cat:active {
+            transform: scale(0.95);
+        }
+
+        .cat:hover {
+            transform: scale(1.05);
+        }
+
+        .pet-feedback {
+            position: absolute;
+            font-size: 24px;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .unlocked-items {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .items-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            font-size: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .item:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .item.locked {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .item-label {
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .modal-emoji {
+            font-size: 60px;
+            margin: 20px 0;
+        }
+
+        .modal-text {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .modal-btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .achievement-popup {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 15px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideInRight 0.5s ease-out;
+            z-index: 2000;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .achievement-text {
+            font-size: 14px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .level-indicator {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 20px;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+
+            .cat {
+                font-size: 80px;
+            }
+
+            .cat-container {
+                height: 180px;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+
+    <div class="game-container">
+        <div class="header">
+            <div class="title">Jackson's Biscuit</div>
+            <div class="subtitle">A wholesome pet care adventure</div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">Happiness</div>
+                <div class="happiness-bar">
+                    <div class="happiness-fill" id="happinessFill"></div>
+                </div>
+                <div class="stat-value" id="happinessValue">50</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Level</div>
+                <div class="stat-value" id="levelValue">1</div>
+            </div>
+        </div>
+
+        <div class="cat-container">
+            <div class="cat" id="biscuit">🐱</div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" id="petBtn">Pet Biscuit</button>
+            <button class="btn btn-primary" id="feedBtn">Feed</button>
+            <button class="btn btn-secondary" id="playBtn">Play</button>
+            <button class="btn btn-secondary" id="sleepBtn">Sleep</button>
+        </div>
+
+        <div class="unlocked-items">
+            <div class="items-title">Treats & Toys</div>
+            <div class="items-grid" id="itemsGrid">
+                <div class="item locked" data-item="treat1">
+                    <div>🍪</div>
+                    <div class="item-label">Cookie</div>
+                </div>
+                <div class="item locked" data-item="treat2">
+                    <div>🍖</div>
+                    <div class="item-label">Meat</div>
+                </div>
+                <div class="item locked" data-item="treat3">
+                    <div>🎾</div>
+                    <div class="item-label">Ball</div>
+                </div>
+                <div class="item locked" data-item="toy1">
+                    <div>🧶</div>
+                    <div class="item-label">Yarn</div>
+                </div>
+                <div class="item locked" data-item="toy2">
+                    <div>🪶</div>
+                    <div class="item-label">Feather</div>
+                </div>
+                <div class="item locked" data-item="toy3">
+                    <div>🎀</div>
+                    <div class="item-label">Ribbon</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="treatModal">
+        <div class="modal-content">
+            <div class="modal-emoji" id="treatEmoji">🍪</div>
+            <div class="modal-title">Yummy Treat!</div>
+            <div class="modal-text" id="treatText">Biscuit loved the treat!</div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-primary" onclick="closeModal('treatModal')">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="playModal">
+        <div class="modal-content">
+            <div class="modal-emoji" id="playEmoji">🎾</div>
+            <div class="modal-title">Playtime Fun!</div>
+            <div class="modal-text" id="playText">Biscuit had a blast playing!</div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-primary" onclick="closeModal('playModal')">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="levelUpModal">
+        <div class="modal-content">
+            <div class="modal-emoji">⭐</div>
+            <div class="modal-title">Level Up!</div>
+            <div class="modal-text" id="levelUpText">Biscuit is now level 2!</div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-primary" onclick="closeModal('levelUpModal')">Awesome!</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="unlockModal">
+        <div class="modal-content">
+            <div class="modal-emoji" id="unlockEmoji">🍪</div>
+            <div class="modal-title">New Item Unlocked!</div>
+            <div class="modal-text" id="unlockText">You unlocked a new treat!</div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-primary" onclick="closeModal('unlockModal')">Yay!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gameState = {
+            happiness: 50,
+            level: 1,
+            totalPets: 0,
+            unlockedItems: new Set(),
+            catState: 'happy',
+            lastAction: null
+        };
+
+        const unlockRequirements = {
+            'treat1': { level: 1, emoji: '🍪', name: 'Cookie' },
+            'treat2': { level: 2, emoji: '🍖', name: 'Meat' },
+            'treat3': { level: 3, emoji: '🎾', name: 'Ball' },
+            'toy1': { level: 2, emoji: '🧶', name: 'Yarn' },
+            'toy2': { level: 3, emoji: '🪶', name: 'Feather' },
+            'toy3': { level: 4, emoji: '🎀', name: 'Ribbon' }
+        };
+
+        const catEmojis = {
+            happy: '🐱',
+            playing: '😹',
+            eating: '😋',
+            sleeping: '😴',
+            excited: '🤩'
+        };
+
+        const petFeedback = ['❤️', '💕', '✨', '😻', '🎉'];
+
+        function updateHappiness(amount) {
+            gameState.happiness = Math.max(0, Math.min(100, gameState.happiness + amount));
+            gameState.totalPets += Math.abs(amount);
+            updateDisplay();
+            checkLevelUp();
+            checkUnlocks();
+        }
+
+        function updateDisplay() {
+            document.getElementById('happinessValue').textContent = gameState.happiness;
+            document.getElementById('happinessFill').style.width = gameState.happiness + '%';
+            document.getElementById('levelValue').textContent = gameState.level;
+        }
+
+        function checkLevelUp() {
+            const petsPerLevel = 20;
+            const newLevel = Math.floor(gameState.totalPets / petsPerLevel) + 1;
+            
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                showLevelUpModal();
+            }
+        }
+
+        function checkUnlocks() {
+            Object.entries(unlockRequirements).forEach(([itemId, requirement]) => {
+                if (gameState.level >= requirement.level && !gameState.unlockedItems.has(itemId)) {
+                    gameState.unlockedItems.add(itemId);
+                    unlockItem(itemId, requirement);
+                }
+            });
+        }
+
+        function unlockItem(itemId, requirement) {
+            const itemElement = document.querySelector(`[data-item="${itemId}"]`);
+            if (itemElement) {
+                itemElement.classList.remove('locked');
+                showUnlockModal(requirement.emoji, requirement.name);
+            }
+        }
+
+        function petBiscuit() {
+            const cat = document.getElementById('biscuit');
+            const randomFeedback = petFeedback[Math.floor(Math.random() * petFeedback.length)];
+            
+            const feedback = document.createElement('div');
+            feedback.className = 'pet-feedback';
+            feedback.textContent = randomFeedback;
+            feedback.style.left = Math.random() * 80 + 10 + '%';
+            cat.parentElement.appendChild(feedback);
+            
+            setTimeout(() => feedback.remove(), 1000);
+            
+            gameState.catState = 'happy';
+            cat.textContent = catEmojis.happy;
+            
+            updateHappiness(5);
+        }
+
+        function feedBiscuit() {
+            const cat = document.getElementById('biscuit');
+            gameState.catState = 'eating';
+            cat.textContent = catEmojis.eating;
+            
+            updateHappiness(15);
+            
+            const treats = ['🍪', '🍖', '🍗', '🥩'];
+            const emoji = treats[Math.floor(Math.random() * treats.length)];
+            
+            showTreatModal(emoji);
+            
+            setTimeout(() => {
+                gameState.catState = 'happy';
+                cat.textContent = catEmojis.happy;
+            }, 2000);
+        }
+
+        function playWithBiscuit() {
+            const cat = document.getElementById('biscuit');
+            gameState.catState = 'playing';
+            cat.textContent = catEmojis.playing;
+            
+            updateHappiness(20);
+            
+            const toys = ['🎾', '🧶', '🪶'];
+            const emoji = toys[Math.floor(Math.random() * toys.length)];
+            
+            showPlayModal(emoji);
+            
+            setTimeout(() => {
+                gameState.catState = 'happy';
+                cat.textContent = catEmojis.happy;
+            }, 2000);
+        }
+
+        function sleepBiscuit() {
+            const cat = document.getElementById('biscuit');
+            gameState.catState = 'sleeping';
+            cat.textContent = catEmojis.sleeping;
+            
+            updateHappiness(10);
+            
+            setTimeout(() => {
+                gameState.catState = 'happy';
+                cat.textContent = catEmojis.happy;
+            }, 3000);
+        }
+
+        function showTreatModal(emoji) {
+            document.getElementById('treatEmoji').textContent = emoji;
+            const treats = {
+                '🍪': 'Biscuit loved the cookie!',
+                '🍖': 'Biscuit devoured the meat!',
+                '🍗': 'Delicious chicken!',
+                '🥩': 'Biscuit is satisfied!'
+            };
+            document.getElementById('treatText').textContent = treats[emoji] || 'Biscuit loved the treat!';
+            document.getElementById('treatModal').classList.add('active');
+        }
+
+        function showPlayModal(emoji) {
+            document.getElementById('playEmoji').textContent = emoji;
+            const plays = {
+                '🎾': 'Biscuit chased the ball everywhere!',
+                '🧶': 'Biscuit tangled in the yarn!',
+                '🪶': 'Biscuit pounced on the feather!'
+            };
+            document.getElementById('playText').textContent = plays[emoji] || 'Biscuit had a blast!';
+            document.getElementById('playModal').classList.add('active');
+        }
+
+        function showLevelUpModal() {
+            document.getElementById('levelUpText').textContent = `Biscuit is now level ${gameState.level}!`;
+            document.getElementById('levelUpModal').classList.add('active');
+        }
+
+        function showUnlockModal(emoji, name) {
+            document.getElementById('unlockEmoji').textContent = emoji;
+            document.getElementById('unlockText').textContent = `You unlocked ${name}! Use it to make Biscuit happier!`;
+            document.getElementById('unlockModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        document.getElementById('petBtn').addEventListener('click', petBiscuit);
+        document.getElementById('feedBtn').addEventListener('click', feedBiscuit);
+        document.getElementById('playBtn').addEventListener('click', playWithBiscuit);
+        document.getElementById('sleepBtn').addEventListener('click', sleepBiscuit);
+
+        document.querySelectorAll('.item').forEach(item => {
+            item.addEventListener('click', function() {
+                if (!this.classList.contains('locked')) {
+                    const itemId = this.getAttribute('data-item');
+                    const requirement = unlockRequirements[itemId];
+                    
+                    gameState.happiness = Math.min(100, gameState.happiness + 15);
+                    updateDisplay();
+                    
+                    const cat = document.getElementById('biscuit');
+                    cat.textContent = catEmojis.excited;
+                    setTimeout(() => {
+                        cat.textContent = catEmojis.happy;
+                    }, 1000);
+                    
+                    showAchievement(`Biscuit loved the ${requirement.name}!`);
+                }
+            });
+        });
+
+        function showAchievement(text) {
+            const popup = document.createElement('div');
+            popup.className = 'achievement-popup';
+            popup.textContent = text;
+            document.body.appendChild(popup);
+            
+            setTimeout(() => {
+                popup.style.animation = 'slideInRight 0.5s ease-out reverse';
+                setTimeout(() => popup.remove(), 500);
+            }, 2000);
+        }
+
+        document.getElementById('biscuit').addEventListener('click', petBiscuit);
+
+        checkUnlocks();
+        updateDisplay();
+    </script>
+</body>
+</html>
