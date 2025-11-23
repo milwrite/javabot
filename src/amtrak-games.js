@@ -1,754 +1,940 @@
-/**
- * Amtrak Journey Games
- * Mini-games for each major stop along the route
- */
+// Amtrak Journey Mini-Games
+// Games for each major stop along the Zach & Cen journey
 
-// ============= PENN STATION GAME: Ticket Punch =============
-class TicketPunchGame {
-  constructor(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.score = 0;
-    this.gameActive = true;
-    this.tickets = [];
-    this.gameTime = 30;
-    this.timeLeft = this.gameTime;
+class AmtrakGames {
+  constructor() {
+    this.currentGame = null;
+  }
+
+  // PENN STATION - Subway Dash
+  // Navigate through Penn Station avoiding crowds
+  initPennStationGame(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const gameHtml = `
+      <div class="game-wrapper">
+        <div class="game-header">
+          <h3>Penn Station Dash</h3>
+          <p>Navigate through the crowd to reach your platform!</p>
+        </div>
+        <canvas id="penn-canvas" width="400" height="300"></canvas>
+        <div class="mobile-controls" id="penn-controls">
+          <button class="control-btn" data-direction="up">↑</button>
+          <div>
+            <button class="control-btn" data-direction="left">←</button>
+            <button class="control-btn" data-direction="down">↓</button>
+            <button class="control-btn" data-direction="right">→</button>
+          </div>
+        </div>
+        <div class="game-stats">
+          <div class="stat-box">
+            <span class="stat-label">Score</span>
+            <span class="stat-number" id="penn-score">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Time</span>
+            <span class="stat-number" id="penn-time">30</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="penn-restart">Restart Game</button>
+      </div>
+    `;
+
+    container.innerHTML = gameHtml;
+
+    const canvas = document.getElementById('penn-canvas');
+    const ctx = canvas.getContext('2d');
     
-    this.resizeCanvas();
-    window.addEventListener('resize', () => this.resizeCanvas());
-    this.setupGame();
-  }
+    let player = { x: canvas.width / 2, y: canvas.height - 40, width: 20, height: 20, speed: 5 };
+    let score = 0;
+    let timeLeft = 30;
+    let gameActive = true;
+    let crowds = [];
+    let collectibles = [];
 
-  resizeCanvas() {
-    this.canvas.width = Math.min(this.canvas.offsetWidth, 500);
-    this.canvas.height = 400;
-  }
-
-  setupGame() {
-    // Create tickets
+    // Initialize crowds (obstacles)
     for (let i = 0; i < 5; i++) {
-      this.tickets.push({
-        x: Math.random() * (this.canvas.width - 60),
-        y: Math.random() * (this.canvas.height - 60),
-        width: 60,
+      crowds.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * (canvas.height - 100),
+        width: 40,
         height: 40,
-        punched: false,
-        rotation: Math.random() * 0.3
+        speedX: (Math.random() - 0.5) * 2,
+        speedY: (Math.random() - 0.5) * 2
       });
     }
 
-    // Touch events
-    this.canvas.addEventListener('click', (e) => this.handleClick(e));
-    this.canvas.addEventListener('touchstart', (e) => this.handleTouch(e));
-
-    this.gameLoop();
-    this.startTimer();
-  }
-
-  handleClick(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    this.checkHit(x, y);
-  }
-
-  handleTouch(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const y = e.touches[0].clientY - rect.top;
-    this.checkHit(x, y);
-  }
-
-  checkHit(x, y) {
-    for (let ticket of this.tickets) {
-      if (!ticket.punched && 
-          x > ticket.x && x < ticket.x + ticket.width &&
-          y > ticket.y && y < ticket.y + ticket.height) {
-        ticket.punched = true;
-        this.score++;
-      }
-    }
-  }
-
-  startTimer() {
-    const timer = setInterval(() => {
-      if (this.gameActive) {
-        this.timeLeft--;
-        if (this.timeLeft <= 0) {
-          this.gameActive = false;
-          clearInterval(timer);
-          document.getElementById('game-status').innerHTML = `<strong>Game Over!</strong> Punched ${this.score} tickets!`;
-        }
-      }
-    }, 1000);
-  }
-
-  gameLoop() {
-    this.ctx.fillStyle = '#0a0a0a';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    // Draw title
-    this.ctx.fillStyle = '#00ff41';
-    this.ctx.font = 'bold 16px Courier Prime';
-    this.ctx.fillText(`Punch Tickets: ${this.score}`, 10, 25);
-    this.ctx.fillText(`Time: ${this.timeLeft}s`, this.canvas.width - 120, 25);
-
-    // Draw tickets
-    for (let ticket of this.tickets) {
-      this.ctx.save();
-      this.ctx.translate(ticket.x + ticket.width/2, ticket.y + ticket.height/2);
-      this.ctx.rotate(ticket.rotation);
-
-      if (ticket.punched) {
-        this.ctx.fillStyle = '#ff0000';
-        this.ctx.globalAlpha = 0.5;
-      } else {
-        this.ctx.fillStyle = '#00ffff';
-      }
-
-      this.ctx.fillRect(-ticket.width/2, -ticket.height/2, ticket.width, ticket.height);
-      this.ctx.strokeStyle = '#00ff41';
-      this.ctx.lineWidth = 2;
-      this.ctx.strokeRect(-ticket.width/2, -ticket.height/2, ticket.width, ticket.height);
-
-      if (ticket.punched) {
-        this.ctx.fillStyle = '#ff0000';
-        this.ctx.globalAlpha = 1;
-        this.ctx.fillText('✓', -8, 5);
-      }
-
-      this.ctx.restore();
+    // Initialize collectibles (coins/tickets)
+    for (let i = 0; i < 8; i++) {
+      collectibles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * (canvas.height - 100),
+        radius: 5,
+        collected: false
+      });
     }
 
-    if (this.gameActive) {
-      requestAnimationFrame(() => this.gameLoop());
-    }
-  }
+    const keys = {};
 
-  getScore() {
-    return this.score;
-  }
-}
-
-// ============= HUDSON VALLEY GAME: Apple Catch =============
-class AppleCatchGame {
-  constructor(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.score = 0;
-    this.gameActive = true;
-    this.gameTime = 30;
-    this.timeLeft = this.gameTime;
-    this.basket = { x: 0, y: 0, width: 60, height: 40 };
-    this.apples = [];
-    this.keys = {};
-
-    this.resizeCanvas();
-    window.addEventListener('resize', () => this.resizeCanvas());
-    this.setupGame();
-  }
-
-  resizeCanvas() {
-    this.canvas.width = Math.min(this.canvas.offsetWidth, 500);
-    this.canvas.height = 400;
-    this.basket.x = this.canvas.width / 2 - 30;
-    this.basket.y = this.canvas.height - 60;
-  }
-
-  setupGame() {
     // Keyboard controls
     document.addEventListener('keydown', (e) => {
-      this.keys[e.key] = true;
-      if (e.key === 'ArrowLeft') this.moveBasket(-15);
-      if (e.key === 'ArrowRight') this.moveBasket(15);
+      keys[e.key.toLowerCase()] = true;
+    });
+    document.addEventListener('keyup', (e) => {
+      keys[e.key.toLowerCase()] = false;
     });
 
-    // Touch controls
-    const leftBtn = document.getElementById('apple-left');
-    const rightBtn = document.getElementById('apple-right');
-    if (leftBtn) leftBtn.addEventListener('touchstart', () => this.moveBasket(-15));
-    if (rightBtn) rightBtn.addEventListener('touchstart', () => this.moveBasket(15));
-
-    this.spawnApple();
-    this.gameLoop();
-    this.startTimer();
-  }
-
-  moveBasket(delta) {
-    this.basket.x += delta;
-    this.basket.x = Math.max(0, Math.min(this.basket.x, this.canvas.width - this.basket.width));
-  }
-
-  spawnApple() {
-    if (this.gameActive) {
-      this.apples.push({
-        x: Math.random() * (this.canvas.width - 20),
-        y: -20,
-        width: 20,
-        height: 20,
-        vx: (Math.random() - 0.5) * 3,
-        vy: 3 + Math.random() * 2
+    // Mobile controls
+    const controlButtons = document.querySelectorAll('#penn-controls .control-btn');
+    controlButtons.forEach(btn => {
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const dir = btn.dataset.direction;
+        if (dir === 'up') keys['arrowup'] = true;
+        if (dir === 'left') keys['arrowleft'] = true;
+        if (dir === 'down') keys['arrowdown'] = true;
+        if (dir === 'right') keys['arrowright'] = true;
       });
-      setTimeout(() => this.spawnApple(), 600);
-    }
-  }
-
-  startTimer() {
-    const timer = setInterval(() => {
-      if (this.gameActive) {
-        this.timeLeft--;
-        if (this.timeLeft <= 0) {
-          this.gameActive = false;
-          clearInterval(timer);
-          document.getElementById('game-status').innerHTML = `<strong>Game Over!</strong> Caught ${this.score} apples!`;
-        }
-      }
-    }, 1000);
-  }
-
-  gameLoop() {
-    this.ctx.fillStyle = '#0a0a0a';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    // Draw title
-    this.ctx.fillStyle = '#00ff41';
-    this.ctx.font = 'bold 16px Courier Prime';
-    this.ctx.fillText(`Apples: ${this.score}`, 10, 25);
-    this.ctx.fillText(`Time: ${this.timeLeft}s`, this.canvas.width - 120, 25);
-
-    // Update and draw apples
-    for (let i = this.apples.length - 1; i >= 0; i--) {
-      let apple = this.apples[i];
-      apple.y += apple.vy;
-      apple.x += apple.vx;
-
-      // Check collision with basket
-      if (apple.y + apple.height > this.basket.y &&
-          apple.y < this.basket.y + this.basket.height &&
-          apple.x + apple.width > this.basket.x &&
-          apple.x < this.basket.x + this.basket.width) {
-        this.score++;
-        this.apples.splice(i, 1);
-        continue;
-      }
-
-      // Remove if off screen
-      if (apple.y > this.canvas.height) {
-        this.apples.splice(i, 1);
-        continue;
-      }
-
-      // Draw apple
-      this.ctx.fillStyle = '#ff0000';
-      this.ctx.beginPath();
-      this.ctx.arc(apple.x + apple.width/2, apple.y + apple.height/2, apple.width/2, 0, Math.PI * 2);
-      this.ctx.fill();
-    }
-
-    // Draw basket
-    this.ctx.fillStyle = '#00ffff';
-    this.ctx.fillRect(this.basket.x, this.basket.y, this.basket.width, this.basket.height);
-    this.ctx.strokeStyle = '#00ff41';
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(this.basket.x, this.basket.y, this.basket.width, this.basket.height);
-
-    if (this.gameActive) {
-      requestAnimationFrame(() => this.gameLoop());
-    }
-  }
-
-  getScore() {
-    return this.score;
-  }
-}
-
-// ============= ALBANY GAME: Capitol Climber =============
-class CapitolClimberGame {
-  constructor(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.score = 0;
-    this.gameActive = true;
-    this.gameTime = 30;
-    this.timeLeft = this.gameTime;
-    this.player = { x: 0, y: 0, width: 20, height: 20, vy: 0 };
-    this.platforms = [];
-    this.keys = {};
-
-    this.resizeCanvas();
-    window.addEventListener('resize', () => this.resizeCanvas());
-    this.setupGame();
-  }
-
-  resizeCanvas() {
-    this.canvas.width = Math.min(this.canvas.offsetWidth, 500);
-    this.canvas.height = 400;
-    this.player.x = this.canvas.width / 2 - 10;
-    this.player.y = this.canvas.height - 50;
-  }
-
-  setupGame() {
-    // Create platforms
-    for (let i = 0; i < 8; i++) {
-      this.platforms.push({
-        x: Math.random() * (this.canvas.width - 80),
-        y: this.canvas.height - (i + 1) * 50,
-        width: 80,
-        height: 15
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        const dir = btn.dataset.direction;
+        if (dir === 'up') keys['arrowup'] = false;
+        if (dir === 'left') keys['arrowleft'] = false;
+        if (dir === 'down') keys['arrowdown'] = false;
+        if (dir === 'right') keys['arrowright'] = false;
       });
-    }
-
-    // Keyboard
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') this.player.x -= 15;
-      if (e.key === 'ArrowRight') this.player.x += 15;
     });
 
-    // Touch controls
-    const leftBtn = document.getElementById('climb-left');
-    const rightBtn = document.getElementById('climb-right');
-    if (leftBtn) leftBtn.addEventListener('touchstart', () => { this.player.x -= 15; });
-    if (rightBtn) rightBtn.addEventListener('touchstart', () => { this.player.x += 15; });
+    function updatePlayer() {
+      if (keys['arrowup'] || keys['w']) player.y = Math.max(0, player.y - player.speed);
+      if (keys['arrowdown'] || keys['s']) player.y = Math.min(canvas.height - player.height, player.y + player.speed);
+      if (keys['arrowleft'] || keys['a']) player.x = Math.max(0, player.x - player.speed);
+      if (keys['arrowright'] || keys['d']) player.x = Math.min(canvas.width - player.width, player.x + player.speed);
+    }
 
-    this.gameLoop();
-    this.startTimer();
-  }
+    function updateCrowds() {
+      crowds.forEach(crowd => {
+        crowd.x += crowd.speedX;
+        crowd.y += crowd.speedY;
+        
+        if (crowd.x < 0 || crowd.x + crowd.width > canvas.width) crowd.speedX *= -1;
+        if (crowd.y < 0 || crowd.y + crowd.height > canvas.height - 50) crowd.speedY *= -1;
+      });
+    }
 
-  startTimer() {
+    function checkCollisions() {
+      // Check collision with crowds
+      crowds.forEach(crowd => {
+        if (player.x < crowd.x + crowd.width &&
+            player.x + player.width > crowd.x &&
+            player.y < crowd.y + crowd.height &&
+            player.y + player.height > crowd.y) {
+          gameActive = false;
+        }
+      });
+
+      // Check collectibles
+      collectibles.forEach(item => {
+        const dist = Math.hypot(player.x - item.x, player.y - item.y);
+        if (dist < player.width + item.radius && !item.collected) {
+          item.collected = true;
+          score += 10;
+        }
+      });
+    }
+
+    function draw() {
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw grid background
+      ctx.strokeStyle = '#00ff4122';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < canvas.width; i += 20) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, canvas.height);
+        ctx.stroke();
+      }
+      for (let i = 0; i < canvas.height; i += 20) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(canvas.width, i);
+        ctx.stroke();
+      }
+
+      // Draw goal zone
+      ctx.fillStyle = '#00ff4144';
+      ctx.fillRect(0, 0, canvas.width, 30);
+      ctx.fillStyle = '#00ff41';
+      ctx.font = '12px Courier Prime';
+      ctx.textAlign = 'center';
+      ctx.fillText('PLATFORM', canvas.width / 2, 20);
+
+      // Draw player
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+
+      // Draw crowds
+      ctx.fillStyle = '#ff000088';
+      crowds.forEach(crowd => {
+        ctx.fillRect(crowd.x, crowd.y, crowd.width, crowd.height);
+      });
+
+      // Draw collectibles
+      ctx.fillStyle = '#00ffff';
+      collectibles.forEach(item => {
+        if (!item.collected) {
+          ctx.beginPath();
+          ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    }
+
+    function gameLoop() {
+      if (!gameActive) {
+        ctx.fillStyle = '#ff0000aa';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#00ff41';
+        ctx.font = 'bold 24px Courier Prime';
+        ctx.textAlign = 'center';
+        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+        ctx.font = '16px Courier Prime';
+        ctx.fillText('Final Score: ' + score, canvas.width / 2, canvas.height / 2 + 30);
+        return;
+      }
+
+      updatePlayer();
+      updateCrowds();
+      checkCollisions();
+      draw();
+
+      document.getElementById('penn-score').textContent = score;
+      document.getElementById('penn-time').textContent = timeLeft;
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Timer
     const timer = setInterval(() => {
-      if (this.gameActive) {
-        this.timeLeft--;
-        if (this.timeLeft <= 0) {
-          this.gameActive = false;
+      if (gameActive) {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          gameActive = false;
           clearInterval(timer);
-          document.getElementById('game-status').innerHTML = `<strong>Game Over!</strong> Reached height ${this.score}!`;
         }
       }
     }, 1000);
-  }
 
-  gameLoop() {
-    this.ctx.fillStyle = '#0a0a0a';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    // Draw title
-    this.ctx.fillStyle = '#00ff41';
-    this.ctx.font = 'bold 16px Courier Prime';
-    this.ctx.fillText(`Height: ${this.score}`, 10, 25);
-    this.ctx.fillText(`Time: ${this.timeLeft}s`, this.canvas.width - 120, 25);
-
-    // Physics
-    this.player.vy += 0.3; // gravity
-    this.player.y += this.player.vy;
-
-    // Boundary
-    this.player.x = Math.max(0, Math.min(this.player.x, this.canvas.width - this.player.width));
-
-    // Platform collision
-    for (let platform of this.platforms) {
-      if (this.player.vy > 0 &&
-          this.player.y + this.player.height >= platform.y &&
-          this.player.y + this.player.height <= platform.y + platform.height + 5 &&
-          this.player.x + this.player.width > platform.x &&
-          this.player.x < platform.x + platform.width) {
-        this.player.vy = -12;
-        this.score++;
-      }
-    }
-
-    // Game over if fell
-    if (this.player.y > this.canvas.height) {
-      this.gameActive = false;
-      document.getElementById('game-status').innerHTML = `<strong>Game Over!</strong> Reached height ${this.score}!`;
-    }
-
-    // Draw platforms
-    this.ctx.fillStyle = '#00ffff';
-    for (let platform of this.platforms) {
-      this.ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
-    }
-
-    // Draw player
-    this.ctx.fillStyle = '#ff0000';
-    this.ctx.fillRect(this.player.x, this.player.y, this.player.width, this.player.height);
-
-    if (this.gameActive) {
-      requestAnimationFrame(() => this.gameLoop());
-    }
-  }
-
-  getScore() {
-    return this.score;
-  }
-}
-
-// ============= BINGHAMTON GAME: Carousel Spin =============
-class CarouselSpinGame {
-  constructor(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.score = 0;
-    this.gameActive = true;
-    this.gameTime = 30;
-    this.timeLeft = this.gameTime;
-    this.rotation = 0;
-    this.targetRotation = 0;
-    this.horses = 8;
-
-    this.resizeCanvas();
-    window.addEventListener('resize', () => this.resizeCanvas());
-    this.setupGame();
-  }
-
-  resizeCanvas() {
-    this.canvas.width = Math.min(this.canvas.offsetWidth, 500);
-    this.canvas.height = 400;
-    this.centerX = this.canvas.width / 2;
-    this.centerY = this.canvas.height / 2;
-    this.radius = 80;
-  }
-
-  setupGame() {
-    // Click to spin
-    this.canvas.addEventListener('click', () => this.spin());
-    this.canvas.addEventListener('touchstart', () => this.spin());
-
-    this.gameLoop();
-    this.startTimer();
-  }
-
-  spin() {
-    if (this.gameActive) {
-      this.targetRotation += (Math.random() * 4 + 2) * Math.PI;
-      this.score++;
-    }
-  }
-
-  startTimer() {
-    const timer = setInterval(() => {
-      if (this.gameActive) {
-        this.timeLeft--;
-        if (this.timeLeft <= 0) {
-          this.gameActive = false;
-          clearInterval(timer);
-          document.getElementById('game-status').innerHTML = `<strong>Game Over!</strong> Spun ${this.score} times!`;
-        }
-      }
-    }, 1000);
-  }
-
-  gameLoop() {
-    this.ctx.fillStyle = '#0a0a0a';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    // Draw title
-    this.ctx.fillStyle = '#00ff41';
-    this.ctx.font = 'bold 16px Courier Prime';
-    this.ctx.fillText(`Spins: ${this.score}`, 10, 25);
-    this.ctx.fillText(`Time: ${this.timeLeft}s`, this.canvas.width - 120, 25);
-
-    // Smooth rotation
-    this.rotation += (this.targetRotation - this.rotation) * 0.05;
-
-    // Draw carousel
-    this.ctx.save();
-    this.ctx.translate(this.centerX, this.centerY);
-    this.ctx.rotate(this.rotation);
-
-    for (let i = 0; i < this.horses; i++) {
-      const angle = (i / this.horses) * Math.PI * 2;
-      const x = Math.cos(angle) * this.radius;
-      const y = Math.sin(angle) * this.radius;
-
-      this.ctx.fillStyle = '#00ffff';
-      this.ctx.beginPath();
-      this.ctx.arc(x, y, 12, 0, Math.PI * 2);
-      this.ctx.fill();
-
-      this.ctx.fillStyle = '#ff0000';
-      this.ctx.font = '10px Courier Prime';
-      this.ctx.fillText('🐴', x - 5, y + 4);
-    }
-
-    this.ctx.restore();
-
-    // Draw center
-    this.ctx.fillStyle = '#00ff41';
-    this.ctx.beginPath();
-    this.ctx.arc(this.centerX, this.centerY, 15, 0, Math.PI * 2);
-    this.ctx.fill();
-
-    // Draw instruction
-    this.ctx.fillStyle = '#00ffff';
-    this.ctx.font = '12px Courier Prime';
-    this.ctx.fillText('TAP TO SPIN', this.centerX - 40, this.centerY + 100);
-
-    if (this.gameActive) {
-      requestAnimationFrame(() => this.gameLoop());
-    }
-  }
-
-  getScore() {
-    return this.score;
-  }
-}
-
-// ============= SYRACUSE GAME: Salt Collector =============
-class SaltCollectorGame {
-  constructor(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.score = 0;
-    this.gameActive = true;
-    this.gameTime = 30;
-    this.timeLeft = this.gameTime;
-    this.bucket = { x: 0, y: 0, width: 50, height: 40 };
-    this.saltCrystals = [];
-    this.keys = {};
-
-    this.resizeCanvas();
-    window.addEventListener('resize', () => this.resizeCanvas());
-    this.setupGame();
-  }
-
-  resizeCanvas() {
-    this.canvas.width = Math.min(this.canvas.offsetWidth, 500);
-    this.canvas.height = 400;
-    this.bucket.x = this.canvas.width / 2 - 25;
-    this.bucket.y = this.canvas.height - 60;
-  }
-
-  setupGame() {
-    // Keyboard
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') this.bucket.x -= 15;
-      if (e.key === 'ArrowRight') this.bucket.x += 15;
+    document.getElementById('penn-restart').addEventListener('click', () => {
+      clearInterval(timer);
+      this.initPennStationGame(containerId);
     });
 
-    // Touch
-    const leftBtn = document.getElementById('salt-left');
-    const rightBtn = document.getElementById('salt-right');
-    if (leftBtn) leftBtn.addEventListener('touchstart', () => { this.bucket.x -= 15; });
-    if (rightBtn) rightBtn.addEventListener('touchstart', () => { this.bucket.x += 15; });
-
-    this.spawnSalt();
-    this.gameLoop();
-    this.startTimer();
+    gameLoop();
   }
 
-  spawnSalt() {
-    if (this.gameActive) {
-      this.saltCrystals.push({
-        x: Math.random() * (this.canvas.width - 12),
-        y: -12,
-        width: 12,
-        height: 12,
-        vy: 2 + Math.random() * 3
+  // HUDSON VALLEY - Train Window Spotting
+  // Click/tap on scenic objects as they pass by
+  initHudsonValleyGame(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const gameHtml = `
+      <div class="game-wrapper">
+        <div class="game-header">
+          <h3>Hudson Valley Spotter</h3>
+          <p>Click the scenic sights as they pass by your window!</p>
+        </div>
+        <div id="hudson-game" class="hudson-game-area"></div>
+        <div class="game-stats">
+          <div class="stat-box">
+            <span class="stat-label">Spotted</span>
+            <span class="stat-number" id="hudson-score">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Time</span>
+            <span class="stat-number" id="hudson-time">45</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="hudson-restart">Restart Game</button>
+      </div>
+    `;
+
+    container.innerHTML = gameHtml;
+
+    const gameArea = document.getElementById('hudson-game');
+    gameArea.style.width = '100%';
+    gameArea.style.height = '300px';
+    gameArea.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%)';
+    gameArea.style.position = 'relative';
+    gameArea.style.overflow = 'hidden';
+    gameArea.style.border = '3px solid #00ff41';
+    gameArea.style.cursor = 'crosshair';
+
+    let score = 0;
+    let timeLeft = 45;
+    let gameActive = true;
+
+    const sights = [
+      { emoji: '🏔️', label: 'Mountain' },
+      { emoji: '🌲', label: 'Pine Tree' },
+      { emoji: '🏠', label: 'Riverside Home' },
+      { emoji: '⛵', label: 'Sailboat' },
+      { emoji: '🦅', label: 'Bald Eagle' },
+      { emoji: '🌉', label: 'Bridge' },
+      { emoji: '🏰', label: 'Historic Estate' },
+      { emoji: '🚤', label: 'Speedboat' }
+    ];
+
+    function createSight() {
+      if (!gameActive) return;
+
+      const sight = sights[Math.floor(Math.random() * sights.length)];
+      const element = document.createElement('div');
+      element.textContent = sight.emoji;
+      element.style.position = 'absolute';
+      element.style.fontSize = '48px';
+      element.style.cursor = 'pointer';
+      element.style.left = '-60px';
+      element.style.top = Math.random() * (gameArea.clientHeight - 60) + 'px';
+      element.style.userSelect = 'none';
+      element.style.transition = 'none';
+
+      let clicked = false;
+      element.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!clicked) {
+          clicked = true;
+          score++;
+          document.getElementById('hudson-score').textContent = score;
+          element.style.opacity = '0.3';
+          setTimeout(() => element.remove(), 200);
+        }
       });
-      setTimeout(() => this.spawnSalt(), 400);
-    }
-  }
 
-  startTimer() {
+      element.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!clicked) {
+          clicked = true;
+          score++;
+          document.getElementById('hudson-score').textContent = score;
+          element.style.opacity = '0.3';
+          setTimeout(() => element.remove(), 200);
+        }
+      });
+
+      gameArea.appendChild(element);
+
+      let pos = -60;
+      const speed = 2 + Math.random() * 3;
+
+      const moveInterval = setInterval(() => {
+        if (!gameActive) {
+          clearInterval(moveInterval);
+          element.remove();
+          return;
+        }
+
+        pos += speed;
+        element.style.left = pos + 'px';
+
+        if (pos > gameArea.clientWidth) {
+          clearInterval(moveInterval);
+          element.remove();
+        }
+      }, 30);
+    }
+
+    // Spawn sights regularly
+    const spawnInterval = setInterval(() => {
+      if (gameActive) createSight();
+    }, 800);
+
+    // Timer
     const timer = setInterval(() => {
-      if (this.gameActive) {
-        this.timeLeft--;
-        if (this.timeLeft <= 0) {
-          this.gameActive = false;
+      if (gameActive) {
+        timeLeft--;
+        document.getElementById('hudson-time').textContent = timeLeft;
+        if (timeLeft <= 0) {
+          gameActive = false;
           clearInterval(timer);
-          document.getElementById('game-status').innerHTML = `<strong>Game Over!</strong> Collected ${this.score} salt crystals!`;
+          clearInterval(spawnInterval);
         }
       }
     }, 1000);
+
+    document.getElementById('hudson-restart').addEventListener('click', () => {
+      clearInterval(timer);
+      clearInterval(spawnInterval);
+      gameArea.innerHTML = '';
+      this.initHudsonValleyGame(containerId);
+    });
   }
 
-  gameLoop() {
-    this.ctx.fillStyle = '#0a0a0a';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  // ALBANY - Capitol Quiz
+  // Quick trivia about Albany's history
+  initAlbanyGame(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
 
-    // Draw title
-    this.ctx.fillStyle = '#00ff41';
-    this.ctx.font = 'bold 16px Courier Prime';
-    this.ctx.fillText(`Salt: ${this.score}`, 10, 25);
-    this.ctx.fillText(`Time: ${this.timeLeft}s`, this.canvas.width - 120, 25);
+    const questions = [
+      {
+        question: "What year did Albany become the state capital?",
+        options: ["1797", "1807", "1817", "1827"],
+        correct: 1,
+        fact: "Albany was officially named the capital in 1797!"
+      },
+      {
+        question: "The Hudson River was named after which explorer?",
+        options: ["Henry Hudson", "Robert Hudson", "James Hudson", "William Hudson"],
+        correct: 0,
+        fact: "Henry Hudson explored the river in 1609!"
+      },
+      {
+        question: "What is Albany's nickname?",
+        options: ["The Gateway", "The Cradle of American Democracy", "The Pearl", "The Empire"],
+        correct: 1,
+        fact: "Albany is called the Cradle of American Democracy!"
+      },
+      {
+        question: "The New York State Capitol was completed in what year?",
+        options: ["1879", "1889", "1899", "1909"],
+        correct: 1,
+        fact: "The stunning Capitol building took 32 years to complete!"
+      }
+    ];
 
-    // Boundary
-    this.bucket.x = Math.max(0, Math.min(this.bucket.x, this.canvas.width - this.bucket.width));
+    let currentQuestion = 0;
+    let score = 0;
+    let gameActive = true;
 
-    // Update and draw salt
-    for (let i = this.saltCrystals.length - 1; i >= 0; i--) {
-      let salt = this.saltCrystals[i];
-      salt.y += salt.vy;
+    const gameHtml = `
+      <div class="game-wrapper">
+        <div class="game-header">
+          <h3>Albany History Quiz</h3>
+          <p>Test your knowledge of the Capital City!</p>
+        </div>
+        <div id="albany-content">
+          <div class="quiz-question">
+            <h4 id="albany-question"></h4>
+            <div id="albany-options" class="quiz-options"></div>
+            <div id="albany-feedback" class="quiz-feedback"></div>
+          </div>
+        </div>
+        <div class="game-stats">
+          <div class="stat-box">
+            <span class="stat-label">Score</span>
+            <span class="stat-number" id="albany-score">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Question</span>
+            <span class="stat-number" id="albany-question-num">1</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="albany-restart">Restart Game</button>
+      </div>
+    `;
 
-      // Collision
-      if (salt.y + salt.height > this.bucket.y &&
-          salt.y < this.bucket.y + this.bucket.height &&
-          salt.x + salt.width > this.bucket.x &&
-          salt.x < this.bucket.x + this.bucket.width) {
-        this.score++;
-        this.saltCrystals.splice(i, 1);
-        continue;
+    container.innerHTML = gameHtml;
+
+    function showQuestion() {
+      if (currentQuestion >= questions.length) {
+        showGameOver();
+        return;
       }
 
-      if (salt.y > this.canvas.height) {
-        this.saltCrystals.splice(i, 1);
-        continue;
-      }
+      const q = questions[currentQuestion];
+      document.getElementById('albany-question').textContent = q.question;
+      document.getElementById('albany-feedback').innerHTML = '';
 
-      // Draw salt crystal
-      this.ctx.fillStyle = '#ffffff';
-      this.ctx.fillRect(salt.x, salt.y, salt.width, salt.height);
-      this.ctx.strokeStyle = '#00ffff';
-      this.ctx.lineWidth = 1;
-      this.ctx.strokeRect(salt.x, salt.y, salt.width, salt.height);
-    }
+      const optionsDiv = document.getElementById('albany-options');
+      optionsDiv.innerHTML = '';
 
-    // Draw bucket
-    this.ctx.fillStyle = '#ff0000';
-    this.ctx.fillRect(this.bucket.x, this.bucket.y, this.bucket.width, this.bucket.height);
-    this.ctx.strokeStyle = '#00ff41';
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(this.bucket.x, this.bucket.y, this.bucket.width, this.bucket.height);
-
-    if (this.gameActive) {
-      requestAnimationFrame(() => this.gameLoop());
-    }
-  }
-
-  getScore() {
-    return this.score;
-  }
-}
-
-// ============= ROCHESTER GAME: Flour Milling =============
-class FlourMillingGame {
-  constructor(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.score = 0;
-    this.gameActive = true;
-    this.gameTime = 30;
-    this.timeLeft = this.gameTime;
-    this.millRotation = 0;
-    this.grains = [];
-    this.flourCount = 0;
-
-    this.resizeCanvas();
-    window.addEventListener('resize', () => this.resizeCanvas());
-    this.setupGame();
-  }
-
-  resizeCanvas() {
-    this.canvas.width = Math.min(this.canvas.offsetWidth, 500);
-    this.canvas.height = 400;
-    this.centerX = this.canvas.width / 2;
-    this.centerY = this.canvas.height / 2;
-  }
-
-  setupGame() {
-    // Click to mill
-    this.canvas.addEventListener('click', () => this.addGrain());
-    this.canvas.addEventListener('touchstart', () => this.addGrain());
-
-    this.gameLoop();
-    this.startTimer();
-  }
-
-  addGrain() {
-    if (this.gameActive) {
-      this.grains.push({
-        rotation: Math.random() * Math.PI * 2,
-        life: 30
+      q.options.forEach((option, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-secondary quiz-option-btn';
+        btn.textContent = option;
+        btn.addEventListener('click', () => selectAnswer(index, q));
+        optionsDiv.appendChild(btn);
       });
-    }
-  }
 
-  startTimer() {
-    const timer = setInterval(() => {
-      if (this.gameActive) {
-        this.timeLeft--;
-        if (this.timeLeft <= 0) {
-          this.gameActive = false;
-          clearInterval(timer);
-          document.getElementById('game-status').innerHTML = `<strong>Game Over!</strong> Milled ${this.score} grains!`;
-        }
-      }
-    }, 1000);
-  }
-
-  gameLoop() {
-    this.ctx.fillStyle = '#0a0a0a';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    // Draw title
-    this.ctx.fillStyle = '#00ff41';
-    this.ctx.font = 'bold 16px Courier Prime';
-    this.ctx.fillText(`Flour: ${this.score}`, 10, 25);
-    this.ctx.fillText(`Time: ${this.timeLeft}s`, this.canvas.width - 120, 25);
-
-    // Update mill
-    this.millRotation += 0.1;
-
-    // Draw mill
-    this.ctx.save();
-    this.ctx.translate(this.centerX, this.centerY);
-
-    // Mill body
-    this.ctx.fillStyle = '#00ffff';
-    this.ctx.beginPath();
-    this.ctx.arc(0, 0, 60, 0, Math.PI * 2);
-    this.ctx.fill();
-
-    // Mill blades
-    this.ctx.rotate(this.millRotation);
-    this.ctx.fillStyle = '#ff0000';
-    for (let i = 0; i < 4; i++) {
-      this.ctx.rotate(Math.PI / 2);
-      this.ctx.fillRect(-10, 40, 20, 30);
+      document.getElementById('albany-question-num').textContent = currentQuestion + 1;
     }
 
-    this.ctx.restore();
+    function selectAnswer(index, question) {
+      const feedback = document.getElementById('albany-feedback');
+      const buttons = document.querySelectorAll('.quiz-option-btn');
 
-    // Update and draw grains
-    for (let i = this.grains.length - 1; i >= 0; i--) {
-      let grain = this.grains[i];
-      grain.life--;
+      buttons.forEach(btn => btn.disabled = true);
 
-      if (grain.life <= 0) {
-        this.score++;
-        this.grains.splice(i, 1);
+      if (index === question.correct) {
+        score++;
+        feedback.innerHTML = `<div style="color: #00ff41; font-weight: bold;">✓ Correct!</div><p>${question.fact}</p>`;
+        document.getElementById('albany-score').textContent = score;
       } else {
-        // Draw grain being milled
-        const x = Math.cos(grain.rotation) * 40;
-        const y = Math.sin(grain.rotation) * 40;
-        this.ctx.fillStyle = '#ffff00';
-        this.ctx.beginPath();
-        this.ctx.arc(this.centerX + x, this.centerY + y, 4, 0, Math.PI * 2);
-        this.ctx.fill();
+        feedback.innerHTML = `<div style="color: #ff0000; font-weight: bold;">✗ Incorrect</div><p>${question.fact}</p>`;
+      }
+
+      setTimeout(() => {
+        currentQuestion++;
+        showQuestion();
+      }, 2500);
+    }
+
+    function showGameOver() {
+      gameActive = false;
+      document.getElementById('albany-content').innerHTML = `
+        <div class="game-over-modal">
+          <h3>Quiz Complete!</h3>
+          <p>Final Score: <span style="color: #00ff41; font-weight: bold;">${score}/${questions.length}</span></p>
+          <p>${score === questions.length ? '🎉 Perfect Score!' : score >= 3 ? '🌟 Great Job!' : '📚 Keep Learning!'}</p>
+        </div>
+      `;
+    }
+
+    document.getElementById('albany-restart').addEventListener('click', () => {
+      currentQuestion = 0;
+      score = 0;
+      gameActive = true;
+      this.initAlbanyGame(containerId);
+    });
+
+    showQuestion();
+  }
+
+  // BINGHAMTON - Bridge Crossing
+  // Timed platformer to cross the Susquehanna River
+  initBinghamtonGame(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const gameHtml = `
+      <div class="game-wrapper">
+        <div class="game-header">
+          <h3>Susquehanna Crossing</h3>
+          <p>Jump across the bridge platforms!</p>
+        </div>
+        <canvas id="binghamton-canvas" width="400" height="300"></canvas>
+        <div class="mobile-controls" id="binghamton-controls">
+          <button class="control-btn" data-action="jump">JUMP</button>
+          <div>
+            <button class="control-btn" data-direction="left">←</button>
+            <button class="control-btn" data-direction="right">→</button>
+          </div>
+        </div>
+        <div class="game-stats">
+          <div class="stat-box">
+            <span class="stat-label">Distance</span>
+            <span class="stat-number" id="binghamton-distance">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Lives</span>
+            <span class="stat-number" id="binghamton-lives">3</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="binghamton-restart">Restart Game</button>
+      </div>
+    `;
+
+    container.innerHTML = gameHtml;
+
+    const canvas = document.getElementById('binghamton-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let player = { x: canvas.width / 2 - 10, y: canvas.height - 60, width: 20, height: 20, velocityY: 0, jumping: false };
+    let platforms = [];
+    let distance = 0;
+    let lives = 3;
+    let gameActive = true;
+    let gravity = 0.5;
+
+    // Generate platforms
+    function generatePlatforms() {
+      platforms = [];
+      for (let i = 0; i < 8; i++) {
+        platforms.push({
+          x: Math.random() * (canvas.width - 60),
+          y: canvas.height - 60 - i * 60,
+          width: 60,
+          height: 12,
+          moving: Math.random() > 0.5
+        });
       }
     }
 
-    // Draw instruction
-    this.ctx.fillStyle = '#00ffff';
-    this.ctx.font = '12px Courier Prime';
-    this.ctx.fillText('TAP TO MILL', this.centerX - 40, this.centerY + 110);
+    generatePlatforms();
 
-    if (this.gameActive) {
-      requestAnimationFrame(() => this.gameLoop());
+    const keys = {};
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === ' ') { e.preventDefault(); keys['space'] = true; }
+      keys[e.key.toLowerCase()] = true;
+    });
+    document.addEventListener('keyup', (e) => {
+      keys[e.key.toLowerCase()] = false;
+    });
+
+    const controlButtons = document.querySelectorAll('#binghamton-controls .control-btn');
+    controlButtons.forEach(btn => {
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const dir = btn.dataset.direction;
+        const action = btn.dataset.action;
+        if (dir === 'left') keys['arrowleft'] = true;
+        if (dir === 'right') keys['arrowright'] = true;
+        if (action === 'jump') keys['space'] = true;
+      });
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        const dir = btn.dataset.direction;
+        const action = btn.dataset.action;
+        if (dir === 'left') keys['arrowleft'] = false;
+        if (dir === 'right') keys['arrowright'] = false;
+        if (action === 'jump') keys['space'] = false;
+      });
+    });
+
+    function update() {
+      // Horizontal movement
+      if (keys['arrowleft'] || keys['a']) player.x = Math.max(0, player.x - 5);
+      if (keys['arrowright'] || keys['d']) player.x = Math.min(canvas.width - player.width, player.x + 5);
+
+      // Gravity and jumping
+      player.velocityY += gravity;
+      player.y += player.velocityY;
+
+      // Jump
+      if ((keys['space'] || keys['w']) && !player.jumping) {
+        player.velocityY = -12;
+        player.jumping = true;
+      }
+
+      // Platform collision
+      let onPlatform = false;
+      platforms.forEach(platform => {
+        if (player.velocityY > 0 &&
+            player.y + player.height <= platform.y + 5 &&
+            player.y + player.height + player.velocityY >= platform.y &&
+            player.x + player.width > platform.x &&
+            player.x < platform.x + platform.width) {
+          player.velocityY = 0;
+          player.y = platform.y - player.height;
+          player.jumping = false;
+          onPlatform = true;
+          distance = Math.max(distance, Math.floor((canvas.height - platform.y) / 60));
+        }
+
+        // Move platforms
+        if (platform.moving) {
+          platform.x += Math.sin(Date.now() / 500 + platform.y) * 1.5;
+          platform.x = Math.max(0, Math.min(canvas.width - platform.width, platform.x));
+        }
+      });
+
+      // Fall detection
+      if (player.y > canvas.height) {
+        lives--;
+        if (lives <= 0) {
+          gameActive = false;
+        } else {
+          player.y = canvas.height - 60;
+          player.velocityY = 0;
+        }
+      }
+
+      document.getElementById('binghamton-distance').textContent = distance;
+      document.getElementById('binghamton-lives').textContent = lives;
     }
+
+    function draw() {
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Water background
+      ctx.fillStyle = '#0044ff44';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Platforms
+      ctx.fillStyle = '#00ff41';
+      platforms.forEach(platform => {
+        ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+      });
+
+      // Player
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+
+      // UI
+      ctx.fillStyle = '#00ffff';
+      ctx.font = '12px Courier Prime';
+      ctx.fillText('SUSQUEHANNA RIVER', 10, 20);
+    }
+
+    function gameLoop() {
+      if (!gameActive) {
+        ctx.fillStyle = '#ff0000aa';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#00ff41';
+        ctx.font = 'bold 24px Courier Prime';
+        ctx.textAlign = 'center';
+        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+        ctx.font = '16px Courier Prime';
+        ctx.fillText('Distance: ' + distance, canvas.width / 2, canvas.height / 2 + 30);
+        return;
+      }
+
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    document.getElementById('binghamton-restart').addEventListener('click', () => {
+      distance = 0;
+      lives = 3;
+      gameActive = true;
+      player = { x: canvas.width / 2 - 10, y: canvas.height - 60, width: 20, height: 20, velocityY: 0, jumping: false };
+      generatePlatforms();
+      gameLoop();
+    });
+
+    gameLoop();
   }
 
-  getScore() {
-    return this.score;
+  // SYRACUSE - Salt Mining Clicker
+  // Click to collect salt from the famous salt mines
+  initSyracuseGame(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const gameHtml = `
+      <div class="game-wrapper">
+        <div class="game-header">
+          <h3>Salt Mine Collector</h3>
+          <p>Click the salt crystals to collect them! Buy upgrades to go faster.</p>
+        </div>
+        <div class="game-content">
+          <div class="salt-display">
+            <div class="salt-counter">
+              <span id="syracuse-salt">0</span>
+              <span class="salt-label">SALT</span>
+            </div>
+            <button id="syracuse-click-btn" class="salt-click-btn">⛏️ MINE</button>
+          </div>
+          <div class="upgrades-section">
+            <h4>Upgrades</h4>
+            <div id="syracuse-upgrades" class="upgrades-grid"></div>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="syracuse-restart">Reset Game</button>
+      </div>
+    `;
+
+    container.innerHTML = gameHtml;
+
+    let salt = 0;
+    let clickPower = 1;
+    let autoMineRate = 0;
+
+    const upgrades = [
+      { name: 'Better Pickaxe', cost: 10, effect: () => clickPower += 1, bought: false },
+      { name: 'Auto Miner', cost: 50, effect: () => autoMineRate += 0.5, bought: false },
+      { name: 'Industrial Drill', cost: 200, effect: () => clickPower *= 2, bought: false },
+      { name: 'Crystal Detector', cost: 500, effect: () => autoMineRate *= 2, bought: false }
+    ];
+
+    const clickBtn = document.getElementById('syracuse-click-btn');
+    clickBtn.addEventListener('click', () => {
+      salt += clickPower;
+      document.getElementById('syracuse-salt').textContent = Math.floor(salt);
+      clickBtn.style.transform = 'scale(0.95)';
+      setTimeout(() => clickBtn.style.transform = 'scale(1)', 100);
+    });
+
+    function renderUpgrades() {
+      const upgradesDiv = document.getElementById('syracuse-upgrades');
+      upgradesDiv.innerHTML = '';
+
+      upgrades.forEach((upgrade, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn upgrade-btn';
+        btn.disabled = salt < upgrade.cost || upgrade.bought;
+        btn.innerHTML = `
+          <div class="upgrade-name">${upgrade.name}</div>
+          <div class="upgrade-cost">${upgrade.cost} salt</div>
+        `;
+        btn.addEventListener('click', () => {
+          if (salt >= upgrade.cost && !upgrade.bought) {
+            salt -= upgrade.cost;
+            upgrade.bought = true;
+            upgrade.effect();
+            document.getElementById('syracuse-salt').textContent = Math.floor(salt);
+            renderUpgrades();
+          }
+        });
+        upgradesDiv.appendChild(btn);
+      });
+    }
+
+    // Auto mining
+    setInterval(() => {
+      if (autoMineRate > 0) {
+        salt += autoMineRate;
+        document.getElementById('syracuse-salt').textContent = Math.floor(salt);
+      }
+    }, 1000);
+
+    document.getElementById('syracuse-restart').addEventListener('click', () => {
+      salt = 0;
+      clickPower = 1;
+      autoMineRate = 0;
+      upgrades.forEach(u => u.bought = false);
+      document.getElementById('syracuse-salt').textContent = '0';
+      renderUpgrades();
+    });
+
+    renderUpgrades();
+  }
+
+  // ROCHESTER - Final Station Quiz
+  // Trivia about Rochester to celebrate arrival
+  initRochesterGame(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const questions = [
+      {
+        question: "Rochester was once known as the 'Flour Milling Capital' of what?",
+        options: ["America", "The World", "New York", "The Northeast"],
+        correct: 0,
+        fact: "Rochester was called the 'Flour Milling Capital of America' in the 1800s!"
+      },
+      {
+        question: "What famous company was founded in Rochester in 1880?",
+        options: ["Kodak", "Xerox", "IBM", "Bausch & Lomb"],
+        correct: 0,
+        fact: "Kodak was founded by George Eastman in Rochester!"
+      },
+      {
+        question: "The Genesee River flows through Rochester to what Great Lake?",
+        options: ["Lake Michigan", "Lake Ontario", "Lake Erie", "Lake Huron"],
+        correct: 1,
+        fact: "The Genesee River flows into Lake Ontario!"
+      },
+      {
+        question: "What is Rochester's nickname?",
+        options: ["The Flower City", "The Image City", "The Flour City", "The Garden City"],
+        correct: 1,
+        fact: "Rochester is called the 'Image City' - home of photography!"
+      },
+      {
+        question: "What famous suffragist was born in Rochester?",
+        options: ["Susan B. Anthony", "Elizabeth Cady Stanton", "Lucretia Mott", "Lucy Stone"],
+        correct: 0,
+        fact: "Susan B. Anthony, a leader in the women's suffrage movement, was born in Rochester!"
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    const gameHtml = `
+      <div class="game-wrapper">
+        <div class="game-header">
+          <h3>Rochester Welcome Quiz</h3>
+          <p>Test your knowledge of your final destination!</p>
+        </div>
+        <div id="rochester-content">
+          <div class="quiz-question">
+            <h4 id="rochester-question"></h4>
+            <div id="rochester-options" class="quiz-options"></div>
+            <div id="rochester-feedback" class="quiz-feedback"></div>
+          </div>
+        </div>
+        <div class="game-stats">
+          <div class="stat-box">
+            <span class="stat-label">Score</span>
+            <span class="stat-number" id="rochester-score">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Question</span>
+            <span class="stat-number" id="rochester-question-num">1</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="rochester-restart">Restart Game</button>
+      </div>
+    `;
+
+    container.innerHTML = gameHtml;
+
+    function showQuestion() {
+      if (currentQuestion >= questions.length) {
+        showGameOver();
+        return;
+      }
+
+      const q = questions[currentQuestion];
+      document.getElementById('rochester-question').textContent = q.question;
+      document.getElementById('rochester-feedback').innerHTML = '';
+
+      const optionsDiv = document.getElementById('rochester-options');
+      optionsDiv.innerHTML = '';
+
+      q.options.forEach((option, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-secondary quiz-option-btn';
+        btn.textContent = option;
+        btn.addEventListener('click', () => selectAnswer(index, q));
+        optionsDiv.appendChild(btn);
+      });
+
+      document.getElementById('rochester-question-num').textContent = currentQuestion + 1;
+    }
+
+    function selectAnswer(index, question) {
+      const feedback = document.getElementById('rochester-feedback');
+      const buttons = document.querySelectorAll('.quiz-option-btn');
+
+      buttons.forEach(btn => btn.disabled = true);
+
+      if (index === question.correct) {
+        score++;
+        feedback.innerHTML = `<div style="color: #00ff41; font-weight: bold;">✓ Correct!</div><p>${question.fact}</p>`;
+        document.getElementById('rochester-score').textContent = score;
+      } else {
+        feedback.innerHTML = `<div style="color: #ff0000; font-weight: bold;">✗ Incorrect</div><p>${question.fact}</p>`;
+      }
+
+      setTimeout(() => {
+        currentQuestion++;
+        showQuestion();
+      }, 2500);
+    }
+
+    function showGameOver() {
+      document.getElementById('rochester-content').innerHTML = `
+        <div class="game-over-modal">
+          <h3>🎉 Welcome to Rochester! 🎉</h3>
+          <p>Final Score: <span style="color: #00ff41; font-weight: bold;">${score}/${questions.length}</span></p>
+          <p>${score === questions.length ? '🌟 Expert Guide!' : score >= 4 ? '🎯 Great Navigator!' : '📚 Enjoy Your Stay!'}</p>
+          <p style="margin-top: 20px; font-size: 14px;">Thanks for traveling with Zach & Cen!</p>
+        </div>
+      `;
+    }
+
+    document.getElementById('rochester-restart').addEventListener('click', () => {
+      currentQuestion = 0;
+      score = 0;
+      this.initRochesterGame(containerId);
+    });
+
+    showQuestion();
   }
 }
 
 // Export for use
-window.AmtrakGames = {
-  TicketPunchGame,
-  AppleCatchGame,
-  CapitolClimberGame,
-  CarouselSpinGame,
-  SaltCollectorGame,
-  FlourMillingGame
-};
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = AmtrakGames;
+}
