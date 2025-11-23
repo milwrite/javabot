@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amtrak Journey: Penn Station to Rochester</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            text-decoration: none;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .home-link:hover {
+            background: rgba(102, 126, 234, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            padding: 40px;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            height: fit-content;
+        }
+
+        .journey-map {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .stop-list {
+            list-style: none;
+        }
+
+        .stop-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .stop-item:hover {
+            background: #f0f4ff;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .stop-item.active {
+            background: #667eea;
+            color: white;
+            border-left-color: #764ba2;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .stop-item.completed {
+            border-left-color: #28a745;
+            opacity: 0.7;
+        }
+
+        .stop-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .stop-time {
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        .stop-item.active .stop-time {
+            opacity: 0.9;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .timeline-item {
+            padding-left: 60px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 10px;
+            top: 5px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        .timeline-item.completed .timeline-dot {
+            background: #28a745;
+            border-color: #28a745;
+        }
+
+        .content-area {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            min-height: 400px;
+        }
+
+        .stop-details {
+            display: none;
+        }
+
+        .stop-details.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stop-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .stop-header i {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-right: 20px;
+        }
+
+        .stop-header h2 {
+            font-size: 2em;
+            color: #333;
+        }
+
+        .facts-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .facts-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .facts-section h3 i {
+            margin-right: 10px;
+        }
+
+        .fact-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.95em;
+            color: #555;
+        }
+
+        .fact-item:last-child {
+            border-bottom: none;
+        }
+
+        .game-section {
+            background: #fff3cd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+
+        .game-section h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .game-section h3 i {
+            margin-right: 10px;
+        }
+
+        .quiz-question {
+            margin-bottom: 15px;
+        }
+
+        .quiz-question p {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .quiz-option {
+            padding: 10px 15px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+        }
+
+        .quiz-option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .quiz-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .quiz-option.correct {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .quiz-option.incorrect {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .quiz-feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+            font-weight: 600;
+        }
+
+        .quiz-feedback.show {
+            display: block;
+        }
+
+        .quiz-feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .quiz-feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .game-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .game-button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .mini-game-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .memory-card {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 2em;
+            transition: all 0.3s ease;
+            color: white;
+            font-weight: bold;
+        }
+
+        .memory-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .memory-card.flipped {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .memory-card.matched {
+            background: #28a745;
+            color: white;
+            cursor: not-allowed;
+        }
+
+        .distance-display {
+            text-align: center;
+            font-size: 1.2em;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .train-animation {
+            position: relative;
+            height: 100px;
+            background: linear-gradient(90deg, transparent 0%, rgba(102, 126, 234, 0.1) 50%, transparent 100%);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        .train {
+            position: absolute;
+            font-size: 3em;
+            animation: trainMove 8s infinite;
+        }
+
+        @keyframes trainMove {
+            0% {
+                left: -50px;
+            }
+            50% {
+                left: calc(100% - 50px);
+            }
+            100% {
+                left: -50px;
+            }
+        }
+
+        .achievement {
+            background: #ffc107;
+            color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .achievement i {
+            font-size: 2em;
+        }
+
+        .achievement-text h4 {
+            margin-bottom: 5px;
+        }
+
+        .achievement-text p {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .memory-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .completion-message {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .completion-message.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .completion-message h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .completion-message p {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-train"></i> Amtrak Journey</h1>
+            <p>Penn Station (NYC) to Rochester, NY</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <h3 style="color: #667eea; margin-bottom: 20px;"><i class="fas fa-map-marker-alt"></i> Journey Stops</h3>
+                <ul class="stop-list" id="stopList"></ul>
+                
+                <div class="progress-bar" style="margin-top: 30px;">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stopsVisited">0</div>
+                        <div class="stat-label">Stops Visited</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="gamesWon">0</div>
+                        <div class="stat-label">Games Won</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="factsLearned">0</div>
+                        <div class="stat-label">Facts Learned</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="journey-map">
+                <div class="content-area" id="contentArea"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const journeyData = [
+            {
+                id: 1,
+                name: "Penn Station",
+                city: "New York City, NY",
+                time: "09:00 AM",
+                icon: "fas fa-train",
+                distance: 0,
+                description: "Starting point of our journey at the iconic Pennsylvania Station in Manhattan.",
+                facts: [
+                    "Penn Station opened in 1910 and is one of the busiest railway stations in the world",
+                    "Amtrak operates over 500 daily trains from Penn Station",
+                    "The original Penn Station was demolished in 1963, and the current building was completed in 1968",
+                    "Penn Station serves over 750,000 passengers annually"
+                ],
+                game: {
+                    type: "memory",
+                    title: "Remember the Route",
+                    description: "Match the cities with their distances from Penn Station",
+                    cards: ["NYC", "ALB", "SYR", "ROC", "NYC", "ALB", "SYR", "ROC"],
+                    pairs: [
+                        { card1: 0, card2: 4, label: "New York City" },
+                        { card1: 1, card2: 5, label: "Albany" },
+                        { card1: 2, card2: 6, label: "Syracuse" },
+                        { card1: 3, card2: 7, label: "Rochester" }
+                    ]
+                }
+            },
+            {
+                id: 2,
+                name: "Yonkers",
+                city: "Yonkers, NY",
+                time: "09:25 AM",
+                icon: "fas fa-city",
+                distance: 20,
+                description: "First stop heading north along the Hudson River.",
+                facts: [
+                    "Yonkers is the 3rd largest city in New York State",
+                    "The city is known for its scenic location along the Hudson River",
+                    "Yonkers has a population of approximately 200,000 residents",
+                    "The Hudson River waterfront has been revitalized in recent years"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Hudson River Facts",
+                    description: "Test your knowledge about the Hudson River",
+                    question: "What is the length of the Hudson River?",
+                    options: ["206 miles", "315 miles", "425 miles", "550 miles"],
+                    correct: 1,
+                    explanation: "The Hudson River is approximately 315 miles long!"
+                }
+            },
+            {
+                id: 3,
+                name: "Croton-Harmon",
+                city: "Croton-on-Hudson, NY",
+                time: "09:50 AM",
+                icon: "fas fa-leaf",
+                distance: 35,
+                description: "Scenic stop along the Hudson Valley.",
+                facts: [
+                    "Croton-Harmon is a major junction point for Metro-North Railroad",
+                    "The area is known for its beautiful Hudson Valley scenery",
+                    "The Croton Dam was built in 1906 and supplies water to New York City",
+                    "The Hudson Valley is famous for its apple orchards and farms"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Hudson Valley Knowledge",
+                    description: "How well do you know the Hudson Valley?",
+                    question: "What year was the Croton Dam completed?",
+                    options: ["1896", "1906", "1916", "1926"],
+                    correct: 1,
+                    explanation: "The Croton Dam was completed in 1906!"
+                }
+            },
+            {
+                id: 4,
+                name: "Poughkeepsie",
+                city: "Poughkeepsie, NY",
+                time: "10:30 AM",
+                icon: "fas fa-bridge",
+                distance: 75,
+                description: "Historic city home to Vassar College and the Mid-Hudson Bridge.",
+                facts: [
+                    "Poughkeepsie is home to Vassar College, founded in 1861",
+                    "The Mid-Hudson Bridge connects Poughkeepsie to Highland",
+                    "The city was a major center of the American Industrial Revolution",
+                    "The Poughkeepsie Waterfront has been transformed into a vibrant cultural district"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Poughkeepsie Trivia",
+                    description: "Test your knowledge about Poughkeepsie",
+                    question: "In what year was Vassar College founded?",
+                    options: ["1841", "1851", "1861", "1871"],
+                    correct: 2,
+                    explanation: "Vassar College was founded in 1861!"
+                }
+            },
+            {
+                id: 5,
+                name: "Rhinecliff",
+                city: "Rhinecliff, NY",
+                time: "11:00 AM",
+                icon: "fas fa-landmark",
+                distance: 90,
+                description: "Gateway to the Catskill Mountains and wine country.",
+                facts: [
+                    "Rhinecliff is a small village with historic charm",
+                    "The area is known for its proximity to wineries and farms",
+                    "The Catskill Mountains are just minutes away",
+                    "Rhinecliff Station is one of the oldest continuously operating stations"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Catskill Region",
+                    description: "What do you know about the Catskills?",
+                    question: "The Catskill Mountains are part of which larger mountain range?",
+                    options: ["Appalachian Mountains", "Rocky Mountains", "Sierra Nevada", "Adirondacks"],
+                    correct: 0,
+                    explanation: "The Catskill Mountains are part of the Appalachian Mountains!"
+                }
+            },
+            {
+                id: 6,
+                name: "Albany",
+                city: "Albany, NY",
+                time: "12:00 PM",
+                icon: "fas fa-capitol",
+                distance: 150,
+                description: "Capital of New York State with rich political history.",
+                facts: [
+                    "Albany is the capital of New York State",
+                    "The city is home to the New York State Capitol building, completed in 1899",
+                    "Albany was founded in 1624 by the Dutch",
+                    "The city is located at the confluence of the Hudson and Mohawk rivers"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Albany Capital Facts",
+                    description: "Test your New York State knowledge",
+                    question: "In what year was the New York State Capitol building completed?",
+                    options: ["1889", "1899", "1909", "1919"],
+                    correct: 1,
+                    explanation: "The Capitol building was completed in 1899!"
+                }
+            },
+            {
+                id: 7,
+                name: "Schenectady",
+                city: "Schenectady, NY",
+                time: "1:00 PM",
+                icon: "fas fa-industry",
+                distance: 180,
+                description: "Historic industrial city and home to Union College.",
+                facts: [
+                    "Schenectady was a major center of industrial innovation",
+                    "General Electric was founded in Schenectady in 1892",
+                    "Union College, founded in 1795, is one of the oldest colleges in the US",
+                    "The city is known as the 'City that Lights and Hauls the World'"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Industrial History",
+                    description: "When was General Electric founded in Schenectady?",
+                    question: "In what year was General Electric founded in Schenectady?",
+                    options: ["1882", "1892", "1902", "1912"],
+                    correct: 1,
+                    explanation: "General Electric was founded in Schenectady in 1892!"
+                }
+            },
+            {
+                id: 8,
+                name: "Amsterdam",
+                city: "Amsterdam, NY",
+                time: "1:45 PM",
+                icon: "fas fa-water",
+                distance: 210,
+                description: "Small historic town along the Mohawk River.",
+                facts: [
+                    "Amsterdam is located along the scenic Mohawk River",
+                    "The city was an important stop on the Erie Canal",
+                    "Amsterdam has a rich textile manufacturing history",
+                    "The Mohawk River was crucial to the development of upstate New York"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Mohawk River Knowledge",
+                    description: "Test your canal knowledge",
+                    question: "The Erie Canal connected which two major waterways?",
+                    options: ["Hudson River and Great Lakes", "Delaware River and Susquehanna", "Potomac River and Ohio River", "Connecticut River and Atlantic Ocean"],
+                    correct: 0,
+                    explanation: "The Erie Canal connected the Hudson River to the Great Lakes!"
+                }
+            },
+            {
+                id: 9,
+                name: "Utica",
+                city: "Utica, NY",
+                time: "2:30 PM",
+                icon: "fas fa-building",
+                distance: 250,
+                description: "Historic manufacturing city in the Mohawk Valley.",
+                facts: [
+                    "Utica was a major center of textile and railroad manufacturing",
+                    "The city was founded in 1773",
+                    "Utica is home to Utica College and SUNY Polytechnic Institute",
+                    "The city is known for its diverse immigrant communities"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Utica History",
+                    description: "When was Utica founded?",
+                    question: "In what year was Utica founded?",
+                    options: ["1763", "1773", "1783", "1793"],
+                    correct: 1,
+                    explanation: "Utica was founded in 1773!"
+                }
+            },
+            {
+                id: 10,
+                name: "Syracuse",
+                city: "Syracuse, NY",
+                time: "3:45 PM",
+                icon: "fas fa-university",
+                distance: 310,
+                description: "Major city and home to Syracuse University.",
+                facts: [
+                    "Syracuse is home to Syracuse University, founded in 1870",
+                    "The city was a major salt production center in the 19th century",
+                    "Syracuse is located at the crossroads of major transportation routes",
+                    "The city is known for its diverse cultural attractions and museums"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Syracuse Facts",
+                    description: "Test your Syracuse knowledge",
+                    question: "In what year was Syracuse University founded?",
+                    options: ["1860", "1870", "1880", "1890"],
+                    correct: 1,
+                    explanation: "Syracuse University was founded in 1870!"
+                }
+            },
+            {
+                id: 11,
+                name: "Fulton",
+                city: "Fulton, NY",
+                time: "4:30 PM",
+                icon: "fas fa-fish",
+                distance: 350,
+                description: "Historic city known as the 'Oswego County Seat' and Oswego River.",
+                facts: [
+                    "Fulton is located on the Oswego River",
+                    "The city has a rich history of industrial development",
+                    "Fulton is known for its historic canal heritage",
+                    "The city is a gateway to the Finger Lakes region"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Oswego River",
+                    description: "What do you know about the Oswego River?",
+                    question: "The Oswego River connects to which major waterway?",
+                    options: ["Finger Lakes", "Lake Ontario", "Seneca River", "Genesee River"],
+                    correct: 1,
+                    explanation: "The Oswego River flows into Lake Ontario!"
+                }
+            },
+            {
+                id: 12,
+                name: "Rochester",
+                city: "Rochester, NY",
+                time: "5:30 PM",
+                icon: "fas fa-flag-checkered",
+                distance: 390,
+                description: "Final destination - the 'Flower City' of New York.",
+                facts: [
+                    "Rochester is known as the 'Flower City' because of its beautiful gardens",
+                    "The city is home to the Eastman Kodak Company, a photography pioneer",
+                    "Rochester has a population of approximately 210,000 residents",
+                    "The Genesee River Falls are a beautiful natural feature of the city"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Rochester Final Quiz",
+                    description: "Test your knowledge about Rochester",
+                    question: "Why is Rochester known as the 'Flower City'?",
+                    options: ["It has many flower shops", "It's famous for beautiful gardens", "It's near botanical gardens", "All of the above"],
+                    correct: 1,
+                    explanation: "Rochester is known as the 'Flower City' because of its beautiful gardens!"
+                }
+            }
+        ];
+
+        let currentStopIndex = 0;
+        let stopsVisited = 0;
+        let gamesWon = 0;
+        let factsLearned = 0;
+        let memoryGameState = {};
+        let quizAnswered = false;
+
+        function initializeJourney() {
+            renderStopList();
+            showStop(0);
+        }
+
+        function renderStopList() {
+            const stopList = document.getElementById('stopList');
+            stopList.innerHTML = '';
+
+            journeyData.forEach((stop, index) => {
+                const li = document.createElement('li');
+                li.className = 'stop-item';
+                if (index === currentStopIndex) li.classList.add('active');
+                if (index < currentStopIndex) li.classList.add('completed');
+
+                li.innerHTML = `
+                    <div class="stop-name"><i class="${stop.icon}"></i> ${stop.name}</div>
+                    <div class="stop-time">${stop.time} | ${stop.distance} mi</div>
+                `;
+
+                li.addEventListener('click', () => showStop(index));
+                stopList.appendChild(li);
+            });
+        }
+
+        function showStop(index) {
+            currentStopIndex = index;
+            const stop = journeyData[index];
+
+            renderStopList();
+            updateProgress();
+
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = `
+                <div class="stop-header">
+                    <i class="${stop.icon}"></i>
+                    <div>
+                        <h2>${stop.name}</h2>
+                        <p style="color: #666; margin-top: 5px;">${stop.city}</p>
+                    </div>
+                </div>
+
+                <p style="font-size: 1.1em; color: #555; margin: 20px 0;">${stop.description}</p>
+
+                <div class="distance-display">
+                    <i class="fas fa-train"></i> ${stop.distance} miles from Penn Station
+                </div>
+
+                <div class="train-animation">
+                    <div class="train">🚂</div>
+                </div>
+
+                <div class="facts-section">
+                    <h3><i class="fas fa-lightbulb"></i> Did You Know?</h3>
+                    ${stop.facts.map(fact => `<div class="fact-item">• ${fact}</div>`).join('')}
+                </div>
+
+                ${renderGame(stop)}
+
+                <div style="text-align: center; margin-top: 30px;">
+                    ${index > 0 ? `<button class="game-button" onclick="showStop(${index - 1})"><i class="fas fa-arrow-left"></i> Previous Stop</button>` : ''}
+                    ${index < journeyData.length - 1 ? `<button class="game-button" onclick="showStop(${index + 1})" style="margin-left: 10px;"><i class="fas fa-arrow-right"></i> Next Stop</button>` : ''}
+                </div>
+
+                ${index === journeyData.length - 1 ? `
+                    <div class="completion-message show">
+                        <h2><i class="fas fa-check-circle"></i> Journey Complete!</h2>
+                        <p>You've successfully traveled from Penn Station to Rochester!</p>
+                        <p style="font-size: 1em; margin-top: 15px;">
+                            <strong>${stopsVisited}</strong> stops visited | 
+                            <strong>${gamesWon}</strong> games won | 
+                            <strong>${factsLearned}</strong> facts learned
+                        </p>
+                    </div>
+                ` : ''}
+            `;
+
+            factsLearned += stop.facts.length;
+            if (index > stopsVisited) {
+                stopsVisited = index + 1;
+            }
+            updateStats();
+        }
+
+        function renderGame(stop) {
+            if (stop.game.type === 'memory') {
+                return renderMemoryGame(stop);
+            } else if (stop.game.type === 'quiz') {
+                return renderQuizGame(stop);
+            }
+        }
+
+        function renderMemoryGame(stop) {
+            const gameId = `memory-${stop.id}`;
+            memoryGameState[gameId] = memoryGameState[gameId] || {
+                flipped: [],
+                matched: [],
+                moves: 0
+            };
+
+            return `
+                <div class="game-section">
+                    <h3><i class="fas fa-gamepad"></i> ${stop.game.title}</h3>
+                    <p>${stop.game.description}</p>
+                    <div class="memory-grid" id="memoryGrid-${stop.id}">
+                        ${stop.game.cards.map((card, idx) => `
+                            <button class="memory-card" onclick="flipMemoryCard(${stop.id}, ${idx})">
+                                <span id="card-${stop.id}-${idx}">?</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <p>Moves: <strong id="moves-${stop.id}">0</strong></p>
+                        <button class="game-button" onclick="resetMemoryGame(${stop.id})">Reset Game</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function flipMemoryCard(stopId, cardIndex) {
+            const gameId = `memory-${stopId}`;
+            const state = memoryGameState[gameId];
+            const stop = journeyData[stopId - 1];
+
+            if (state.flipped.includes(cardIndex) || state.matched.includes(cardIndex)) return;
+            if (state.flipped.length === 2) return;
+
+            state.flipped.push(cardIndex);
+            const cardElement = document.getElementById(`card-${stopId}-${cardIndex}`);
+            cardElement.textContent = stop.game.cards[cardIndex];
+            cardElement.parentElement.classList.add('flipped');
+
+            if (state.flipped.length === 2) {
+                state.moves++;
+                document.getElementById(`moves-${stopId}`).textContent = state.moves;
+
+                const [idx1, idx2] = state.flipped;
+                if (stop.game.cards[idx1] === stop.game.cards[idx2]) {
+                    state.matched.push(idx1, idx2);
+                    state.flipped = [];
+
+                    if (state.matched.length === stop.game.cards.length) {
+                        gamesWon++;
+                        updateStats();
+                        setTimeout(() => {
+                            alert(`🎉 Memory game completed in ${state.moves} moves!`);
+                        }, 500);
+                    }
+                } else {
+                    setTimeout(() => {
+                        document.getElementById(`card-${stopId}-${idx1}`).textContent = '?';
+                        document.getElementById(`card-${stopId}-${idx1}`).parentElement.classList.remove('flipped');
+                        document.getElementById(`card-${stopId}-${idx2}`).textContent = '?';
+                        document.getElementById(`card-${stopId}-${idx2}`).parentElement.classList.remove('flipped');
+                        state.flipped = [];
+                    }, 1000);
+                }
+            }
+        }
+
+        function resetMemoryGame(stopId) {
+            const gameId = `memory-${stopId}`;
+            memoryGameState[gameId] = {
+                flipped: [],
+                matched: [],
+                moves: 0
+            };
+            document.getElementById(`moves-${stopId}`).textContent = '0';
+
+            const grid = document.getElementById(`memoryGrid-${stopId}`);
+            grid.querySelectorAll('.memory-card').forEach(card => {
+                card.classList.remove('flipped', 'matched');
+                card.querySelector('span').textContent = '?';
+            });
+        }
+
+        function renderQuizGame(stop) {
+            return `
+                <div class="game-section">
