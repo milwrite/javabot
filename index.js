@@ -221,7 +221,16 @@ When you finish creating a page, briefly tell the user what you made:
 1. Summarize the key feature (1 sentence): "Built you a frogger game with mobile touch controls"
 2. Mention any creative additions: "Added CRT scanlines and a high score tracker"
 3. Note the live URL so they can check it out
+4. ALWAYS remind users: "Give it a minute or two to deploy to GitHub Pages"
 Keep it casual and brief - don't list every HTML element or CSS class used.
+
+URL FORMATTING (CRITICAL - FOLLOW EXACTLY):
+- NEVER put em dash (—) or any punctuation directly after a URL - it breaks the link!
+- BAD: "Check it out at https://example.com—cool right?" (BROKEN - em dash touching URL)
+- GOOD: "Check it out at https://example.com - cool right?" (space before dash)
+- GOOD: "Check it out: https://example.com" (URL on its own)
+- Always put a SPACE after URLs before any punctuation
+- Use plain hyphens (-) not em dashes (—) in page names
 
 AVAILABLE CAPABILITIES:
 - list_files(path): List files in directory
@@ -837,7 +846,7 @@ Return only HTML, no markdown blocks or explanations.`;
         await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
 
         console.log(`[CREATE_PAGE] Success + pushed: ${fileName}`);
-        return `Created ${fileName} and pushed. Live at: https://milwrite.github.io/javabot/src/${name}.html`;
+        return `Created ${fileName} and pushed. Live at: https://milwrite.github.io/javabot/src/${name}.html (give it 1-2 min to deploy)`;
     } catch (error) {
         console.error(`[CREATE_PAGE] Error:`, error.message);
         return `Error creating page: ${error.message}`;
@@ -925,7 +934,7 @@ Return only HTML code, no markdown blocks or explanations.`;
         await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
 
         console.log(`[CREATE_FEATURE] Success + pushed: ${jsFileName}, ${htmlFileName}`);
-        return `Created ${jsFileName} and ${htmlFileName}, pushed. Live demo: https://milwrite.github.io/javabot/src/${name}.html`;
+        return `Created ${jsFileName} and ${htmlFileName}, pushed. Live demo: https://milwrite.github.io/javabot/src/${name}.html (give it 1-2 min to deploy)`;
     } catch (error) {
         console.error(`[CREATE_FEATURE] Error:`, error.message);
         return `Error creating feature: ${error.message}`;
