@@ -1199,7 +1199,18 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
             const toolResults = [];
             for (const toolCall of lastResponse.tool_calls) {
                 const functionName = toolCall.function.name;
-                const args = JSON.parse(toolCall.function.arguments || '{}');
+                let args;
+                try {
+                    args = JSON.parse(toolCall.function.arguments || '{}');
+                } catch (parseError) {
+                    logEvent('LLM', `JSON parse error for ${functionName}: ${parseError.message}`);
+                    toolResults.push({
+                        role: 'tool',
+                        tool_call_id: toolCall.id,
+                        content: `Error: Invalid JSON in tool arguments. Please try again with valid JSON.`
+                    });
+                    continue;
+                }
 
                 let result;
                 if (functionName === 'list_files') {
