@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TASK WARNING - URGENT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #ff0000;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
+            animation: scanlineMove 8s linear infinite;
+        }
+
+        @keyframes scanlineMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(10px); }
+        }
+
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .flash-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ff0000;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 998;
+            animation: flashRed 2s infinite;
+        }
+
+        @keyframes flashRed {
+            0%, 100% { opacity: 0; }
+            10%, 30%, 50% { opacity: 0.3; }
+            20%, 40% { opacity: 0; }
+        }
+
+        .corner-warning {
+            position: fixed;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            animation: cornerPulse 1.5s infinite;
+        }
+
+        .corner-warning.top-left {
+            top: 0;
+            left: 0;
+            border-width: 60px 60px 0 0;
+            border-color: #ff0000 transparent transparent transparent;
+        }
+
+        .corner-warning.top-right {
+            top: 0;
+            right: 0;
+            border-width: 0 60px 60px 0;
+            border-color: transparent #ff0000 transparent transparent;
+        }
+
+        .corner-warning.bottom-left {
+            bottom: 0;
+            left: 0;
+            border-width: 60px 0 0 60px;
+            border-color: transparent transparent transparent #ff0000;
+        }
+
+        .corner-warning.bottom-right {
+            bottom: 0;
+            right: 0;
+            border-width: 0 0 60px 60px;
+            border-color: transparent transparent #ff0000 transparent;
+        }
+
+        @keyframes cornerPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .container {
+            max-width: 900px;
+            width: 90%;
+            padding: 40px;
+            border: 3px solid #ff0000;
+            background: rgba(10, 10, 10, 0.95);
+            box-shadow: 
+                0 0 20px rgba(255, 0, 0, 0.5),
+                inset 0 0 20px rgba(255, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+            animation: containerPulse 3s infinite;
+        }
+
+        @keyframes containerPulse {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 20px rgba(255, 0, 0, 0.5),
+                    inset 0 0 20px rgba(255, 0, 0, 0.1);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 40px rgba(255, 0, 0, 0.8),
+                    inset 0 0 30px rgba(255, 0, 0, 0.2);
+            }
+        }
+
+        .warning-header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .warning-icon {
+            font-size: 80px;
+            animation: iconSpin 4s linear infinite, colorShift 1s infinite;
+            display: inline-block;
+        }
+
+        @keyframes iconSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(10deg) scale(1.1); }
+            50% { transform: rotate(0deg) scale(1); }
+            75% { transform: rotate(-10deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        @keyframes colorShift {
+            0%, 100% { color: #ff0000; text-shadow: 0 0 20px #ff0000; }
+            50% { color: #ff6666; text-shadow: 0 0 30px #ff0000; }
+        }
+
+        .alert-title {
+            font-size: clamp(24px, 5vw, 48px);
+            font-weight: bold;
+            letter-spacing: 5px;
+            margin: 20px 0;
+            animation: textPulse 1s infinite;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        @keyframes textPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+
+        .terminal-line {
+            margin: 10px 0;
+            padding: 5px 0;
+            border-left: 3px solid #ff0000;
+            padding-left: 15px;
+        }
+
+        .message-box {
+            background: rgba(20, 0, 0, 0.8);
+            border: 2px solid #ff0000;
+            padding: 30px;
+            margin: 30px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .message-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 0, 0.2), transparent);
+            animation: scanEffect 3s linear infinite;
+        }
+
+        @keyframes scanEffect {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .message-text {
+            font-size: clamp(14px, 2.5vw, 18px);
+            line-height: 1.8;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
+
+        .signature {
+            text-align: right;
+            margin-top: 20px;
+            font-style: italic;
+            font-size: clamp(16px, 3vw, 20px);
+            animation: signatureFade 2s infinite;
+        }
+
+        @keyframes signatureFade {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .siren-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .siren {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            position: relative;
+            animation: sirenRotate 1s linear infinite;
+        }
+
+        .siren::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff0000, transparent 70%);
+            animation: sirenPulse 1s infinite;
+        }
+
+        @keyframes sirenRotate {
+            0% { transform: rotate(0deg); filter: hue-rotate(0deg); }
+            100% { transform: rotate(360deg); filter: hue-rotate(360deg); }
+        }
+
+        @keyframes sirenPulse {
+            0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        .danger-stripes {
+            height: 20px;
+            background: repeating-linear-gradient(
+                45deg,
+                #ff0000,
+                #ff0000 20px,
+                #000000 20px,
+                #000000 40px
+            );
+            animation: stripeMove 1s linear infinite;
+            margin: 20px 0;
+        }
+
+        @keyframes stripeMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 0; }
+        }
+
+        .glitch {
+            position: relative;
+            display: inline-block;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch::before {
+            animation: glitch1 0.3s infinite;
+            color: #0ff;
+            z-index: -1;
+        }
+
+        .glitch::after {
+            animation: glitch2 0.3s infinite;
+            color: #f0f;
+            z-index: -2;
+        }
+
+        @keyframes glitch1 {
+            0%, 100% { transform: translate(0); }
+            33% { transform: translate(-2px, 2px); }
+            66% { transform: translate(2px, -2px); }
+        }
+
+        @keyframes glitch2 {
+            0%, 100% { transform: translate(0); }
+            33% { transform: translate(2px, -2px); }
+            66% { transform: translate(-2px, 2px); }
+        }
+
+        .timestamp {
+            text-align: center;
+            font-size: clamp(12px, 2vw, 14px);
+            margin-top: 20px;
+            opacity: 0.7;
+            font-family: monospace;
+        }
+
+        .audio-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: 2px solid #ff0000;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            z-index: 9999;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+
+        .audio-control:hover {
+            background: rgba(255, 0, 0, 1);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .corner-warning {
+                border-width: 40px 40px 0 0 !important;
+            }
+
+            .corner-warning.top-right {
+                border-width: 0 40px 40px 0 !important;
+            }
+
+            .corner-warning.bottom-left {
+                border-width: 40px 0 0 40px !important;
+            }
+
+            .corner-warning.bottom-right {
+                border-width: 0 0 40px 40px !important;
+            }
+
+            .warning-icon {
+                font-size: 60px;
+            }
+
+            .siren {
+                width: 40px;
+                height: 40px;
+            }
+
+            .message-box {
+                padding: 20px;
+            }
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    <div class="flash-overlay"></div>
+
+    <div class="corner-warning top-left"></div>
+    <div class="corner-warning top-right"></div>
+    <div class="corner-warning bottom-left"></div>
+    <div class="corner-warning bottom-right"></div>
+
+    <div class="container">
+        <div class="warning-header">
+            <div class="warning-icon">⚠</div>
+            <h1 class="alert-title glitch" data-text="URGENT WARNING">URGENT WARNING</h1>
+        </div>
+
+        <div class="danger-stripes"></div>
+
+        <div class="terminal-line">
+            <span style="color: #ff6666;">&gt;&gt;&gt;</span> SYSTEM ALERT INITIATED
+        </div>
+        <div class="terminal-line">
+            <span style="color: #ff6666;">&gt;&gt;&gt;</span> PRIORITY: CRITICAL
+        </div>
+        <div class="terminal-line">
+            <span style="color: #ff6666;">&gt;&gt;&gt;</span> STATUS: TASKS INCOMPLETE
+        </div>
+
+        <div class="siren-container">
+            <div class="siren"></div>
+            <div class="siren"></div>
+            <div class="siren"></div>
+            <div class="siren"></div>
+        </div>
+
+        <div class="message-box">
+            <div class="message-text">
+                <strong>Good Morning</strong> - this is a text to let you know you still have tasks incomplete. 
+                To avoid injury or a death sentence, please complete these at your earliest convenience. 
+                Thank you!
+                <div class="signature">-Sportello</div>
+            </div>
+        </div>
+
+        <div class="danger-stripes"></div>
+
+        <div class="timestamp" id="timestamp"></div>
+    </div>
+
+    <button class="audio-control" id="audioToggle">🔊 ENABLE SIREN</button>
+
+    <script>
+        // Update timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            const timestamp = now.toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            document.getElementById('timestamp').textContent = `ALERT TIMESTAMP: ${timestamp}`;
+        }
+
+        updateTimestamp();
+        setInterval(updateTimestamp, 1000);
+
+        // Audio siren functionality
+        let audioContext;
+        let oscillator;
+        let gainNode;
+        let isPlaying = false;
+
+        const audioToggle = document.getElementById('audioToggle');
+
+        audioToggle.addEventListener('click', function() {
+            if (!isPlaying) {
+                startSiren();
+                audioToggle.textContent = '🔇 DISABLE SIREN';
+                isPlaying = true;
+            } else {
+                stopSiren();
+                audioToggle.textContent = '🔊 ENABLE SIREN';
+                isPlaying = false;
+            }
+        });
+
+        function startSiren() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            oscillator = audioContext.createOscillator();
+            gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.type = 'sine';
+            gainNode.gain.value = 0.3;
+
+            oscillator.start();
+
+            // Siren effect
+            let frequency = 400;
+            let direction = 1;
+            setInterval(() => {
+                if (isPlaying) {
+                    frequency += direction * 20;
+                    if (frequency > 800 || frequency < 400) {
+                        direction *= -1;
+                    }
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                }
+            }, 50);
+        }
+
+        function stopSiren() {
+            if (oscillator) {
+                oscillator.stop();
+                oscillator = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+        }
+
+        // Random glitch effect on text
+        setInterval(() => {
+            const glitchElements = document.querySelectorAll('.glitch');
+            glitchElements.forEach(el => {
+                if (Math.random() > 0.7) {
+                    el.style.transform = `translate(${Math.random() * 4 - 2}px, ${Math.random() * 4 - 2}px)`;
+                    setTimeout(() => {
+                        el.style.transform = 'translate(0, 0)';
+                    }, 50);
+                }
+            });
+        }, 200);
+
+        // Screen shake effect
+        let shakeInterval;
+        function screenShake() {
+            const container = document.querySelector('.container');
+            const intensity = 3;
+            container.style.transform = `translate(${Math.random() * intensity - intensity/2}px, ${Math.random() * intensity - intensity/2}px)`;
+        }
+
+        setInterval(() => {
+            if (Math.random() > 0.8) {
+                shakeInterval = setInterval(screenShake, 50);
+                setTimeout(() => {
+                    clearInterval(shakeInterval);
+                    document.querySelector('.container').style.transform = 'translate(0, 0)';
+                }, 200);
+            }
+        }, 3000);
+
+        // Add random static bursts
+        setInterval(() => {
+            if (Math.random() > 0.9) {
+                const flash = document.querySelector('.flash-overlay');
+                flash.style.opacity = '0.5';
+                setTimeout(() => {
+                    flash.style.opacity = '';
+                }, 100);
+            }
+        }, 500);
+    </script>
+</body>
+</html>

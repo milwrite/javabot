@@ -98,5 +98,9 @@
   "anniversary": {
     "icon": "🌐",
     "description": "Zach & Cen's surreal Lynchian anniversary chronicle at Love's Club with interactive visualizations"
+  },
+  "task-warning": {
+    "icon": "✅",
+    "description": "Create a flashing warning page with the message: 'Good Morning - this is a text to let you know you still have tasks incomplete. To avoid injury or a death sentence, please complete these at your earliest convenience. Thank you! -Sportello'. Use red flashing effects, alarm-style visuals, sirens, pulsing text, and an ominous noir terminal aesthetic. Mobile-responsive with dramatic animations."
   }
 }
