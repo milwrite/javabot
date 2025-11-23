@@ -163,6 +163,7 @@ Color Palette (Noir Terminal):
 - Card backgrounds: rgba(26, 0, 0, 0.4)
 - Font: 'Courier Prime' monospace (terminal aesthetic)
 - CRT scanlines and flicker effects included
+- Starry sky background: add <script src="../stars.js"></script> to enable twinkling stars on any page
 
 Available CSS Classes (page-theme.css):
 
