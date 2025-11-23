@@ -532,8 +532,23 @@ async function writeFile(filePath, content) {
 
         // Write the file
         await fs.writeFile(filePath, content, 'utf8');
-        return `File written successfully: ${filePath} (${content.length} bytes)`;
+        console.log(`[WRITE_FILE] Written: ${filePath} (${content.length} bytes)`);
+
+        // Auto-commit and push so file is live before link is shared
+        console.log(`[WRITE_FILE] Auto-pushing to remote...`);
+        const fileName = path.basename(filePath);
+        const commitMessage = `add ${fileName}`;
+
+        await gitWithTimeout(() => git.add(filePath));
+        await gitWithTimeout(() => git.commit(commitMessage));
+        const status = await gitWithTimeout(() => git.status());
+        const currentBranch = status.current || 'main';
+        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+
+        console.log(`[WRITE_FILE] Auto-pushed: ${commitMessage}`);
+        return `File written and pushed: ${filePath} (${content.length} bytes) - now live at https://milwrite.github.io/javabot/${filePath}`;
     } catch (error) {
+        console.error(`[WRITE_FILE] Error:`, error.message);
         return `Error writing file: ${error.message}`;
     }
 }
@@ -589,9 +604,20 @@ Return ONLY the complete updated file content. No explanations, no markdown code
         // Write the updated content
         await fs.writeFile(filePath, updatedContent, 'utf8');
 
+        // Auto-commit and push so changes are live before link is shared
+        console.log(`[EDIT_FILE] Auto-pushing to remote...`);
+        const fileName = path.basename(filePath);
+        const commitMessage = `update ${fileName}`;
+
+        await gitWithTimeout(() => git.add(filePath));
+        await gitWithTimeout(() => git.commit(commitMessage));
+        const status = await gitWithTimeout(() => git.status());
+        const currentBranch = status.current || 'main';
+        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`[EDIT_FILE] Success: ${filePath} (${totalTime}s total)`);
-        return `File edited successfully: ${filePath}. Changes applied: ${instructions}`;
+        console.log(`[EDIT_FILE] Success + pushed: ${filePath} (${totalTime}s total)`);
+        return `File edited and pushed: ${filePath}. Changes applied: ${instructions} - now live`;
     } catch (error) {
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
         console.error(`[EDIT_FILE] Error after ${totalTime}s:`, error.message);
@@ -750,8 +776,16 @@ Return only HTML, no markdown blocks or explanations.`;
         // Update index.html
         await updateIndexWithPage(name, description);
 
-        console.log(`[CREATE_PAGE] Success: ${fileName}`);
-        return `Created ${fileName} and updated index.html. Live at: https://milwrite.github.io/javabot/src/${name}.html`;
+        // Auto-commit and push so page is live before link is shared
+        console.log(`[CREATE_PAGE] Auto-pushing to remote...`);
+        await gitWithTimeout(() => git.add([fileName, 'projectmetadata.json']));
+        await gitWithTimeout(() => git.commit(`add ${name} page`));
+        const status = await gitWithTimeout(() => git.status());
+        const currentBranch = status.current || 'main';
+        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+
+        console.log(`[CREATE_PAGE] Success + pushed: ${fileName}`);
+        return `Created ${fileName} and pushed. Live at: https://milwrite.github.io/javabot/src/${name}.html`;
     } catch (error) {
         console.error(`[CREATE_PAGE] Error:`, error.message);
         return `Error creating page: ${error.message}`;
@@ -830,8 +864,16 @@ Return only HTML code, no markdown blocks or explanations.`;
         // Update index.html
         await updateIndexWithPage(name, description);
 
-        console.log(`[CREATE_FEATURE] Success: ${jsFileName}, ${htmlFileName}`);
-        return `Created ${jsFileName} and ${htmlFileName}, updated index.html. Live demo: https://milwrite.github.io/javabot/src/${name}.html`;
+        // Auto-commit and push so feature is live before link is shared
+        console.log(`[CREATE_FEATURE] Auto-pushing to remote...`);
+        await gitWithTimeout(() => git.add([jsFileName, htmlFileName, 'projectmetadata.json']));
+        await gitWithTimeout(() => git.commit(`add ${name} feature`));
+        const status = await gitWithTimeout(() => git.status());
+        const currentBranch = status.current || 'main';
+        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+
+        console.log(`[CREATE_FEATURE] Success + pushed: ${jsFileName}, ${htmlFileName}`);
+        return `Created ${jsFileName} and ${htmlFileName}, pushed. Live demo: https://milwrite.github.io/javabot/src/${name}.html`;
     } catch (error) {
         console.error(`[CREATE_FEATURE] Error:`, error.message);
         return `Error creating feature: ${error.message}`;
