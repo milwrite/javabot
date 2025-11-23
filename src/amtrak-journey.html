@@ -535,7 +535,8 @@
             completedGames: new Set()
         };
 
-        let memoryState = { flipped: [], matched: 0, cards: [] };
+        // Separate memory state for each stop that has a memory game
+        let memoryStates = {};
 
         // Initialize
         function init() {
@@ -620,7 +621,11 @@
                     </div>
                 `;
             } else if (stop.game === 'memory') {
-                if (!completed) initMemory(stop.pairs);
+                // Initialize memory state for this stop if it doesn't exist
+                if (!memoryStates[state.currentStop]) {
+                    initMemory(stop.pairs, state.currentStop);
+                }
+                const memoryState = memoryStates[state.currentStop];
                 section.innerHTML = `
                     <div class="game-header"><i class="fas fa-gamepad"></i> MEMORY MATCH</div>
                     <div class="memory-grid">
@@ -667,15 +672,18 @@
         }
 
         // Memory
-        function initMemory(pairs) {
+        function initMemory(pairs, stopIndex) {
             const cards = [...pairs, ...pairs].map(emoji => ({ emoji, flipped: false, matched: false }));
             cards.sort(() => Math.random() - 0.5);
-            memoryState = { flipped: [], matched: 0, cards };
+            memoryStates[stopIndex] = { flipped: [], matched: 0, cards };
         }
 
         function flipCard(index) {
             const gameId = `game-${state.currentStop}`;
             if (state.completedGames.has(gameId)) return;
+
+            const memoryState = memoryStates[state.currentStop];
+            if (!memoryState) return;
 
             const card = memoryState.cards[index];
             if (card.flipped || card.matched || memoryState.flipped.length >= 2) return;
@@ -690,6 +698,9 @@
         }
 
         function checkMatch() {
+            const memoryState = memoryStates[state.currentStop];
+            if (!memoryState) return;
+
             const [i1, i2] = memoryState.flipped;
             const c1 = memoryState.cards[i1];
             const c2 = memoryState.cards[i2];
@@ -753,6 +764,7 @@
 
         function restart() {
             state = { currentStop: 0, score: 0, gamesWon: 0, completedGames: new Set() };
+            memoryStates = {};
             document.getElementById('modal').classList.remove('show');
             init();
         }
