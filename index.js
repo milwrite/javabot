@@ -185,10 +185,12 @@ MODALS: .modal, .modal-content, .modal-header, .close-btn, .notification, .game-
 GAMES: .game-wrapper, .game-container, .sudoku-grid, .cell, .number-pad, .mobile-controls (REQUIRED for games), canvas
 
 MOBILE CONTROLS (REQUIRED FOR ALL GAMES):
-- Include .mobile-controls div with arrow buttons for directional games
+- Position controls DIRECTLY below canvas (before other content)
 - Display: none on desktop, display: grid on mobile (@media max-width: 768px)
-- All control buttons must be 44px+ touch targets
-- Add touch event handlers alongside keyboard controls
+- CSS: touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+- Size: min-height 50px, min-width 50px, font-size 20px for arrows
+- JS: Use touchstart with preventDefault + {passive: false}, click as fallback
+- Example: btn.addEventListener('touchstart', (e) => { e.preventDefault(); handler(); }, {passive: false});
 
 RESPONSIVE BREAKPOINTS (MANDATORY):
 @media (max-width: 768px) - Tablet/mobile landscape
