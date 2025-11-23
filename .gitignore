@@ -10,3 +10,4 @@ LOG.md
 
 .gemini/
 gha-creds-*.json
+github-api-migration.md
