@@ -149,7 +149,7 @@ class AmtrakGames {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Draw grid background
-      ctx.strokeStyle = '#00ff4122';
+      ctx.strokeStyle = '#7ec8e322';
       ctx.lineWidth = 0.5;
       for (let i = 0; i < canvas.width; i += 20) {
         ctx.beginPath();
@@ -165,9 +165,9 @@ class AmtrakGames {
       }
 
       // Draw goal zone
-      ctx.fillStyle = '#00ff4144';
+      ctx.fillStyle = '#7ec8e344';
       ctx.fillRect(0, 0, canvas.width, 30);
-      ctx.fillStyle = '#00ff41';
+      ctx.fillStyle = '#7ec8e3';
       ctx.font = '12px Courier Prime';
       ctx.textAlign = 'center';
       ctx.fillText('PLATFORM', canvas.width / 2, 20);
@@ -197,7 +197,7 @@ class AmtrakGames {
       if (!gameActive) {
         ctx.fillStyle = '#ff0000aa';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#00ff41';
+        ctx.fillStyle = '#7ec8e3';
         ctx.font = 'bold 24px Courier Prime';
         ctx.textAlign = 'center';
         ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
@@ -271,7 +271,7 @@ class AmtrakGames {
     gameArea.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%)';
     gameArea.style.position = 'relative';
     gameArea.style.overflow = 'hidden';
-    gameArea.style.border = '3px solid #00ff41';
+    gameArea.style.border = '3px solid #7ec8e3';
     gameArea.style.cursor = 'crosshair';
 
     let score = 0;
@@ -472,7 +472,7 @@ class AmtrakGames {
 
       if (index === question.correct) {
         score++;
-        feedback.innerHTML = `<div style="color: #00ff41; font-weight: bold;">✓ Correct!</div><p>${question.fact}</p>`;
+        feedback.innerHTML = `<div style="color: #7ec8e3; font-weight: bold;">✓ Correct!</div><p>${question.fact}</p>`;
         document.getElementById('albany-score').textContent = score;
       } else {
         feedback.innerHTML = `<div style="color: #ff0000; font-weight: bold;">✗ Incorrect</div><p>${question.fact}</p>`;
@@ -489,7 +489,7 @@ class AmtrakGames {
       document.getElementById('albany-content').innerHTML = `
         <div class="game-over-modal">
           <h3>Quiz Complete!</h3>
-          <p>Final Score: <span style="color: #00ff41; font-weight: bold;">${score}/${questions.length}</span></p>
+          <p>Final Score: <span style="color: #7ec8e3; font-weight: bold;">${score}/${questions.length}</span></p>
           <p>${score === questions.length ? '🎉 Perfect Score!' : score >= 3 ? '🌟 Great Job!' : '📚 Keep Learning!'}</p>
         </div>
       `;
@@ -658,7 +658,7 @@ class AmtrakGames {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Platforms
-      ctx.fillStyle = '#00ff41';
+      ctx.fillStyle = '#7ec8e3';
       platforms.forEach(platform => {
         ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
       });
@@ -677,7 +677,7 @@ class AmtrakGames {
       if (!gameActive) {
         ctx.fillStyle = '#ff0000aa';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#00ff41';
+        ctx.fillStyle = '#7ec8e3';
         ctx.font = 'bold 24px Courier Prime';
         ctx.textAlign = 'center';
         ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
@@ -901,7 +901,7 @@ class AmtrakGames {
 
       if (index === question.correct) {
         score++;
-        feedback.innerHTML = `<div style="color: #00ff41; font-weight: bold;">✓ Correct!</div><p>${question.fact}</p>`;
+        feedback.innerHTML = `<div style="color: #7ec8e3; font-weight: bold;">✓ Correct!</div><p>${question.fact}</p>`;
         document.getElementById('rochester-score').textContent = score;
       } else {
         feedback.innerHTML = `<div style="color: #ff0000; font-weight: bold;">✗ Incorrect</div><p>${question.fact}</p>`;
@@ -917,7 +917,7 @@ class AmtrakGames {
       document.getElementById('rochester-content').innerHTML = `
         <div class="game-over-modal">
           <h3>🎉 Welcome to Rochester! 🎉</h3>
-          <p>Final Score: <span style="color: #00ff41; font-weight: bold;">${score}/${questions.length}</span></p>
+          <p>Final Score: <span style="color: #7ec8e3; font-weight: bold;">${score}/${questions.length}</span></p>
           <p>${score === questions.length ? '🌟 Expert Guide!' : score >= 4 ? '🎯 Great Navigator!' : '📚 Enjoy Your Stay!'}</p>
           <p style="margin-top: 20px; font-size: 14px;">Thanks for traveling with Zach & Cen!</p>
         </div>

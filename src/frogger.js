@@ -253,11 +253,11 @@ class FroggerGame {
         });
 
         // Draw frog - terminal green
-        this.ctx.fillStyle = '#00ff41';
+        this.ctx.fillStyle = '#7ec8e3';
         this.ctx.fillRect(this.frog.x + 2, this.frog.y + 2, this.frog.size, this.frog.size);
 
         // Draw UI - terminal green
-        this.ctx.fillStyle = '#00ff41';
+        this.ctx.fillStyle = '#7ec8e3';
         this.ctx.font = '20px "Courier Prime", monospace';
         this.ctx.fillText(`Score: ${this.score}`, 10, 30);
         this.ctx.fillText(`Lives: ${this.lives}`, 10, 55);
@@ -272,7 +272,7 @@ class FroggerGame {
             this.ctx.font = '30px "Courier Prime", monospace';
             this.ctx.textAlign = 'center';
             this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2 - 50);
-            this.ctx.fillStyle = '#00ff41';
+            this.ctx.fillStyle = '#7ec8e3';
             this.ctx.font = '16px "Courier Prime", monospace';
             this.ctx.fillText(`Final Score: ${this.score}`, this.canvas.width / 2, this.canvas.height / 2);
             this.ctx.fillText('Refresh to play again', this.canvas.width / 2, this.canvas.height / 2 + 30);

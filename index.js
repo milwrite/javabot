@@ -156,7 +156,7 @@ MOBILE-FIRST DESIGN (Discord is mobile-forward):
 - Font sizes must be readable on mobile (min 14px body text)
 
 Color Palette (Noir Terminal):
-- Primary green: #00ff41 (terminal green) - main accent
+- Primary green: #7ec8e3 (sky blue) - main accent
 - Accent red: #ff0000 - buttons, highlights, warnings
 - Accent cyan: #00ffff - secondary text, headings
 - Background: #0a0a0a (near-black)
@@ -204,7 +204,7 @@ WHEN CREATING PAGES:
 4. Body: padding-top 80px for home button, overflow-x/y: auto
 5. For GAMES: Always include .mobile-controls with touch buttons
 6. Canvas games: max-width 100%, height auto
-7. Keep noir terminal colors (#00ff41, #ff0000, #00ffff, #0a0a0a)
+7. Keep noir terminal colors (#7ec8e3, #ff0000, #00ffff, #0a0a0a)
 8. Test scrollability on mobile - no overflow: hidden on body
 
 PROJECT METADATA CAPTIONS (for projectmetadata.json):

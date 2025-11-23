@@ -31,7 +31,7 @@
             background: #d4a574;
             margin: 10px 0;
             overflow: hidden;
-            border: 2px solid #00ff41;
+            border: 2px solid #7ec8e3;
         }
 
         .meat {
@@ -41,7 +41,7 @@
         }
 
         .veggie {
-            background: #00ff41;
+            background: #7ec8e3;
             flex: var(--veggie-ratio);
             position: relative;
         }
@@ -60,7 +60,7 @@
 
         .ratio-text {
             font-size: 0.7em;
-            color: #00ff41;
+            color: #7ec8e3;
             margin-top: 10px;
         }
 
@@ -87,7 +87,7 @@
         .stat-box {
             padding: 15px;
             background: rgba(26, 0, 0, 0.4);
-            border: 2px solid #00ff41;
+            border: 2px solid #7ec8e3;
             text-align: center;
         }
 
@@ -99,7 +99,7 @@
 
         .stat-label {
             font-size: 0.6em;
-            color: #00ff41;
+            color: #7ec8e3;
             margin-top: 8px;
         }
     </style>
@@ -200,7 +200,7 @@
 
             if (meat === 40 && veggie === 40) {
                 balance.textContent = 'Perfect!';
-                balance.style.color = '#00ff41';
+                balance.style.color = '#7ec8e3';
             } else if (Math.abs(meat - 40) <= 10 && Math.abs(veggie - 40) <= 10) {
                 balance.textContent = 'Good';
                 balance.style.color = '#00ffff';

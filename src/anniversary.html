@@ -17,7 +17,7 @@
         body {
             font-family: 'Courier Prime', monospace;
             background: #0a0a0a;
-            color: #00ff41;
+            color: #7ec8e3;
             overflow-x: hidden;
             overflow-y: auto;
             line-height: 1.8;
@@ -59,10 +59,10 @@
             z-index: 9999;
             text-decoration: none;
             background: rgba(255, 0, 0, 0.7);
-            color: #00ff41;
+            color: #7ec8e3;
             padding: 10px 20px;
-            border: 2px solid #00ff41;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5), inset 0 0 10px rgba(0, 255, 65, 0.2);
+            border: 2px solid #7ec8e3;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5), inset 0 0 10px rgba(126, 200, 227, 0.2);
             transition: all 0.3s ease;
             font-weight: bold;
             letter-spacing: 2px;
@@ -77,7 +77,7 @@
         .home-link:hover {
             background: rgba(255, 0, 0, 1);
             transform: skew(-5deg);
-            box-shadow: 0 0 30px rgba(255, 0, 0, 0.8), inset 0 0 20px rgba(0, 255, 65, 0.4);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.8), inset 0 0 20px rgba(126, 200, 227, 0.4);
         }
 
         .container {
@@ -107,7 +107,7 @@
             bottom: 0;
             background:
                 radial-gradient(circle at 20% 50%, rgba(255, 0, 0, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(0, 255, 65, 0.05) 0%, transparent 50%);
+                radial-gradient(circle at 80% 80%, rgba(126, 200, 227, 0.05) 0%, transparent 50%);
             pointer-events: none;
             animation: dreamShift 8s ease-in-out infinite;
         }
@@ -121,7 +121,7 @@
             font-size: 2.8em;
             margin-bottom: 15px;
             color: #ff0000;
-            text-shadow: 0 0 30px rgba(255, 0, 0, 0.8), 0 0 60px rgba(0, 255, 65, 0.3);
+            text-shadow: 0 0 30px rgba(255, 0, 0, 0.8), 0 0 60px rgba(126, 200, 227, 0.3);
             position: relative;
             z-index: 1;
             letter-spacing: 3px;
@@ -144,7 +144,7 @@
 
         @keyframes titleGlitch {
             0% { transform: translate(0, 0); color: #ff0000; }
-            20% { transform: translate(-2px, 2px); color: #00ff41; }
+            20% { transform: translate(-2px, 2px); color: #7ec8e3; }
             40% { transform: translate(2px, -2px); color: #ff0000; }
             60% { transform: translate(-1px, 1px); color: #00ffff; }
             80% { transform: translate(1px, -1px); color: #ff0000; }
@@ -177,7 +177,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.1), transparent);
+            background: linear-gradient(90deg, transparent, rgba(126, 200, 227, 0.1), transparent);
             animation: shimmer 4s infinite;
         }
 
@@ -207,8 +207,8 @@
             padding: 20px;
             padding-left: 30px;
             position: relative;
-            background: rgba(0, 255, 65, 0.05);
-            border-left: 4px solid #00ff41;
+            background: rgba(126, 200, 227, 0.05);
+            border-left: 4px solid #7ec8e3;
             opacity: 0;
             animation: fadeInUp 0.6s ease forwards;
             transition: all 0.3s ease;
@@ -216,9 +216,9 @@
         }
 
         .event:hover {
-            background: rgba(0, 255, 65, 0.15);
+            background: rgba(126, 200, 227, 0.15);
             transform: translateX(10px);
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 20px rgba(126, 200, 227, 0.3);
         }
 
         .event:nth-child(1) { animation-delay: 0.1s; }
@@ -247,7 +247,7 @@
         }
 
         .event-text {
-            color: #00ff41;
+            color: #7ec8e3;
             font-size: 0.9em;
             line-height: 1.6;
         }
@@ -257,9 +257,9 @@
             z-index: 1;
             height: 350px;
             background: rgba(0, 0, 0, 0.6);
-            border: 3px solid #00ff41;
+            border: 3px solid #7ec8e3;
             overflow: hidden;
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 30px rgba(126, 200, 227, 0.3);
         }
 
         #canvas-container {
@@ -278,7 +278,7 @@
 
         .stat-box {
             background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #00ff41;
+            border: 2px solid #7ec8e3;
             padding: 20px;
             text-align: center;
             transition: all 0.3s ease;
@@ -300,7 +300,7 @@
 
         .stat-label {
             font-size: 0.8em;
-            color: #00ff41;
+            color: #7ec8e3;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -311,8 +311,8 @@
         }
 
         .memory-card {
-            background: rgba(0, 255, 65, 0.05);
-            border-left: 4px solid #00ff41;
+            background: rgba(126, 200, 227, 0.05);
+            border-left: 4px solid #7ec8e3;
             padding: 18px;
             margin-bottom: 12px;
             cursor: pointer;
@@ -328,7 +328,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(126, 200, 227, 0.2), transparent);
             transition: left 0.5s ease;
         }
 
@@ -338,8 +338,8 @@
 
         .memory-card:hover {
             transform: translateX(10px);
-            background: rgba(0, 255, 65, 0.15);
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            background: rgba(126, 200, 227, 0.15);
+            box-shadow: 0 0 20px rgba(126, 200, 227, 0.3);
         }
 
         .memory-title {
@@ -351,7 +351,7 @@
         }
 
         .memory-text {
-            color: #00ff41;
+            color: #7ec8e3;
             font-size: 0.85em;
             line-height: 1.6;
         }
@@ -367,8 +367,8 @@
 
         button {
             background: rgba(255, 0, 0, 0.7);
-            color: #00ff41;
-            border: 2px solid #00ff41;
+            color: #7ec8e3;
+            border: 2px solid #7ec8e3;
             padding: 12px 20px;
             cursor: pointer;
             font-weight: bold;
@@ -392,12 +392,12 @@
         }
 
         .dream-text {
-            color: #00ff41;
+            color: #7ec8e3;
             font-style: italic;
             margin-top: 20px;
             padding: 18px;
-            background: rgba(0, 255, 65, 0.1);
-            border-left: 4px solid #00ff41;
+            background: rgba(126, 200, 227, 0.1);
+            border-left: 4px solid #7ec8e3;
             font-size: 0.9em;
             line-height: 1.8;
             position: relative;
