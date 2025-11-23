@@ -114,5 +114,9 @@
   "index": {
     "icon": "🌐",
     "description": "Index"
+  },
+  "sampson_deodorant": {
+    "icon": "🌐",
+    "description": "A silly 90s-style infomercial visualization about"
   }
 }
