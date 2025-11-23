@@ -82,9 +82,16 @@ class FroggerGame {
     bindEvents() {
         document.addEventListener('keydown', (e) => this.handleInput(e));
         
-        // Mobile controls
+        // Mobile controls - use touchstart to prevent zoom
         document.querySelectorAll('.mobile-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const key = btn.getAttribute('data-key');
+                this.handleInput({ key });
+            }, { passive: false });
+            // Fallback for non-touch devices
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
                 const key = btn.getAttribute('data-key');
                 this.handleInput({ key });
             });

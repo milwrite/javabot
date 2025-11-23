@@ -235,6 +235,12 @@
             width: 60px;
             height: 60px;
             font-size: 1.5em;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .aim-btn.empty {
+            visibility: hidden;
         }
 
         .shoot-btn {
@@ -242,6 +248,8 @@
             height: 60px;
             font-size: 1.2em;
             background: rgba(255, 0, 0, 0.8);
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .instructions {
@@ -386,28 +394,28 @@
         <div class="streak-indicator" id="streakIndicator">ON FIRE!</div>
     </div>
 
-    <div class="controls-container">
-        <button class="btn" id="resetBtn">RESET</button>
-    </div>
-
     <div class="mobile-controls" id="mobileControls">
         <div class="aim-controls">
-            <button class="btn aim-btn empty"></button>
-            <button class="btn aim-btn" id="aimUp">^</button>
-            <button class="btn aim-btn empty"></button>
-            <button class="btn aim-btn" id="aimLeft"><</button>
-            <button class="btn aim-btn" id="shootBtn">O</button>
-            <button class="btn aim-btn" id="aimRight">></button>
-            <button class="btn aim-btn empty"></button>
-            <button class="btn aim-btn" id="aimDown">v</button>
-            <button class="btn aim-btn empty"></button>
+            <div class="aim-btn empty"></div>
+            <button class="btn aim-btn" id="aimUp">↑</button>
+            <div class="aim-btn empty"></div>
+            <button class="btn aim-btn" id="aimLeft">←</button>
+            <button class="btn aim-btn" id="shootBtn">🏀</button>
+            <button class="btn aim-btn" id="aimRight">→</button>
+            <div class="aim-btn empty"></div>
+            <button class="btn aim-btn" id="aimDown">↓</button>
+            <div class="aim-btn empty"></div>
         </div>
         <button class="btn shoot-btn" id="mobileShoot">SHOOT!</button>
     </div>
 
+    <div class="controls-container">
+        <button class="btn" id="resetBtn">RESET</button>
+    </div>
+
     <div class="instructions">
         <p class="desktop-hint">Drag the ball and release to shoot. Aim for the rim!</p>
-        <p class="mobile-hint">Use arrow buttons to aim, then tap SHOOT!</p>
+        <p class="mobile-hint">Use arrows to aim, center or SHOOT! to fire</p>
     </div>
 
     <script>
@@ -648,25 +656,52 @@
         let aimY = -10; // Default aim upward
         let power = 80;
 
-        document.getElementById('aimUp').addEventListener('click', () => {
+        function handleAimUp(e) {
+            e.preventDefault();
             aimY = Math.max(aimY - 2, -15);
             updateAimDisplay();
-        });
+        }
 
-        document.getElementById('aimDown').addEventListener('click', () => {
+        function handleAimDown(e) {
+            e.preventDefault();
             aimY = Math.min(aimY + 2, -5);
             updateAimDisplay();
-        });
+        }
 
-        document.getElementById('aimLeft').addEventListener('click', () => {
+        function handleAimLeft(e) {
+            e.preventDefault();
             aimX = Math.max(aimX - 2, -8);
             updateAimDisplay();
-        });
+        }
 
-        document.getElementById('aimRight').addEventListener('click', () => {
+        function handleAimRight(e) {
+            e.preventDefault();
             aimX = Math.min(aimX + 2, 8);
             updateAimDisplay();
-        });
+        }
+
+        function handleShoot(e) {
+            e.preventDefault();
+            if (isAnimating) return;
+            aimLine.style.display = 'none';
+            shootBall(aimX, aimY, power);
+        }
+
+        // Touch events (prevent zoom)
+        document.getElementById('aimUp').addEventListener('touchstart', handleAimUp, { passive: false });
+        document.getElementById('aimDown').addEventListener('touchstart', handleAimDown, { passive: false });
+        document.getElementById('aimLeft').addEventListener('touchstart', handleAimLeft, { passive: false });
+        document.getElementById('aimRight').addEventListener('touchstart', handleAimRight, { passive: false });
+        document.getElementById('mobileShoot').addEventListener('touchstart', handleShoot, { passive: false });
+        document.getElementById('shootBtn').addEventListener('touchstart', handleShoot, { passive: false });
+
+        // Click fallbacks
+        document.getElementById('aimUp').addEventListener('click', handleAimUp);
+        document.getElementById('aimDown').addEventListener('click', handleAimDown);
+        document.getElementById('aimLeft').addEventListener('click', handleAimLeft);
+        document.getElementById('aimRight').addEventListener('click', handleAimRight);
+        document.getElementById('mobileShoot').addEventListener('click', handleShoot);
+        document.getElementById('shootBtn').addEventListener('click', handleShoot);
 
         function updateAimDisplay() {
             const angle = Math.atan2(aimX, -aimY);
@@ -677,18 +712,6 @@
             aimLine.style.bottom = (gameArea.offsetHeight - initialBallY - 20) + 'px';
             aimLine.style.transform = `rotate(${angle}rad)`;
         }
-
-        document.getElementById('mobileShoot').addEventListener('click', () => {
-            if (isAnimating) return;
-            aimLine.style.display = 'none';
-            shootBall(aimX, aimY, power);
-        });
-
-        document.getElementById('shootBtn').addEventListener('click', () => {
-            if (isAnimating) return;
-            aimLine.style.display = 'none';
-            shootBall(aimX, aimY, power);
-        });
 
         // Reset button
         document.getElementById('resetBtn').addEventListener('click', () => {

@@ -21,6 +21,13 @@
             border: 3px solid #00ff41;
             box-shadow: 0 0 30px rgba(0, 255, 65, 0.4);
         }
+        .control-btn {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 50px;
+            min-width: 50px;
+            font-size: 20px;
+        }
         @media (max-width: 768px) {
             canvas {
                 max-width: 95vw;
@@ -28,6 +35,7 @@
             }
             .mobile-controls {
                 display: grid;
+                margin-top: 10px;
             }
             .stats {
                 grid-template-columns: repeat(3, 1fr);
@@ -60,6 +68,16 @@
         <div class="game-wrapper">
             <canvas id="gameCanvas" width="400" height="400"></canvas>
 
+            <!-- Mobile Controls - Right below canvas -->
+            <div class="mobile-controls" id="mobileControls">
+                <div class="control-btn empty"></div>
+                <button class="control-btn" id="btnUp">↑</button>
+                <div class="control-btn empty"></div>
+                <button class="control-btn" id="btnLeft">←</button>
+                <button class="control-btn" id="btnDown">↓</button>
+                <button class="control-btn" id="btnRight">→</button>
+            </div>
+
             <div class="stats">
                 <div class="stat-box">
                     <div class="stat-label">Score</div>
@@ -89,16 +107,6 @@
 
             <div class="info-panel">
                 <strong>Controls:</strong> Use <strong>Arrow Keys</strong> or <strong>WASD</strong> to move. Eat food to grow. Avoid walls and yourself!
-            </div>
-
-            <!-- Mobile Controls -->
-            <div class="mobile-controls" id="mobileControls">
-                <div class="control-btn empty"></div>
-                <button class="control-btn" id="btnUp">↑</button>
-                <div class="control-btn empty"></div>
-                <button class="control-btn" id="btnLeft">←</button>
-                <button class="control-btn" id="btnDown">↓</button>
-                <button class="control-btn" id="btnRight">→</button>
             </div>
         </div>
     </div>

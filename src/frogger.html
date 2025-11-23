@@ -48,10 +48,13 @@
             border: 2px solid #00ff41;
             padding: 15px;
             font-family: inherit;
-            font-size: 14px;
+            font-size: 20px;
             cursor: pointer;
             user-select: none;
-            min-height: 44px;
+            min-height: 50px;
+            min-width: 50px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         .mobile-btn:active {
             background: #ff0000;
@@ -85,10 +88,6 @@
     <div class="game-container">
         <h1>Frogger</h1>
         <canvas id="gameCanvas"></canvas>
-        <div class="controls">
-            Use arrow keys to move the frog!<br>
-            Avoid cars, use logs to cross water
-        </div>
         <div class="mobile-controls">
             <div></div>
             <button class="mobile-btn" data-key="ArrowUp">↑</button>
@@ -96,6 +95,10 @@
             <button class="mobile-btn" data-key="ArrowLeft">←</button>
             <button class="mobile-btn" data-key="ArrowDown">↓</button>
             <button class="mobile-btn" data-key="ArrowRight">→</button>
+        </div>
+        <div class="controls">
+            Use arrow keys to move the frog!<br>
+            Avoid cars, use logs to cross water
         </div>
     </div>
 
