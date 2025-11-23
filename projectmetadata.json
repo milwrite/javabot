@@ -106,5 +106,9 @@
   "red-siren-protocol": {
     "icon": "✅",
     "description": "Flashing red alert warning for incomplete tasks with dramatic siren effects and pulsing text message"
+  },
+  "zach-sleep-letter": {
+    "icon": "🌐",
+    "description": "Interactive letter about Zach needing beauty sleep with visualizations showing sleep importance, health effects, and productivity charts"
   }
 }
