@@ -102,5 +102,9 @@
   "task-warning": {
     "icon": "✅",
     "description": "Create a flashing warning page with the message: 'Good Morning - this is a text to let you know you still have tasks incomplete. To avoid injury or a death sentence, please complete these at your earliest convenience. Thank you! -Sportello'. Use red flashing effects, alarm-style visuals, sirens, pulsing text, and an ominous noir terminal aesthetic. Mobile-responsive with dramatic animations."
+  },
+  "red-siren-protocol": {
+    "icon": "✅",
+    "description": "Flashing red alert warning for incomplete tasks with dramatic siren effects and pulsing text message"
   }
 }
