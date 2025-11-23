@@ -3,152 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zach & Cen's Amtrak Adventure</title>
-    <link rel="stylesheet" href="../page-theme.css">
+    <title>Amtrak Journey: Penn Station to Rochester</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            padding-top: 80px;
-            overflow-x: auto;
-            overflow-y: auto;
-        }
-
-        .journey-header {
-            text-align: center;
-            margin-bottom: 40px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
+            overflow-x: hidden;
         }
 
-        .journey-header h1 {
-            color: #00ff41;
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            text-decoration: none;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .home-link:hover {
+            background: rgba(102, 126, 234, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
-            text-shadow: 0 0 10px #00ff41;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .journey-header .subtitle {
-            color: #ff0000;
-            font-size: 1.5em;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px #ff0000;
-        }
-
-        .journey-header p {
-            color: #00ffff;
+        .header p {
             font-size: 1.1em;
+            opacity: 0.9;
         }
 
-        /* Route Visualization */
-        .route-viz {
-            margin: 40px 0;
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            padding: 40px;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            border-radius: 15px;
             padding: 30px;
-            border: 2px solid #00ff41;
-            background: rgba(0, 255, 65, 0.05);
-            border-radius: 4px;
+            height: fit-content;
         }
 
-        .stops-timeline {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-            margin: 30px 0;
-            flex-wrap: wrap;
-            gap: 10px;
+        .journey-map {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
         }
 
-        .stops-timeline::before {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #00ff41;
-            z-index: 1;
+        .stop-list {
+            list-style: none;
         }
 
-        .stop-marker {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            z-index: 2;
-            flex: 1;
-            min-width: 100px;
+        .stop-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
+            position: relative;
         }
 
-        .stop-marker:hover {
-            transform: scale(1.05);
+        .stop-item:hover {
+            background: #f0f4ff;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
         }
 
-        .stop-dot {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #00ff41;
-            border-radius: 50%;
-            background: #0a0a0a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 10px;
-            font-size: 1.2em;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
-            transition: all 0.3s ease;
+        .stop-item.active {
+            background: #667eea;
+            color: white;
+            border-left-color: #764ba2;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
-        .stop-marker.current .stop-dot {
-            background: #ff0000;
-            border-color: #ff0000;
-            box-shadow: 0 0 20px #ff0000;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 20px #ff0000; }
-            50% { box-shadow: 0 0 30px #ff0000; }
+        .stop-item.completed {
+            border-left-color: #28a745;
+            opacity: 0.7;
         }
 
         .stop-name {
-            color: #00ffff;
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .stop-time {
             font-size: 0.9em;
-            text-align: center;
-            text-shadow: 0 0 5px #00ffff;
-            white-space: nowrap;
+            opacity: 0.7;
         }
 
-        .stop-miles {
-            color: #ff0000;
-            font-size: 0.75em;
-            text-shadow: 0 0 3px #ff0000;
+        .stop-item.active .stop-time {
+            opacity: 0.9;
         }
 
-        /* Stop Sections */
-        .stops-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 30px;
-            margin-top: 20px;
+        .timeline {
+            position: relative;
+            padding: 20px 0;
         }
 
-        .stop-section {
-            border: 2px solid #00ff41;
-            background: rgba(0, 255, 65, 0.08);
-            padding: 25px;
-            border-radius: 4px;
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .timeline-item {
+            padding-left: 60px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 10px;
+            top: 5px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        .timeline-item.completed .timeline-dot {
+            background: #28a745;
+            border-color: #28a745;
+        }
+
+        .content-area {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            min-height: 400px;
+        }
+
+        .stop-details {
             display: none;
-            animation: slideIn 0.4s ease;
         }
 
-        .stop-section.active {
+        .stop-details.active {
             display: block;
+            animation: fadeIn 0.3s ease;
         }
 
-        @keyframes slideIn {
+        @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(10px);
             }
             to {
                 opacity: 1;
@@ -156,676 +202,888 @@
             }
         }
 
-        .stop-title {
+        .stop-header {
             display: flex;
             align-items: center;
-            gap: 15px;
             margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #00ff41;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
         }
 
-        .stop-title h2 {
-            color: #00ff41;
-            font-size: 1.8em;
-            text-shadow: 0 0 8px #00ff41;
-            margin: 0;
+        .stop-header i {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-right: 20px;
         }
 
-        .stop-emoji {
+        .stop-header h2 {
             font-size: 2em;
+            color: #333;
         }
 
-        .stop-facts {
+        .facts-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
             margin: 20px 0;
-            padding: 15px;
-            background: rgba(0, 255, 65, 0.05);
-            border-left: 3px solid #00ffff;
-            border-radius: 2px;
         }
 
-        .stop-facts h4 {
-            color: #00ffff;
-            margin-bottom: 10px;
-            text-shadow: 0 0 5px #00ffff;
+        .facts-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
         }
 
-        .stop-facts p {
-            color: #00ff41;
-            margin: 8px 0;
-            line-height: 1.5;
+        .facts-section h3 i {
+            margin-right: 10px;
+        }
+
+        .fact-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.95em;
+            color: #555;
+        }
+
+        .fact-item:last-child {
+            border-bottom: none;
         }
 
         .game-section {
-            margin-top: 25px;
-            padding-top: 25px;
-            border-top: 2px solid #ff0000;
-        }
-
-        .game-section h4 {
-            color: #ff0000;
-            margin-bottom: 15px;
-            text-shadow: 0 0 5px #ff0000;
-        }
-
-        #game-container {
-            min-height: 400px;
-        }
-
-        /* Game Styling */
-        .game-wrapper {
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid #00ff41;
+            background: #fff3cd;
+            border-radius: 10px;
             padding: 20px;
-            border-radius: 4px;
-        }
-
-        .game-header {
-            text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #00ff41;
-        }
-
-        .game-header h3 {
-            color: #00ff41;
-            text-shadow: 0 0 8px #00ff41;
-            margin-bottom: 5px;
-        }
-
-        .game-header p {
-            color: #00ffff;
-        }
-
-        .game-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
             margin: 20px 0;
+            border-left: 4px solid #ffc107;
         }
 
-        .stat-box {
-            background: rgba(0, 255, 65, 0.1);
-            border: 1px solid #00ff41;
-            padding: 12px;
-            text-align: center;
-            border-radius: 2px;
-        }
-
-        .stat-label {
-            display: block;
-            color: #00ffff;
-            font-size: 0.85em;
-            margin-bottom: 5px;
-        }
-
-        .stat-number {
-            display: block;
-            color: #00ff41;
-            font-size: 1.5em;
-            font-weight: bold;
-            text-shadow: 0 0 5px #00ff41;
-        }
-
-        /* Canvas & Game Elements */
-        canvas {
-            max-width: 100%;
-            height: auto;
-            border: 2px solid #00ff41;
-            border-radius: 2px;
-            background: #0a0a0a;
-            display: block;
-            margin: 0 auto 20px;
-        }
-
-        .hudson-game-area {
-            border: 2px solid #00ff41;
-            border-radius: 2px;
-            margin: 20px 0;
-        }
-
-        .salt-display {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .salt-counter {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .salt-counter span:first-child {
-            font-size: 3em;
-            color: #00ff41;
-            text-shadow: 0 0 10px #00ff41;
-            font-weight: bold;
-        }
-
-        .salt-label {
-            color: #00ffff;
-            font-size: 1.2em;
-        }
-
-        .salt-click-btn {
-            font-size: 2em;
-            padding: 20px 40px;
-            background: #ff0000;
-            color: #00ff41;
-            border: 2px solid #ff0000;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.1s ease;
-            font-weight: bold;
-        }
-
-        .salt-click-btn:hover {
-            box-shadow: 0 0 15px #ff0000;
-        }
-
-        .upgrades-section {
-            margin-top: 30px;
-        }
-
-        .upgrades-section h4 {
-            color: #00ffff;
+        .game-section h3 {
+            color: #856404;
             margin-bottom: 15px;
-            text-shadow: 0 0 5px #00ffff;
+            display: flex;
+            align-items: center;
         }
 
-        .upgrades-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
+        .game-section h3 i {
+            margin-right: 10px;
         }
 
-        .upgrade-btn {
-            background: rgba(0, 255, 65, 0.1);
-            border: 2px solid #00ff41;
-            color: #00ff41;
-            padding: 12px;
-            cursor: pointer;
-            border-radius: 2px;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-
-        .upgrade-btn:hover:not(:disabled) {
-            background: #00ff41;
-            color: #0a0a0a;
-            box-shadow: 0 0 10px #00ff41;
-        }
-
-        .upgrade-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .upgrade-name {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .upgrade-cost {
-            font-size: 0.85em;
-            color: #ff0000;
-        }
-
-        /* Quiz Styling */
         .quiz-question {
-            margin: 20px 0;
+            margin-bottom: 15px;
         }
 
-        .quiz-question h4 {
-            color: #00ffff;
-            margin-bottom: 20px;
-            text-shadow: 0 0 5px #00ffff;
-            font-size: 1.2em;
+        .quiz-question p {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
         }
 
         .quiz-options {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .quiz-option-btn {
-            background: rgba(0, 255, 65, 0.1);
-            border: 2px solid #00ff41;
-            color: #00ff41;
-            padding: 15px;
+        .quiz-option {
+            padding: 10px 15px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
             cursor: pointer;
-            border-radius: 2px;
             transition: all 0.3s ease;
-            text-align: center;
             font-size: 0.95em;
         }
 
-        .quiz-option-btn:hover:not(:disabled) {
-            background: #00ff41;
-            color: #0a0a0a;
-            box-shadow: 0 0 10px #00ff41;
+        .quiz-option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
         }
 
-        .quiz-option-btn:disabled {
-            cursor: not-allowed;
+        .quiz-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .quiz-option.correct {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .quiz-option.incorrect {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
         }
 
         .quiz-feedback {
-            padding: 15px;
-            border-radius: 2px;
-            margin-top: 15px;
-            min-height: 40px;
-        }
-
-        .game-over-modal {
-            text-align: center;
-            padding: 40px 20px;
-            background: rgba(255, 0, 0, 0.1);
-            border: 2px solid #ff0000;
-            border-radius: 4px;
-            margin: 20px 0;
-        }
-
-        .game-over-modal h3 {
-            color: #00ff41;
-            font-size: 1.8em;
-            margin-bottom: 15px;
-            text-shadow: 0 0 10px #00ff41;
-        }
-
-        .game-over-modal p {
-            color: #00ffff;
-            margin: 10px 0;
-            font-size: 1.1em;
-        }
-
-        /* Mobile Controls */
-        .mobile-controls {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
             display: none;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-            max-width: 300px;
-            margin-left: auto;
-            margin-right: auto;
+            font-weight: 600;
         }
 
-        @media (max-width: 768px) {
-            .mobile-controls {
-                display: grid;
-            }
-
-            .stops-timeline {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .stops-timeline::before {
-                display: none;
-            }
-
-            .stop-marker {
-                width: 100%;
-                flex: none;
-            }
+        .quiz-feedback.show {
+            display: block;
         }
 
-        .control-btn {
-            background: #ff0000;
-            border: 2px solid #ff0000;
-            color: #00ff41;
-            padding: 15px;
-            font-size: 1.2em;
+        .quiz-feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .quiz-feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .game-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
-            border-radius: 2px;
-            transition: all 0.1s ease;
-            min-height: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .game-button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .mini-game-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .memory-card {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 2em;
+            transition: all 0.3s ease;
+            color: white;
             font-weight: bold;
         }
 
-        .control-btn:active {
-            background: #ff0000;
-            box-shadow: 0 0 15px #ff0000;
-            transform: scale(0.95);
+        .memory-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
-        /* Completion Section */
-        .completion-section {
+        .memory-card.flipped {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .memory-card.matched {
+            background: #28a745;
+            color: white;
+            cursor: not-allowed;
+        }
+
+        .distance-display {
             text-align: center;
-            padding: 40px;
-            margin-top: 40px;
-            border: 3px solid #00ff41;
-            background: rgba(0, 255, 65, 0.1);
-            border-radius: 4px;
+            font-size: 1.2em;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .train-animation {
+            position: relative;
+            height: 100px;
+            background: linear-gradient(90deg, transparent 0%, rgba(102, 126, 234, 0.1) 50%, transparent 100%);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        .train {
+            position: absolute;
+            font-size: 3em;
+            animation: trainMove 8s infinite;
+        }
+
+        @keyframes trainMove {
+            0% {
+                left: -50px;
+            }
+            50% {
+                left: calc(100% - 50px);
+            }
+            100% {
+                left: -50px;
+            }
+        }
+
+        .achievement {
+            background: #ffc107;
+            color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .achievement i {
+            font-size: 2em;
+        }
+
+        .achievement-text h4 {
+            margin-bottom: 5px;
+        }
+
+        .achievement-text p {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .memory-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .completion-message {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
             display: none;
         }
 
-        .completion-section.active {
+        .completion-message.show {
             display: block;
             animation: slideIn 0.5s ease;
         }
 
-        .completion-section h2 {
-            color: #00ff41;
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            text-shadow: 0 0 15px #00ff41;
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .completion-section p {
-            color: #00ffff;
-            font-size: 1.2em;
-            margin: 15px 0;
+        .completion-message h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
         }
 
-        .btn {
-            background: #ff0000;
-            border: 2px solid #ff0000;
-            color: #00ff41;
-            padding: 12px 24px;
-            cursor: pointer;
-            border-radius: 2px;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-
-        .btn:hover {
-            background: #ff0000;
-            box-shadow: 0 0 15px #ff0000;
-        }
-
-        .btn-primary {
-            background: #ff0000;
-            border-color: #ff0000;
-        }
-
-        .home-link {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            background: #ff0000;
-            border: 2px solid #ff0000;
-            color: #00ff41;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 2px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .home-link:hover {
-            box-shadow: 0 0 15px #ff0000;
-        }
-
-        @media (max-width: 480px) {
-            .journey-header h1 {
-                font-size: 1.8em;
-            }
-
-            .journey-header .subtitle {
-                font-size: 1.1em;
-            }
-
-            .stop-marker {
-                min-width: 80px;
-            }
-
-            .stop-name {
-                font-size: 0.75em;
-            }
-
-            .stop-section {
-                padding: 15px;
-            }
-
-            .game-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .quiz-options {
-                grid-template-columns: 1fr;
-            }
+        .completion-message p {
+            font-size: 1.1em;
+            margin-bottom: 5px;
         }
     </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
 </head>
 <body>
-    <a href="../index.html" class="home-link">← HOME</a>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
 
     <div class="container">
-        <div class="journey-header">
-            <h1>🚂 AMTRAK ADVENTURE 🚂</h1>
-            <div class="subtitle">Zach & Cen's Journey</div>
-            <p>Penn Station to Rochester via the Northeast Corridor</p>
+        <div class="header">
+            <h1><i class="fas fa-train"></i> Amtrak Journey</h1>
+            <p>Penn Station (NYC) to Rochester, NY</p>
         </div>
 
-        <div class="route-viz">
-            <h3 style="color: #00ffff; text-align: center; margin-bottom: 20px;">Your Journey</h3>
-            <div class="stops-timeline" id="stops-timeline">
-                <div class="stop-marker current" data-stop="penn">
-                    <div class="stop-dot">🚉</div>
-                    <div class="stop-name">Penn Station</div>
-                    <div class="stop-miles">0 mi</div>
+        <div class="main-content">
+            <div class="sidebar">
+                <h3 style="color: #667eea; margin-bottom: 20px;"><i class="fas fa-map-marker-alt"></i> Journey Stops</h3>
+                <ul class="stop-list" id="stopList"></ul>
+                
+                <div class="progress-bar" style="margin-top: 30px;">
+                    <div class="progress-fill" id="progressFill"></div>
                 </div>
-                <div class="stop-marker" data-stop="hudson">
-                    <div class="stop-dot">🏔️</div>
-                    <div class="stop-name">Hudson Valley</div>
-                    <div class="stop-miles">90 mi</div>
-                </div>
-                <div class="stop-marker" data-stop="albany">
-                    <div class="stop-dot">🏛️</div>
-                    <div class="stop-name">Albany</div>
-                    <div class="stop-miles">150 mi</div>
-                </div>
-                <div class="stop-marker" data-stop="binghamton">
-                    <div class="stop-dot">🌉</div>
-                    <div class="stop-name">Binghamton</div>
-                    <div class="stop-miles">235 mi</div>
-                </div>
-                <div class="stop-marker" data-stop="syracuse">
-                    <div class="stop-dot">🧂</div>
-                    <div class="stop-name">Syracuse</div>
-                    <div class="stop-miles">310 mi</div>
-                </div>
-                <div class="stop-marker" data-stop="rochester">
-                    <div class="stop-dot">📸</div>
-                    <div class="stop-name">Rochester</div>
-                    <div class="stop-miles">380 mi</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="stops-container">
-            <!-- PENN STATION -->
-            <div class="stop-section active" id="penn-section">
-                <div class="stop-title">
-                    <span class="stop-emoji">🚉</span>
-                    <h2>Penn Station</h2>
-                </div>
-                <div class="stop-facts">
-                    <h4>📍 Starting Point</h4>
-                    <p>Pennsylvania Station in Manhattan is one of the busiest train stations in the Western Hemisphere. Built in 1910, it serves as the main hub for Amtrak's Northeast Corridor.</p>
-                    <p>The station handles over 600,000 passengers daily and is a architectural marvel of the Beaux-Arts style.</p>
-                </div>
-                <div class="game-section">
-                    <h4>🎮 GAME: Penn Station Dash</h4>
-                    <div id="game-container"></div>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stopsVisited">0</div>
+                        <div class="stat-label">Stops Visited</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="gamesWon">0</div>
+                        <div class="stat-label">Games Won</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="factsLearned">0</div>
+                        <div class="stat-label">Facts Learned</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- HUDSON VALLEY -->
-            <div class="stop-section" id="hudson-section">
-                <div class="stop-title">
-                    <span class="stop-emoji">🏔️</span>
-                    <h2>Hudson Valley</h2>
-                </div>
-                <div class="stop-facts">
-                    <h4>🌄 Scenic Beauty</h4>
-                    <p>The Hudson Valley is famous for its stunning natural landscapes, with dramatic cliffs and mountains lining the Hudson River. The Palisades are particularly breathtaking in autumn.</p>
-                    <p>This region is home to historic estates, art communities, and some of New York's most picturesque towns.</p>
-                </div>
-                <div class="game-section">
-                    <h4>🎮 GAME: Hudson Valley Spotter</h4>
-                    <div id="game-container"></div>
-                </div>
+            <div class="journey-map">
+                <div class="content-area" id="contentArea"></div>
             </div>
-
-            <!-- ALBANY -->
-            <div class="stop-section" id="albany-section">
-                <div class="stop-title">
-                    <span class="stop-emoji">🏛️</span>
-                    <h2>Albany</h2>
-                </div>
-                <div class="stop-facts">
-                    <h4>🏰 State Capital</h4>
-                    <p>Albany has been New York's state capital since 1797 and is home to the stunning New York State Capitol building. The city sits at the head of the Hudson River's tidal estuary.</p>
-                    <p>Known as the "Cradle of American Democracy," Albany played a crucial role in early American history and the founding of the nation.</p>
-                </div>
-                <div class="game-section">
-                    <h4>🎮 GAME: Albany History Quiz</h4>
-                    <div id="game-container"></div>
-                </div>
-            </div>
-
-            <!-- BINGHAMTON -->
-            <div class="stop-section" id="binghamton-section">
-                <div class="stop-title">
-                    <span class="stop-emoji">🌉</span>
-                    <h2>Binghamton</h2>
-                </div>
-                <div class="stop-facts">
-                    <h4>🌊 River Crossing</h4>
-                    <p>Binghamton sits at the confluence of the Susquehanna and Chenango Rivers. The city was historically a major shoe manufacturing center, earning the nickname "Shoe City."</p>
-                    <p>The area is known for its picturesque bridges and riverside scenery, with the Susquehanna River providing beautiful views from the train.</p>
-                </div>
-                <div class="game-section">
-                    <h4>🎮 GAME: Susquehanna Crossing</h4>
-                    <div id="game-container"></div>
-                </div>
-            </div>
-
-            <!-- SYRACUSE -->
-            <div class="stop-section" id="syracuse-section">
-                <div class="stop-title">
-                    <span class="stop-emoji">🧂</span>
-                    <h2>Syracuse</h2>
-                </div>
-                <div class="stop-facts">
-                    <h4>⛏️ Salt Mining Legacy</h4>
-                    <p>Syracuse was once the "Salt City," famous for its extensive salt mines that powered the economy for over a century. The city sits on Onondaga Lake, which was crucial to salt production.</p>
-                    <p>Today, Syracuse is home to Syracuse University and remains an important cultural and educational hub in Central New York.</p>
-                </div>
-                <div class="game-section">
-                    <h4>🎮 GAME: Salt Mine Collector</h4>
-                    <div id="game-container"></div>
-                </div>
-            </div>
-
-            <!-- ROCHESTER -->
-            <div class="stop-section" id="rochester-section">
-                <div class="stop-title">
-                    <span class="stop-emoji">📸</span>
-                    <h2>Rochester</h2>
-                </div>
-                <div class="stop-facts">
-                    <h4>📷 Final Destination</h4>
-                    <p>Rochester is the home of Kodak and the birthplace of modern photography. The city was also known as the "Flour Milling Capital of America" in the 1800s.</p>
-                    <p>Today, Rochester is known as the "Image City" and is home to the George Eastman Museum, one of the world's oldest photography museums.</p>
-                </div>
-                <div class="game-section">
-                    <h4>🎮 GAME: Rochester Welcome Quiz</h4>
-                    <div id="game-container"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="completion-section" id="completion">
-            <h2>🎉 WELCOME TO ROCHESTER! 🎉</h2>
-            <p>You've completed the Amtrak journey with Zach & Cen!</p>
-            <p style="font-size: 1.5em; color: #00ff41;">380 miles traveled • 6 stops explored • Countless memories made</p>
-            <p>Thanks for riding along on this adventure!</p>
         </div>
     </div>
 
-    <script src="amtrak-games.js"></script>
     <script>
-        const games = new AmtrakGames();
-        let currentStop = 'penn';
+        const journeyData = [
+            {
+                id: 1,
+                name: "Penn Station",
+                city: "New York City, NY",
+                time: "09:00 AM",
+                icon: "fas fa-train",
+                distance: 0,
+                description: "Starting point of our journey at the iconic Pennsylvania Station in Manhattan.",
+                facts: [
+                    "Penn Station opened in 1910 and is one of the busiest railway stations in the world",
+                    "Amtrak operates over 500 daily trains from Penn Station",
+                    "The original Penn Station was demolished in 1963, and the current building was completed in 1968",
+                    "Penn Station serves over 750,000 passengers annually"
+                ],
+                game: {
+                    type: "memory",
+                    title: "Remember the Route",
+                    description: "Match the cities with their distances from Penn Station",
+                    cards: ["NYC", "ALB", "SYR", "ROC", "NYC", "ALB", "SYR", "ROC"],
+                    pairs: [
+                        { card1: 0, card2: 4, label: "New York City" },
+                        { card1: 1, card2: 5, label: "Albany" },
+                        { card1: 2, card2: 6, label: "Syracuse" },
+                        { card1: 3, card2: 7, label: "Rochester" }
+                    ]
+                }
+            },
+            {
+                id: 2,
+                name: "Yonkers",
+                city: "Yonkers, NY",
+                time: "09:25 AM",
+                icon: "fas fa-city",
+                distance: 20,
+                description: "First stop heading north along the Hudson River.",
+                facts: [
+                    "Yonkers is the 3rd largest city in New York State",
+                    "The city is known for its scenic location along the Hudson River",
+                    "Yonkers has a population of approximately 200,000 residents",
+                    "The Hudson River waterfront has been revitalized in recent years"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Hudson River Facts",
+                    description: "Test your knowledge about the Hudson River",
+                    question: "What is the length of the Hudson River?",
+                    options: ["206 miles", "315 miles", "425 miles", "550 miles"],
+                    correct: 1,
+                    explanation: "The Hudson River is approximately 315 miles long!"
+                }
+            },
+            {
+                id: 3,
+                name: "Croton-Harmon",
+                city: "Croton-on-Hudson, NY",
+                time: "09:50 AM",
+                icon: "fas fa-leaf",
+                distance: 35,
+                description: "Scenic stop along the Hudson Valley.",
+                facts: [
+                    "Croton-Harmon is a major junction point for Metro-North Railroad",
+                    "The area is known for its beautiful Hudson Valley scenery",
+                    "The Croton Dam was built in 1906 and supplies water to New York City",
+                    "The Hudson Valley is famous for its apple orchards and farms"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Hudson Valley Knowledge",
+                    description: "How well do you know the Hudson Valley?",
+                    question: "What year was the Croton Dam completed?",
+                    options: ["1896", "1906", "1916", "1926"],
+                    correct: 1,
+                    explanation: "The Croton Dam was completed in 1906!"
+                }
+            },
+            {
+                id: 4,
+                name: "Poughkeepsie",
+                city: "Poughkeepsie, NY",
+                time: "10:30 AM",
+                icon: "fas fa-bridge",
+                distance: 75,
+                description: "Historic city home to Vassar College and the Mid-Hudson Bridge.",
+                facts: [
+                    "Poughkeepsie is home to Vassar College, founded in 1861",
+                    "The Mid-Hudson Bridge connects Poughkeepsie to Highland",
+                    "The city was a major center of the American Industrial Revolution",
+                    "The Poughkeepsie Waterfront has been transformed into a vibrant cultural district"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Poughkeepsie Trivia",
+                    description: "Test your knowledge about Poughkeepsie",
+                    question: "In what year was Vassar College founded?",
+                    options: ["1841", "1851", "1861", "1871"],
+                    correct: 2,
+                    explanation: "Vassar College was founded in 1861!"
+                }
+            },
+            {
+                id: 5,
+                name: "Rhinecliff",
+                city: "Rhinecliff, NY",
+                time: "11:00 AM",
+                icon: "fas fa-landmark",
+                distance: 90,
+                description: "Gateway to the Catskill Mountains and wine country.",
+                facts: [
+                    "Rhinecliff is a small village with historic charm",
+                    "The area is known for its proximity to wineries and farms",
+                    "The Catskill Mountains are just minutes away",
+                    "Rhinecliff Station is one of the oldest continuously operating stations"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Catskill Region",
+                    description: "What do you know about the Catskills?",
+                    question: "The Catskill Mountains are part of which larger mountain range?",
+                    options: ["Appalachian Mountains", "Rocky Mountains", "Sierra Nevada", "Adirondacks"],
+                    correct: 0,
+                    explanation: "The Catskill Mountains are part of the Appalachian Mountains!"
+                }
+            },
+            {
+                id: 6,
+                name: "Albany",
+                city: "Albany, NY",
+                time: "12:00 PM",
+                icon: "fas fa-capitol",
+                distance: 150,
+                description: "Capital of New York State with rich political history.",
+                facts: [
+                    "Albany is the capital of New York State",
+                    "The city is home to the New York State Capitol building, completed in 1899",
+                    "Albany was founded in 1624 by the Dutch",
+                    "The city is located at the confluence of the Hudson and Mohawk rivers"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Albany Capital Facts",
+                    description: "Test your New York State knowledge",
+                    question: "In what year was the New York State Capitol building completed?",
+                    options: ["1889", "1899", "1909", "1919"],
+                    correct: 1,
+                    explanation: "The Capitol building was completed in 1899!"
+                }
+            },
+            {
+                id: 7,
+                name: "Schenectady",
+                city: "Schenectady, NY",
+                time: "1:00 PM",
+                icon: "fas fa-industry",
+                distance: 180,
+                description: "Historic industrial city and home to Union College.",
+                facts: [
+                    "Schenectady was a major center of industrial innovation",
+                    "General Electric was founded in Schenectady in 1892",
+                    "Union College, founded in 1795, is one of the oldest colleges in the US",
+                    "The city is known as the 'City that Lights and Hauls the World'"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Industrial History",
+                    description: "When was General Electric founded in Schenectady?",
+                    question: "In what year was General Electric founded in Schenectady?",
+                    options: ["1882", "1892", "1902", "1912"],
+                    correct: 1,
+                    explanation: "General Electric was founded in Schenectady in 1892!"
+                }
+            },
+            {
+                id: 8,
+                name: "Amsterdam",
+                city: "Amsterdam, NY",
+                time: "1:45 PM",
+                icon: "fas fa-water",
+                distance: 210,
+                description: "Small historic town along the Mohawk River.",
+                facts: [
+                    "Amsterdam is located along the scenic Mohawk River",
+                    "The city was an important stop on the Erie Canal",
+                    "Amsterdam has a rich textile manufacturing history",
+                    "The Mohawk River was crucial to the development of upstate New York"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Mohawk River Knowledge",
+                    description: "Test your canal knowledge",
+                    question: "The Erie Canal connected which two major waterways?",
+                    options: ["Hudson River and Great Lakes", "Delaware River and Susquehanna", "Potomac River and Ohio River", "Connecticut River and Atlantic Ocean"],
+                    correct: 0,
+                    explanation: "The Erie Canal connected the Hudson River to the Great Lakes!"
+                }
+            },
+            {
+                id: 9,
+                name: "Utica",
+                city: "Utica, NY",
+                time: "2:30 PM",
+                icon: "fas fa-building",
+                distance: 250,
+                description: "Historic manufacturing city in the Mohawk Valley.",
+                facts: [
+                    "Utica was a major center of textile and railroad manufacturing",
+                    "The city was founded in 1773",
+                    "Utica is home to Utica College and SUNY Polytechnic Institute",
+                    "The city is known for its diverse immigrant communities"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Utica History",
+                    description: "When was Utica founded?",
+                    question: "In what year was Utica founded?",
+                    options: ["1763", "1773", "1783", "1793"],
+                    correct: 1,
+                    explanation: "Utica was founded in 1773!"
+                }
+            },
+            {
+                id: 10,
+                name: "Syracuse",
+                city: "Syracuse, NY",
+                time: "3:45 PM",
+                icon: "fas fa-university",
+                distance: 310,
+                description: "Major city and home to Syracuse University.",
+                facts: [
+                    "Syracuse is home to Syracuse University, founded in 1870",
+                    "The city was a major salt production center in the 19th century",
+                    "Syracuse is located at the crossroads of major transportation routes",
+                    "The city is known for its diverse cultural attractions and museums"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Syracuse Facts",
+                    description: "Test your Syracuse knowledge",
+                    question: "In what year was Syracuse University founded?",
+                    options: ["1860", "1870", "1880", "1890"],
+                    correct: 1,
+                    explanation: "Syracuse University was founded in 1870!"
+                }
+            },
+            {
+                id: 11,
+                name: "Fulton",
+                city: "Fulton, NY",
+                time: "4:30 PM",
+                icon: "fas fa-fish",
+                distance: 350,
+                description: "Historic city known as the 'Oswego County Seat' and Oswego River.",
+                facts: [
+                    "Fulton is located on the Oswego River",
+                    "The city has a rich history of industrial development",
+                    "Fulton is known for its historic canal heritage",
+                    "The city is a gateway to the Finger Lakes region"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Oswego River",
+                    description: "What do you know about the Oswego River?",
+                    question: "The Oswego River connects to which major waterway?",
+                    options: ["Finger Lakes", "Lake Ontario", "Seneca River", "Genesee River"],
+                    correct: 1,
+                    explanation: "The Oswego River flows into Lake Ontario!"
+                }
+            },
+            {
+                id: 12,
+                name: "Rochester",
+                city: "Rochester, NY",
+                time: "5:30 PM",
+                icon: "fas fa-flag-checkered",
+                distance: 390,
+                description: "Final destination - the 'Flower City' of New York.",
+                facts: [
+                    "Rochester is known as the 'Flower City' because of its beautiful gardens",
+                    "The city is home to the Eastman Kodak Company, a photography pioneer",
+                    "Rochester has a population of approximately 210,000 residents",
+                    "The Genesee River Falls are a beautiful natural feature of the city"
+                ],
+                game: {
+                    type: "quiz",
+                    title: "Rochester Final Quiz",
+                    description: "Test your knowledge about Rochester",
+                    question: "Why is Rochester known as the 'Flower City'?",
+                    options: ["It has many flower shops", "It's famous for beautiful gardens", "It's near botanical gardens", "All of the above"],
+                    correct: 1,
+                    explanation: "Rochester is known as the 'Flower City' because of its beautiful gardens!"
+                }
+            }
+        ];
 
-        const stops = ['penn', 'hudson', 'albany', 'binghamton', 'syracuse', 'rochester'];
-        const stopNames = {
-            penn: 'Penn Station',
-            hudson: 'Hudson Valley',
-            albany: 'Albany',
-            binghamton: 'Binghamton',
-            syracuse: 'Syracuse',
-            rochester: 'Rochester'
-        };
+        let currentStopIndex = 0;
+        let stopsVisited = 0;
+        let gamesWon = 0;
+        let factsLearned = 0;
+        let memoryGameState = {};
+        let quizAnswered = false;
 
-        const gameInitializers = {
-            penn: () => games.initPennStationGame('game-container'),
-            hudson: () => games.initHudsonValleyGame('game-container'),
-            albany: () => games.initAlbanyGame('game-container'),
-            binghamton: () => games.initBinghamtonGame('game-container'),
-            syracuse: () => games.initSyracuseGame('game-container'),
-            rochester: () => games.initRochesterGame('game-container')
-        };
-
-        function showStop(stopId) {
-            // Hide all sections
-            document.querySelectorAll('.stop-section').forEach(section => {
-                section.classList.remove('active');
-            });
-
-            // Hide completion section
-            document.getElementById('completion').classList.remove('active');
-
-            // Show selected section
-            document.getElementById(stopId + '-section').classList.add('active');
-
-            // Update markers
-            document.querySelectorAll('.stop-marker').forEach(marker => {
-                marker.classList.remove('current');
-            });
-            document.querySelector(`[data-stop="${stopId}"]`).classList.add('current');
-
-            // Initialize game
-            const gameContainer = document.querySelector('#' + stopId + '-section #game-container');
-            gameContainer.innerHTML = '';
-            gameInitializers[stopId]();
-
-            currentStop = stopId;
-
-            // Scroll to section
-            document.getElementById(stopId + '-section').scrollIntoView({ behavior: 'smooth' });
+        function initializeJourney() {
+            renderStopList();
+            showStop(0);
         }
 
-        // Add click handlers to stop markers
-        document.querySelectorAll('.stop-marker').forEach(marker => {
-            marker.addEventListener('click', () => {
-                const stopId = marker.dataset.stop;
-                showStop(stopId);
+        function renderStopList() {
+            const stopList = document.getElementById('stopList');
+            stopList.innerHTML = '';
+
+            journeyData.forEach((stop, index) => {
+                const li = document.createElement('li');
+                li.className = 'stop-item';
+                if (index === currentStopIndex) li.classList.add('active');
+                if (index < currentStopIndex) li.classList.add('completed');
+
+                li.innerHTML = `
+                    <div class="stop-name"><i class="${stop.icon}"></i> ${stop.name}</div>
+                    <div class="stop-time">${stop.time} | ${stop.distance} mi</div>
+                `;
+
+                li.addEventListener('click', () => showStop(index));
+                stopList.appendChild(li);
             });
-        });
+        }
 
-        // Initialize first game
-        window.addEventListener('load', () => {
-            showStop('penn');
-        });
+        function showStop(index) {
+            currentStopIndex = index;
+            const stop = journeyData[index];
 
-        // Show completion when reaching Rochester
-        function checkCompletion() {
-            if (currentStop === 'rochester') {
-                setTimeout(() => {
-                    document.getElementById('completion').classList.add('active');
-                }, 2000);
+            renderStopList();
+            updateProgress();
+
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = `
+                <div class="stop-header">
+                    <i class="${stop.icon}"></i>
+                    <div>
+                        <h2>${stop.name}</h2>
+                        <p style="color: #666; margin-top: 5px;">${stop.city}</p>
+                    </div>
+                </div>
+
+                <p style="font-size: 1.1em; color: #555; margin: 20px 0;">${stop.description}</p>
+
+                <div class="distance-display">
+                    <i class="fas fa-train"></i> ${stop.distance} miles from Penn Station
+                </div>
+
+                <div class="train-animation">
+                    <div class="train">🚂</div>
+                </div>
+
+                <div class="facts-section">
+                    <h3><i class="fas fa-lightbulb"></i> Did You Know?</h3>
+                    ${stop.facts.map(fact => `<div class="fact-item">• ${fact}</div>`).join('')}
+                </div>
+
+                ${renderGame(stop)}
+
+                <div style="text-align: center; margin-top: 30px;">
+                    ${index > 0 ? `<button class="game-button" onclick="showStop(${index - 1})"><i class="fas fa-arrow-left"></i> Previous Stop</button>` : ''}
+                    ${index < journeyData.length - 1 ? `<button class="game-button" onclick="showStop(${index + 1})" style="margin-left: 10px;"><i class="fas fa-arrow-right"></i> Next Stop</button>` : ''}
+                </div>
+
+                ${index === journeyData.length - 1 ? `
+                    <div class="completion-message show">
+                        <h2><i class="fas fa-check-circle"></i> Journey Complete!</h2>
+                        <p>You've successfully traveled from Penn Station to Rochester!</p>
+                        <p style="font-size: 1em; margin-top: 15px;">
+                            <strong>${stopsVisited}</strong> stops visited | 
+                            <strong>${gamesWon}</strong> games won | 
+                            <strong>${factsLearned}</strong> facts learned
+                        </p>
+                    </div>
+                ` : ''}
+            `;
+
+            factsLearned += stop.facts.length;
+            if (index > stopsVisited) {
+                stopsVisited = index + 1;
+            }
+            updateStats();
+        }
+
+        function renderGame(stop) {
+            if (stop.game.type === 'memory') {
+                return renderMemoryGame(stop);
+            } else if (stop.game.type === 'quiz') {
+                return renderQuizGame(stop);
             }
         }
-    </script>
-</body>
-</html>
+
+        function renderMemoryGame(stop) {
+            const gameId = `memory-${stop.id}`;
+            memoryGameState[gameId] = memoryGameState[gameId] || {
+                flipped: [],
+                matched: [],
+                moves: 0
+            };
+
+            return `
+                <div class="game-section">
+                    <h3><i class="fas fa-gamepad"></i> ${stop.game.title}</h3>
+                    <p>${stop.game.description}</p>
+                    <div class="memory-grid" id="memoryGrid-${stop.id}">
+                        ${stop.game.cards.map((card, idx) => `
+                            <button class="memory-card" onclick="flipMemoryCard(${stop.id}, ${idx})">
+                                <span id="card-${stop.id}-${idx}">?</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <p>Moves: <strong id="moves-${stop.id}">0</strong></p>
+                        <button class="game-button" onclick="resetMemoryGame(${stop.id})">Reset Game</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function flipMemoryCard(stopId, cardIndex) {
+            const gameId = `memory-${stopId}`;
+            const state = memoryGameState[gameId];
+            const stop = journeyData[stopId - 1];
+
+            if (state.flipped.includes(cardIndex) || state.matched.includes(cardIndex)) return;
+            if (state.flipped.length === 2) return;
+
+            state.flipped.push(cardIndex);
+            const cardElement = document.getElementById(`card-${stopId}-${cardIndex}`);
+            cardElement.textContent = stop.game.cards[cardIndex];
+            cardElement.parentElement.classList.add('flipped');
+
+            if (state.flipped.length === 2) {
+                state.moves++;
+                document.getElementById(`moves-${stopId}`).textContent = state.moves;
+
+                const [idx1, idx2] = state.flipped;
+                if (stop.game.cards[idx1] === stop.game.cards[idx2]) {
+                    state.matched.push(idx1, idx2);
+                    state.flipped = [];
+
+                    if (state.matched.length === stop.game.cards.length) {
+                        gamesWon++;
+                        updateStats();
+                        setTimeout(() => {
+                            alert(`🎉 Memory game completed in ${state.moves} moves!`);
+                        }, 500);
+                    }
+                } else {
+                    setTimeout(() => {
+                        document.getElementById(`card-${stopId}-${idx1}`).textContent = '?';
+                        document.getElementById(`card-${stopId}-${idx1}`).parentElement.classList.remove('flipped');
+                        document.getElementById(`card-${stopId}-${idx2}`).textContent = '?';
+                        document.getElementById(`card-${stopId}-${idx2}`).parentElement.classList.remove('flipped');
+                        state.flipped = [];
+                    }, 1000);
+                }
+            }
+        }
+
+        function resetMemoryGame(stopId) {
+            const gameId = `memory-${stopId}`;
+            memoryGameState[gameId] = {
+                flipped: [],
+                matched: [],
+                moves: 0
+            };
+            document.getElementById(`moves-${stopId}`).textContent = '0';
+
+            const grid = document.getElementById(`memoryGrid-${stopId}`);
+            grid.querySelectorAll('.memory-card').forEach(card => {
+                card.classList.remove('flipped', 'matched');
+                card.querySelector('span').textContent = '?';
+            });
+        }
+
+        function renderQuizGame(stop) {
+            return `
+                <div class="game-section">
