@@ -423,6 +423,36 @@
             animation: blink 0.5s infinite;
         }
 
+        .mobile-game-controls {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin: 5px 0;
+        }
+
+        .game-control-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            background: rgba(255, 0, 110, 0.8);
+            color: #00ff41;
+            border: 3px solid #00ff41;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .game-control-btn:active {
+            background: #00ff41;
+            color: #000;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.5em;
@@ -434,12 +464,19 @@
                 width: 95%;
                 margin: 20% auto;
             }
+            .mobile-game-controls {
+                display: block;
+            }
+            .game-canvas {
+                max-width: 95vw;
+                height: 250px;
+            }
         }
     </style>
 
 </head>
 <body>
-    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2);font-family:'Press Start 2P',cursive;font-size:0.7em;">← Home</a>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(255,0,0,0.9);color:#00ff41;padding:12px 24px;border:2px solid #00ff41;box-shadow:0 0 20px rgba(0,255,65,0.5);font-family:'VT323',monospace;font-size:1.2em;">HOME</a>
     
     <div class="scanlines"></div>
 
@@ -608,10 +645,25 @@
         <!-- Mini Game Section -->
         <div class="mini-game">
             <h2 style="font-family: 'Press Start 2P', cursive; color: #ff006e; margin-bottom: 20px;">🎮 PIZZA COLLECTOR 🎮</h2>
-            <p style="margin-bottom: 15px;">Use ARROW KEYS to move. Collect pizza slices!</p>
+            <p style="margin-bottom: 15px;">Collect 🍕 pizza! Avoid 🐱 cats! Grab 🧀 cheese for speed boost!</p>
             <div class="game-canvas" id="gameCanvas"></div>
+            <div class="game-stats" style="display: flex; gap: 20px; justify-content: center; margin: 10px 0;">
+                <span style="color: #ffbe0b;">Score: <span id="gameScore">0</span></span>
+                <span style="color: #ff006e;">Lives: <span id="gameLives">3</span></span>
+                <span style="color: #00ff41;">Level: <span id="gameLevel">1</span></span>
+            </div>
             <button class="btn" onclick="startGame()">START GAME</button>
-            <p style="margin-top: 15px; color: #ffbe0b;">Score: <span id="gameScore">0</span></p>
+            <!-- Mobile Controls -->
+            <div class="mobile-game-controls" id="mobileGameControls">
+                <div class="control-row">
+                    <button class="game-control-btn" data-dir="up">↑</button>
+                </div>
+                <div class="control-row">
+                    <button class="game-control-btn" data-dir="left">←</button>
+                    <button class="game-control-btn" data-dir="down">↓</button>
+                    <button class="game-control-btn" data-dir="right">→</button>
+                </div>
+            </div>
         </div>
 
         <!-- Leaderboard -->
@@ -674,9 +726,19 @@
         let playerX = 190;
         let playerY = 250;
         let pizzas = [];
+        let cats = [];
+        let cheese = [];
         let gameScore = 0;
+        let gameLives = 3;
+        let gameLevel = 1;
+        let nextLevelScore = 100;
+        let playerSpeed = 15;
+        let speedBoostTimer = 0;
         let gameCanvas = null;
         let gameCtx = null;
+        let canvasWidth = 400;
+        let canvasHeight = 300;
+        let mobileControlsSetup = false;
 
         const activities = {
             dumpster: {
@@ -871,115 +933,404 @@
 
         function startGame() {
             gameCanvas = document.getElementById('gameCanvas');
-            gameCtx = gameCanvas.getContext('2d');
+            canvasWidth = gameCanvas.offsetWidth;
+            canvasHeight = gameCanvas.offsetHeight;
+
+            // Create actual canvas element
+            let canvas = gameCanvas.querySelector('canvas');
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+                canvas.width = canvasWidth;
+                canvas.height = canvasHeight;
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                gameCanvas.appendChild(canvas);
+            }
+            gameCtx = canvas.getContext('2d');
+
             gameRunning = true;
             gameScore = 0;
-            playerX = 190;
-            playerY = 250;
+            gameLives = 3;
+            gameLevel = 1;
+            nextLevelScore = 100;
+            playerSpeed = 15;
+            speedBoostTimer = 0;
+            playerX = canvasWidth / 2 - 10;
+            playerY = canvasHeight - 40;
             pizzas = [];
+            cats = [];
+            cheese = [];
 
             // Generate initial pizzas
             for (let i = 0; i < 5; i++) {
-                pizzas.push({
-                    x: Math.random() * (gameCanvas.offsetWidth - 30),
-                    y: Math.random() * (gameCanvas.offsetHeight - 30)
-                });
+                spawnPizza();
             }
 
-            // Setup keyboard controls
+            // Spawn initial cat
+            spawnCat();
+
+            // Spawn cheese power-up
+            spawnCheese();
+
+            // Remove old listener first, then add new one
+            document.removeEventListener('keydown', handleGameInput);
             document.addEventListener('keydown', handleGameInput);
+
+            // Setup mobile controls (only once)
+            if (!mobileControlsSetup) {
+                setupMobileControls();
+                mobileControlsSetup = true;
+            }
+
+            updateGameUI();
             gameLoop();
         }
 
+        function spawnPizza() {
+            pizzas.push({
+                x: Math.random() * (canvasWidth - 25),
+                y: Math.random() * (canvasHeight - 25)
+            });
+        }
+
+        function spawnCat() {
+            const side = Math.floor(Math.random() * 4);
+            let x, y, vx, vy;
+            const speed = 1 + (gameLevel * 0.3);
+
+            switch(side) {
+                case 0: // top
+                    x = Math.random() * canvasWidth;
+                    y = 0;
+                    vx = (Math.random() - 0.5) * speed;
+                    vy = Math.random() * speed;
+                    break;
+                case 1: // right
+                    x = canvasWidth;
+                    y = Math.random() * canvasHeight;
+                    vx = -Math.random() * speed;
+                    vy = (Math.random() - 0.5) * speed;
+                    break;
+                case 2: // bottom
+                    x = Math.random() * canvasWidth;
+                    y = canvasHeight;
+                    vx = (Math.random() - 0.5) * speed;
+                    vy = -Math.random() * speed;
+                    break;
+                default: // left
+                    x = 0;
+                    y = Math.random() * canvasHeight;
+                    vx = Math.random() * speed;
+                    vy = (Math.random() - 0.5) * speed;
+            }
+
+            cats.push({ x, y, vx, vy, size: 25 });
+        }
+
+        function spawnCheese() {
+            if (cheese.length < 2) {
+                cheese.push({
+                    x: Math.random() * (canvasWidth - 20),
+                    y: Math.random() * (canvasHeight - 20),
+                    timer: 300
+                });
+            }
+        }
+
+        function setupMobileControls() {
+            const buttons = document.querySelectorAll('.game-control-btn');
+            buttons.forEach(btn => {
+                const dir = btn.dataset.dir;
+
+                // Touch events
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    movePlayer(dir);
+                });
+
+                // Click events for desktop testing
+                btn.addEventListener('click', () => movePlayer(dir));
+            });
+        }
+
+        function movePlayer(dir) {
+            if (!gameRunning) return;
+            const speed = speedBoostTimer > 0 ? playerSpeed * 1.5 : playerSpeed;
+
+            switch(dir) {
+                case 'up':
+                    if (playerY > 0) playerY -= speed;
+                    break;
+                case 'down':
+                    if (playerY < canvasHeight - 20) playerY += speed;
+                    break;
+                case 'left':
+                    if (playerX > 0) playerX -= speed;
+                    break;
+                case 'right':
+                    if (playerX < canvasWidth - 20) playerX += speed;
+                    break;
+            }
+        }
+
         function handleGameInput(e) {
-            const speed = 15;
-            if (e.key === 'ArrowUp' && playerY > 0) playerY -= speed;
-            if (e.key === 'ArrowDown' && playerY < gameCanvas.offsetHeight - 20) playerY += speed;
-            if (e.key === 'ArrowLeft' && playerX > 0) playerX -= speed;
-            if (e.key === 'ArrowRight' && playerX < gameCanvas.offsetWidth - 20) playerX += speed;
+            if (!gameRunning) return;
+
+            const dirMap = {
+                'ArrowUp': 'up', 'w': 'up', 'W': 'up',
+                'ArrowDown': 'down', 's': 'down', 'S': 'down',
+                'ArrowLeft': 'left', 'a': 'left', 'A': 'left',
+                'ArrowRight': 'right', 'd': 'right', 'D': 'right'
+            };
+
+            if (dirMap[e.key]) {
+                e.preventDefault();
+                movePlayer(dirMap[e.key]);
+            }
+        }
+
+        function updateGameUI() {
+            document.getElementById('gameScore').textContent = gameScore;
+            document.getElementById('gameLives').textContent = gameLives;
+            document.getElementById('gameLevel').textContent = gameLevel;
+        }
+
+        function checkCollision(ax, ay, aw, ah, bx, by, bw, bh) {
+            return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
         }
 
         function gameLoop() {
             if (!gameRunning) return;
 
-            gameCtx.fillStyle = '#1a1a2e';
-            gameCtx.fillRect(0, 0, gameCanvas.offsetWidth, gameCanvas.offsetHeight);
+            // Clear canvas with noir background
+            gameCtx.fillStyle = '#0a0a0a';
+            gameCtx.fillRect(0, 0, canvasWidth, canvasHeight);
 
             // Draw grid
             gameCtx.strokeStyle = 'rgba(0, 255, 65, 0.1)';
             gameCtx.lineWidth = 1;
-            for (let i = 0; i < gameCanvas.offsetWidth; i += 20) {
+            for (let i = 0; i < canvasWidth; i += 20) {
                 gameCtx.beginPath();
                 gameCtx.moveTo(i, 0);
-                gameCtx.lineTo(i, gameCanvas.offsetHeight);
+                gameCtx.lineTo(i, canvasHeight);
                 gameCtx.stroke();
             }
-            for (let i = 0; i < gameCanvas.offsetHeight; i += 20) {
+            for (let i = 0; i < canvasHeight; i += 20) {
                 gameCtx.beginPath();
                 gameCtx.moveTo(0, i);
-                gameCtx.lineTo(gameCanvas.offsetWidth, i);
+                gameCtx.lineTo(canvasWidth, i);
                 gameCtx.stroke();
             }
 
-            // Draw pizzas
-            gameCtx.fillStyle = '#ff9500';
-            pizzas.forEach((pizza, index) => {
-                gameCtx.fillRect(pizza.x, pizza.y, 20, 20);
+            // Speed boost timer
+            if (speedBoostTimer > 0) {
+                speedBoostTimer--;
+                // Draw speed indicator
+                gameCtx.fillStyle = '#ffbe0b';
+                gameCtx.fillRect(10, 10, (speedBoostTimer / 180) * 100, 8);
+            }
+
+            // Draw and update pizzas (iterate backwards to safely remove)
+            for (let i = pizzas.length - 1; i >= 0; i--) {
+                const pizza = pizzas[i];
+                // Pizza slice triangle
+                gameCtx.fillStyle = '#ff9500';
+                gameCtx.beginPath();
+                gameCtx.moveTo(pizza.x + 10, pizza.y);
+                gameCtx.lineTo(pizza.x + 20, pizza.y + 20);
+                gameCtx.lineTo(pizza.x, pizza.y + 20);
+                gameCtx.closePath();
+                gameCtx.fill();
                 gameCtx.strokeStyle = '#ffb700';
                 gameCtx.lineWidth = 2;
-                gameCtx.strokeRect(pizza.x, pizza.y, 20, 20);
+                gameCtx.stroke();
+
+                // Check collision with player
+                if (checkCollision(playerX, playerY, 20, 20, pizza.x, pizza.y, 20, 20)) {
+                    gameScore += 10 * gameLevel;
+                    pizzas.splice(i, 1);
+                    spawnPizza();
+
+                    // Level up when reaching threshold
+                    if (gameScore >= nextLevelScore) {
+                        gameLevel++;
+                        nextLevelScore += 100 * gameLevel; // Increasing threshold
+                        spawnCat();
+                    }
+
+                    updateGameUI();
+                }
+            }
+
+            // Draw and update cheese power-ups (iterate backwards)
+            for (let i = cheese.length - 1; i >= 0; i--) {
+                const c = cheese[i];
+                c.timer--;
+                if (c.timer <= 0) {
+                    cheese.splice(i, 1);
+                    continue;
+                }
+
+                // Flashing when about to disappear
+                if (c.timer < 60 && Math.floor(c.timer / 10) % 2 === 0) continue;
+
+                // Draw cheese wedge
+                gameCtx.fillStyle = '#ffbe0b';
+                gameCtx.beginPath();
+                gameCtx.arc(c.x + 10, c.y + 10, 10, 0, Math.PI * 2);
+                gameCtx.fill();
+                gameCtx.fillStyle = '#0a0a0a';
+                gameCtx.beginPath();
+                gameCtx.arc(c.x + 8, c.y + 8, 2, 0, Math.PI * 2);
+                gameCtx.arc(c.x + 14, c.y + 12, 2, 0, Math.PI * 2);
+                gameCtx.fill();
 
                 // Check collision
-                if (playerX < pizza.x + 20 && playerX + 20 > pizza.x &&
-                    playerY < pizza.y + 20 && playerY + 20 > pizza.y) {
-                    gameScore += 10;
-                    pizzas.splice(index, 1);
-                    pizzas.push({
-                        x: Math.random() * (gameCanvas.offsetWidth - 30),
-                        y: Math.random() * (gameCanvas.offsetHeight - 30)
-                    });
+                if (checkCollision(playerX, playerY, 20, 20, c.x, c.y, 20, 20)) {
+                    speedBoostTimer = 180; // 3 seconds at 60fps
+                    cheese.splice(i, 1);
+                    gameScore += 25;
+                    updateGameUI();
                 }
-            });
+            }
 
-            // Draw player (rat)
-            gameCtx.fillStyle = '#ff006e';
+            // Spawn cheese occasionally
+            if (Math.random() < 0.003) spawnCheese();
+
+            // Draw and update cats (enemies) - iterate backwards for safe removal
+            let playerHit = false;
+            for (let i = cats.length - 1; i >= 0; i--) {
+                const cat = cats[i];
+                // Move cat towards player (simple AI)
+                const dx = playerX - cat.x;
+                const dy = playerY - cat.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 0) {
+                    cat.vx = (dx / dist) * (1 + gameLevel * 0.2);
+                    cat.vy = (dy / dist) * (1 + gameLevel * 0.2);
+                }
+
+                cat.x += cat.vx;
+                cat.y += cat.vy;
+
+                // Draw cat
+                gameCtx.fillStyle = '#ff0000';
+                // Body
+                gameCtx.beginPath();
+                gameCtx.ellipse(cat.x + 12, cat.y + 15, 12, 10, 0, 0, Math.PI * 2);
+                gameCtx.fill();
+                // Head
+                gameCtx.beginPath();
+                gameCtx.arc(cat.x + 20, cat.y + 10, 8, 0, Math.PI * 2);
+                gameCtx.fill();
+                // Ears
+                gameCtx.beginPath();
+                gameCtx.moveTo(cat.x + 15, cat.y + 5);
+                gameCtx.lineTo(cat.x + 18, cat.y - 2);
+                gameCtx.lineTo(cat.x + 21, cat.y + 5);
+                gameCtx.fill();
+                gameCtx.beginPath();
+                gameCtx.moveTo(cat.x + 22, cat.y + 5);
+                gameCtx.lineTo(cat.x + 25, cat.y - 2);
+                gameCtx.lineTo(cat.x + 28, cat.y + 5);
+                gameCtx.fill();
+                // Eyes
+                gameCtx.fillStyle = '#ffbe0b';
+                gameCtx.beginPath();
+                gameCtx.arc(cat.x + 18, cat.y + 9, 2, 0, Math.PI * 2);
+                gameCtx.arc(cat.x + 24, cat.y + 9, 2, 0, Math.PI * 2);
+                gameCtx.fill();
+
+                // Check collision with player (only once per frame)
+                if (!playerHit && checkCollision(playerX, playerY, 20, 20, cat.x, cat.y, cat.size, cat.size)) {
+                    playerHit = true;
+                    gameLives--;
+                    updateGameUI();
+
+                    if (gameLives <= 0) {
+                        endGame();
+                        return; // Stop the game loop
+                    }
+
+                    // Reset player position
+                    playerX = canvasWidth / 2 - 10;
+                    playerY = canvasHeight - 40;
+
+                    // Remove this cat and spawn new one after delay
+                    cats.splice(i, 1);
+                    setTimeout(spawnCat, 1000);
+                }
+            }
+
+            // Draw player (rat) with speed boost effect
+            const ratColor = speedBoostTimer > 0 ? '#00ff41' : '#ff006e';
+            gameCtx.fillStyle = ratColor;
+
+            // Body
             gameCtx.beginPath();
-            gameCtx.arc(playerX + 10, playerY + 10, 10, 0, Math.PI * 2);
+            gameCtx.arc(playerX + 10, playerY + 12, 10, 0, Math.PI * 2);
             gameCtx.fill();
 
-            // Draw ear
+            // Ears
             gameCtx.beginPath();
-            gameCtx.arc(playerX + 5, playerY, 5, 0, Math.PI * 2);
+            gameCtx.arc(playerX + 5, playerY + 2, 5, 0, Math.PI * 2);
             gameCtx.fill();
             gameCtx.beginPath();
-            gameCtx.arc(playerX + 15, playerY, 5, 0, Math.PI * 2);
+            gameCtx.arc(playerX + 15, playerY + 2, 5, 0, Math.PI * 2);
             gameCtx.fill();
 
-            // Draw eye
+            // Eye
             gameCtx.fillStyle = '#000';
             gameCtx.beginPath();
-            gameCtx.arc(playerX + 12, playerY + 8, 2, 0, Math.PI * 2);
+            gameCtx.arc(playerX + 12, playerY + 10, 2, 0, Math.PI * 2);
             gameCtx.fill();
 
-            // Draw tail
-            gameCtx.strokeStyle = '#ff006e';
+            // Nose
+            gameCtx.fillStyle = '#ff006e';
+            gameCtx.beginPath();
+            gameCtx.arc(playerX + 18, playerY + 12, 2, 0, Math.PI * 2);
+            gameCtx.fill();
+
+            // Tail
+            gameCtx.strokeStyle = ratColor;
             gameCtx.lineWidth = 3;
             gameCtx.beginPath();
-            gameCtx.moveTo(playerX + 5, playerY + 15);
-            gameCtx.quadraticCurveTo(playerX - 10, playerY + 20, playerX - 15, playerY + 10);
+            gameCtx.moveTo(playerX + 2, playerY + 18);
+            gameCtx.quadraticCurveTo(playerX - 15, playerY + 25, playerX - 20, playerY + 15);
             gameCtx.stroke();
 
-            document.getElementById('gameScore').textContent = gameScore;
-
             requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            gameRunning = false;
+            document.removeEventListener('keydown', handleGameInput);
+
+            // Draw game over screen
+            gameCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            gameCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            gameCtx.fillStyle = '#ff0000';
+            gameCtx.font = 'bold 24px VT323';
+            gameCtx.textAlign = 'center';
+            gameCtx.fillText('GAME OVER', canvasWidth / 2, canvasHeight / 2 - 30);
+
+            gameCtx.fillStyle = '#00ff41';
+            gameCtx.font = '18px VT323';
+            gameCtx.fillText(`Final Score: ${gameScore}`, canvasWidth / 2, canvasHeight / 2);
+            gameCtx.fillText(`Level Reached: ${gameLevel}`, canvasWidth / 2, canvasHeight / 2 + 25);
+            gameCtx.fillText('Click START to play again', canvasWidth / 2, canvasHeight / 2 + 60);
+            gameCtx.textAlign = 'left';
+
+            // Add score to game state
+            gameState.pizza += Math.floor(gameScore / 10);
+            gameState.totalScore += gameScore;
+            updateStats();
         }
 
         function stopGame() {
             gameRunning = false;
             document.removeEventListener('keydown', handleGameInput);
-            gameState.pizza += Math.floor(gameScore / 10);
-            gameState.totalScore += gameScore;
-            updateStats();
         }
 
         // Close modal when clicking outside
