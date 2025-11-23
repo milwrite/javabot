@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amtrak Journey: Penn Station to Rochester</title>
+    <title>Zach & Cen's Amtrak Adventure</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -13,180 +13,164 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Courier New', monospace;
+            background: #0a0e27;
+            color: #00ff41;
             min-height: 100vh;
             padding: 20px;
             overflow-x: hidden;
-        }
-
-        .home-link {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 9999;
-            text-decoration: none;
-            background: rgba(102, 126, 234, 0.9);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .home-link:hover {
-            background: rgba(102, 126, 234, 1);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            border: 2px solid #00ff41;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: #0a0e27;
+            border: 2px solid #00ff41;
+            border-radius: 0;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3), inset 0 0 20px rgba(0, 255, 65, 0.1);
             overflow: hidden;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #0a0e27;
+            border-bottom: 2px solid #00ff41;
             padding: 40px 20px;
             text-align: center;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
         }
 
         .header h1 {
             font-size: 2.5em;
+            color: #00ff41;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 0 10px #00ff41;
+            letter-spacing: 2px;
+        }
+
+        .header .subtitle {
+            font-size: 1.5em;
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff0000;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
         }
 
         .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
+            font-size: 1em;
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
         }
 
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 30px;
-            padding: 40px;
-            min-height: 600px;
+        .route-visualization {
+            background: #0a0e27;
+            border-bottom: 2px solid #00ff41;
+            padding: 40px 20px;
+            overflow-x: auto;
         }
 
-        .sidebar {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 30px;
-            height: fit-content;
-        }
-
-        .journey-map {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-        }
-
-        .stop-list {
-            list-style: none;
-        }
-
-        .stop-item {
-            padding: 15px;
-            margin-bottom: 10px;
-            background: white;
-            border-left: 4px solid #667eea;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .stops-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-width: 100%;
+            padding: 20px 0;
             position: relative;
         }
 
-        .stop-item:hover {
-            background: #f0f4ff;
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        .stops-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #00ff41;
+            z-index: 1;
+            transform: translateY(-50%);
         }
 
-        .stop-item.active {
-            background: #667eea;
-            color: white;
-            border-left-color: #764ba2;
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        .stop-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            min-width: 120px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        .stop-item.completed {
-            border-left-color: #28a745;
-            opacity: 0.7;
+        .stop-marker:hover {
+            transform: scale(1.1);
+        }
+
+        .stop-circle {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #00ff41;
+            border-radius: 50%;
+            background: #0a0e27;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .stop-marker.visited .stop-circle {
+            background: #00ff41;
+            color: #0a0e27;
+        }
+
+        .stop-marker.current .stop-circle {
+            background: #ff0000;
+            border-color: #ff0000;
+            box-shadow: 0 0 15px #ff0000;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 15px #ff0000;
+            }
+            50% {
+                box-shadow: 0 0 25px #ff0000;
+            }
         }
 
         .stop-name {
-            font-weight: 600;
-            font-size: 1.1em;
-            margin-bottom: 5px;
+            font-size: 0.85em;
+            color: #00ffff;
+            text-align: center;
+            text-shadow: 0 0 5px #00ffff;
+            white-space: nowrap;
         }
 
-        .stop-time {
-            font-size: 0.9em;
-            opacity: 0.7;
+        .stop-distance {
+            font-size: 0.75em;
+            color: #ff0000;
+            text-shadow: 0 0 3px #ff0000;
         }
 
-        .stop-item.active .stop-time {
-            opacity: 0.9;
+        .main-content {
+            padding: 40px 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
         }
 
-        .timeline {
-            position: relative;
-            padding: 20px 0;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 20px;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .timeline-item {
-            padding-left: 60px;
-            margin-bottom: 30px;
-            position: relative;
-        }
-
-        .timeline-dot {
-            position: absolute;
-            left: 10px;
-            top: 5px;
-            width: 20px;
-            height: 20px;
-            background: white;
-            border: 3px solid #667eea;
-            border-radius: 50%;
-            z-index: 2;
-        }
-
-        .timeline-item.completed .timeline-dot {
-            background: #28a745;
-            border-color: #28a745;
-        }
-
-        .content-area {
-            background: white;
-            border-radius: 15px;
+        .stop-section {
+            background: #0a0e27;
+            border: 2px solid #00ff41;
+            border-radius: 0;
             padding: 30px;
-            min-height: 400px;
-        }
-
-        .stop-details {
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
             display: none;
         }
 
-        .stop-details.active {
+        .stop-section.active {
             display: block;
             animation: fadeIn 0.3s ease;
         }
@@ -207,32 +191,66 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 2px solid #00ff41;
         }
 
         .stop-header i {
             font-size: 2.5em;
-            color: #667eea;
+            color: #ff0000;
             margin-right: 20px;
+            text-shadow: 0 0 10px #ff0000;
         }
 
         .stop-header h2 {
             font-size: 2em;
-            color: #333;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            letter-spacing: 1px;
+        }
+
+        .stop-header p {
+            color: #00ffff;
+            margin-top: 5px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .stop-description {
+            font-size: 1em;
+            color: #00ff41;
+            margin: 20px 0;
+            line-height: 1.6;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
+        }
+
+        .distance-display {
+            background: #0a0e27;
+            border: 2px solid #ff0000;
+            border-radius: 0;
+            padding: 15px;
+            margin: 20px 0;
+            color: #ff0000;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 0 0 10px #ff0000;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.2);
         }
 
         .facts-section {
-            background: #f8f9fa;
-            border-radius: 10px;
+            background: #0a0e27;
+            border: 2px solid #00ffff;
+            border-radius: 0;
             padding: 20px;
             margin: 20px 0;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
         }
 
         .facts-section h3 {
-            color: #667eea;
+            color: #00ffff;
             margin-bottom: 15px;
             display: flex;
             align-items: center;
+            text-shadow: 0 0 10px #00ffff;
+            letter-spacing: 1px;
         }
 
         .facts-section h3 i {
@@ -241,299 +259,103 @@
 
         .fact-item {
             padding: 10px 0;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #00ff41;
             font-size: 0.95em;
-            color: #555;
+            color: #00ff41;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
         }
 
         .fact-item:last-child {
             border-bottom: none;
         }
 
-        .game-section {
-            background: #fff3cd;
-            border-radius: 10px;
+        .game-container {
+            background: #0a0e27;
+            border: 2px solid #ff0000;
+            border-radius: 0;
             padding: 20px;
             margin: 20px 0;
-            border-left: 4px solid #ffc107;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.2);
         }
 
-        .game-section h3 {
-            color: #856404;
+        .game-container h3 {
+            color: #ff0000;
             margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-
-        .game-section h3 i {
-            margin-right: 10px;
-        }
-
-        .quiz-question {
-            margin-bottom: 15px;
-        }
-
-        .quiz-question p {
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .quiz-options {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .quiz-option {
-            padding: 10px 15px;
-            background: white;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.95em;
-        }
-
-        .quiz-option:hover {
-            border-color: #667eea;
-            background: #f0f4ff;
-        }
-
-        .quiz-option.selected {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .quiz-option.correct {
-            background: #28a745;
-            color: white;
-            border-color: #28a745;
-        }
-
-        .quiz-option.incorrect {
-            background: #dc3545;
-            color: white;
-            border-color: #dc3545;
-        }
-
-        .quiz-feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 8px;
-            display: none;
-            font-weight: 600;
-        }
-
-        .quiz-feedback.show {
-            display: block;
-        }
-
-        .quiz-feedback.correct {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .quiz-feedback.incorrect {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            text-shadow: 0 0 10px #ff0000;
+            letter-spacing: 1px;
         }
 
         .game-button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+            background: #0a0e27;
+            color: #00ff41;
+            border: 2px solid #00ff41;
+            padding: 12px 24px;
+            border-radius: 0;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: bold;
             transition: all 0.3s ease;
             margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+            letter-spacing: 1px;
         }
 
         .game-button:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            background: #00ff41;
+            color: #0a0e27;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            text-shadow: none;
         }
 
-        .progress-bar {
-            background: #e0e0e0;
-            height: 8px;
-            border-radius: 10px;
-            margin: 20px 0;
-            overflow: hidden;
+        .game-button:active {
+            transform: scale(0.98);
         }
 
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 2em;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-
-        .mini-game-container {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .memory-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
+        .navigation-buttons {
+            display: flex;
             gap: 10px;
-            margin: 15px 0;
+            margin-top: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
-        .memory-card {
-            aspect-ratio: 1;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 10px;
+        .nav-button {
+            background: #0a0e27;
+            color: #00ffff;
+            border: 2px solid #00ffff;
+            padding: 10px 20px;
+            border-radius: 0;
             cursor: pointer;
-            font-size: 2em;
-            transition: all 0.3s ease;
-            color: white;
             font-weight: bold;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+            letter-spacing: 1px;
         }
 
-        .memory-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        .nav-button:hover {
+            background: #00ffff;
+            color: #0a0e27;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            text-shadow: none;
         }
 
-        .memory-card.flipped {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-        }
-
-        .memory-card.matched {
-            background: #28a745;
-            color: white;
+        .nav-button:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
         }
 
-        .distance-display {
-            text-align: center;
-            font-size: 1.2em;
-            margin: 20px 0;
-            padding: 15px;
-            background: #f0f4ff;
-            border-radius: 10px;
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .train-animation {
-            position: relative;
-            height: 100px;
-            background: linear-gradient(90deg, transparent 0%, rgba(102, 126, 234, 0.1) 50%, transparent 100%);
-            border-radius: 10px;
-            margin: 20px 0;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-        }
-
-        .train {
-            position: absolute;
-            font-size: 3em;
-            animation: trainMove 8s infinite;
-        }
-
-        @keyframes trainMove {
-            0% {
-                left: -50px;
-            }
-            50% {
-                left: calc(100% - 50px);
-            }
-            100% {
-                left: -50px;
-            }
-        }
-
-        .achievement {
-            background: #ffc107;
-            color: #333;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 10px 0;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .achievement i {
-            font-size: 2em;
-        }
-
-        .achievement-text h4 {
-            margin-bottom: 5px;
-        }
-
-        .achievement-text p {
-            font-size: 0.9em;
-            opacity: 0.8;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-
-            .header h1 {
-                font-size: 1.8em;
-            }
-
-            .stats {
-                grid-template-columns: 1fr;
-            }
-
-            .memory-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
         .completion-message {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
+            background: #0a0e27;
+            border: 3px solid #00ff41;
+            border-radius: 0;
+            padding: 40px;
             text-align: center;
             margin: 20px 0;
             display: none;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
         }
 
         .completion-message.show {
@@ -553,515 +375,535 @@
         }
 
         .completion-message h2 {
-            font-size: 2em;
-            margin-bottom: 10px;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #00ff41;
+            text-shadow: 0 0 15px #00ff41;
+            letter-spacing: 2px;
         }
 
         .completion-message p {
             font-size: 1.1em;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .stats-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .stat-item {
+            background: #0a0e27;
+            border: 2px solid #ff0000;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.2);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            color: #ff0000;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        .stat-label {
+            color: #00ffff;
+            margin-top: 10px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .memory-card {
+            aspect-ratio: 1;
+            background: #0a0e27;
+            border: 2px solid #00ff41;
+            border-radius: 0;
+            cursor: pointer;
+            font-size: 1.5em;
+            transition: all 0.3s ease;
+            color: #00ff41;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+        }
+
+        .memory-card:hover:not(:disabled) {
+            background: #00ff41;
+            color: #0a0e27;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            text-shadow: none;
+        }
+
+        .memory-card:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .memory-card.flipped {
+            background: #ff0000;
+            border-color: #ff0000;
+            color: #00ff41;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+        }
+
+        .memory-card.matched {
+            background: #00ffff;
+            border-color: #00ffff;
+            color: #0a0e27;
+            cursor: not-allowed;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .quiz-question {
+            margin: 15px 0;
+        }
+
+        .quiz-question p {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #00ff41;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quiz-option {
+            padding: 12px 15px;
+            background: #0a0e27;
+            border: 2px solid #00ffff;
+            border-radius: 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+            color: #00ffff;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+        }
+
+        .quiz-option:hover:not(:disabled) {
+            background: #00ffff;
+            color: #0a0e27;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            text-shadow: none;
+        }
+
+        .quiz-option.selected {
+            background: #ff0000;
+            border-color: #ff0000;
+            color: #00ff41;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        }
+
+        .quiz-option.correct {
+            background: #00ff41;
+            border-color: #00ff41;
+            color: #0a0e27;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+        }
+
+        .quiz-option.incorrect {
+            background: #ff0000;
+            border-color: #ff0000;
+            color: #00ff41;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        }
+
+        .quiz-feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 0;
+            display: none;
+            font-weight: bold;
+            border: 2px solid;
+        }
+
+        .quiz-feedback.show {
+            display: block;
+        }
+
+        .quiz-feedback.correct {
+            background: #0a0e27;
+            color: #00ff41;
+            border-color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+        }
+
+        .quiz-feedback.incorrect {
+            background: #0a0e27;
+            color: #ff0000;
+            border-color: #ff0000;
+            text-shadow: 0 0 10px #ff0000;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .header .subtitle {
+                font-size: 1.2em;
+            }
+
+            .stops-container {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .stop-marker {
+                min-width: 100px;
+                margin: 10px;
+            }
+
+            .stops-container::before {
+                display: none;
+            }
+
+            .memory-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .quiz-options {
+                gap: 8px;
+            }
+
+            .stats-display {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hidden {
+            display: none !important;
         }
     </style>
-
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../page-theme.css">
 </head>
 <body>
-    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
-
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-train"></i> Amtrak Journey</h1>
-            <p>Penn Station (NYC) to Rochester, NY</p>
+            <h1><i class="fas fa-train"></i> AMTRAK JOURNEY</h1>
+            <div class="subtitle">Zach & Cen's Amtrak Adventure</div>
+            <p>Penn Station to Rochester | 390 Miles</p>
+        </div>
+
+        <div class="route-visualization">
+            <div class="stops-container" id="stopsContainer"></div>
         </div>
 
         <div class="main-content">
-            <div class="sidebar">
-                <h3 style="color: #667eea; margin-bottom: 20px;"><i class="fas fa-map-marker-alt"></i> Journey Stops</h3>
-                <ul class="stop-list" id="stopList"></ul>
-                
-                <div class="progress-bar" style="margin-top: 30px;">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                
-                <div class="stats">
-                    <div class="stat-card">
-                        <div class="stat-value" id="stopsVisited">0</div>
-                        <div class="stat-label">Stops Visited</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="gamesWon">0</div>
-                        <div class="stat-label">Games Won</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="factsLearned">0</div>
-                        <div class="stat-label">Facts Learned</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="journey-map">
-                <div class="content-area" id="contentArea"></div>
-            </div>
+            <div id="stopsContent"></div>
+            <div id="completionContainer"></div>
         </div>
     </div>
 
     <script>
-        const journeyData = [
+        const stops = [
             {
                 id: 1,
                 name: "Penn Station",
                 city: "New York City, NY",
-                time: "09:00 AM",
                 icon: "fas fa-train",
                 distance: 0,
-                description: "Starting point of our journey at the iconic Pennsylvania Station in Manhattan.",
+                description: "Starting point of our journey at the iconic Pennsylvania Station in Manhattan, one of the busiest railway stations in the world.",
                 facts: [
-                    "Penn Station opened in 1910 and is one of the busiest railway stations in the world",
+                    "Penn Station opened in 1910 and serves over 750,000 passengers annually",
                     "Amtrak operates over 500 daily trains from Penn Station",
-                    "The original Penn Station was demolished in 1963, and the current building was completed in 1968",
-                    "Penn Station serves over 750,000 passengers annually"
-                ],
-                game: {
-                    type: "memory",
-                    title: "Remember the Route",
-                    description: "Match the cities with their distances from Penn Station",
-                    cards: ["NYC", "ALB", "SYR", "ROC", "NYC", "ALB", "SYR", "ROC"],
-                    pairs: [
-                        { card1: 0, card2: 4, label: "New York City" },
-                        { card1: 1, card2: 5, label: "Albany" },
-                        { card1: 2, card2: 6, label: "Syracuse" },
-                        { card1: 3, card2: 7, label: "Rochester" }
-                    ]
-                }
+                    "The current building was completed in 1968 after the original was demolished in 1963"
+                ]
             },
             {
                 id: 2,
                 name: "Yonkers",
                 city: "Yonkers, NY",
-                time: "09:25 AM",
                 icon: "fas fa-city",
                 distance: 20,
-                description: "First stop heading north along the Hudson River.",
-                facts: [
-                    "Yonkers is the 3rd largest city in New York State",
-                    "The city is known for its scenic location along the Hudson River",
-                    "Yonkers has a population of approximately 200,000 residents",
-                    "The Hudson River waterfront has been revitalized in recent years"
-                ],
-                game: {
-                    type: "quiz",
-                    title: "Hudson River Facts",
-                    description: "Test your knowledge about the Hudson River",
-                    question: "What is the length of the Hudson River?",
-                    options: ["206 miles", "315 miles", "425 miles", "550 miles"],
-                    correct: 1,
-                    explanation: "The Hudson River is approximately 315 miles long!"
-                }
+                description: "First stop heading north along the scenic Hudson River, the third largest city in New York State."
             },
             {
                 id: 3,
-                name: "Croton-Harmon",
-                city: "Croton-on-Hudson, NY",
-                time: "09:50 AM",
+                name: "Hudson Valley",
+                city: "Hudson Valley, NY",
                 icon: "fas fa-leaf",
-                distance: 35,
-                description: "Scenic stop along the Hudson Valley.",
-                facts: [
-                    "Croton-Harmon is a major junction point for Metro-North Railroad",
-                    "The area is known for its beautiful Hudson Valley scenery",
-                    "The Croton Dam was built in 1906 and supplies water to New York City",
-                    "The Hudson Valley is famous for its apple orchards and farms"
-                ],
-                game: {
-                    type: "quiz",
-                    title: "Hudson Valley Knowledge",
-                    description: "How well do you know the Hudson Valley?",
-                    question: "What year was the Croton Dam completed?",
-                    options: ["1896", "1906", "1916", "1926"],
-                    correct: 1,
-                    explanation: "The Croton Dam was completed in 1906!"
-                }
+                distance: 50,
+                description: "Beautiful region known for its scenic landscapes, apple orchards, and historic charm along the Hudson River."
             },
             {
                 id: 4,
-                name: "Poughkeepsie",
-                city: "Poughkeepsie, NY",
-                time: "10:30 AM",
-                icon: "fas fa-bridge",
-                distance: 75,
-                description: "Historic city home to Vassar College and the Mid-Hudson Bridge.",
-                facts: [
-                    "Poughkeepsie is home to Vassar College, founded in 1861",
-                    "The Mid-Hudson Bridge connects Poughkeepsie to Highland",
-                    "The city was a major center of the American Industrial Revolution",
-                    "The Poughkeepsie Waterfront has been transformed into a vibrant cultural district"
-                ],
-                game: {
-                    type: "quiz",
-                    title: "Poughkeepsie Trivia",
-                    description: "Test your knowledge about Poughkeepsie",
-                    question: "In what year was Vassar College founded?",
-                    options: ["1841", "1851", "1861", "1871"],
-                    correct: 2,
-                    explanation: "Vassar College was founded in 1861!"
-                }
+                name: "Albany",
+                city: "Albany, NY",
+                icon: "fas fa-capitol",
+                distance: 150,
+                description: "Capital of New York State, founded in 1624 by the Dutch and home to the historic State Capitol building completed in 1899."
             },
             {
                 id: 5,
-                name: "Rhinecliff",
-                city: "Rhinecliff, NY",
-                time: "11:00 AM",
-                icon: "fas fa-landmark",
-                distance: 90,
-                description: "Gateway to the Catskill Mountains and wine country.",
-                facts: [
-                    "Rhinecliff is a small village with historic charm",
-                    "The area is known for its proximity to wineries and farms",
-                    "The Catskill Mountains are just minutes away",
-                    "Rhinecliff Station is one of the oldest continuously operating stations"
-                ],
-                game: {
-                    type: "quiz",
-                    title: "Catskill Region",
-                    description: "What do you know about the Catskills?",
-                    question: "The Catskill Mountains are part of which larger mountain range?",
-                    options: ["Appalachian Mountains", "Rocky Mountains", "Sierra Nevada", "Adirondacks"],
-                    correct: 0,
-                    explanation: "The Catskill Mountains are part of the Appalachian Mountains!"
-                }
+                name: "Syracuse",
+                city: "Syracuse, NY",
+                icon: "fas fa-university",
+                distance: 310,
+                description: "Major city home to Syracuse University, founded in 1870, and historically a major salt production center in the 19th century."
             },
             {
                 id: 6,
-                name: "Albany",
-                city: "Albany, NY",
-                time: "12:00 PM",
-                icon: "fas fa-capitol",
-                distance: 150,
-                description: "Capital of New York State with rich political history.",
-                facts: [
-                    "Albany is the capital of New York State",
-                    "The city is home to the New York State Capitol building, completed in 1899",
-                    "Albany was founded in 1624 by the Dutch",
-                    "The city is located at the confluence of the Hudson and Mohawk rivers"
-                ],
-                game: {
-                    type: "quiz",
-                    title: "Albany Capital Facts",
-                    description: "Test your New York State knowledge",
-                    question: "In what year was the New York State Capitol building completed?",
-                    options: ["1889", "1899", "1909", "1919"],
-                    correct: 1,
-                    explanation: "The Capitol building was completed in 1899!"
-                }
-            },
-            {
-                id: 7,
-                name: "Schenectady",
-                city: "Schenectady, NY",
-                time: "1:00 PM",
-                icon: "fas fa-industry",
-                distance: 180,
-                description: "Historic industrial city and home to Union College.",
-                facts: [
-                    "Schenectady was a major center of industrial innovation",
-                    "General Electric was founded in Schenectady in 1892",
-                    "Union College, founded in 1795, is one of the oldest colleges in the US",
-                    "The city is known as the 'City that Lights and Hauls the World'"
-                ],
-                game: {
-                    type: "quiz",
-                    title: "Industrial History",
-                    description: "When was General Electric founded in Schenectady?",
-                    question: "In what year was General Electric founded in Schenectady?",
-                    options: ["1882", "1892", "1902", "1912"],
-                    correct: 1,
-                    explanation: "General Electric was founded in Schenectady in 1892!"
-                }
-            },
-            {
-                id: 8,
-                name: "Amsterdam",
-                city: "Amsterdam, NY",
-                time: "1:45 PM",
-                icon: "fas fa-water",
-                distance: 210,
-                description: "Small historic town along the Mohawk River.",
-                facts: [
-                    "Amsterdam is located along the scenic Mohawk River",
-                    "The city was an important stop on the Erie Canal",
-                    "Amsterdam has a rich textile manufacturing history",
-                    "The Mohawk River was crucial to the development of upstate New York"
-                ],
-                game: {
-                    type: "quiz",
-                    title: "Mohawk River Knowledge",
-                    description: "Test your canal knowledge",
-                    question: "The Erie Canal connected which two major waterways?",
-                    options: ["Hudson River and Great Lakes", "Delaware River and Susquehanna", "Potomac River and Ohio River", "Connecticut River and Atlantic Ocean"],
-                    correct: 0,
-                    explanation: "The Erie Canal connected the Hudson River to the Great Lakes!"
-                }
-            },
-            {
-                id: 9,
-                name: "Utica",
-                city: "Utica, NY",
-                time: "2:30 PM",
-                icon: "fas fa-building",
-                distance: 250,
-                description: "Historic manufacturing city in the Mohawk Valley.",
-                facts: [
-                    "Utica was a major center of textile and railroad manufacturing",
-                    "The city was founded in 1773",
-                    "Utica is home to Utica College and SUNY Polytechnic Institute",
-                    "The city is known for its diverse immigrant communities"
-                ],
-                game: {
-                    type: "quiz",
-                    title: "Utica History",
-                    description: "When was Utica founded?",
-                    question: "In what year was Utica founded?",
-                    options: ["1763", "1773", "1783", "1793"],
-                    correct: 1,
-                    explanation: "Utica was founded in 1773!"
-                }
-            },
-            {
-                id: 10,
-                name: "Syracuse",
-                city: "Syracuse, NY",
-                time: "3:45 PM",
-                icon: "fas fa-university",
-                distance: 310,
-                description: "Major city and home to Syracuse University.",
-                facts: [
-                    "Syracuse is home to Syracuse University, founded in 1870",
-                    "The city was a major salt production center in the 19th century",
-                    "Syracuse is located at the crossroads of major transportation routes",
-                    "The city is known for its diverse cultural attractions and museums"
-                ],
-                game: {
-                    type: "quiz",
-                    title: "Syracuse Facts",
-                    description: "Test your Syracuse knowledge",
-                    question: "In what year was Syracuse University founded?",
-                    options: ["1860", "1870", "1880", "1890"],
-                    correct: 1,
-                    explanation: "Syracuse University was founded in 1870!"
-                }
-            },
-            {
-                id: 11,
-                name: "Fulton",
-                city: "Fulton, NY",
-                time: "4:30 PM",
-                icon: "fas fa-fish",
-                distance: 350,
-                description: "Historic city known as the 'Oswego County Seat' and Oswego River.",
-                facts: [
-                    "Fulton is located on the Oswego River",
-                    "The city has a rich history of industrial development",
-                    "Fulton is known for its historic canal heritage",
-                    "The city is a gateway to the Finger Lakes region"
-                ],
-                game: {
-                    type: "quiz",
-                    title: "Oswego River",
-                    description: "What do you know about the Oswego River?",
-                    question: "The Oswego River connects to which major waterway?",
-                    options: ["Finger Lakes", "Lake Ontario", "Seneca River", "Genesee River"],
-                    correct: 1,
-                    explanation: "The Oswego River flows into Lake Ontario!"
-                }
-            },
-            {
-                id: 12,
                 name: "Rochester",
                 city: "Rochester, NY",
-                time: "5:30 PM",
                 icon: "fas fa-flag-checkered",
                 distance: 390,
-                description: "Final destination - the 'Flower City' of New York.",
-                facts: [
-                    "Rochester is known as the 'Flower City' because of its beautiful gardens",
-                    "The city is home to the Eastman Kodak Company, a photography pioneer",
-                    "Rochester has a population of approximately 210,000 residents",
-                    "The Genesee River Falls are a beautiful natural feature of the city"
-                ],
-                game: {
-                    type: "quiz",
-                    title: "Rochester Final Quiz",
-                    description: "Test your knowledge about Rochester",
-                    question: "Why is Rochester known as the 'Flower City'?",
-                    options: ["It has many flower shops", "It's famous for beautiful gardens", "It's near botanical gardens", "All of the above"],
-                    correct: 1,
-                    explanation: "Rochester is known as the 'Flower City' because of its beautiful gardens!"
-                }
+                description: "Final destination - the 'Flower City' known for its beautiful gardens, home to Eastman Kodak Company, and the scenic Genesee River Falls."
             }
         ];
 
         let currentStopIndex = 0;
-        let stopsVisited = 0;
-        let gamesWon = 0;
-        let factsLearned = 0;
-        let memoryGameState = {};
-        let quizAnswered = false;
 
         function initializeJourney() {
-            renderStopList();
+            renderStopsVisualization();
+            renderStopsContent();
             showStop(0);
         }
 
-        function renderStopList() {
-            const stopList = document.getElementById('stopList');
-            stopList.innerHTML = '';
+        function renderStopsVisualization() {
+            const container = document.getElementById('stopsContainer');
+            container.innerHTML = stops.map((stop, index) => `
+                <div class="stop-marker ${index === 0 ? 'visited' : ''} ${index === currentStopIndex ? 'current' : ''}" onclick="showStop(${index})">
+                    <div class="stop-circle">
+                        <i class="${stop.icon}"></i>
+                    </div>
+                    <div class="stop-name">${stop.name}</div>
+                    <div class="stop-distance">${stop.distance} mi</div>
+                </div>
+            `).join('');
+        }
 
-            journeyData.forEach((stop, index) => {
-                const li = document.createElement('li');
-                li.className = 'stop-item';
-                if (index === currentStopIndex) li.classList.add('active');
-                if (index < currentStopIndex) li.classList.add('completed');
+        function renderStopsContent() {
+            const container = document.getElementById('stopsContent');
+            container.innerHTML = stops.map((stop, index) => `
+                <div class="stop-section" id="stop-${index}">
+                    <div class="stop-header">
+                        <i class="${stop.icon}"></i>
+                        <div>
+                            <h2>${stop.name}</h2>
+                            <p>${stop.city}</p>
+                        </div>
+                    </div>
 
-                li.innerHTML = `
-                    <div class="stop-name"><i class="${stop.icon}"></i> ${stop.name}</div>
-                    <div class="stop-time">${stop.time} | ${stop.distance} mi</div>
-                `;
+                    <div class="stop-description">${stop.description}</div>
 
-                li.addEventListener('click', () => showStop(index));
-                stopList.appendChild(li);
-            });
+                    <div class="distance-display">
+                        <i class="fas fa-train"></i> ${stop.distance} miles from Penn Station
+                    </div>
+
+                    ${stop.facts ? `
+                        <div class="facts-section">
+                            <h3><i class="fas fa-lightbulb"></i> DID YOU KNOW?</h3>
+                            ${stop.facts.map(fact => `<div class="fact-item">• ${fact}</div>`).join('')}
+                        </div>
+                    ` : ''}
+
+                    <div class="game-container" id="game-${index}"></div>
+
+                    <div class="navigation-buttons">
+                        ${index > 0 ? `<button class="nav-button" onclick="showStop(${index - 1})"><i class="fas fa-arrow-left"></i> PREVIOUS</button>` : ''}
+                        ${index < stops.length - 1 ? `<button class="nav-button" onclick="showStop(${index + 1})">NEXT <i class="fas fa-arrow-right"></i></button>` : ''}
+                    </div>
+                </div>
+            `).join('');
         }
 
         function showStop(index) {
             currentStopIndex = index;
-            const stop = journeyData[index];
+            
+            // Update visualization
+            document.querySelectorAll('.stop-marker').forEach((marker, i) => {
+                marker.classList.remove('current', 'visited');
+                if (i <= index) marker.classList.add('visited');
+                if (i === index) marker.classList.add('current');
+            });
 
-            renderStopList();
-            updateProgress();
+            // Update content
+            document.querySelectorAll('.stop-section').forEach((section, i) => {
+                section.classList.remove('active');
+                if (i === index) section.classList.add('active');
+            });
 
-            const contentArea = document.getElementById('contentArea');
-            contentArea.innerHTML = `
-                <div class="stop-header">
-                    <i class="${stop.icon}"></i>
-                    <div>
-                        <h2>${stop.name}</h2>
-                        <p style="color: #666; margin-top: 5px;">${stop.city}</p>
-                    </div>
-                </div>
+            // Initialize game for this stop
+            initializeGameForStop(index);
 
-                <p style="font-size: 1.1em; color: #555; margin: 20px 0;">${stop.description}</p>
-
-                <div class="distance-display">
-                    <i class="fas fa-train"></i> ${stop.distance} miles from Penn Station
-                </div>
-
-                <div class="train-animation">
-                    <div class="train">🚂</div>
-                </div>
-
-                <div class="facts-section">
-                    <h3><i class="fas fa-lightbulb"></i> Did You Know?</h3>
-                    ${stop.facts.map(fact => `<div class="fact-item">• ${fact}</div>`).join('')}
-                </div>
-
-                ${renderGame(stop)}
-
-                <div style="text-align: center; margin-top: 30px;">
-                    ${index > 0 ? `<button class="game-button" onclick="showStop(${index - 1})"><i class="fas fa-arrow-left"></i> Previous Stop</button>` : ''}
-                    ${index < journeyData.length - 1 ? `<button class="game-button" onclick="showStop(${index + 1})" style="margin-left: 10px;"><i class="fas fa-arrow-right"></i> Next Stop</button>` : ''}
-                </div>
-
-                ${index === journeyData.length - 1 ? `
-                    <div class="completion-message show">
-                        <h2><i class="fas fa-check-circle"></i> Journey Complete!</h2>
-                        <p>You've successfully traveled from Penn Station to Rochester!</p>
-                        <p style="font-size: 1em; margin-top: 15px;">
-                            <strong>${stopsVisited}</strong> stops visited | 
-                            <strong>${gamesWon}</strong> games won | 
-                            <strong>${factsLearned}</strong> facts learned
-                        </p>
-                    </div>
-                ` : ''}
-            `;
-
-            factsLearned += stop.facts.length;
-            if (index > stopsVisited) {
-                stopsVisited = index + 1;
-            }
-            updateStats();
-        }
-
-        function renderGame(stop) {
-            if (stop.game.type === 'memory') {
-                return renderMemoryGame(stop);
-            } else if (stop.game.type === 'quiz') {
-                return renderQuizGame(stop);
+            // Show completion message if at last stop
+            if (index === stops.length - 1) {
+                showCompletionMessage();
+            } else {
+                hideCompletionMessage();
             }
         }
 
-        function renderMemoryGame(stop) {
-            const gameId = `memory-${stop.id}`;
-            memoryGameState[gameId] = memoryGameState[gameId] || {
+        function initializeGameForStop(stopIndex) {
+            const gameContainer = document.getElementById(`game-${stopIndex}`);
+            
+            if (stopIndex === 0) {
+                gameContainer.innerHTML = `
+                    <h3><i class="fas fa-gamepad"></i> MEMORY GAME</h3>
+                    <p>Match the cities with their distances!</p>
+                    <div class="memory-grid" id="memory-grid-0">
+                        <button class="memory-card" onclick="flipCard(0, 0)"><span>?</span></button>
+                        <button class="memory-card" onclick="flipCard(0, 1)"><span>?</span></button>
+                        <button class="memory-card" onclick="flipCard(0, 2)"><span>?</span></button>
+                        <button class="memory-card" onclick="flipCard(0, 3)"><span>?</span></button>
+                        <button class="memory-card" onclick="flipCard(0, 4)"><span>?</span></button>
+                        <button class="memory-card" onclick="flipCard(0, 5)"><span>?</span></button>
+                        <button class="memory-card" onclick="flipCard(0, 6)"><span>?</span></button>
+                        <button class="memory-card" onclick="flipCard(0, 7)"><span>?</span></button>
+                    </div>
+                    <button class="game-button" onclick="resetMemoryGame(0)">RESET GAME</button>
+                `;
+                initMemoryGame(0);
+            } else if (stopIndex === 1) {
+                gameContainer.innerHTML = `
+                    <h3><i class="fas fa-gamepad"></i> QUIZ TIME</h3>
+                    <div class="quiz-question">
+                        <p>What is the length of the Hudson River?</p>
+                        <div class="quiz-options">
+                            <button class="quiz-option" onclick="selectQuizAnswer(1, 0)">206 miles</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(1, 1)">315 miles</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(1, 2)">425 miles</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(1, 3)">550 miles</button>
+                        </div>
+                        <div class="quiz-feedback" id="feedback-1"></div>
+                    </div>
+                `;
+            } else if (stopIndex === 2) {
+                gameContainer.innerHTML = `
+                    <h3><i class="fas fa-gamepad"></i> QUIZ TIME</h3>
+                    <div class="quiz-question">
+                        <p>What year was the Croton Dam completed?</p>
+                        <div class="quiz-options">
+                            <button class="quiz-option" onclick="selectQuizAnswer(2, 0)">1896</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(2, 1)">1906</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(2, 2)">1916</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(2, 3)">1926</button>
+                        </div>
+                        <div class="quiz-feedback" id="feedback-2"></div>
+                    </div>
+                `;
+            } else if (stopIndex === 3) {
+                gameContainer.innerHTML = `
+                    <h3><i class="fas fa-gamepad"></i> QUIZ TIME</h3>
+                    <div class="quiz-question">
+                        <p>What year was the New York State Capitol building completed?</p>
+                        <div class="quiz-options">
+                            <button class="quiz-option" onclick="selectQuizAnswer(3, 0)">1889</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(3, 1)">1899</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(3, 2)">1909</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(3, 3)">1919</button>
+                        </div>
+                        <div class="quiz-feedback" id="feedback-3"></div>
+                    </div>
+                `;
+            } else if (stopIndex === 4) {
+                gameContainer.innerHTML = `
+                    <h3><i class="fas fa-gamepad"></i> QUIZ TIME</h3>
+                    <div class="quiz-question">
+                        <p>In what year was Syracuse University founded?</p>
+                        <div class="quiz-options">
+                            <button class="quiz-option" onclick="selectQuizAnswer(4, 0)">1860</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(4, 1)">1870</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(4, 2)">1880</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(4, 3)">1890</button>
+                        </div>
+                        <div class="quiz-feedback" id="feedback-4"></div>
+                    </div>
+                `;
+            } else if (stopIndex === 5) {
+                gameContainer.innerHTML = `
+                    <h3><i class="fas fa-gamepad"></i> QUIZ TIME</h3>
+                    <div class="quiz-question">
+                        <p>Why is Rochester known as the 'Flower City'?</p>
+                        <div class="quiz-options">
+                            <button class="quiz-option" onclick="selectQuizAnswer(5, 0)">It has many flower shops</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(5, 1)">It's famous for beautiful gardens</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(5, 2)">It's near botanical gardens</button>
+                            <button class="quiz-option" onclick="selectQuizAnswer(5, 3)">All of the above</button>
+                        </div>
+                        <div class="quiz-feedback" id="feedback-5"></div>
+                    </div>
+                `;
+            }
+        }
+
+        let memoryGameState = {
+            0: {
+                cards: ['NYC', 'ALB', 'SYR', 'ROC', 'NYC', 'ALB', 'SYR', 'ROC'],
                 flipped: [],
                 matched: [],
                 moves: 0
-            };
+            }
+        };
 
-            return `
-                <div class="game-section">
-                    <h3><i class="fas fa-gamepad"></i> ${stop.game.title}</h3>
-                    <p>${stop.game.description}</p>
-                    <div class="memory-grid" id="memoryGrid-${stop.id}">
-                        ${stop.game.cards.map((card, idx) => `
-                            <button class="memory-card" onclick="flipMemoryCard(${stop.id}, ${idx})">
-                                <span id="card-${stop.id}-${idx}">?</span>
-                            </button>
-                        `).join('')}
-                    </div>
-                    <div style="text-align: center; margin-top: 15px;">
-                        <p>Moves: <strong id="moves-${stop.id}">0</strong></p>
-                        <button class="game-button" onclick="resetMemoryGame(${stop.id})">Reset Game</button>
-                    </div>
-                </div>
-            `;
+        function initMemoryGame(stopId) {
+            const state = memoryGameState[stopId];
+            const grid = document.getElementById(`memory-grid-${stopId}`);
+            if (grid) {
+                const cards = grid.querySelectorAll('.memory-card');
+                cards.forEach((card, index) => {
+                    card.classList.remove('flipped', 'matched');
+                    card.querySelector('span').textContent = '?';
+                    card.disabled = false;
+                });
+            }
         }
 
-        function flipMemoryCard(stopId, cardIndex) {
-            const gameId = `memory-${stopId}`;
-            const state = memoryGameState[gameId];
-            const stop = journeyData[stopId - 1];
-
+        function flipCard(stopId, cardIndex) {
+            const state = memoryGameState[stopId];
+            
             if (state.flipped.includes(cardIndex) || state.matched.includes(cardIndex)) return;
             if (state.flipped.length === 2) return;
 
             state.flipped.push(cardIndex);
-            const cardElement = document.getElementById(`card-${stopId}-${cardIndex}`);
-            cardElement.textContent = stop.game.cards[cardIndex];
-            cardElement.parentElement.classList.add('flipped');
+            const card = document.querySelectorAll(`#memory-grid-${stopId} .memory-card`)[cardIndex];
+            card.classList.add('flipped');
+            card.querySelector('span').textContent = state.cards[cardIndex];
 
             if (state.flipped.length === 2) {
                 state.moves++;
-                document.getElementById(`moves-${stopId}`).textContent = state.moves;
-
                 const [idx1, idx2] = state.flipped;
-                if (stop.game.cards[idx1] === stop.game.cards[idx2]) {
+
+                if (state.cards[idx1] === state.cards[idx2]) {
                     state.matched.push(idx1, idx2);
+                    document.querySelectorAll(`#memory-grid-${stopId} .memory-card`).forEach((c, i) => {
+                        if (state.matched.includes(i)) {
+                            c.classList.add('matched');
+                            c.disabled = true;
+                        }
+                    });
                     state.flipped = [];
 
-                    if (state.matched.length === stop.game.cards.length) {
-                        gamesWon++;
-                        updateStats();
+                    if (state.matched.length === state.cards.length) {
                         setTimeout(() => {
-                            alert(`🎉 Memory game completed in ${state.moves} moves!`);
-                        }, 500);
+                            alert(`PERFECT! Completed in ${state.moves} moves!`);
+                        }, 300);
                     }
                 } else {
                     setTimeout(() => {
-                        document.getElementById(`card-${stopId}-${idx1}`).textContent = '?';
-                        document.getElementById(`card-${stopId}-${idx1}`).parentElement.classList.remove('flipped');
-                        document.getElementById(`card-${stopId}-${idx2}`).textContent = '?';
-                        document.getElementById(`card-${stopId}-${idx2}`).parentElement.classList.remove('flipped');
+                        const cards = document.querySelectorAll(`#memory-grid-${stopId} .memory-card`);
+                        cards[idx1].classList.remove('flipped');
+                        cards[idx1].querySelector('span').textContent = '?';
+                        cards[idx2].classList.remove('flipped');
+                        cards[idx2].querySelector('span').textContent = '?';
                         state.flipped = [];
                     }, 1000);
                 }
@@ -1069,21 +911,78 @@
         }
 
         function resetMemoryGame(stopId) {
-            const gameId = `memory-${stopId}`;
-            memoryGameState[gameId] = {
+            memoryGameState[stopId] = {
+                cards: ['NYC', 'ALB', 'SYR', 'ROC', 'NYC', 'ALB', 'SYR', 'ROC'],
                 flipped: [],
                 matched: [],
                 moves: 0
             };
-            document.getElementById(`moves-${stopId}`).textContent = '0';
-
-            const grid = document.getElementById(`memoryGrid-${stopId}`);
-            grid.querySelectorAll('.memory-card').forEach(card => {
-                card.classList.remove('flipped', 'matched');
-                card.querySelector('span').textContent = '?';
-            });
+            initMemoryGame(stopId);
         }
 
-        function renderQuizGame(stop) {
-            return `
-                <div class="game-section">
+        function selectQuizAnswer(stopId, optionIndex) {
+            const correctAnswers = {
+                1: 1,
+                2: 1,
+                3: 1,
+                4: 1,
+                5: 1
+            };
+
+            const feedbackDiv = document.getElementById(`feedback-${stopId}`);
+            const options = document.querySelectorAll(`#game-${stopId} .quiz-option`);
+
+            options.forEach(opt => opt.disabled = true);
+            options[optionIndex].classList.add('selected');
+
+            feedbackDiv.classList.add('show');
+
+            if (optionIndex === correctAnswers[stopId]) {
+                options[optionIndex].classList.remove('selected');
+                options[optionIndex].classList.add('correct');
+                feedbackDiv.classList.add('correct');
+                feedbackDiv.textContent = '✓ CORRECT!';
+            } else {
+                options[optionIndex].classList.remove('selected');
+                options[optionIndex].classList.add('incorrect');
+                options[correctAnswers[stopId]].classList.add('correct');
+                feedbackDiv.classList.add('incorrect');
+                feedbackDiv.textContent = '✗ INCORRECT! The correct answer was highlighted.';
+            }
+        }
+
+        function showCompletionMessage() {
+            const container = document.getElementById('completionContainer');
+            container.innerHTML = `
+                <div class="completion-message show">
+                    <h2><i class="fas fa-check-circle"></i> JOURNEY COMPLETE!</h2>
+                    <p>You've successfully traveled from Penn Station to Rochester!</p>
+                    <p>Total Distance: 390 miles | Stops Visited: 6</p>
+                    <div class="stats-display">
+                        <div class="stat-item">
+                            <div class="stat-value">6</div>
+                            <div class="stat-label">STOPS VISITED</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">5</div>
+                            <div class="stat-label">GAMES COMPLETED</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">∞</div>
+                            <div class="stat-label">MEMORIES MADE</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function hideCompletionMessage() {
+            const container = document.getElementById('completionContainer');
+            container.innerHTML = '';
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initializeJourney);
+    </script>
+</body>
+</html>
