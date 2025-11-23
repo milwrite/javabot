@@ -369,6 +369,38 @@ body {
 - Adequate spacing between clickable elements (minimum 8px gap)
 - No hover-only functionality (provide tap alternatives)
 
+### Mobile Control Implementation (CRITICAL)
+
+**Preventing Zoom on Button Tap** - Mobile Safari/Chrome zoom when buttons are tapped rapidly. Fix with:
+
+```css
+.mobile-btn, .control-btn, .aim-btn {
+    touch-action: manipulation;  /* PREVENTS ZOOM */
+    -webkit-tap-highlight-color: transparent;
+    min-height: 50px;
+    min-width: 50px;
+    font-size: 20px;  /* Readable arrows */
+}
+```
+
+**JavaScript Event Handlers** - Use `touchstart` with `preventDefault`, not just `click`:
+
+```javascript
+// CORRECT: touchstart with preventDefault prevents zoom
+btn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    handleInput();
+}, { passive: false });
+
+// Add click as fallback for desktop
+btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    handleInput();
+});
+```
+
+**Control Positioning** - Place mobile controls DIRECTLY below canvas, before other content.
+
 ### Game-Specific Mobile Patterns
 
 **For Canvas Games** (like Frogger, Snake):
@@ -518,6 +550,11 @@ const CONFIG = {
 - Discord's messageCreate event can fire twice for same message (network issues, API quirks)
 - Always track processed message IDs in a Set to prevent duplicate AI responses
 - Clean up old IDs periodically to prevent memory leaks (keep last 100)
+
+**File Naming Conventions**:
+- Use hyphens for page names: `amtrak-journey.html` not `amtrak_journey.html`
+- When restoring files from git, always verify completeness (check file ends with `</html>`)
+- Avoid creating duplicate files with different naming conventions
 
 ## Important Dependencies
 
