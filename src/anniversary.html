@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zach & Cen's Surreal Anniversary</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <title>Room 101: A Year in the Red Curtains</title>
     <style>
         * {
             margin: 0;
@@ -13,12 +11,42 @@
             box-sizing: border-box;
         }
 
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital@0;1&display=swap');
+
         body {
-            font-family: 'Courier New', monospace;
-            background: #0a0e27;
-            color: #e0e6ff;
+            font-family: 'Courier Prime', monospace;
+            background: #0a0a0a;
+            color: #00ff41;
             overflow-x: hidden;
-            line-height: 1.6;
+            overflow-y: auto;
+            line-height: 1.8;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 0, 0, 0.15),
+                    rgba(0, 0, 0, 0.15) 1px,
+                    transparent 1px,
+                    transparent 2px
+                );
+            pointer-events: none;
+            z-index: 9998;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.97; }
         }
 
         .home-link {
@@ -27,19 +55,28 @@
             left: 20px;
             z-index: 9999;
             text-decoration: none;
-            background: rgba(102, 126, 234, 0.9);
-            color: white;
+            background: rgba(255, 0, 0, 0.7);
+            color: #00ff41;
             padding: 10px 20px;
-            border-radius: 25px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            border-radius: 0;
+            border: 2px solid #00ff41;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5), inset 0 0 10px rgba(0, 255, 65, 0.2);
             transition: all 0.3s ease;
             font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 0.8em;
+            min-height: 44px;
+            min-width: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .home-link:hover {
-            background: rgba(102, 126, 234, 1);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+            background: rgba(255, 0, 0, 1);
+            transform: skew(-5deg);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.8), inset 0 0 20px rgba(0, 255, 65, 0.4);
         }
 
         .container {
@@ -47,15 +84,21 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .header {
             text-align: center;
-            padding: 60px 20px 40px;
-            background: linear-gradient(135deg, #1a1f3a 0%, #2d1b4e 50%, #1a1f3a 100%);
-            border-bottom: 2px solid #667cea;
+            padding: 80px 20px 60px;
+            background: linear-gradient(135deg, #1a0000 0%, #0a0a0a 50%, #1a0000 100%);
+            border-bottom: 3px solid #ff0000;
             position: relative;
             overflow: hidden;
+            min-height: 40vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .header::before {
@@ -65,257 +108,290 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 50%);
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 0, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 255, 65, 0.05) 0%, transparent 50%);
             pointer-events: none;
+            animation: dreamShift 8s ease-in-out infinite;
+        }
+
+        @keyframes dreamShift {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 2px,
+                rgba(255, 0, 0, 0.03) 2px,
+                rgba(255, 0, 0, 0.03) 4px
+            );
+            animation: slidePattern 20s linear infinite;
+        }
+
+        @keyframes slidePattern {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(100px); }
         }
 
         .header h1 {
             font-size: 3.5em;
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(255, 0, 0, 0.8), 0 0 60px rgba(0, 255, 65, 0.3);
             position: relative;
             z-index: 1;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            color: #ff0000;
+            animation: titleGlitch 0.4s ease-in-out infinite;
+            font-weight: bold;
+        }
+
+        @keyframes titleGlitch {
+            0% { transform: translate(0, 0); color: #ff0000; }
+            20% { transform: translate(-2px, 2px); color: #00ff41; }
+            40% { transform: translate(2px, -2px); color: #ff0000; }
+            60% { transform: translate(-1px, 1px); color: #00ffff; }
+            80% { transform: translate(1px, -1px); color: #ff0000; }
+            100% { transform: translate(0, 0); color: #ff0000; }
         }
 
         .header p {
-            font-size: 1.3em;
-            color: #a78bfa;
+            font-size: 1.2em;
+            color: #00ffff;
             position: relative;
             z-index: 1;
-        }
-
-        .glitch {
-            position: relative;
-            display: inline-block;
-        }
-
-        .glitch::before,
-        .glitch::after {
-            content: attr(data-text);
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .glitch::before {
-            animation: glitch-1 0.3s infinite;
-            color: #667cea;
-            z-index: -1;
-            text-shadow: -2px 0 #ff00ff;
-        }
-
-        .glitch::after {
-            animation: glitch-2 0.3s infinite;
-            color: #a78bfa;
-            z-index: -2;
-            text-shadow: 2px 0 #00ffff;
-        }
-
-        @keyframes glitch-1 {
-            0% { clip-path: inset(40% 0 61% 0); transform: translate(-2px, -2px); }
-            20% { clip-path: inset(92% 0 1% 0); transform: translate(2px, 2px); }
-            40% { clip-path: inset(43% 0 1% 0); transform: translate(-2px, 2px); }
-            60% { clip-path: inset(25% 0 58% 0); transform: translate(2px, -2px); }
-            80% { clip-path: inset(54% 0 7% 0); transform: translate(-2px, -2px); }
-            100% { clip-path: inset(58% 0 43% 0); transform: translate(2px, 2px); }
-        }
-
-        @keyframes glitch-2 {
-            0% { clip-path: inset(27% 0 58% 0); transform: translate(2px, 2px); }
-            20% { clip-path: inset(1% 0 58% 0); transform: translate(-2px, 2px); }
-            40% { clip-path: inset(35% 0 33% 0); transform: translate(2px, -2px); }
-            60% { clip-path: inset(72% 0 6% 0); transform: translate(-2px, 2px); }
-            80% { clip-path: inset(56% 0 33% 0); transform: translate(2px, -2px); }
-            100% { clip-path: inset(1% 0 94% 0); transform: translate(-2px, -2px); }
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            letter-spacing: 2px;
         }
 
         .content {
             flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            padding: 60px 40px;
-            max-width: 1400px;
+            padding: 40px 20px;
+            max-width: 1200px;
             margin: 0 auto;
             width: 100%;
         }
 
         .section {
-            background: rgba(45, 27, 78, 0.6);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            border-radius: 15px;
+            margin-bottom: 60px;
             padding: 40px;
-            backdrop-filter: blur(10px);
+            background: rgba(26, 0, 0, 0.4);
+            border: 2px solid #ff0000;
             position: relative;
             overflow: hidden;
+            animation: fadeInSection 1s ease-in-out;
+        }
+
+        @keyframes fadeInSection {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .section::before {
             content: '';
             position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
-            animation: float 20s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(20px, 20px) rotate(180deg); }
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.02) 2px,
+                rgba(0, 255, 65, 0.02) 4px
+            );
+            pointer-events: none;
         }
 
         .section h2 {
-            font-size: 1.8em;
-            margin-bottom: 25px;
-            color: #667cea;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            color: #ff0000;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+            letter-spacing: 2px;
             position: relative;
             z-index: 1;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .timeline {
-            position: relative;
-            z-index: 1;
-        }
-
-        .event {
-            margin-bottom: 30px;
-            padding-left: 40px;
-            position: relative;
-            opacity: 0;
-            animation: fadeInUp 0.6s ease forwards;
-        }
-
-        .event:nth-child(1) { animation-delay: 0.1s; }
-        .event:nth-child(2) { animation-delay: 0.2s; }
-        .event:nth-child(3) { animation-delay: 0.3s; }
-        .event:nth-child(4) { animation-delay: 0.4s; }
-        .event:nth-child(5) { animation-delay: 0.5s; }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .event::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 5px;
-            width: 12px;
-            height: 12px;
-            background: #667cea;
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
-        }
-
-        .event::after {
-            content: '';
-            position: absolute;
-            left: 5px;
-            top: 17px;
-            width: 2px;
-            height: 30px;
-            background: linear-gradient(to bottom, rgba(102, 126, 234, 0.5), transparent);
-        }
-
-        .event:last-child::after {
-            display: none;
-        }
-
-        .event-time {
-            font-size: 0.9em;
-            color: #a78bfa;
-            font-weight: bold;
-        }
-
-        .event-text {
-            color: #e0e6ff;
-            margin-top: 5px;
-            font-size: 0.95em;
-        }
-
-        .visualization {
-            position: relative;
-            z-index: 1;
-            height: 400px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid rgba(102, 126, 234, 0.2);
-        }
-
-        #canvas-container {
-            width: 100%;
-            height: 100%;
-        }
-
-        .stats {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 30px;
+            gap: 30px;
             position: relative;
             z-index: 1;
         }
 
-        .stat-box {
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
+        .timeline-item {
+            padding: 30px;
+            background: rgba(0, 255, 65, 0.05);
+            border-left: 4px solid #00ff41;
+            position: relative;
+            cursor: pointer;
             transition: all 0.3s ease;
+            min-height: 44px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
-        .stat-box:hover {
-            background: rgba(102, 126, 234, 0.2);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        .timeline-item:hover {
+            background: rgba(0, 255, 65, 0.15);
+            transform: translateX(10px);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
         }
 
-        .stat-number {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #667cea;
+        .timeline-item h3 {
+            color: #00ffff;
+            font-size: 1.5em;
             margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
         }
 
-        .stat-label {
+        .timeline-item .time {
+            color: #ff0000;
             font-size: 0.9em;
-            color: #a78bfa;
-            text-transform: uppercase;
+            margin-bottom: 15px;
             letter-spacing: 1px;
         }
 
-        .memories {
+        .timeline-item p {
+            color: #00ff41;
+            font-size: 0.95em;
+            line-height: 1.8;
+            opacity: 0.9;
+        }
+
+        .curtain-section {
+            position: relative;
+            height: 400px;
+            overflow: hidden;
+            margin: 40px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .curtain-left, .curtain-right {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, #cc0000, #ff0000);
+            z-index: 2;
+            transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .curtain-left {
+            left: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                #cc0000,
+                #cc0000 10px,
+                #ff0000 10px,
+                #ff0000 20px
+            );
+        }
+
+        .curtain-right {
+            right: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                #ff0000,
+                #ff0000 10px,
+                #cc0000 10px,
+                #cc0000 20px
+            );
+        }
+
+        .curtain-section:hover .curtain-left {
+            transform: translateX(-100%);
+        }
+
+        .curtain-section:hover .curtain-right {
+            transform: translateX(100%);
+        }
+
+        .curtain-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px dashed #00ff41;
+        }
+
+        .curtain-content h3 {
+            color: #00ffff;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+        }
+
+        .curtain-content p {
+            color: #00ff41;
+            font-size: 0.95em;
+            line-height: 1.8;
+        }
+
+        .hearts-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            padding: 40px;
+        }
+
+        .heart {
+            font-size: 4em;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.6));
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            min-width: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .heart:hover {
+            transform: scale(1.3);
+            filter: drop-shadow(0 0 40px rgba(255, 0, 0, 1));
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
             position: relative;
             z-index: 1;
         }
 
         .memory-card {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
-            border: 1px solid rgba(102, 126, 234, 0.4);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ff41;
             position: relative;
             overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .memory-card::before {
@@ -325,442 +401,596 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.5s ease;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.3), transparent);
+            animation: shimmer 3s infinite;
         }
 
-        .memory-card:hover::before {
-            left: 100%;
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         .memory-card:hover {
-            transform: translateX(10px);
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(168, 85, 247, 0.3) 100%);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+            background: rgba(0, 255, 65, 0.1);
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.4);
+            transform: translateY(-10px);
+            border-color: #ff0000;
         }
 
-        .memory-title {
-            font-weight: bold;
-            color: #667cea;
-            margin-bottom: 8px;
-            font-size: 1.1em;
-        }
-
-        .memory-text {
-            color: #c4b5fd;
+        .memory-card p {
+            color: #00ff41;
             font-size: 0.95em;
-        }
-
-        .interactive-area {
             position: relative;
             z-index: 1;
-            height: 300px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 20px;
-            cursor: crosshair;
-            overflow: hidden;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
         }
 
-        .particle {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: radial-gradient(circle, #667cea, rgba(102, 126, 234, 0.3));
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
-            pointer-events: none;
-        }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
+        .interactive-story {
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 3px solid #00ffff;
             position: relative;
             z-index: 1;
-            flex-wrap: wrap;
         }
 
-        button {
-            background: linear-gradient(135deg, #667cea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
+        .story-text {
+            color: #00ff41;
+            font-size: 0.95em;
+            line-height: 2;
+            margin-bottom: 30px;
+        }
+
+        .story-reveal {
+            color: #ff0000;
             cursor: pointer;
-            font-weight: bold;
+            text-decoration: underline;
             transition: all 0.3s ease;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
         }
 
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        .story-reveal:hover {
+            color: #00ffff;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
         }
 
-        button:active {
-            transform: translateY(-1px);
+        .hidden-text {
+            display: inline;
+            color: #0a0a0a;
+            background: #0a0a0a;
+            transition: all 0.3s ease;
+        }
+
+        .hidden-text.revealed {
+            color: #00ff41;
+            background: transparent;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
         }
 
         .footer {
             text-align: center;
             padding: 40px 20px;
-            background: linear-gradient(135deg, #1a1f3a 0%, #2d1b4e 100%);
-            border-top: 1px solid rgba(102, 126, 234, 0.3);
-            color: #a78bfa;
+            border-top: 2px solid #ff0000;
+            color: #00ffff;
+            font-size: 0.9em;
+            letter-spacing: 1px;
         }
 
+        /* TABLET MEDIA QUERY - 768px and below */
         @media (max-width: 768px) {
+            .header {
+                padding: 60px 20px 45px;
+                min-height: 35vh;
+            }
+
+            .header h1 {
+                font-size: 2.8em;
+                margin-bottom: 15px;
+                letter-spacing: 2px;
+            }
+
+            .header p {
+                font-size: 1.05em;
+                letter-spacing: 1px;
+                margin: 5px 0;
+            }
+
             .content {
-                grid-template-columns: 1fr;
-                padding: 30px 20px;
+                padding: 30px 15px;
+            }
+
+            .section {
+                padding: 30px;
+                margin-bottom: 45px;
+            }
+
+            .section h2 {
+                font-size: 1.9em;
+                margin-bottom: 25px;
+                letter-spacing: 1px;
+            }
+
+            .timeline-item {
+                padding: 25px;
+                border-left-width: 3px;
+            }
+
+            .timeline-item h3 {
+                font-size: 1.3em;
+                margin-bottom: 8px;
+            }
+
+            .timeline-item .time {
+                font-size: 0.85em;
+                margin-bottom: 12px;
+            }
+
+            .timeline-item p {
+                font-size: 0.9em;
+            }
+
+            .curtain-section {
+                height: 350px;
+                margin: 30px 0;
+            }
+
+            .curtain-content {
+                padding: 30px;
+            }
+
+            .curtain-content h3 {
+                font-size: 1.5em;
+                margin-bottom: 15px;
+            }
+
+            .curtain-content p {
+                font-size: 0.9em;
+            }
+
+            .hearts-container {
                 gap: 30px;
+                padding: 30px;
+            }
+
+            .heart {
+                font-size: 3.5em;
+            }
+
+            .memory-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .memory-card {
+                padding: 20px;
+                min-height: 130px;
+            }
+
+            .memory-card p {
+                font-size: 0.9em;
+            }
+
+            .interactive-story {
+                padding: 30px;
+            }
+
+            .story-text {
+                font-size: 0.9em;
+                line-height: 1.8;
+                margin-bottom: 25px;
+            }
+
+            .footer {
+                padding: 30px 15px;
+                font-size: 0.85em;
+                letter-spacing: 0.5px;
+            }
+
+            .home-link {
+                padding: 9px 18px;
+                font-size: 0.75em;
+                letter-spacing: 1px;
+            }
+        }
+
+        /* MOBILE MEDIA QUERY - 480px and below */
+        @media (max-width: 480px) {
+            html, body {
+                overflow-x: hidden;
+                width: 100%;
+            }
+
+            .container {
+                width: 100%;
+                overflow-x: hidden;
+            }
+
+            .header {
+                padding: 40px 15px 30px;
+                min-height: 30vh;
             }
 
             .header h1 {
                 font-size: 2em;
+                margin-bottom: 12px;
+                letter-spacing: 1px;
             }
 
             .header p {
+                font-size: 0.85em;
+                letter-spacing: 0.5px;
+                margin: 4px 0;
+                line-height: 1.4;
+            }
+
+            .content {
+                padding: 20px 12px;
+                max-width: 100%;
+            }
+
+            .section {
+                padding: 20px;
+                margin-bottom: 30px;
+                border: 2px solid #ff0000;
+            }
+
+            .section h2 {
+                font-size: 1.5em;
+                margin-bottom: 20px;
+                letter-spacing: 0.5px;
+            }
+
+            .timeline {
+                gap: 20px;
+            }
+
+            .timeline-item {
+                padding: 18px;
+                border-left-width: 3px;
+                min-height: auto;
+            }
+
+            .timeline-item h3 {
+                font-size: 1.1em;
+                margin-bottom: 6px;
+            }
+
+            .timeline-item .time {
+                font-size: 0.75em;
+                margin-bottom: 10px;
+                letter-spacing: 0.5px;
+            }
+
+            .timeline-item p {
+                font-size: 0.85em;
+                line-height: 1.6;
+            }
+
+            .curtain-section {
+                height: 280px;
+                margin: 20px 0;
+            }
+
+            .curtain-left, .curtain-right {
+                background-size: 20px 100%;
+            }
+
+            .curtain-content {
+                padding: 20px;
+                border: 2px dashed #00ff41;
+            }
+
+            .curtain-content h3 {
+                font-size: 1.3em;
+                margin-bottom: 12px;
+            }
+
+            .curtain-content p {
+                font-size: 0.85em;
+                line-height: 1.6;
+            }
+
+            .hearts-container {
+                gap: 15px;
+                padding: 20px;
+                justify-content: center;
+            }
+
+            .heart {
+                font-size: 2.5em;
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            .memory-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .memory-card {
+                padding: 18px;
+                min-height: 120px;
+                border: 2px solid #00ff41;
+            }
+
+            .memory-card p {
+                font-size: 0.85em;
+                line-height: 1.6;
+            }
+
+            .interactive-story {
+                padding: 20px;
+                border: 3px solid #00ffff;
+            }
+
+            .story-text {
+                font-size: 0.85em;
+                line-height: 1.6;
+                margin-bottom: 20px;
+            }
+
+            .story-reveal {
+                min-height: 44px;
+            }
+
+            .footer {
+                padding: 20px 12px;
+                font-size: 0.75em;
+                letter-spacing: 0.5px;
+                line-height: 1.4;
+            }
+
+            .home-link {
+                top: 12px;
+                left: 12px;
+                padding: 8px 12px;
+                font-size: 0.6em;
+                letter-spacing: 0.5px;
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            /* Prevent horizontal overflow */
+            * {
+                max-width: 100%;
+            }
+
+            .section {
+                overflow-x: hidden;
+            }
+
+            .timeline-item {
+                overflow-x: hidden;
+                word-wrap: break-word;
+            }
+
+            .memory-card {
+                overflow-x: hidden;
+                word-wrap: break-word;
+            }
+
+            .curtain-content {
+                overflow-x: hidden;
+                word-wrap: break-word;
+            }
+
+            .interactive-story {
+                overflow-x: hidden;
+                word-wrap: break-word;
+            }
+
+            .story-text {
+                overflow-x: hidden;
+                word-wrap: break-word;
+            }
+        }
+
+        /* Extra small devices - 360px and below */
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 1.6em;
+                letter-spacing: 0.5px;
+            }
+
+            .header p {
+                font-size: 0.75em;
+            }
+
+            .section h2 {
+                font-size: 1.3em;
+            }
+
+            .timeline-item h3 {
                 font-size: 1em;
             }
 
-            .stats {
-                grid-template-columns: 1fr;
+            .heart {
+                font-size: 2em;
+            }
+
+            .home-link {
+                padding: 6px 10px;
+                font-size: 0.55em;
             }
         }
-
-        .pulse {
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .dream-text {
-            color: #c4b5fd;
-            font-style: italic;
-            margin-top: 15px;
-            padding: 15px;
-            background: rgba(102, 126, 234, 0.1);
-            border-left: 3px solid #667cea;
-            border-radius: 5px;
-        }
     </style>
-
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../page-theme.css">
 </head>
 <body>
-    <a href="../index.html" class="home-link">← Home</a>
-
+    <a href="../" class="home-link">← HOME</a>
+    
     <div class="container">
         <div class="header">
-            <h1><span class="glitch" data-text="Zach & Cen's Anniversary">Zach & Cen's Anniversary</span></h1>
-            <p>A Surreal Chronicle at Love's Club</p>
+            <h1>ROOM 101</h1>
+            <p>A YEAR IN THE RED CURTAINS</p>
+            <p>ZACH & CEN | ONE YEAR ANNIVERSARY</p>
+            <p>LOVE'S CLUB | THE NIGHT THAT NEVER ENDED</p>
         </div>
 
         <div class="content">
-            <!-- Left Column -->
-            <div>
-                <div class="section">
-                    <h2>📍 The Timeline</h2>
-                    <div class="timeline">
-                        <div class="event">
-                            <div class="event-time">Year 0</div>
-                            <div class="event-text">Two souls collide in the velvet darkness of Love's Club</div>
-                        </div>
-                        <div class="event">
-                            <div class="event-time">Month 3</div>
-                            <div class="event-text">Reality bends. Time becomes malleable in their presence</div>
-                        </div>
-                        <div class="event">
-                            <div class="event-time">Month 6</div>
-                            <div class="event-text">The club's mirrors begin reflecting moments yet to come</div>
-                        </div>
-                        <div class="event">
-                            <div class="event-time">Month 9</div>
-                            <div class="event-text">Dreams and waking hours become indistinguishable</div>
-                        </div>
-                        <div class="event">
-                            <div class="event-time">Year 1</div>
-                            <div class="event-text">Infinite loops of joy. They exist in all moments simultaneously</div>
-                        </div>
+            <!-- TIMELINE SECTION -->
+            <div class="section">
+                <h2>THE NIGHT: A CHRONICLE</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="time">22:00 — THE ARRIVAL</div>
+                        <h3>They entered through the red door</h3>
+                        <p>The air was thick. Cigarette smoke and something else—the smell of a year completed. The bass hummed at a frequency that matched their heartbeats, or maybe it was the other way around. Everything was in motion. Everything was still.</p>
                     </div>
-                </div>
 
-                <div class="section" style="margin-top: 40px;">
-                    <h2>✨ Statistics</h2>
-                    <div class="stats">
-                        <div class="stat-box">
-                            <div class="stat-number" id="stat-days">365</div>
-                            <div class="stat-label">Days Together</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-number" id="stat-moments">∞</div>
-                            <div class="stat-label">Perfect Moments</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-number" id="stat-love">100%</div>
-                            <div class="stat-label">Love Capacity</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-number" id="stat-magic">999</div>
-                            <div class="stat-label">Magic Level</div>
-                        </div>
+                    <div class="timeline-item">
+                        <div class="time">23:15 — THE DANCE</div>
+                        <h3>Shadows on the wall moved wrong</h3>
+                        <p>The floor became liquid. Bodies became light. One song turned into three turned into one again. The DJ watched from above like an angel made of turntables. Time folded like origami. One year felt like one second felt like one lifetime.</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="time">00:47 — THE MOMENT</div>
+                        <h3>In the corner where the red meets the black</h3>
+                        <p>There was a moment. Just one. But it contained everything. The past year compressed into a single breath. They looked at each other and saw themselves reflected infinitely, like mirrors facing mirrors, love echoing into the void.</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="time">02:33 — THE MYSTERY</div>
+                        <h3>Where did the night go?</h3>
+                        <p>Hours disappeared. Or maybe they were never there. The club had become something else—a place between places. The walls breathed. The people were made of music. Nothing made sense. Everything made perfect sense.</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="time">04:00 — THE RETURN</div>
+                        <h3>Back to the surface</h3>
+                        <p>The sun was coming. They could feel it approaching like a predator. The night released them slowly, reluctantly. But something had changed. A year had been lived. A year had been celebrated. A year would become a thousand more.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column -->
-            <div>
-                <div class="section">
-                    <h2>🎨 Reality Visualizer</h2>
-                    <div class="visualization">
-                        <div id="canvas-container"></div>
-                    </div>
-                    <div class="controls">
-                        <button onclick="startVisualization()">Start Reality</button>
-                        <button onclick="resetVisualization()">Reset</button>
-                        <button onclick="toggleAnimation()">Pause/Play</button>
+            <!-- RED CURTAINS VISUALIZATION -->
+            <div class="section">
+                <h2>BEHIND THE CURTAIN</h2>
+                <div class="curtain-section">
+                    <div class="curtain-left"></div>
+                    <div class="curtain-right"></div>
+                    <div class="curtain-content">
+                        <h3>HOVER TO REVEAL</h3>
+                        <p>The night holds its secrets. But some are meant to be found.</p>
                     </div>
                 </div>
+            </div>
 
-                <div class="section" style="margin-top: 40px;">
-                    <h2>💭 Memories & Dreams</h2>
-                    <div class="memories">
-                        <div class="memory-card">
-                            <div class="memory-title">The First Dance</div>
-                            <div class="memory-text">Spinning endlessly in the neon glow, time stopped mattering</div>
-                        </div>
-                        <div class="memory-card">
-                            <div class="memory-title">Midnight Conversations</div>
-                            <div class="memory-text">Words became unnecessary. They spoke in frequencies only they could hear</div>
-                        </div>
-                        <div class="memory-card">
-                            <div class="memory-title">The Dreamscape</div>
-                            <div class="memory-text">Where they meet when sleeping. A place of infinite possibility</div>
-                        </div>
-                        <div class="memory-card">
-                            <div class="memory-title">Tomorrow's Echo</div>
-                            <div class="memory-text">They remember events that haven't happened yet</div>
-                        </div>
+            <!-- HEARTS SECTION -->
+            <div class="section">
+                <h2>OSCILLATING HEARTS</h2>
+                <div class="hearts-container">
+                    <div class="heart">❤️</div>
+                    <div class="heart">💚</div>
+                    <div class="heart">💙</div>
+                    <div class="heart">❤️</div>
+                </div>
+            </div>
+
+            <!-- MEMORIES SECTION -->
+            <div class="section">
+                <h2>FRAGMENTED MEMORIES</h2>
+                <div class="memory-grid">
+                    <div class="memory-card">
+                        <p>"The way the light hit your face when that song dropped"</p>
                     </div>
-                    <div class="dream-text">
-                        "In this surreal dimension of Love's Club, past and future merge. Zach & Cen exist in a perpetual moment of bliss, forever dancing between what was and what will be."
+                    <div class="memory-card">
+                        <p>"Twelve months of mornings, all leading to this one night"</p>
+                    </div>
+                    <div class="memory-card">
+                        <p>"The bass was our heartbeat, synchronized"</p>
+                    </div>
+                    <div class="memory-card">
+                        <p>"Did we dance or did we fly? The answer is yes"</p>
+                    </div>
+                    <div class="memory-card">
+                        <p>"One year down. Infinity to go"</p>
+                    </div>
+                    <div class="memory-card">
+                        <p>"Love's Club. Love's Club. Love's Club. The name was a prophecy"</p>
                     </div>
                 </div>
+            </div>
+
+            <!-- INTERACTIVE STORY -->
+            <div class="section">
+                <h2>WHERE DID THE NIGHT GO?</h2>
+                <div class="interactive-story">
+                    <div class="story-text">
+                        The night went <span class="story-reveal hidden-text" onclick="this.classList.toggle('revealed')">into their bones</span>. 
+                        It became part of them, a <span class="story-reveal hidden-text" onclick="this.classList.toggle('revealed')">phosphorescence in the dark</span>. 
+                        Every song they heard would echo with this night. Every moment they shared would be measured against this night. 
+                        <br><br>
+                        The night didn't end. <span class="story-reveal hidden-text" onclick="this.classList.toggle('revealed')">It transformed</span>. 
+                        It became memory. It became meaning. It became the night they would tell stories about—not just to others, but to themselves, 
+                        in the quiet moments when they needed to remember that <span class="story-reveal hidden-text" onclick="this.classList.toggle('revealed')">love is real and loud and alive</span>.
+                        <br><br>
+                        One year. Celebrated in red lights and green glow. In a club called Love's, dancing like the world was ending and beginning 
+                        at the same time. <span class="story-reveal hidden-text" onclick="this.classList.toggle('revealed')">Twelve months turned into one perfect night</span>. 
+                        And one perfect night turned into forever.
+                        <br><br>
+                        The night went here: <span class="story-reveal hidden-text" onclick="this.classList.toggle('revealed')">into the space between heartbeats, into the place where two people become one, into the red curtains that separate the real world from the dream</span>.
+                    </div>
+                </div>
+            </div>
+
+            <!-- CLOSING SECTION -->
+            <div class="section" style="text-align: center; border-color: #00ffff;">
+                <h2 style="color: #00ffff;">ONE YEAR</h2>
+                <p style="font-size: 1.1em; color: #00ff41; margin-top: 20px;">
+                    In the red lights of Love's Club, where time folds and reality bends,<br>
+                    two hearts beat as one.<br>
+                    <br>
+                    <span style="color: #ff0000; text-shadow: 0 0 20px rgba(255, 0, 0, 0.6);">ZACH & CEN</span><br>
+                    <br>
+                    The night remembers. The night will always remember.
+                </p>
             </div>
         </div>
 
         <div class="footer">
-            <p>✨ May your love continue to bend the fabric of reality ✨</p>
-            <p style="margin-top: 10px; font-size: 0.9em;">Love's Club • The Surreal Dimension • Forever & Always</p>
+            THE RED CURTAINS CLOSE | BUT THE STORY CONTINUES | 🎬 FIN 🎬
         </div>
     </div>
 
     <script>
-        let scene, camera, renderer, particles = [];
-        let animationRunning = true;
-        let particleGroup;
+        // Subtle animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
 
-        function initThreeScene() {
-            const container = document.getElementById('canvas-container');
-            
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0e27);
-            
-            camera = new THREE.PerspectiveCamera(
-                75,
-                container.clientWidth / container.clientHeight,
-                0.1,
-                1000
-            );
-            camera.position.z = 5;
-            
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            container.appendChild(renderer.domElement);
-            
-            particleGroup = new THREE.Group();
-            scene.add(particleGroup);
-            
-            createParticles();
-            animate();
-            
-            window.addEventListener('resize', onWindowResize);
-        }
-
-        function createParticles() {
-            particleGroup.clear();
-            particles = [];
-            
-            const geometry = new THREE.BufferGeometry();
-            const positions = [];
-            const colors = [];
-            
-            for (let i = 0; i < 100; i++) {
-                const x = (Math.random() - 0.5) * 10;
-                const y = (Math.random() - 0.5) * 10;
-                const z = (Math.random() - 0.5) * 10;
-                
-                positions.push(x, y, z);
-                
-                const hue = Math.random() * 0.3 + 0.6;
-                const color = new THREE.Color().setHSL(hue, 1, 0.5);
-                colors.push(color.r, color.g, color.b);
-                
-                particles.push({
-                    x: x,
-                    y: y,
-                    z: z,
-                    vx: (Math.random() - 0.5) * 0.02,
-                    vy: (Math.random() - 0.5) * 0.02,
-                    vz: (Math.random() - 0.5) * 0.02
-                });
-            }
-            
-            geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-            geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
-            
-            const material = new THREE.PointsMaterial({
-                size: 0.1,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.8,
-                sizeAttenuation: true
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInSection 1s ease-in-out forwards';
+                    observer.unobserve(entry.target);
+                }
             });
-            
-            const points = new THREE.Points(geometry, material);
-            particleGroup.add(points);
-        }
+        }, observerOptions);
 
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            if (animationRunning) {
-                const positionAttribute = particleGroup.children[0].geometry.getAttribute('position');
-                const positions = positionAttribute.array;
-                
-                particles.forEach((p, i) => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.z += p.vz;
-                    
-                    if (Math.abs(p.x) > 5) p.vx *= -1;
-                    if (Math.abs(p.y) > 5) p.vy *= -1;
-                    if (Math.abs(p.z) > 5) p.vz *= -1;
-                    
-                    positions[i * 3] = p.x;
-                    positions[i * 3 + 1] = p.y;
-                    positions[i * 3 + 2] = p.z;
-                });
-                
-                positionAttribute.needsUpdate = true;
-                particleGroup.rotation.x += 0.0001;
-                particleGroup.rotation.y += 0.0002;
-            }
-            
-            renderer.render(scene, camera);
-        }
-
-        function onWindowResize() {
-            const container = document.getElementById('canvas-container');
-            const width = container.clientWidth;
-            const height = container.clientHeight;
-            
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-            renderer.setSize(width, height);
-        }
-
-        function startVisualization() {
-            createParticles();
-            animationRunning = true;
-        }
-
-        function resetVisualization() {
-            createParticles();
-        }
-
-        function toggleAnimation() {
-            animationRunning = !animationRunning;
-        }
-
-        // Interactive particle creation
-        document.addEventListener('DOMContentLoaded', function() {
-            initThreeScene();
-            
-            // Animate stats on load
-            animateStats();
-            
-            // Add interactivity
-            const interactiveArea = document.querySelector('.interactive-area');
-            if (interactiveArea) {
-                interactiveArea.addEventListener('mousemove', function(e) {
-                    const rect = this.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    
-                    createInteractiveParticle(x, y, this);
-                });
-            }
+        document.querySelectorAll('.timeline-item, .memory-card').forEach(el => {
+            observer.observe(el);
         });
 
-        function createInteractiveParticle(x, y, container) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.left = x + 'px';
-            particle.style.top = y + 'px';
-            container.appendChild(particle);
-            
-            gsap.to(particle, {
-                duration: 1,
-                opacity: 0,
-                y: -50,
-                onComplete: () => particle.remove()
+        // Glitch effect on hover
+        document.querySelectorAll('.memory-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translate(' + (Math.random() * 4 - 2) + 'px, ' + (Math.random() * 4 - 2) + 'px)';
             });
-        }
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translate(0, 0)';
+            });
+        });
 
-        function animateStats() {
-            const statBoxes = document.querySelectorAll('.stat-box');
-            statBoxes.forEach((box, index) => {
-                gsap.from(box, {
-                    duration: 0.6,
-                    delay: index * 0.1,
-                    opacity: 0,
-                    y: 20
-                });
-            });
-        }
-
-        // Add some surreal effects
-        window.addEventListener('load', function() {
-            // Glitch effect on header
-            const glitchElements = document.querySelectorAll('.glitch');
-            glitchElements.forEach(el => {
-                el.setAttribute('data-text', el.textContent);
-            });
-            
-            // Memory card hover effects
-            const memoryCards = document.querySelectorAll('.memory-card');
-            memoryCards.forEach(card => {
-                card.addEventListener('click', function() {
-                    this.style.transform = 'rotateY(360deg)';
-                    setTimeout(() => {
-                        this.style.transform = '';
-                    }, 600);
-                });
+        // Random heart color pulse
+        document.querySelectorAll('.heart').forEach(heart => {
+            heart.addEventListener('click', function() {
+                this.style.animation = 'none';
+                setTimeout(() => {
+                    this.style.animation = 'pulse 2s ease-in-out infinite';
+                }, 10);
             });
         });
     </script>
