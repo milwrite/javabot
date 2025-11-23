@@ -65,15 +65,19 @@ class FroggerGame {
             }
         }
         
-        // Create logs in water (rows 2, 4)
-        for (let row of [2, 4]) {
-            for (let i = 0; i < 2; i++) {
+        // Create logs in water (rows 1-5)
+        for (let row of [1, 2, 3, 4, 5]) {
+            const numLogs = row % 2 === 0 ? 2 : 3; // Alternate log density
+            const logWidth = row % 2 === 0 ? this.gridSize * 3 : this.gridSize * 2;
+            const spacing = this.canvas.width / numLogs;
+
+            for (let i = 0; i < numLogs; i++) {
                 this.logs.push({
-                    x: i * this.gridSize * 6,
+                    x: i * spacing + (row * 30) % 100, // Offset for variety
                     y: row * this.gridSize,
-                    width: this.gridSize * 3,
+                    width: logWidth,
                     height: this.gridSize - 4,
-                    speed: (row % 4 === 0 ? 1 : -1) * this.level
+                    speed: (row % 2 === 0 ? 1.5 : -1.5) * this.level
                 });
             }
         }

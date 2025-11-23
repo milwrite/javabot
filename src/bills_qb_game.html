@@ -542,8 +542,9 @@
             constructor(x, y, angle, power) {
                 this.x = x;
                 this.y = y;
-                this.vx = Math.cos(angle * Math.PI / 180) * power * 0.5;
-                this.vy = -Math.sin(angle * Math.PI / 180) * power * 0.5;
+                // Increased velocity multiplier for better reach to receivers
+                this.vx = Math.cos(angle * Math.PI / 180) * power * 0.7;
+                this.vy = -Math.sin(angle * Math.PI / 180) * power * 0.7;
                 this.radius = 6;
                 this.active = true;
                 this.trail = [];
@@ -554,7 +555,7 @@
                 this.trail.push({ x: this.x, y: this.y });
                 if (this.trail.length > 10) this.trail.shift();
 
-                this.vy += 0.35; // gravity
+                this.vy += 0.4; // gravity
                 this.x += this.vx;
                 this.y += this.vy;
 
