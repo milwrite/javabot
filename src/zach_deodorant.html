@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZACH DEODORANT - The 90s Infomercial Experience</title>
+    <title>ZACH DEODORANT - Life Changing!</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -35,7 +36,7 @@
 
         .home-link:hover {
             background: rgba(102, 126, 234, 1);
-            transform: scale(1.05);
+            transform: translateX(-5px);
         }
 
         .container {
@@ -44,33 +45,43 @@
             padding: 20px;
         }
 
+        /* Header */
         .header {
             text-align: center;
             color: white;
-            margin: 40px 0;
-            animation: slideDown 0.8s ease-out;
+            padding: 40px 20px;
+            animation: slideDown 0.8s ease;
         }
 
         .header h1 {
-            font-size: 4rem;
-            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+            font-size: 4em;
+            font-weight: 900;
+            text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.3);
             margin-bottom: 10px;
-            letter-spacing: 3px;
-            animation: pulse 2s infinite;
+            letter-spacing: 2px;
         }
 
         .header .tagline {
-            font-size: 1.5rem;
-            color: #ffff00;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-size: 1.8em;
             font-style: italic;
-            animation: blink 1s infinite;
+            text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .header .warning {
+            background: rgba(255, 255, 0, 0.9);
+            color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: inline-block;
+            animation: pulse 1s infinite;
         }
 
         @keyframes slideDown {
             from {
                 opacity: 0;
-                transform: translateY(-50px);
+                transform: translateY(-30px);
             }
             to {
                 opacity: 1;
@@ -79,33 +90,157 @@
         }
 
         @keyframes pulse {
-            0%, 100% {
-                text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 255, 0, 0.5);
-            }
-            50% {
-                text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 255, 0, 0.8);
-            }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
-        @keyframes blink {
-            0%, 49%, 100% {
-                opacity: 1;
-            }
-            50%, 99% {
-                opacity: 0.5;
-            }
+        /* Statistics Section */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+            animation: fadeIn 1s ease 0.3s both;
         }
 
-        .section {
+        .stat-box {
             background: white;
+            padding: 30px;
             border-radius: 15px;
-            padding: 40px;
-            margin: 30px 0;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            animation: fadeIn 0.8s ease-out;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: hover scale(1.05);
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: 900;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            color: #333;
+            font-weight: bold;
         }
 
         @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Before/After Section */
+        .before-after-section {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin: 40px 0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .before-after-title {
+            text-align: center;
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 900;
+        }
+
+        .before-after-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .before-after-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .before-after-item {
+            text-align: center;
+        }
+
+        .before-after-item h3 {
+            font-size: 2em;
+            margin-bottom: 15px;
+            font-weight: 900;
+        }
+
+        .before {
+            color: #e74c3c;
+        }
+
+        .after {
+            color: #27ae60;
+        }
+
+        .character {
+            font-size: 6em;
+            margin: 20px 0;
+            animation: bounce 1s infinite;
+        }
+
+        .before .character {
+            animation: sadBounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes sadBounce {
+            0%, 100% { transform: translateY(0) scaleX(0.9); }
+            50% { transform: translateY(-5px) scaleX(0.85); }
+        }
+
+        .description {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        /* Testimonials */
+        .testimonials-section {
+            margin: 40px 0;
+        }
+
+        .testimonials-title {
+            text-align: center;
+            font-size: 2.5em;
+            color: white;
+            margin-bottom: 30px;
+            font-weight: 900;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .testimonial {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.6s ease both;
+        }
+
+        @keyframes slideUp {
             from {
                 opacity: 0;
                 transform: translateY(30px);
@@ -116,395 +251,205 @@
             }
         }
 
-        .section h2 {
+        .testimonial:nth-child(1) { animation-delay: 0.1s; }
+        .testimonial:nth-child(2) { animation-delay: 0.2s; }
+        .testimonial:nth-child(3) { animation-delay: 0.3s; }
+        .testimonial:nth-child(4) { animation-delay: 0.4s; }
+
+        .testimonial::before {
+            content: '"';
+            font-size: 4em;
             color: #667eea;
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .before-after {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin: 30px 0;
-            align-items: center;
-        }
-
-        .before-after-item {
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            border-radius: 10px;
-            background: #f0f0f0;
-            padding: 20px;
-            transition: transform 0.3s ease;
-        }
-
-        .before-after-item:hover {
-            transform: scale(1.05);
-        }
-
-        .before-after-item.before {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-            color: white;
-        }
-
-        .before-after-item.after {
-            background: linear-gradient(135deg, #51cf66, #37b24d);
-            color: white;
-        }
-
-        .emoji-large {
-            font-size: 5rem;
-            margin: 20px 0;
-        }
-
-        .before-after-item h3 {
-            font-size: 2rem;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-        }
-
-        .before-after-item p {
-            font-size: 1.1rem;
-            line-height: 1.6;
-        }
-
-        .testimonials {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-
-        .testimonial {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-            border-left: 5px solid #ffff00;
-        }
-
-        .testimonial:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .testimonial-name {
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            color: #ffff00;
+            opacity: 0.2;
+            position: absolute;
+            top: -20px;
+            left: 10px;
         }
 
         .testimonial-text {
-            font-size: 0.95rem;
+            font-size: 1em;
+            color: #333;
+            margin-bottom: 15px;
             line-height: 1.6;
             font-style: italic;
-            margin-bottom: 10px;
         }
 
-        .testimonial-age {
-            font-size: 0.85rem;
-            opacity: 0.9;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-
-        .stat-box {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 25px;
-            border-radius: 10px;
-            text-align: center;
-            border: 3px solid #ffff00;
-            animation: bounce 2s infinite;
-        }
-
-        .stat-box:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .stat-box:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        .stat-box:nth-child(4) {
-            animation-delay: 0.6s;
-        }
-
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        .stat-number {
-            font-size: 3rem;
+        .testimonial-author {
             font-weight: bold;
-            color: #ffff00;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            color: #667eea;
+            font-size: 1.1em;
         }
 
-        .stat-label {
-            font-size: 1rem;
-            margin-top: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .testimonial-title {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 5px;
         }
 
+        .stars {
+            color: #ffc107;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        /* CTA Section */
         .cta-section {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-            color: white;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 50px;
+            border-radius: 20px;
             text-align: center;
-            padding: 40px;
-            border-radius: 15px;
-            margin: 30px 0;
-        }
-
-        .cta-section h2 {
             color: white;
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            animation: flash 0.5s infinite;
+            margin: 40px 0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: zoomIn 0.8s ease;
         }
 
-        @keyframes flash {
-            0%, 100% {
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            }
-            50% {
-                text-shadow: 0 0 30px rgba(255, 255, 255, 1);
-            }
-        }
-
-        .order-button {
-            background: #ffff00;
-            color: #ff6b6b;
-            border: none;
-            padding: 20px 40px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            animation: pulse-button 0.6s infinite;
-        }
-
-        @keyframes pulse-button {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            }
-            50% {
-                transform: scale(1.1);
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            }
-        }
-
-        .order-button:hover {
-            background: #ffffff;
-            transform: scale(1.15);
-        }
-
-        .order-button:active {
-            transform: scale(0.95);
-        }
-
-        .order-buttons-container {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 30px;
-        }
-
-        .product-showcase {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin: 30px 0;
-        }
-
-        .product-card {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            border: 3px solid #ffff00;
-        }
-
-        .product-card:hover {
-            transform: translateY(-15px) rotate(2deg);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-        }
-
-        .product-emoji {
-            font-size: 4rem;
-            margin-bottom: 15px;
-        }
-
-        .product-name {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #ffff00;
-            text-transform: uppercase;
-        }
-
-        .product-description {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 15px;
-        }
-
-        .product-price {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #ffff00;
-            margin-bottom: 15px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 10000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 500px;
-            text-align: center;
-            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
-            animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
+        @keyframes zoomIn {
             from {
                 opacity: 0;
-                transform: translateY(50px);
+                transform: scale(0.8);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: scale(1);
             }
         }
 
-        .modal-content h2 {
-            color: #667eea;
-            font-size: 2rem;
+        .cta-section h2 {
+            font-size: 2.5em;
             margin-bottom: 20px;
+            font-weight: 900;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .modal-content p {
-            color: #333;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 20px;
+        .cta-section p {
+            font-size: 1.3em;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
 
-        .close-button {
-            background: #667eea;
-            color: white;
+        .cta-button {
+            background: white;
+            color: #f5576c;
+            padding: 20px 50px;
+            font-size: 1.5em;
+            font-weight: 900;
             border: none;
-            padding: 12px 30px;
-            font-size: 1rem;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .close-button:hover {
-            background: #764ba2;
-            transform: scale(1.05);
-        }
-
-        .zach-counter {
-            background: #ffff00;
-            color: #667eea;
-            padding: 15px 30px;
             border-radius: 50px;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin: 20px 0;
-            display: inline-block;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        .footer {
-            text-align: center;
-            color: white;
-            padding: 30px;
-            font-size: 0.9rem;
+        .cta-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
         }
 
-        .footer p {
-            margin: 10px 0;
+        .cta-button:active {
+            transform: scale(0.95);
         }
 
+        /* Disclaimer */
         .disclaimer {
             background: rgba(255, 255, 255, 0.1);
             color: white;
             padding: 20px;
             border-radius: 10px;
-            margin-top: 20px;
-            font-size: 0.85rem;
-            line-height: 1.6;
+            margin-top: 30px;
+            font-size: 0.9em;
+            border: 2px solid white;
+            text-align: center;
         }
 
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2.5rem;
-            }
+        /* Floating elements */
+        .floating-deodorant {
+            position: fixed;
+            font-size: 3em;
+            opacity: 0.3;
+            animation: float 6s ease-in-out infinite;
+            pointer-events: none;
+        }
 
-            .header .tagline {
-                font-size: 1.1rem;
-            }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(5deg); }
+        }
 
-            .before-after {
-                grid-template-columns: 1fr;
-            }
+        .deodorant-1 {
+            top: 10%;
+            right: 5%;
+            animation-delay: 0s;
+        }
 
-            .section {
-                padding: 20px;
-            }
+        .deodorant-2 {
+            top: 30%;
+            left: 5%;
+            animation-delay: 2s;
+        }
 
-            .section h2 {
-                font-size: 1.8rem;
-            }
+        .deodorant-3 {
+            bottom: 20%;
+            right: 10%;
+            animation-delay: 4s;
+        }
 
-            .order-button {
-                padding: 15px 30px;
-                font-size: 1.2rem;
-            }
+        /* Interactive Counter */
+        .counter-section {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            margin: 40px 0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .counter-title {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 900;
+        }
+
+        .counter-display {
+            font-size: 4em;
+            color: #667eea;
+            font-weight: 900;
+            margin: 20px 0;
+        }
+
+        .counter-button {
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .counter-button:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 30px;
+            margin-top: 40px;
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .footer p {
+            margin: 10px 0;
+            font-size: 0.9em;
         }
     </style>
 
@@ -514,298 +459,184 @@
 <body>
     <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
 
+    <div class="floating-deodorant deodorant-1">🧴</div>
+    <div class="floating-deodorant deodorant-2">🧴</div>
+    <div class="floating-deodorant deodorant-3">🧴</div>
+
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>ZACH DEODORANT</h1>
-            <p class="tagline">★ THE DEODORANT FOR BOYS NAMED ZACH ★</p>
-            <p class="tagline">Available NOW in the year 1997!</p>
+            <h1>ZACH DEODORANT™</h1>
+            <p class="tagline">The Deodorant That Literally Changed Everything!</p>
+            <div class="warning">
+                ⚠️ WARNING: LIFE-ALTERING RESULTS ⚠️
+            </div>
         </div>
 
-        <!-- Problem Section -->
-        <div class="section">
-            <h2>Are YOU a Zach?</h2>
-            <p style="font-size: 1.2rem; margin-bottom: 20px; color: #333;">
-                Is your name ZACH? Do you struggle with the daily challenges that only boys named Zach understand?
-            </p>
-            
-            <div class="before-after">
-                <div class="before-after-item before">
-                    <div class="emoji-large">😰</div>
-                    <h3>BEFORE ZACH DEODORANT</h3>
-                    <p>
-                        ✗ Awkward social situations<br>
-                        ✗ Confidence at all-time low<br>
-                        ✗ Can't raise hand in class<br>
-                        ✗ Gym class nightmares<br>
-                        ✗ Dating? Forget about it!
-                    </p>
+        <!-- Statistics -->
+        <div class="stats-section">
+            <div class="stat-box">
+                <div class="stat-number">847%</div>
+                <div class="stat-label">Increase in Zach Confidence</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">99.9%</div>
+                <div class="stat-label">of Zachs Recommend It</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">∞</div>
+                <div class="stat-label">Freshness Duration</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">10/10</div>
+                <div class="stat-label">Zach Approval Rating</div>
+            </div>
+        </div>
+
+        <!-- Before/After -->
+        <div class="before-after-section">
+            <h2 class="before-after-title">BEFORE vs AFTER</h2>
+            <div class="before-after-container">
+                <div class="before-after-item">
+                    <h3 class="before">BEFORE ZACH DEODORANT</h3>
+                    <div class="character">😰</div>
+                    <div class="description">
+                        <strong>Zach couldn't leave his house.</strong> Social situations were impossible. Even his goldfish seemed disappointed. He wore 5 layers in summer. Fans followed him. Not admirers—actual fans.
+                    </div>
                 </div>
-                <div class="before-after-item after">
-                    <div class="emoji-large">🚀</div>
-                    <h3>AFTER ZACH DEODORANT</h3>
-                    <p>
-                        ✓ Social butterfly status<br>
-                        ✓ Confidence through the ROOF<br>
-                        ✓ Hand raised constantly<br>
-                        ✓ Gym class CHAMPION<br>
-                        ✓ Dating success guaranteed!
-                    </p>
+                <div class="before-after-item">
+                    <h3 class="after">AFTER ZACH DEODORANT</h3>
+                    <div class="character">😎</div>
+                    <div class="description">
+                        <strong>Zach is now a LEGEND.</strong> He walks into rooms and people applaud. His confidence is legendary. He's dating a supermodel. He invented a new dance. NASA asked him to be an astronaut. He said no because he's too busy being cool.
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Statistics Section -->
-        <div class="section">
-            <h2>The SHOCKING Statistics</h2>
-            <p style="font-size: 1.1rem; color: #333; margin-bottom: 30px;">
-                These REAL statistics will BLOW YOUR MIND!
-            </p>
-            <div class="stats">
-                <div class="stat-box">
-                    <div class="stat-number">94%</div>
-                    <div class="stat-label">Of Zachs report better social lives</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number">87%</div>
-                    <div class="stat-label">More confident within 3 days</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number">156%</div>
-                    <div class="stat-label">Increased popularity rating*</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number">∞</div>
-                    <div class="stat-label">Freshness guaranteed**</div>
-                </div>
-            </div>
-            <div class="disclaimer">
-                *Results not typical. **Freshness may vary. These statistics are completely made up for entertainment purposes.
-            </div>
+        <!-- Counter Section -->
+        <div class="counter-section">
+            <h2 class="counter-title">How Many Zachs Have Changed Their Lives?</h2>
+            <div class="counter-display" id="counter">0</div>
+            <button class="counter-button" onclick="incrementCounter()">I'm a Zach! (+1)</button>
+            <button class="counter-button" onclick="resetCounter()">Reset</button>
         </div>
 
-        <!-- Testimonials Section -->
-        <div class="section">
-            <h2>Real Testimonials from REAL Zachs</h2>
-            <div class="testimonials">
+        <!-- Testimonials -->
+        <div class="testimonials-section">
+            <h2 class="testimonials-title">REAL TESTIMONIALS FROM REAL ZACHS</h2>
+            <div class="testimonials-grid">
                 <div class="testimonial">
-                    <div class="testimonial-name">Zach M.</div>
-                    <div class="testimonial-text">
-                        "I was a shy Zach. After using ZACH DEODORANT, I became the most popular Zach in my entire school! I'm not even the only Zach anymore, but I'm definitely the BEST Zach!"
-                    </div>
-                    <div class="testimonial-age">Age 14, Cincinnati</div>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"I was Zach from Accounting. Now I'm Zach from the Penthouse. ZACH DEODORANT changed my life!"</p>
+                    <p class="testimonial-author">Zach K.</p>
+                    <p class="testimonial-title">Former Accountant, Current Legend</p>
                 </div>
+
                 <div class="testimonial">
-                    <div class="testimonial-name">Zach T.</div>
-                    <div class="testimonial-text">
-                        "My mom bought me ZACH DEODORANT as a joke because of my name. Joke's on her - it WORKS! I've never felt fresher, and the girls actually notice me now!"
-                    </div>
-                    <div class="testimonial-age">Age 15, Denver</div>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"I applied it once and immediately got promoted. I don't even work there anymore!"</p>
+                    <p class="testimonial-author">Zach M.</p>
+                    <p class="testimonial-title">Professional Zach</p>
                 </div>
+
                 <div class="testimonial">
-                    <div class="testimonial-name">Zach R.</div>
-                    <div class="testimonial-text">
-                        "Being named Zach used to be a curse. Now it's a BLESSING! ZACH DEODORANT changed my life. I'm basically a celebrity at my school. All the other Zachs are jealous."
-                    </div>
-                    <div class="testimonial-age">Age 13, Portland</div>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"My crush noticed me! Then my crush's crush noticed me! I have three crushes now!"</p>
+                    <p class="testimonial-author">Zach T.</p>
+                    <p class="testimonial-title">Love Machine</p>
                 </div>
+
                 <div class="testimonial">
-                    <div class="testimonial-name">Zach K.</div>
-                    <div class="testimonial-text">
-                        "I tried other deodorants, but they just didn't understand ME. ZACH DEODORANT gets it. It's like the deodorant was MADE for me! Because it was! LITERALLY!"
-                    </div>
-                    <div class="testimonial-age">Age 16, Austin</div>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"I used ZACH DEODORANT and won the lottery. Then I won it again. Then a third time!"</p>
+                    <p class="testimonial-author">Zach L.</p>
+                    <p class="testimonial-title">Millionaire Zach</p>
                 </div>
+
                 <div class="testimonial">
-                    <div class="testimonial-name">Zach L.</div>
-                    <div class="testimonial-text">
-                        "My friends think I'm crazy for using deodorant branded with my own name, but when they smell how fresh I am, they stop laughing. ZACH DEODORANT: It's not just deodorant, it's a LIFESTYLE."
-                    </div>
-                    <div class="testimonial-age">Age 14, Seattle</div>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"My dog started obeying me better. My plants grew faster. I think it works on everything!"</p>
+                    <p class="testimonial-author">Zach P.</p>
+                    <p class="testimonial-title">Zach with Green Thumb</p>
                 </div>
+
                 <div class="testimonial">
-                    <div class="testimonial-name">Zach D.</div>
-                    <div class="testimonial-text">
-                        "I've never felt more SEEN. This deodorant was literally made for people like me. Other Zachs understand. We are UNITED. We are FRESH. We are ZACH."
-                    </div>
-                    <div class="testimonial-age">Age 15, Boston</div>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"I became so fresh that I achieved enlightenment. I can now see the future. It's all Zachs."</p>
+                    <p class="testimonial-author">Zach Z.</p>
+                    <p class="testimonial-title">Spiritual Zach</p>
                 </div>
             </div>
         </div>
 
-        <!-- Product Showcase -->
-        <div class="section">
-            <h2>Choose Your ZACH DEODORANT</h2>
-            <div class="product-showcase">
-                <div class="product-card">
-                    <div class="product-emoji">💨</div>
-                    <div class="product-name">Original Zach</div>
-                    <div class="product-description">
-                        The classic scent that says "My name is Zach and I'm FRESH." Perfect for everyday use.
-                    </div>
-                    <div class="product-price">$4.99</div>
-                    <button class="order-button" onclick="orderProduct('Original Zach')">ORDER NOW!</button>
-                </div>
-                <div class="product-card">
-                    <div class="product-emoji">🔥</div>
-                    <div class="product-name">Zach Extreme</div>
-                    <div class="product-description">
-                        For the Zach who wants to make a STATEMENT. 48-hour freshness guaranteed or your money back!
-                    </div>
-                    <div class="product-price">$6.99</div>
-                    <button class="order-button" onclick="orderProduct('Zach Extreme')">ORDER NOW!</button>
-                </div>
-                <div class="product-card">
-                    <div class="product-emoji">🌊</div>
-                    <div class="product-name">Zach Ocean Breeze</div>
-                    <div class="product-description">
-                        Smells like you just came back from the beach. Impress your crush with this tropical scent!
-                    </div>
-                    <div class="product-price">$5.99</div>
-                    <button class="order-button" onclick="orderProduct('Zach Ocean Breeze')">ORDER NOW!</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- CTA Section -->
+        <!-- CTA -->
         <div class="cta-section">
-            <h2>DON'T WAIT! ORDER TODAY!</h2>
-            <p style="font-size: 1.2rem; margin-bottom: 20px;">
-                Supplies are LIMITED! Only <span class="zach-counter" id="zachCounter">1000</span> units available!
-            </p>
-            <p style="font-size: 1.1rem; margin-bottom: 30px;">
-                Are YOU a Zach? Don't miss out on your DESTINY!
-            </p>
-            <div class="order-buttons-container">
-                <button class="order-button" onclick="orderProduct('Mystery Bundle')">ORDER 1-PACK!</button>
-                <button class="order-button" onclick="orderProduct('Mystery Bundle')">ORDER 3-PACK!</button>
-                <button class="order-button" onclick="orderProduct('Mystery Bundle')">ORDER MEGA BUNDLE!</button>
-            </div>
-            <div class="disclaimer" style="margin-top: 30px;">
-                ⚠️ DISCLAIMER: ZACH DEODORANT is only effective if your name is actually Zach. Results may vary based on how much you believe in yourself. Not responsible for increased popularity or confidence. Side effects may include: excessive freshness, improved social status, and an inexplicable connection to other Zachs. Call 1-800-ZACH-NOW! Operators are standing by!
+            <h2>DON'T BE A ZACH WITHOUT IT!</h2>
+            <p>Order NOW and get 100% FRESHNESS GUARANTEE*</p>
+            <button class="cta-button" onclick="orderNow()">ORDER NOW - ONLY $19.99</button>
+            <p style="margin-top: 20px; font-size: 0.9em;">*Freshness may vary. Results not guaranteed. Side effects include: excessive coolness, inexplicable charm, spontaneous dancing.</p>
+            <div class="disclaimer">
+                🚨 DISCLAIMER: ZACH DEODORANT is only for people named Zach. If your name is not Zach, it will still work, but you might become a Zach. Results may include: becoming awesome, gaining confidence, attracting admirers, and inexplicable success. Not responsible for life changes. ZACH DEODORANT™ - Because Regular Deodorant is For Regular Zachs.
             </div>
         </div>
 
         <!-- Footer -->
         <div class="footer">
-            <p style="font-size: 1.2rem; font-weight: bold; margin-bottom: 20px;">
-                ZACH DEODORANT™ - The Deodorant for Boys Named Zach™
-            </p>
-            <p>
-                © 1997 ZACH INDUSTRIES. All Rights Reserved. ZACH is a registered trademark of Zach Industries, Inc.
-            </p>
-            <p>
-                This is a parody infomercial created for entertainment purposes. Not a real product. Please use actual deodorant from real companies.
-            </p>
-            <p style="margin-top: 20px; font-size: 0.8rem; opacity: 0.8;">
-                Void where prohibited. See store for details. Some restrictions apply. Results not typical. Individual results may vary.
-            </p>
-        </div>
-    </div>
-
-    <!-- Order Modal -->
-    <div id="orderModal" class="modal">
-        <div class="modal-content">
-            <h2>🎉 ORDER CONFIRMED! 🎉</h2>
-            <p id="modalText">Thank you for your order of <strong id="productName"></strong>!</p>
-            <p style="font-size: 0.9rem; color: #666;">
-                Your ZACH DEODORANT will arrive in 6-8 weeks via carrier pigeon.
-            </p>
-            <p style="font-size: 1.1rem; color: #667eea; font-weight: bold; margin: 20px 0;">
-                Welcome to the ZACH FAMILY! 💪
-            </p>
-            <button class="close-button" onclick="closeModal()">CLOSE</button>
+            <p>© 2024 ZACH DEODORANT™ | For Zachs, By Zachs</p>
+            <p>Not affiliated with any actual deodorant companies or Zachs (except all of them)</p>
+            <p>Made with ❤️ and an unhealthy obsession with deodorant</p>
         </div>
     </div>
 
     <script>
-        let zachCount = 1000;
+        let zachCount = localStorage.getItem('zachCount') || 0;
+        document.getElementById('counter').textContent = zachCount;
 
-        function orderProduct(productName) {
-            document.getElementById('productName').textContent = productName;
-            document.getElementById('orderModal').style.display = 'block';
+        function incrementCounter() {
+            zachCount++;
+            localStorage.setItem('zachCount', zachCount);
+            document.getElementById('counter').textContent = zachCount;
             
-            // Decrease counter
-            zachCount = Math.max(0, zachCount - Math.floor(Math.random() * 20) + 5);
-            document.getElementById('zachCounter').textContent = zachCount;
-            
-            // Trigger confetti effect
-            triggerConfetti();
+            // Add celebration animation
+            const counter = document.getElementById('counter');
+            counter.style.animation = 'none';
+            setTimeout(() => {
+                counter.style.animation = 'bounce 0.5s ease';
+            }, 10);
         }
 
-        function closeModal() {
-            document.getElementById('orderModal').style.display = 'none';
+        function resetCounter() {
+            zachCount = 0;
+            localStorage.setItem('zachCount', zachCount);
+            document.getElementById('counter').textContent = zachCount;
         }
 
-        function triggerConfetti() {
-            // Simple confetti effect using CSS animations
-            const confettiContainer = document.createElement('div');
-            confettiContainer.style.position = 'fixed';
-            confettiContainer.style.top = '0';
-            confettiContainer.style.left = '0';
-            confettiContainer.style.width = '100%';
-            confettiContainer.style.height = '100%';
-            confettiContainer.style.pointerEvents = 'none';
-            confettiContainer.style.zIndex = '9998';
-            document.body.appendChild(confettiContainer);
+        function orderNow() {
+            alert('🎉 CONGRATULATIONS! 🎉\n\nYou\'ve taken the first step to becoming the best Zach you can be!\n\nYour order has been processed in the dimension where ZACH DEODORANT exists.\n\nExpect delivery in 3-5 business days or whenever you become cool enough to receive it.\n\nMay the freshness be with you! 🧴✨');
+        }
 
-            const confettiPieces = ['🎉', '🎊', '⭐', '🌟', '💫', '✨'];
-            
-            for (let i = 0; i < 30; i++) {
-                const confetti = document.createElement('div');
-                confetti.textContent = confettiPieces[Math.floor(Math.random() * confettiPieces.length)];
-                confetti.style.position = 'absolute';
-                confetti.style.left = Math.random() * 100 + '%';
-                confetti.style.top = '-10px';
-                confetti.style.fontSize = '2rem';
-                confetti.style.animation = `fall ${2 + Math.random() * 2}s linear forwards`;
-                confettiContainer.appendChild(confetti);
-            }
+        // Easter egg - konami code
+        const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        let konamiIndex = 0;
 
-            // Add CSS animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes fall {
-                    to {
-                        transform: translateY(100vh) rotate(360deg);
-                        opacity: 0;
-                    }
+        document.addEventListener('keydown', (e) => {
+            const key = e.key;
+            if (key === konamiCode[konamiIndex]) {
+                konamiIndex++;
+                if (konamiIndex === konamiCode.length) {
+                    activateZachMode();
+                    konamiIndex = 0;
                 }
-            `;
-            document.head.appendChild(style);
-
-            // Remove confetti container after animation
-            setTimeout(() => confettiContainer.remove(), 5000);
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('orderModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
+            } else {
+                konamiIndex = 0;
             }
-        }
-
-        // Animate counter on page load
-        window.addEventListener('load', () => {
-            const counter = document.getElementById('zachCounter');
-            const originalCount = parseInt(counter.textContent);
-            
-            // Simulate people ordering
-            setInterval(() => {
-                const current = parseInt(counter.textContent);
-                if (current > 0) {
-                    const decrease = Math.floor(Math.random() * 3) + 1;
-                    counter.textContent = Math.max(0, current - decrease);
-                    
-                    // Flash effect when stock decreases
-                    counter.style.animation = 'none';
-                    setTimeout(() => {
-                        counter.style.animation = 'pulse 0.5s ease';
-                    }, 10);
-                }
-            }, 3000);
         });
+
+        function activateZachMode() {
+            document.body.style.animation = 'spin 1s ease';
+            alert('🌟 YOU\'VE UNLOCKED ULTIMATE ZACH MODE! 🌟\n\nYou are now 10x more Zach than before!\n\nYour freshness level: LEGENDARY\nYour coolness factor: INFINITE\nYour Zach rating: MAXIMUM\n\nGo forth and be the freshest Zach you can be! 🧴✨');
+        }
     </script>
 </body>
 </html>
