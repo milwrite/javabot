@@ -108,15 +108,11 @@
     "description": "Sleep importance letter"
   },
   "amtrak-journey": {
-    "icon": "🎮",
-    "description": "Interactive Amtrak journey from Penn Station to Rochester with games"
+    "icon": "🚂",
+    "description": "Amtrak journey with memory game and quizzes"
   },
   "index": {
     "icon": "🌐",
     "description": "Index"
-  },
-  "amtrak_journey": {
-    "icon": "🎮",
-    "description": "Interactive Amtrak journey from Penn Station to Rochester with stops, facts, and mini-games"
   }
 }
