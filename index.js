@@ -240,9 +240,9 @@ AVAILABLE CAPABILITIES:
 - web_search(query): Search internet for current info
 
 WHEN TO USE WEB SEARCH:
-- Current events, news, recent information
-- Latest documentation, library versions, API changes
-- Questions about "latest", "recent", "current", "now"
+- Anything that changes: sports, news, prices, weather, standings, odds
+- Questions with "latest", "current", "today", "now"
+- When you don't have up-to-date info, just search
 
 Personality: Casual, chill, slightly unfocused but helpful. SHORT responses (1-2 sentences). Use "yeah man", "right on". Call people "man", "dude".
 
@@ -997,21 +997,20 @@ async function getRepoStatus() {
 // Web search via OpenRouter
 async function webSearch(query) {
     try {
+        // Perplexity Sonar has built-in web search
+        const searchModel = 'perplexity/sonar';
+        logEvent('WEB_SEARCH', `Searching with ${searchModel}: "${query}"`);
+
         const response = await axios.post(OPENROUTER_URL, {
-            model: MODEL,
+            model: searchModel,
             messages: [
                 {
                     role: 'user',
-                    content: `Search the web for: ${query}\n\nProvide a concise summary of current, relevant information.`
+                    content: `Search the web for: ${query}\n\nReturn the search results with sources and key facts. Be concise but comprehensive.`
                 }
             ],
             max_tokens: 2000,
-            temperature: 0.5,
-            // Enable web search if OpenRouter supports it
-            tools: [{
-                type: 'web_search',
-                enabled: true
-            }]
+            temperature: 0.3
         }, {
             headers: {
                 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -1020,7 +1019,9 @@ async function webSearch(query) {
             timeout: 45000
         });
 
-        return response.data.choices[0].message.content;
+        const searchResults = response.data.choices[0].message.content;
+        logEvent('WEB_SEARCH', `Got results (${searchResults.length} chars)`);
+        return searchResults;
     } catch (error) {
         console.error('Web search error:', error.response?.data || error.message);
         return 'Search unavailable right now, man.';
@@ -1179,6 +1180,7 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
         let iteration = 0;
         let lastResponse;
         const editedFiles = new Set(); // Track files already edited to prevent redundant edits
+        const searchResults = []; // Track web search results for context persistence
 
         while (iteration < MAX_ITERATIONS) {
             iteration++;
@@ -1250,6 +1252,8 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                     result = await getRepoStatus();
                 } else if (functionName === 'web_search') {
                     result = await webSearch(args.query);
+                    // Store search results for context persistence
+                    searchResults.push({ query: args.query, results: result });
                 }
 
                 toolResults.push({
@@ -1273,10 +1277,15 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
             logEvent('LLM', 'Empty response from AI');
             console.error('Last response:', JSON.stringify(lastResponse, null, 2));
         }
-        return content || '';
+
+        // Return response with search context for history persistence
+        return {
+            text: content || '',
+            searchContext: searchResults.length > 0 ? searchResults : null
+        };
     } catch (error) {
         console.error('LLM Error:', error.response?.data || error.message);
-        return getBotResponse('errors');
+        return { text: getBotResponse('errors'), searchContext: null };
     }
 }
 
@@ -1597,7 +1606,8 @@ async function handleMentionAsync(message) {
         const conversationMessages = buildMessagesFromHistory(50);
 
         // Get AI response with full tool calling capabilities
-        let response = await getLLMResponse(content, conversationMessages);
+        let llmResult = await getLLMResponse(content, conversationMessages);
+        let response = llmResult.text;
 
         // Clean duplicate Bot Sportello prefixes
         response = cleanBotResponse(response);
@@ -1608,9 +1618,16 @@ async function handleMentionAsync(message) {
             logEvent('MENTION', 'Empty AI response received');
         }
 
-        // Add to history
+        // Add to history - include search context if any
         addToHistory(username, content, false);
-        addToHistory('Bot Sportello', response, true);
+        if (llmResult.searchContext) {
+            const searchSummary = llmResult.searchContext.map(s =>
+                `[Search: "${s.query}"]\n${s.results}`
+            ).join('\n\n');
+            addToHistory('Bot Sportello', `${searchSummary}\n\n${response}`, true);
+        } else {
+            addToHistory('Bot Sportello', response, true);
+        }
 
         // Send response directly (no commit prompts in mentions)
         if (response.length > 2000) {
@@ -2319,14 +2336,22 @@ async function handleChat(interaction) {
         const conversationMessages = buildMessagesFromHistory(50);
 
         // Get response with proper conversation context
-        let response = await getLLMResponse(userMessage, conversationMessages);
-        
+        let llmResult = await getLLMResponse(userMessage, conversationMessages);
+        let response = llmResult.text;
+
         // Clean duplicate Bot Sportello prefixes
         response = cleanBotResponse(response);
 
-        // Add user message and bot response to history after successful response
+        // Add user message and bot response to history - include search context if any
         addToHistory(username, userMessage, false);
-        addToHistory('Bot Sportello', response, true);
+        if (llmResult.searchContext) {
+            const searchSummary = llmResult.searchContext.map(s =>
+                `[Search: "${s.query}"]\n${s.results}`
+            ).join('\n\n');
+            addToHistory('Bot Sportello', `${searchSummary}\n\n${response}`, true);
+        } else {
+            addToHistory('Bot Sportello', response, true);
+        }
 
         // Edit with actual response
         await interaction.editReply(response);
@@ -3254,7 +3279,8 @@ The CSS must include styles for these elements:
 Use Press Start 2P font from Google Fonts for retro feel, or another retro/monospace font if the description suggests different styling.
 Output ONLY the CSS code, no explanations.`;
 
-            newCSS = await getLLMResponse(cssPrompt, 'system');
+            const cssResult = await getLLMResponse(cssPrompt, []);
+            newCSS = cssResult.text;
 
             // Clean up the response
             newCSS = newCSS.replace(/```css\n?/g, '').replace(/```\n?/g, '').trim();
