@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bills Super Bowl Infographic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #00338d 0%, #c60c30 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            text-decoration: none;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .home-link:hover {
+            background: rgba(102, 126, 234, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        header h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-weight: 900;
+        }
+
+        header p {
+            font-size: 1.3em;
+            opacity: 0.95;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .bills-logo {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            animation: bounce 2s infinite;
+            font-size: 60px;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card.active {
+            background: linear-gradient(135deg, #00338d 0%, #c60c30 100%);
+            color: white;
+        }
+
+        .stat-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            color: #00338d;
+        }
+
+        .stat-card.active .stat-icon {
+            color: white;
+        }
+
+        .stat-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #00338d;
+        }
+
+        .stat-card.active .stat-title {
+            color: white;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: #c60c30;
+            margin-bottom: 10px;
+        }
+
+        .stat-card.active .stat-value {
+            color: #ffeb3b;
+        }
+
+        .stat-description {
+            font-size: 0.95em;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .stat-card.active .stat-description {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00338d, #c60c30);
+            border-radius: 10px;
+            width: 0;
+            animation: fillProgress 1.5s ease-out forwards;
+        }
+
+        @keyframes fillProgress {
+            to {
+                width: var(--progress);
+            }
+        }
+
+        .players-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeInUp 0.8s ease-out 0.5s forwards;
+            opacity: 0;
+        }
+
+        .players-section h2 {
+            font-size: 2.2em;
+            color: #00338d;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .player-card {
+            background: linear-gradient(135deg, #00338d 0%, #c60c30 100%);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .player-card:hover {
+            transform: scale(1.05) rotateY(5deg);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            border: 3px solid white;
+        }
+
+        .player-name {
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .player-position {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .player-stat {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        .timeline-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeInUp 0.8s ease-out 0.6s forwards;
+            opacity: 0;
+        }
+
+        .timeline-section h2 {
+            font-size: 2.2em;
+            color: #00338d;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #00338d, #c60c30);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            margin-bottom: 30px;
+            opacity: 0;
+            animation: fadeInTimeline 0.6s ease-out forwards;
+        }
+
+        .timeline-item:nth-child(1) { animation-delay: 0.7s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.8s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.9s; }
+
+        @keyframes fadeInTimeline {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .timeline-item:nth-child(odd) {
+            padding-right: 52%;
+        }
+
+        .timeline-item:nth-child(even) {
+            padding-left: 52%;
+        }
+
+        .timeline-content {
+            background: linear-gradient(135deg, #f5f5f5, #fff);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #00338d;
+        }
+
+        .timeline-item:nth-child(even) .timeline-content {
+            border-left: none;
+            border-right: 4px solid #c60c30;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 50%;
+            top: 25px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 4px solid #c60c30;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        .timeline-year {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #00338d;
+            margin-bottom: 5px;
+        }
+
+        .timeline-text {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .prediction-section {
+            background: linear-gradient(135deg, #00338d 0%, #c60c30 100%);
+            border-radius: 20px;
+            padding: 40px;
+            color: white;
+            text-align: center;
+            margin-bottom: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeInUp 0.8s ease-out 0.7s forwards;
+            opacity: 0;
+        }
+
+        .prediction-section h2 {
+            font-size: 2.2em;
+            margin-bottom: 20px;
+        }
+
+        .prediction-meter {
+            max-width: 400px;
+            margin: 30px auto;
+        }
+
+        .meter-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .meter-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid white;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffeb3b, #ff9800);
+            width: 0;
+            animation: fillMeter 2s ease-out forwards;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00338d;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        @keyframes fillMeter {
+            to {
+                width: 87%;
+            }
+        }
+
+        .interactive-toggle {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .toggle-btn {
+            background: white;
+            color: #00338d;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+        }
+
+        .toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-btn.active {
+            background: #ffeb3b;
+            color: #00338d;
+        }
+
+        .comparison-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+            animation: fadeInUp 0.8s ease-out 0.8s forwards;
+            opacity: 0;
+        }
+
+        .comparison-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .comparison-card h3 {
+            font-size: 1.5em;
+            color: #00338d;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comparison-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            background: #f5f5f5;
+        }
+
+        .comparison-item i {
+            font-size: 1.5em;
+            color: #c60c30;
+            width: 30px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2.2em;
+            }
+
+            header p {
+                font-size: 1.1em;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-item {
+                padding-left: 70px !important;
+                padding-right: 0 !important;
+            }
+
+            .timeline-dot {
+                left: 20px;
+            }
+
+            .comparison-section {
+                grid-template-columns: 1fr;
+            }
+
+            .players-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .prediction-section {
+                padding: 30px 20px;
+            }
+
+            .prediction-section h2 {
+                font-size: 1.8em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .players-section,
+            .timeline-section,
+            .prediction-section {
+                padding: 20px;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-icon {
+                font-size: 2em;
+            }
+
+            .stat-value {
+                font-size: 2em;
+            }
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #ffeb3b;
+            pointer-events: none;
+            animation: confettiFall 3s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            to {
+                transform: translateY(100vh) rotateZ(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+
+    <div class="container">
+        <header>
+            <div class="logo-section">
+                <div class="bills-logo">🏈</div>
+            </div>
+            <h1>Buffalo Bills Super Bowl Path</h1>
+            <p>Why Buffalo Will Hoist the Lombardi Trophy</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card" onclick="toggleCard(this)">
+                <div class="stat-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="stat-title">Defense Ranking</div>
+                <div class="stat-value">1st</div>
+                <div class="stat-description">Elite defensive unit leading the NFL with exceptional pass rush and coverage</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="--progress: 95%"></div>
+                </div>
+            </div>
+
+            <div class="stat-card" onclick="toggleCard(this)">
+                <div class="stat-icon"><i class="fas fa-fire"></i></div>
+                <div class="stat-title">Offensive Power</div>
+                <div class="stat-value">Top 5</div>
+                <div class="stat-description">Explosive offense with dual-threat QB and dynamic receiving corps</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="--progress: 88%"></div>
+                </div>
+            </div>
+
+            <div class="stat-card" onclick="toggleCard(this)">
+                <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                <div class="stat-title">Playoff Wins</div>
+                <div class="stat-value">6</div>
+                <div class="stat-description">Recent playoff success with multiple deep runs in consecutive seasons</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="--progress: 85%"></div>
+                </div>
+            </div>
+
+            <div class="stat-card" onclick="toggleCard(this)">
+                <div class="stat-icon"><i class="fas fa-star"></i></div>
+                <div class="stat-title">Team Chemistry</div>
+                <div class="stat-value">Excellent</div>
+                <div class="stat-description">Cohesive unit with veteran leadership and championship experience</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="--progress: 92%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="players-section">
+            <h2>⭐ Key Players</h2>
+            <div class="players-grid">
+                <div class="player-card" onclick="highlightPlayer(this)">
+                    <div class="player-avatar">🏃</div>
+                    <div class="player-name">Josh Allen</div>
+                    <div class="player-position">Quarterback</div>
+                    <div class="player-stat">MVP Caliber Performance</div>
+                </div>
+
+                <div class="player-card" onclick="highlightPlayer(this)">
+                    <div class="player-avatar">🎯</div>
+                    <div class="player-name">Stefon Diggs</div>
+                    <div class="player-position">Wide Receiver</div>
+                    <div class="player-stat">Elite Route Runner</div>
+                </div>
+
+                <div class="player-card" onclick="highlightPlayer(this)">
+                    <div class="player-avatar">🛡️</div>
+                    <div class="player-name">Von Miller</div>
+                    <div class="player-position">Pass Rusher</div>
+                    <div class="player-stat">Super Bowl Champion</div>
+                </div>
+
+                <div class="player-card" onclick="highlightPlayer(this)">
+                    <div class="player-avatar">🏃‍♂️</div>
+                    <div class="player-name">James Cook</div>
+                    <div class="player-position">Running Back</div>
+                    <div class="player-stat">Dynamic Threat</div>
+                </div>
+
+                <div class="player-card" onclick="highlightPlayer(this)">
+                    <div class="player-avatar">🎭</div>
+                    <div class="player-name">Damar Hamlin</div>
+                    <div class="player-position">Safety</div>
+                    <div class="player-stat">Inspirational Leader</div>
+                </div>
+
+                <div class="player-card" onclick="highlightPlayer(this)">
+                    <div class="player-avatar">🧠</div>
+                    <div class="player-name">Sean McDermott</div>
+                    <div class="player-position">Head Coach</div>
+                    <div class="player-stat">Proven Strategist</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-section">
+            <h2>📊 Playoff History</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-year">2021 Season</div>
+                        <div class="timeline-text">AFC East Champions - Wild Card Victory</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-year">2022 Season</div>
+                        <div class="timeline-text">AFC East Champions - Divisional Round Victory</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-year">2024 Season</div>
+                        <div class="timeline-text">Super Bowl LIX Bound - Championship Ready</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <div class="comparison-card">
+                <h3><i class="fas fa-check-circle"></i> Strengths</h3>
+                <div class="comparison-item">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Dominant Defense</span>
+                </div>
+                <div class="comparison-item">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Elite QB Play</span>
+                </div>
+                <div class="comparison-item">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Playoff Experience</span>
+                </div>
+                <div class="comparison-item">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Strong Coaching</span>
+                </div>
+                <div class="comparison-item">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Balanced Offense</span>
+                </div>
+            </div>
+
+            <div class="comparison-card">
+                <h3><i class="fas fa-bullseye"></i> Opportunities</h3>
+                <div class="comparison-item">
+                    <i class="fas fa-target"></i>
+                    <span>Injury Prevention</span>
+                </div>
+                <div class="comparison-item">
+                    <i class="fas fa-target"></i>
+                    <span>Consistency in Playoffs</span>
+                </div>
+                <div class="comparison-item">
+                    <i class="fas fa-target"></i>
+                    <span>Red Zone Efficiency</span>
+                </div>
+                <div class="comparison-item">
+                    <i class="fas fa-target"></i>
+                    <span>Turnover Margin</span>
+                </div>
+                <div class="comparison-item">
+                    <i class="fas fa-target"></i>
+                    <span>Championship Poise</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="prediction-section">
+            <h2>🏆 Super Bowl Probability</h2>
+            <p>Based on current performance metrics and historical data</p>
+            <div class="prediction-meter">
+                <div class="meter-label">
+                    <span>Unlikely</span>
+                    <span>Probable</span>
+                </div>
+                <div class="meter-bar">
+                    <div class="meter-fill">87%</div>
+                </div>
+            </div>
+            <div class="interactive-toggle">
+                <button class="toggle-btn active" onclick="togglePrediction(this)">Optimistic View</button>
+                <button class="toggle-btn" onclick="togglePrediction(this)">Realistic View</button>
+                <button class="toggle-btn" onclick="togglePrediction(this)">Historic Comparison</button>
+            </div>
+            <p style="margin-top: 30px; font-size: 1.1em;">The Bills have all the ingredients for a championship run: elite defense, dynamic offense, proven coaching, and championship experience. This is their year!</p>
+        </div>
+    </div>
+
+    <script>
+        function toggleCard(element) {
+            const cards = document.querySelectorAll('.stat-card');
+            cards.forEach(card => card.classList.remove('active'));
+            element.classList.add('active');
+            createConfetti();
+        }
+
+        function highlightPlayer(element) {
+            const players = document.querySelectorAll('.player-card');
+            players.forEach(player => player.style.transform = '');
+            element.style.transform = 'scale(1.1)';
+        }
+
+        function togglePrediction(element) {
+            const buttons = document.querySelectorAll('.toggle-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+
+            const predictions = [
+                'The Bills will dominate the playoffs with their elite defense and balanced offense. Super Bowl victory is inevitable!',
+                'The Bills are strong contenders with a realistic 87% chance to reach the Super Bowl. They have the talent to win it all.',
+                'Comparing to past championship teams, the Bills have similar or better metrics than recent Super Bowl winners. History favors them!'
+            ];
+
+            const index = Array.from(buttons).indexOf(element);
+            const predictionText = document.querySelector('.prediction-section p:last-of-type');
+            predictionText.textContent = predictions[index];
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.top = '0px';
+                confetti.style.background = ['#00338d', '#c60c30', '#ffeb3b'][Math.floor(Math.random() * 3)];
+                confetti.style.delay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 3500);
+            }
+        }
+
+        // Add scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Animate stat cards on scroll
+        document.querySelectorAll('.stat-card').forEach(card => {
+            observer.observe(card);
+        });
+
+        // Add interactive hover effects
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.3)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.2)';
+            });
+        });
+
+        // Smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Initialize with some interactivity
+        window.addEventListener('load', function() {
+            console.log('Bills Super Bowl Infographic loaded successfully!');
+        });
+    </script>
+</body>
+</html>

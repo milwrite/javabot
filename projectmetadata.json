@@ -119,10 +119,6 @@
     "icon": "🌐",
     "description": "A silly 90s-style infomercial visualization about"
   },
-  "zach_deodorant": {
-    "icon": "🌐",
-    "description": "A silly 90s-style infomercial visualization about"
-  },
   "bills_qb_game": {
     "icon": "🎮",
     "description": "Buffalo Bills quarterback throwing game where"
@@ -138,5 +134,9 @@
   "jackson_biscuit_game": {
     "icon": "🎮",
     "description": "A wholesome pet-petting game where Jackson can pet"
+  },
+  "bills-superbowl-infographic": {
+    "icon": "🌐",
+    "description": "Interactive infographic showcasing why the Buffalo"
   }
 }
