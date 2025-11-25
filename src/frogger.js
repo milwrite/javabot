@@ -22,11 +22,13 @@ class FroggerGame {
             y: (this.rows - 1) * this.gridSize,
             size: this.gridSize - 4
         };
-        
+
         this.cars = [];
         this.logs = [];
         this.water = [];
         this.frogOnLog = false;
+        this.showLevelUp = false;
+        this.levelUpTimer = 0;
         
         this.init();
     }
@@ -126,19 +128,30 @@ class FroggerGame {
         // Check if frog reached the top
         if (this.frog.y === 0) {
             this.score += 100;
-            this.resetFrog();
-            
-            // Check for level completion
+
+            // Check for level completion (every 500 points)
             if (this.score % 500 === 0) {
                 this.level++;
                 this.setupLevel();
+                this.showLevelUp = true;
+                this.levelUpTimer = 120; // Show for 2 seconds at 60fps
             }
+
+            this.resetFrog();
         }
     }
     
     update() {
         if (this.gameState !== 'playing') return;
-        
+
+        // Update level up display timer
+        if (this.showLevelUp && this.levelUpTimer > 0) {
+            this.levelUpTimer--;
+            if (this.levelUpTimer <= 0) {
+                this.showLevelUp = false;
+            }
+        }
+
         // Update cars
         this.cars.forEach(car => {
             car.x += car.speed;
@@ -266,6 +279,21 @@ class FroggerGame {
         this.ctx.fillText(`Score: ${this.score}`, 10, 30);
         this.ctx.fillText(`Lives: ${this.lives}`, 10, 55);
         this.ctx.fillText(`Level: ${this.level}`, 10, 80);
+
+        // Level up notification
+        if (this.showLevelUp) {
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillRect(this.canvas.width / 2 - 150, this.canvas.height / 2 - 40, 300, 80);
+            this.ctx.strokeStyle = '#00ff41';
+            this.ctx.lineWidth = 3;
+            this.ctx.strokeRect(this.canvas.width / 2 - 150, this.canvas.height / 2 - 40, 300, 80);
+
+            this.ctx.fillStyle = '#00ff41';
+            this.ctx.font = '30px "Courier Prime", monospace';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(`LEVEL ${this.level}!`, this.canvas.width / 2, this.canvas.height / 2 + 10);
+            this.ctx.textAlign = 'start';
+        }
 
         // Game over screen
         if (this.gameState === 'gameOver') {

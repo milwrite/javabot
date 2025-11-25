@@ -378,9 +378,10 @@
 
         <div class="game-info">
             <h3>How to Play:</h3>
-            <p>🐷 Collect all the pellets to advance!</p>
-            <p>👨 Avoid the people or lose a life!</p>
-            <p>⭐ Grab power pellets to scare them!</p>
+            <p>🐷 Collect all pellets to advance levels!</p>
+            <p>👨🏻👨🏼👨🏽👨🏿 Each ghost has unique AI behavior!</p>
+            <p>⭐ Power pellets let you eat ghosts!</p>
+            <p style="font-size: 0.85em; color: #aaa;">Ghosts: Blinky chases, Pinky ambushes, Inky is unpredictable, Clyde is shy</p>
             <p id="gameStatus" style="color: #ffd93d; margin-top: 10px; font-weight: bold;">Ready to play? Press START!</p>
         </div>
 
@@ -410,7 +411,8 @@
         let score = 0;
         let level = 1;
         let lives = 3;
-        let gameSpeed = 6;
+        let gameSpeed = 12; // Higher = slower (movement every N frames)
+        let ghostSpeed = 14; // Ghosts slightly slower than player
 
         // Grid setup
         const gridSize = 20;
@@ -459,12 +461,16 @@
             frameCounter: 0
         };
 
-        // Ghosts with AI - different skin tone emojis
+        // Ghosts with unique AI behaviors - different skin tone emojis
+        // Blinky: Direct chase - always follows player
+        // Pinky: Ambush - targets 4 tiles ahead of player
+        // Inky: Unpredictable - alternates between chase and random
+        // Clyde: Shy - runs away when close, chases when far
         const ghosts = [
-            { x: 9, y: 9, vx: 0, vy: 0, emoji: '👨🏻', name: 'P-Diddy', frightened: false, frameCounter: 0, targetX: 0, targetY: 0 },
-            { x: 10, y: 9, vx: 0, vy: 0, emoji: '👨🏽', name: 'R Kelly', frightened: false, frameCounter: 0, targetX: 0, targetY: 0 },
-            { x: 9, y: 10, vx: 0, vy: 0, emoji: '👨🏾', name: 'OJ Simpson', frightened: false, frameCounter: 0, targetX: 0, targetY: 0 },
-            { x: 10, y: 10, vx: 0, vy: 0, emoji: '👨🏿', name: 'Bill Clinton', frightened: false, frameCounter: 0, targetX: 0, targetY: 0 }
+            { x: 9, y: 9, vx: 0, vy: 0, emoji: '👨🏻', name: 'Blinky', behavior: 'chase', frightened: false, frameCounter: 0, scatterTimer: 0 },
+            { x: 10, y: 9, vx: 0, vy: 0, emoji: '👨🏼', name: 'Pinky', behavior: 'ambush', frightened: false, frameCounter: 0, scatterTimer: 0 },
+            { x: 9, y: 10, vx: 0, vy: 0, emoji: '👨🏽', name: 'Inky', behavior: 'unpredictable', frightened: false, frameCounter: 0, scatterTimer: 0 },
+            { x: 10, y: 10, vx: 0, vy: 0, emoji: '👨🏿', name: 'Clyde', behavior: 'shy', frightened: false, frameCounter: 0, scatterTimer: 0 }
         ];
 
         // Pellets
@@ -545,7 +551,8 @@
             score = 0;
             level = 1;
             lives = 3;
-            gameSpeed = 10;
+            gameSpeed = 12; // Slower base speed
+            ghostSpeed = 14; // Ghosts slightly slower than player
             ryan.x = 1;
             ryan.y = 1;
             ryan.vx = 0;
@@ -564,13 +571,14 @@
                 g.vy = 0;
                 g.frightened = false;
                 g.frameCounter = 0;
+                g.scatterTimer = 0;
             });
 
             initializePellets();
             console.log('Game state after init - lives:', lives, 'gameRunning:', gameRunning);
             startBtn.classList.add('hidden');
             restartBtn.classList.remove('hidden');
-            gameStatus.textContent = '🎮 Game Started! Collect pellets!';
+            gameStatus.textContent = `🎮 Level ${level} - Collect all pellets!`;
             gameLoop();
         }
 
@@ -643,65 +651,105 @@
             return Math.abs(x1 - x2) + Math.abs(y1 - y2);
         }
 
+        // Get ALL valid directions a ghost can move to
+        function getAllDirections(ghost) {
+            const directions = [];
+            if (ghost.x > 0 && maze[ghost.y][ghost.x - 1] === 0) {
+                directions.push({ vx: -1, vy: 0, x: ghost.x - 1, y: ghost.y });
+            }
+            if (ghost.x < cols - 1 && maze[ghost.y][ghost.x + 1] === 0) {
+                directions.push({ vx: 1, vy: 0, x: ghost.x + 1, y: ghost.y });
+            }
+            if (ghost.y > 0 && maze[ghost.y - 1][ghost.x] === 0) {
+                directions.push({ vx: 0, vy: -1, x: ghost.x, y: ghost.y - 1 });
+            }
+            if (ghost.y < rows - 1 && maze[ghost.y + 1][ghost.x] === 0) {
+                directions.push({ vx: 0, vy: 1, x: ghost.x, y: ghost.y + 1 });
+            }
+            return directions;
+        }
+
         function updateGhosts() {
-            ghosts.forEach(ghost => {
+            ghosts.forEach((ghost, index) => {
                 ghost.frameCounter++;
-                if (ghost.frameCounter % (gameSpeed + 2) !== 0) return;
+                const currentGhostSpeed = Math.max(8, ghostSpeed - (level - 1));
+                if (ghost.frameCounter % currentGhostSpeed !== 0) return;
+
+                // Get all possible directions
+                let directions = getAllDirections(ghost);
+                if (directions.length === 0) return;
+
+                // Filter out reverse direction if we have other options
+                const nonReverse = directions.filter(d =>
+                    !(d.vx === -ghost.vx && d.vy === -ghost.vy && (ghost.vx !== 0 || ghost.vy !== 0))
+                );
+                if (nonReverse.length > 0) {
+                    directions = nonReverse;
+                }
+
+                // Determine target based on ghost behavior
+                let targetX = ryan.x;
+                let targetY = ryan.y;
 
                 if (ghost.frightened) {
-                    // Run away from Ryan when frightened
-                    const directions = [];
-                    if (ghost.x > 0 && maze[ghost.y][ghost.x - 1] === 0) directions.push({ vx: -1, vy: 0, x: ghost.x - 1, y: ghost.y });
-                    if (ghost.x < cols - 1 && maze[ghost.y][ghost.x + 1] === 0) directions.push({ vx: 1, vy: 0, x: ghost.x + 1, y: ghost.y });
-                    if (ghost.y > 0 && maze[ghost.y - 1][ghost.x] === 0) directions.push({ vx: 0, vy: -1, x: ghost.x, y: ghost.y - 1 });
-                    if (ghost.y < rows - 1 && maze[ghost.y + 1][ghost.x] === 0) directions.push({ vx: 0, vy: 1, x: ghost.x, y: ghost.y + 1 });
-
-                    if (directions.length > 0) {
-                        // Choose direction that moves furthest from Ryan
-                        directions.sort((a, b) => {
-                            const distA = getDistance(a.x, a.y, ryan.x, ryan.y);
-                            const distB = getDistance(b.x, b.y, ryan.x, ryan.y);
-                            return distB - distA;
-                        });
-                        ghost.vx = directions[0].vx;
-                        ghost.vy = directions[0].vy;
-                    }
+                    // Run away - target opposite corner from Ryan
+                    targetX = ryan.x < 10 ? 18 : 1;
+                    targetY = ryan.y < 10 ? 18 : 1;
                 } else {
-                    // Smart chase AI - choose best direction towards Ryan
-                    const directions = [];
-                    if (ghost.x > 0 && maze[ghost.y][ghost.x - 1] === 0 && ghost.vx !== 1) {
-                        directions.push({ vx: -1, vy: 0, x: ghost.x - 1, y: ghost.y });
-                    }
-                    if (ghost.x < cols - 1 && maze[ghost.y][ghost.x + 1] === 0 && ghost.vx !== -1) {
-                        directions.push({ vx: 1, vy: 0, x: ghost.x + 1, y: ghost.y });
-                    }
-                    if (ghost.y > 0 && maze[ghost.y - 1][ghost.x] === 0 && ghost.vy !== 1) {
-                        directions.push({ vx: 0, vy: -1, x: ghost.x, y: ghost.y - 1 });
-                    }
-                    if (ghost.y < rows - 1 && maze[ghost.y + 1][ghost.x] === 0 && ghost.vy !== -1) {
-                        directions.push({ vx: 0, vy: 1, x: ghost.x, y: ghost.y + 1 });
-                    }
+                    // Unique behaviors
+                    switch (ghost.behavior) {
+                        case 'chase': // Blinky - direct chase
+                            targetX = ryan.x;
+                            targetY = ryan.y;
+                            break;
 
-                    if (directions.length > 0) {
-                        // Choose direction closest to Ryan (Manhattan distance)
-                        directions.sort((a, b) => {
-                            const distA = getDistance(a.x, a.y, ryan.x, ryan.y);
-                            const distB = getDistance(b.x, b.y, ryan.x, ryan.y);
-                            return distA - distB;
-                        });
-                        ghost.vx = directions[0].vx;
-                        ghost.vy = directions[0].vy;
+                        case 'ambush': // Pinky - target ahead of player
+                            targetX = Math.max(0, Math.min(cols - 1, ryan.x + ryan.vx * 4));
+                            targetY = Math.max(0, Math.min(rows - 1, ryan.y + ryan.vy * 4));
+                            break;
+
+                        case 'unpredictable': // Inky - mix of chase and wander
+                            ghost.scatterTimer = (ghost.scatterTimer || 0) + 1;
+                            if (ghost.scatterTimer % 100 < 50) {
+                                targetX = ryan.x;
+                                targetY = ryan.y;
+                            } else {
+                                // Wander to corners
+                                const corners = [[1,1], [18,1], [1,18], [18,18]];
+                                const corner = corners[Math.floor(ghost.scatterTimer / 50) % 4];
+                                targetX = corner[0];
+                                targetY = corner[1];
+                            }
+                            break;
+
+                        case 'shy': // Clyde - runs when close
+                            const dist = getDistance(ghost.x, ghost.y, ryan.x, ryan.y);
+                            if (dist < 6) {
+                                targetX = 1;
+                                targetY = 18;
+                            } else {
+                                targetX = ryan.x;
+                                targetY = ryan.y;
+                            }
+                            break;
                     }
                 }
+
+                // Sort directions by distance to target
+                directions.sort((a, b) => {
+                    const distA = getDistance(a.x, a.y, targetX, targetY);
+                    const distB = getDistance(b.x, b.y, targetX, targetY);
+                    return ghost.frightened ? distB - distA : distA - distB;
+                });
+
+                // Pick best direction (with small random chance for variety)
+                const choice = (Math.random() < 0.15 && directions.length > 1) ? 1 : 0;
+                ghost.vx = directions[choice].vx;
+                ghost.vy = directions[choice].vy;
 
                 // Move ghost
-                const nextX = ghost.x + ghost.vx;
-                const nextY = ghost.y + ghost.vy;
-
-                if (nextX >= 0 && nextX < cols && nextY >= 0 && nextY < rows && maze[nextY][nextX] === 0) {
-                    ghost.x = nextX;
-                    ghost.y = nextY;
-                }
+                ghost.x += ghost.vx;
+                ghost.y += ghost.vy;
             });
         }
 
@@ -738,22 +786,41 @@
             if (pellets.length === 0 && powerPellets.length === 0) {
                 console.log('Level complete!');
                 level++;
-                score += 500;
-                gameSpeed = Math.max(3, gameSpeed - 1);
+                score += 500 * level; // More points for higher levels
+
+                // Gradually speed up the game (lower = faster)
+                gameSpeed = Math.max(8, gameSpeed - 1);
+                ghostSpeed = Math.max(6, ghostSpeed - 1);
+
+                // Reset positions
                 ryan.x = 1;
                 ryan.y = 1;
                 ryan.vx = 0;
                 ryan.vy = 0;
+                ryan.invincible = false;
+                ryan.invincibleTime = 0;
+
                 ghosts.forEach((g, i) => {
                     g.x = [9, 10, 9, 10][i];
                     g.y = [9, 9, 10, 10][i];
                     g.vx = 0;
                     g.vy = 0;
                     g.frightened = false;
+                    g.scatterTimer = 0;
                 });
+
                 initializePellets();
                 createParticles(10, 10, '#FFD700', 30);
-                gameStatus.textContent = `🎉 Level ${level}! Ghosts are faster!`;
+
+                // Level-specific messages
+                const levelMessages = [
+                    `🎉 Level ${level}! Ghosts getting smarter!`,
+                    `🔥 Level ${level}! Watch out for Blinky!`,
+                    `⚡ Level ${level}! They're speeding up!`,
+                    `💀 Level ${level}! Good luck!`,
+                    `🏆 Level ${level}! You're a pro!`
+                ];
+                gameStatus.textContent = levelMessages[Math.min(level - 2, levelMessages.length - 1)];
             }
         }
 
