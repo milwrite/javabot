@@ -12,67 +12,73 @@
         }
 
         .game-wrapper {
-            max-width: 600px;
+            max-width: 500px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 15px;
         }
 
         .phase-display {
             background: rgba(26, 0, 0, 0.4);
             border: 2px solid #7ec8e3;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 12px;
+            margin-bottom: 12px;
             text-align: center;
             border-radius: 5px;
         }
 
         .phase-name {
             color: #00ffff;
-            font-size: 1.8em;
-            margin-bottom: 10px;
+            font-size: 1.3em;
+            margin-bottom: 5px;
             text-shadow: 0 0 10px #00ffff;
+        }
+
+        .bubba-art {
+            font-size: 2.5em;
+            margin: 8px 0;
+            line-height: 1;
         }
 
         .phase-description {
             color: #7ec8e3;
-            font-size: 0.95em;
-            margin-bottom: 15px;
-            line-height: 1.4;
+            font-size: 0.85em;
+            margin-bottom: 0;
+            line-height: 1.3;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 8px;
+            margin-bottom: 12px;
         }
 
         .stat-box {
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid #7ec8e3;
-            padding: 12px;
+            padding: 8px;
             border-radius: 3px;
             text-align: center;
         }
 
         .stat-label {
             color: #7ec8e3;
-            font-size: 0.85em;
-            margin-bottom: 5px;
+            font-size: 0.75em;
+            margin-bottom: 3px;
         }
 
         .stat-value {
             color: #00ffff;
-            font-size: 1.5em;
+            font-size: 1.2em;
             font-weight: bold;
             text-shadow: 0 0 5px #00ffff;
         }
 
         .clicker-button {
             width: 100%;
-            padding: 40px;
-            font-size: 2em;
-            margin-bottom: 20px;
+            padding: 25px;
+            font-size: 1.6em;
+            margin-bottom: 12px;
             background: linear-gradient(135deg, #ff0000, #cc0000);
             color: white;
             border: 3px solid #ff0000;
@@ -99,34 +105,36 @@
         .upgrades-section {
             background: rgba(26, 0, 0, 0.4);
             border: 1px solid #7ec8e3;
-            padding: 15px;
+            padding: 10px;
             border-radius: 5px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         .upgrades-title {
             color: #00ffff;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             font-weight: bold;
             border-bottom: 1px dashed #7ec8e3;
-            padding-bottom: 8px;
+            padding-bottom: 5px;
+            font-size: 0.95em;
         }
 
         .upgrade-btn {
             display: block;
             width: 100%;
-            padding: 12px;
-            margin-bottom: 8px;
+            padding: 8px;
+            margin-bottom: 6px;
             background: rgba(126, 200, 227, 0.2);
             border: 1px solid #7ec8e3;
             color: #7ec8e3;
             cursor: pointer;
             border-radius: 3px;
             font-family: 'Courier Prime', monospace;
-            font-size: 0.9em;
+            font-size: 0.85em;
             transition: all 0.2s ease;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
+            line-height: 1.3;
         }
 
         .upgrade-btn:hover {
@@ -152,11 +160,12 @@
         .message {
             color: #7ec8e3;
             text-align: center;
-            padding: 10px;
-            margin-bottom: 10px;
+            padding: 8px;
+            margin-bottom: 8px;
             border: 1px solid #7ec8e3;
             border-radius: 3px;
             background: rgba(126, 200, 227, 0.1);
+            font-size: 0.9em;
         }
 
         .warning {
@@ -165,24 +174,36 @@
             background: rgba(255, 0, 0, 0.1);
         }
 
-        .bubba-art {
-            font-size: 3em;
-            margin: 20px 0;
-            line-height: 1;
-        }
-
         @media (max-width: 480px) {
+            .game-wrapper {
+                padding: 12px;
+            }
+
             .phase-name {
-                font-size: 1.4em;
+                font-size: 1.1em;
+            }
+
+            .bubba-art {
+                font-size: 2em;
             }
 
             .clicker-button {
-                padding: 30px;
-                font-size: 1.5em;
+                padding: 20px;
+                font-size: 1.4em;
+                margin-bottom: 10px;
             }
 
             .stats-grid {
-                grid-template-columns: 1fr;
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+
+            .stat-box {
+                padding: 6px;
+            }
+
+            .stat-value {
+                font-size: 1em;
             }
         }
     </style>
@@ -200,7 +221,7 @@
             <div class="phase-name" id="phaseName">Phase 1: Innocent Foal Days</div>
             <div class="bubba-art">🐴</div>
             <div class="phase-description" id="phaseDesc">
-                Young Bubba grazes peacefully in the pasture. Every click brings him closer to stardom.
+                Young Bubba grazes peacefully. Every click brings him closer to stardom.
             </div>
         </div>
 
@@ -213,14 +234,6 @@
                 <div class="stat-label">CLICKS/SEC</div>
                 <div class="stat-value" id="cpsDisplay">1</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-label">TOTAL CLICKS</div>
-                <div class="stat-value" id="totalClicks">0</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">PHASE</div>
-                <div class="stat-value" id="phaseNumber">1/4</div>
-            </div>
         </div>
 
         <button class="clicker-button" id="clickerBtn">CLICK FOR FAME</button>
@@ -229,10 +242,10 @@
 
         <div class="upgrades-section">
             <div class="upgrades-title">UPGRADES</div>
-            <button class="upgrade-btn" id="upgrade1">📺 Media Attention (+1 fame/click) - Cost: 10</button>
-            <button class="upgrade-btn" id="upgrade2">🎬 TV Appearances (+2 fame/click) - Cost: 50</button>
-            <button class="upgrade-btn" id="upgrade3">📱 Social Media (+5 fame/click) - Cost: 250</button>
-            <button class="upgrade-btn" id="upgrade4">🎪 Sponsorship Deal (+10 fame/click) - Cost: 1000</button>
+            <button class="upgrade-btn" id="upgrade1">📺 Media Attention - Cost: 10</button>
+            <button class="upgrade-btn" id="upgrade2">🎬 TV Appearances - Cost: 50</button>
+            <button class="upgrade-btn" id="upgrade3">📱 Social Media - Cost: 250</button>
+            <button class="upgrade-btn" id="upgrade4">🎪 Sponsorship Deal - Cost: 1000</button>
         </div>
     </div>
 
@@ -251,9 +264,9 @@
                 { id: 4, cost: 1000, power: 10, owned: 0, name: 'Sponsorship Deal' }
             ],
             phases: [
-                { name: 'Phase 1: Innocent Foal Days', desc: 'Young Bubba grazes peacefully in the pasture. Every click brings him closer to stardom.', emoji: '🐴', threshold: 500 },
+                { name: 'Phase 1: Innocent Foal Days', desc: 'Young Bubba grazes peacefully. Every click brings him closer to stardom.', emoji: '🐴', threshold: 500 },
                 { name: 'Phase 2: Rising Star', desc: 'Bubba is getting noticed! Local news wants interviews. The world is watching.', emoji: '⭐', threshold: 2500 },
-                { name: 'Phase 3: Peak Fame', desc: 'Bubba is EVERYWHERE. Merchandise, appearances, endorsements. Living the dream.', emoji: '🏆', threshold: 10000 },
+                { name: 'Phase 3: Peak Fame', desc: 'Bubba is EVERYWHERE. Merchandise, appearances, endorsements everywhere.', emoji: '🏆', threshold: 10000 },
                 { name: 'Phase 4: The Shadows', desc: 'Something changed. Strange visitors. Whispers. Bubba\'s innocence is fading...', emoji: '👁️', threshold: Infinity }
             ]
         };
@@ -262,10 +275,8 @@
         const clickerBtn = document.getElementById('clickerBtn');
         const fameDisplay = document.getElementById('fameDisplay');
         const cpsDisplay = document.getElementById('cpsDisplay');
-        const totalClicksDisplay = document.getElementById('totalClicks');
         const phaseNameEl = document.getElementById('phaseName');
         const phaseDescEl = document.getElementById('phaseDesc');
-        const phaseNumberEl = document.getElementById('phaseNumber');
         const messageBox = document.getElementById('messageBox');
 
         // Click Handler
@@ -289,7 +300,6 @@
         // Update Display
         function updateDisplay() {
             fameDisplay.textContent = Math.floor(game.fame);
-            totalClicksDisplay.textContent = game.totalClicks;
             cpsDisplay.textContent = calculateCPS();
             updateUpgradeButtons();
         }
@@ -318,7 +328,6 @@
             phaseNameEl.textContent = phase.name;
             phaseDescEl.textContent = phase.desc;
             document.querySelector('.bubba-art').textContent = phase.emoji;
-            phaseNumberEl.textContent = `${game.phase}/4`;
         }
 
         // Upgrade System
@@ -352,7 +361,7 @@
                 const btn = document.getElementById(`upgrade${upgrade.id}`);
                 const canAfford = game.fame >= upgrade.cost;
                 
-                btn.textContent = `${upgrade.name} (+${upgrade.power} fame/click) - Cost: ${upgrade.cost} [${upgrade.owned}]`;
+                btn.textContent = `${upgrade.name} (+${upgrade.power}) - Cost: ${upgrade.cost} [${upgrade.owned}]`;
                 btn.className = 'upgrade-btn';
                 
                 if (!canAfford) {
