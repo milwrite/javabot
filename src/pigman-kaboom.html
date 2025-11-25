@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pigman (Kaboom.js)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667ee6 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        .game-container {
+            background: #1a1a2e;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .game-header {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .game-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .stat {
+            color: #fff;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #ffd93d;
+        }
+
+        /* Kaboom.js canvas container */
+        #game-root {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        #game-root canvas {
+            border: 3px solid #667ee6;
+            border-radius: 10px;
+            max-width: 100%;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            padding: 15px;
+            background: linear-gradient(135deg, #667ee6, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 50px;
+            min-width: 50px;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn:hover {
+            background: linear-gradient(135deg, #764ba2, #667ee6);
+        }
+
+        .control-btn.up { grid-column: 2; }
+        .control-btn.left { grid-column: 1; grid-row: 2; }
+        .control-btn.down { grid-column: 2; grid-row: 2; }
+        .control-btn.right { grid-column: 3; grid-row: 2; }
+
+        .game-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .game-info h3 {
+            color: #ffd93d;
+            margin-bottom: 10px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .hidden { display: none; }
+
+        .keyboard-hint {
+            color: #aaa;
+            font-size: 0.85em;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            body {
+                align-items: flex-start;
+                padding: 10px;
+                padding-top: 80px;
+            }
+            .game-container { padding: 15px; }
+            .game-header h1 { font-size: 2em; }
+            .game-stats { gap: 10px; padding: 12px; }
+            .stat-value { font-size: 1.5em; }
+            .control-btn {
+                padding: 15px;
+                font-size: 1.5em;
+                min-height: 60px;
+                min-width: 60px;
+            }
+            .game-info { font-size: 0.9em; padding: 12px; }
+            .action-btn { min-height: 50px; }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 8px; padding-top: 70px; }
+            .game-container { padding: 12px; }
+            .game-header h1 { font-size: 1.5em; }
+            .game-header p { font-size: 0.85em; }
+            .stat-label { font-size: 0.75em; }
+            .stat-value { font-size: 1.3em; }
+            .control-btn {
+                padding: 12px;
+                font-size: 1.3em;
+                min-height: 55px;
+                min-width: 55px;
+            }
+            .game-info { font-size: 0.85em; padding: 10px; }
+            .game-info p { margin-bottom: 5px; }
+            .action-btn { font-size: 1.1em; padding: 12px; }
+            .keyboard-hint { font-size: 0.75em; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Home link -->
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2);font-weight:bold;">← Home</a>
+
+    <div class="game-container">
+        <!-- Game header -->
+        <div class="game-header">
+            <h1>PIGMAN</h1>
+            <p style="color: #aaa; margin-top: 5px;">Help the pig escape the people! (Kaboom.js Edition)</p>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">SCORE</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">LEVEL</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">LIVES</div>
+                <div class="stat-value" id="lives">3</div>
+            </div>
+        </div>
+
+        <!-- Kaboom.js renders here -->
+        <div id="game-root"></div>
+
+        <!-- Mobile controls -->
+        <div class="controls" id="controls">
+            <button class="control-btn up" id="btnUp">▲</button>
+            <button class="control-btn left" id="btnLeft">◄</button>
+            <button class="control-btn down" id="btnDown">▼</button>
+            <button class="control-btn right" id="btnRight">►</button>
+        </div>
+
+        <!-- Instructions -->
+        <div class="game-info">
+            <h3>How to Play:</h3>
+            <p>🐷 Collect all pellets to advance levels!</p>
+            <p>👨🏻👨🏼👨🏽👨🏿 Each ghost has unique AI behavior!</p>
+            <p>⭐ Power pellets let you eat ghosts!</p>
+            <p style="font-size: 0.85em; color: #aaa;">Ghosts: Blinky chases, Pinky ambushes, Inky is unpredictable, Clyde is shy</p>
+            <p id="gameStatus" style="color: #ffd93d; margin-top: 10px; font-weight: bold;">Ready to play? Press START!</p>
+        </div>
+
+        <!-- Action buttons -->
+        <button class="action-btn" id="startBtn">START GAME</button>
+        <button class="action-btn hidden" id="restartBtn">RESTART GAME</button>
+
+        <div class="keyboard-hint">
+            Use arrow keys or touch buttons to move
+        </div>
+    </div>
+
+    <!-- Load game module -->
+    <script type="module" src="./pigman-kaboom.js"></script>
+</body>
+</html>
