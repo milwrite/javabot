@@ -759,14 +759,15 @@
                     if (ryan.invincible && ghost.frightened) {
                         // Eat the ghost
                         score += 200;
-                        createParticles(ghost.x, ghost.y, ghost.color, 10);
+                        createParticles(ghost.x, ghost.y, '#FFD700', 10);
                         ghost.x = [9, 10, 9, 10][ghosts.indexOf(ghost)];
                         ghost.y = [9, 9, 10, 10][ghosts.indexOf(ghost)];
                         ghost.frightened = false;
                         gameStatus.textContent = '🎉 Ghost eaten! +200 points!';
-                    } else if (!ryan.invincible) {
+                    } else if (!ryan.invincible && !ghost.frightened) {
+                        // Ghost caught the pig
                         lives--;
-                        createParticles(ryan.x, ryan.y, '#FFFF00', 15);
+                        createParticles(ryan.x, ryan.y, '#FF69B4', 15);
                         if (lives <= 0) {
                             endGame();
                         } else {
@@ -774,7 +775,7 @@
                             ryan.y = 1;
                             ryan.vx = 0;
                             ryan.vy = 0;
-                            gameStatus.textContent = `💔 Hit! ${lives} lives left!`;
+                            gameStatus.textContent = `💔 Caught! ${lives} lives left!`;
                         }
                     }
                 }
