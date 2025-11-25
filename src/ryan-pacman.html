@@ -392,21 +392,12 @@
         </div>
     </div>
 
-    <div class="game-over-modal hidden" id="gameOverModal">
-        <div class="game-over-content">
-            <h2 id="gameOverTitle">GAME OVER!</h2>
-            <p>Final Score: <span id="finalScore">0</span></p>
-            <p>Level Reached: <span id="finalLevel">1</span></p>
-            <button class="restart-btn" onclick="location.reload()">PLAY AGAIN</button>
-        </div>
-    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const startBtn = document.getElementById('startBtn');
         const restartBtn = document.getElementById('restartBtn');
-        const gameOverModal = document.getElementById('gameOverModal');
         const controls = document.getElementById('controls');
         const scoreDisplay = document.getElementById('score');
         const levelDisplay = document.getElementById('level');
@@ -760,13 +751,13 @@
         }
 
         function endGame() {
+            console.log('=== GAME OVER ===');
             gameRunning = false;
             gameOver = true;
             controls.style.display = 'none';
-            document.getElementById('gameOverTitle').textContent = 'GAME OVER!';
-            document.getElementById('finalScore').textContent = score;
-            document.getElementById('finalLevel').textContent = level;
-            gameOverModal.classList.remove('hidden');
+            gameStatus.textContent = `💀 GAME OVER! Score: ${score} Level: ${level}`;
+            startBtn.classList.remove('hidden');
+            restartBtn.classList.add('hidden');
         }
 
         function drawMaze() {
