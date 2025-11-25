@@ -138,5 +138,9 @@
   "bills-superbowl-infographic": {
     "icon": "🌐",
     "description": "Interactive infographic showcasing why the Buffalo"
+  },
+  "ryan-pacman": {
+    "icon": "🎮",
+    "description": "Pac-Man style game where Ryan from Ryan's Toy"
   }
 }
