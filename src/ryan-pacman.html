@@ -369,23 +369,23 @@
 
         <canvas id="gameCanvas" width="400" height="400"></canvas>
 
-        <div class="game-info">
-            <h3>How to Play:</h3>
-            <p>🎯 Collect all the pellets to advance!</p>
-            <p>👻 Avoid the celebrity ghosts or lose a life!</p>
-            <p>⭐ Grab power pellets to eat the ghosts!</p>
-            <p id="gameStatus" style="color: #ffd93d; margin-top: 10px; font-weight: bold;">Ready to play? Press START!</p>
-        </div>
-
-        <button class="start-btn" id="startBtn">START GAME</button>
-        <button class="restart-btn hidden" id="restartBtn">RESTART GAME</button>
-
-        <div class="controls" id="controls" style="display: none;">
+        <div class="controls" id="controls" style="display: grid;">
             <button class="control-btn up">▲</button>
             <button class="control-btn left">◄</button>
             <button class="control-btn down">▼</button>
             <button class="control-btn right">►</button>
         </div>
+
+        <div class="game-info">
+            <h3>How to Play:</h3>
+            <p>🐷 Collect all the pellets to advance!</p>
+            <p>👨 Avoid the people or lose a life!</p>
+            <p>⭐ Grab power pellets to scare them!</p>
+            <p id="gameStatus" style="color: #ffd93d; margin-top: 10px; font-weight: bold;">Ready to play? Press START!</p>
+        </div>
+
+        <button class="start-btn" id="startBtn">START GAME</button>
+        <button class="restart-btn hidden" id="restartBtn">RESTART GAME</button>
 
         <div class="keyboard-hint">
             💡 Use arrow keys or touch buttons to move
@@ -459,12 +459,12 @@
             frameCounter: 0
         };
 
-        // Ghosts with AI
+        // Ghosts with AI - different skin tone emojis
         const ghosts = [
-            { x: 9, y: 9, vx: 0, vy: 0, color: '#FF6B9D', name: 'P-Diddy', frightened: false, frameCounter: 0 },
-            { x: 10, y: 9, vx: 0, vy: 0, color: '#C44569', name: 'R Kelly', frightened: false, frameCounter: 0 },
-            { x: 9, y: 10, vx: 0, vy: 0, color: '#F8B500', name: 'OJ Simpson', frightened: false, frameCounter: 0 },
-            { x: 10, y: 10, vx: 0, vy: 0, color: '#4A90E2', name: 'Bill Clinton', frightened: false, frameCounter: 0 }
+            { x: 9, y: 9, vx: 0, vy: 0, emoji: '👨🏻', name: 'P-Diddy', frightened: false, frameCounter: 0, targetX: 0, targetY: 0 },
+            { x: 10, y: 9, vx: 0, vy: 0, emoji: '👨🏽', name: 'R Kelly', frightened: false, frameCounter: 0, targetX: 0, targetY: 0 },
+            { x: 9, y: 10, vx: 0, vy: 0, emoji: '👨🏾', name: 'OJ Simpson', frightened: false, frameCounter: 0, targetX: 0, targetY: 0 },
+            { x: 10, y: 10, vx: 0, vy: 0, emoji: '👨🏿', name: 'Bill Clinton', frightened: false, frameCounter: 0, targetX: 0, targetY: 0 }
         ];
 
         // Pellets
@@ -545,7 +545,7 @@
             score = 0;
             level = 1;
             lives = 3;
-            gameSpeed = 6;
+            gameSpeed = 10;
             ryan.x = 1;
             ryan.y = 1;
             ryan.vx = 0;
@@ -570,7 +570,6 @@
             console.log('Game state after init - lives:', lives, 'gameRunning:', gameRunning);
             startBtn.classList.add('hidden');
             restartBtn.classList.remove('hidden');
-            controls.style.display = 'grid';
             gameStatus.textContent = '🎮 Game Started! Collect pellets!';
             gameLoop();
         }
@@ -640,50 +639,58 @@
             }
         }
 
+        function getDistance(x1, y1, x2, y2) {
+            return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+        }
+
         function updateGhosts() {
             ghosts.forEach(ghost => {
                 ghost.frameCounter++;
-                if (ghost.frameCounter % (gameSpeed + 1) !== 0) return;
+                if (ghost.frameCounter % (gameSpeed + 2) !== 0) return;
 
                 if (ghost.frightened) {
-                    // Random movement when frightened
-                    if (Math.random() < 0.3) {
-                        const directions = [];
-                        if (ghost.x > 0 && maze[ghost.y][ghost.x - 1] === 0) directions.push({ vx: -1, vy: 0 });
-                        if (ghost.x < cols - 1 && maze[ghost.y][ghost.x + 1] === 0) directions.push({ vx: 1, vy: 0 });
-                        if (ghost.y > 0 && maze[ghost.y - 1][ghost.x] === 0) directions.push({ vx: 0, vy: -1 });
-                        if (ghost.y < rows - 1 && maze[ghost.y + 1][ghost.x] === 0) directions.push({ vx: 0, vy: 1 });
+                    // Run away from Ryan when frightened
+                    const directions = [];
+                    if (ghost.x > 0 && maze[ghost.y][ghost.x - 1] === 0) directions.push({ vx: -1, vy: 0, x: ghost.x - 1, y: ghost.y });
+                    if (ghost.x < cols - 1 && maze[ghost.y][ghost.x + 1] === 0) directions.push({ vx: 1, vy: 0, x: ghost.x + 1, y: ghost.y });
+                    if (ghost.y > 0 && maze[ghost.y - 1][ghost.x] === 0) directions.push({ vx: 0, vy: -1, x: ghost.x, y: ghost.y - 1 });
+                    if (ghost.y < rows - 1 && maze[ghost.y + 1][ghost.x] === 0) directions.push({ vx: 0, vy: 1, x: ghost.x, y: ghost.y + 1 });
 
-                        if (directions.length > 0) {
-                            const dir = directions[Math.floor(Math.random() * directions.length)];
-                            ghost.vx = dir.vx;
-                            ghost.vy = dir.vy;
-                        }
+                    if (directions.length > 0) {
+                        // Choose direction that moves furthest from Ryan
+                        directions.sort((a, b) => {
+                            const distA = getDistance(a.x, a.y, ryan.x, ryan.y);
+                            const distB = getDistance(b.x, b.y, ryan.x, ryan.y);
+                            return distB - distA;
+                        });
+                        ghost.vx = directions[0].vx;
+                        ghost.vy = directions[0].vy;
                     }
                 } else {
-                    // Chase Ryan with simple AI
-                    const dx = ryan.x - ghost.x;
-                    const dy = ryan.y - ghost.y;
+                    // Smart chase AI - choose best direction towards Ryan
+                    const directions = [];
+                    if (ghost.x > 0 && maze[ghost.y][ghost.x - 1] === 0 && ghost.vx !== 1) {
+                        directions.push({ vx: -1, vy: 0, x: ghost.x - 1, y: ghost.y });
+                    }
+                    if (ghost.x < cols - 1 && maze[ghost.y][ghost.x + 1] === 0 && ghost.vx !== -1) {
+                        directions.push({ vx: 1, vy: 0, x: ghost.x + 1, y: ghost.y });
+                    }
+                    if (ghost.y > 0 && maze[ghost.y - 1][ghost.x] === 0 && ghost.vy !== 1) {
+                        directions.push({ vx: 0, vy: -1, x: ghost.x, y: ghost.y - 1 });
+                    }
+                    if (ghost.y < rows - 1 && maze[ghost.y + 1][ghost.x] === 0 && ghost.vy !== -1) {
+                        directions.push({ vx: 0, vy: 1, x: ghost.x, y: ghost.y + 1 });
+                    }
 
-                    if (Math.random() < 0.3) {
-                        const directions = [];
-                        // Prefer directions towards Ryan
-                        if (dx > 0 && ghost.x < cols - 1 && maze[ghost.y][ghost.x + 1] === 0) directions.push({ vx: 1, vy: 0 });
-                        if (dx < 0 && ghost.x > 0 && maze[ghost.y][ghost.x - 1] === 0) directions.push({ vx: -1, vy: 0 });
-                        if (dy > 0 && ghost.y < rows - 1 && maze[ghost.y + 1][ghost.x] === 0) directions.push({ vx: 0, vy: 1 });
-                        if (dy < 0 && ghost.y > 0 && maze[ghost.y - 1][ghost.x] === 0) directions.push({ vx: 0, vy: -1 });
-
-                        // Add random valid directions
-                        if (ghost.x > 0 && maze[ghost.y][ghost.x - 1] === 0) directions.push({ vx: -1, vy: 0 });
-                        if (ghost.x < cols - 1 && maze[ghost.y][ghost.x + 1] === 0) directions.push({ vx: 1, vy: 0 });
-                        if (ghost.y > 0 && maze[ghost.y - 1][ghost.x] === 0) directions.push({ vx: 0, vy: -1 });
-                        if (ghost.y < rows - 1 && maze[ghost.y + 1][ghost.x] === 0) directions.push({ vx: 0, vy: 1 });
-
-                        if (directions.length > 0) {
-                            const dir = directions[Math.floor(Math.random() * directions.length)];
-                            ghost.vx = dir.vx;
-                            ghost.vy = dir.vy;
-                        }
+                    if (directions.length > 0) {
+                        // Choose direction closest to Ryan (Manhattan distance)
+                        directions.sort((a, b) => {
+                            const distA = getDistance(a.x, a.y, ryan.x, ryan.y);
+                            const distB = getDistance(b.x, b.y, ryan.x, ryan.y);
+                            return distA - distB;
+                        });
+                        ghost.vx = directions[0].vx;
+                        ghost.vy = directions[0].vy;
                     }
                 }
 
@@ -754,7 +761,6 @@
             console.log('=== GAME OVER ===');
             gameRunning = false;
             gameOver = true;
-            controls.style.display = 'none';
             gameStatus.textContent = `💀 GAME OVER! Score: ${score} Level: ${level}`;
             startBtn.classList.remove('hidden');
             restartBtn.classList.add('hidden');
@@ -777,79 +783,41 @@
         function drawRyan() {
             const centerX = (ryan.x + 0.5) * gridSize;
             const centerY = (ryan.y + 0.5) * gridSize;
-            const radius = gridSize * 0.4;
 
             ctx.save();
-            ctx.translate(centerX, centerY);
-            ctx.rotate(ryan.direction);
-
-            ctx.fillStyle = ryan.invincible ? '#FFD700' : '#FFFF00';
-            ctx.beginPath();
-            const mouthAngle = Math.abs(Math.sin(ryan.mouthOpen)) * 0.4;
-            ctx.arc(0, 0, radius, mouthAngle, Math.PI * 2 - mouthAngle);
-            ctx.lineTo(0, 0);
-            ctx.fill();
-
-            // Eye
-            ctx.fillStyle = '#000';
-            ctx.beginPath();
-            ctx.arc(-radius * 0.1, -radius * 0.3, radius * 0.15, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.restore();
+            ctx.font = `${gridSize * 0.9}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
 
             // Invincibility glow
             if (ryan.invincible) {
-                ctx.strokeStyle = '#FFD700';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius + 3, 0, Math.PI * 2);
-                ctx.stroke();
+                ctx.shadowColor = '#FFD700';
+                ctx.shadowBlur = 15;
             }
+
+            ctx.fillText('🐷', centerX, centerY);
+            ctx.restore();
         }
 
         function drawGhosts() {
             ghosts.forEach(ghost => {
-                const x = ghost.x * gridSize;
-                const y = ghost.y * gridSize;
-                const centerX = x + gridSize / 2;
-                const centerY = y + gridSize / 2;
+                const centerX = (ghost.x + 0.5) * gridSize;
+                const centerY = (ghost.y + 0.5) * gridSize;
 
-                // Body
-                ctx.fillStyle = ghost.frightened ? '#2222CC' : ghost.color;
-                ctx.beginPath();
-                ctx.arc(centerX, centerY - 2, gridSize * 0.35, Math.PI, 0);
-                ctx.lineTo(x + gridSize - 4, y + gridSize - 4);
+                ctx.save();
+                ctx.font = `${gridSize * 0.9}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
 
-                // Wavy bottom
-                for (let i = 0; i < 3; i++) {
-                    ctx.lineTo(x + gridSize - 6 - i * 4, y + gridSize - 2);
-                    ctx.lineTo(x + gridSize - 8 - i * 4, y + gridSize - 4);
-                }
-
-                ctx.lineTo(x + 4, y + gridSize - 4);
-                ctx.closePath();
-                ctx.fill();
-
-                // Eyes
-                ctx.fillStyle = '#FFF';
-                ctx.fillRect(x + 6, y + 7, 4, 5);
-                ctx.fillRect(x + 12, y + 7, 4, 5);
-
-                // Pupils
-                ctx.fillStyle = '#000';
-                const pupilX = ghost.frightened ? 1 : (ryan.x > ghost.x ? 2 : (ryan.x < ghost.x ? 0 : 1));
-                const pupilY = ghost.frightened ? 1 : (ryan.y > ghost.y ? 2 : (ryan.y < ghost.y ? 0 : 1));
-                ctx.fillRect(x + 7 + pupilX, y + 8 + pupilY, 2, 2);
-                ctx.fillRect(x + 13 + pupilX, y + 8 + pupilY, 2, 2);
-
-                // Frightened mouth
                 if (ghost.frightened) {
-                    ctx.fillStyle = '#FFF';
-                    for (let i = 0; i < 3; i++) {
-                        ctx.fillRect(x + 6 + i * 3, y + 14, 2, 1);
-                    }
+                    // Show scared emoji when frightened
+                    ctx.fillText('😱', centerX, centerY);
+                } else {
+                    // Show person emoji
+                    ctx.fillText(ghost.emoji, centerX, centerY);
                 }
+
+                ctx.restore();
             });
         }
 
