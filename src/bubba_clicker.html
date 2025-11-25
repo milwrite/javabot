@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubba Clicker - Interactive Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0e27;
+            color: #0f0;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* CRT Screen Effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 0, 0, 0.15),
+                    rgba(0, 0, 0, 0.15) 1px,
+                    transparent 1px,
+                    transparent 2px
+                );
+            pointer-events: none;
+            z-index: 9998;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.97; }
+        }
+
+        /* Scanline effect */
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(10px); }
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            text-decoration: none;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .home-link:hover {
+            background: rgba(102, 126, 234, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 20px 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border: 2px solid #0f0;
+            padding: 30px;
+            background: rgba(15, 0, 0, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2), inset 0 0 20px rgba(0, 255, 0, 0.05);
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.2), inset 0 0 20px rgba(0, 255, 0, 0.05); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.4), inset 0 0 30px rgba(0, 255, 0, 0.1); }
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+            letter-spacing: 3px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            color: #0a0;
+            margin: 5px 0;
+        }
+
+        .demo-section {
+            margin-bottom: 40px;
+            border: 1px solid #0f0;
+            padding: 25px;
+            background: rgba(0, 20, 0, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.1);
+        }
+
+        .demo-section h2 {
+            color: #0f0;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #0f0;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .game-canvas {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 20px;
+            background: #000;
+            border: 3px solid #0f0;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3), inset 0 0 20px rgba(0, 255, 0, 0.05);
+        }
+
+        .game-display {
+            background: #001a00;
+            border: 1px solid #0f0;
+            padding: 20px;
+            margin-bottom: 15px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 255, 0, 0.03),
+                    rgba(0, 255, 0, 0.03) 1px,
+                    transparent 1px,
+                    transparent 2px
+                );
+            pointer-events: none;
+            animation: scanlines 8s linear infinite;
+        }
+
+        .bubba-ascii {
+            font-size: 2em;
+            line-height: 1.2;
+            margin: 20px 0;
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0;
+            font-weight: bold;
+            white-space: pre;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stats-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stat-box {
+            background: rgba(0, 50, 0, 0.5);
+            border: 1px solid #0f0;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+        }
+
+        .stat-label {
+            color: #0a0;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #0f0;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .clicker-button {
+            background: linear-gradient(135deg, #0f0, #0a0);
+            border: 2px solid #0f0;
+            color: #000;
+            padding: 20px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            border-radius: 5px;
+            transition: all 0.1s ease;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .clicker-button:hover {
+            background: linear-gradient(135deg, #0f0, #0f0);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.5), inset 0 0 10px rgba(0, 255, 0, 0.2);
+            transform: scale(1.05);
+        }
+
+        .clicker-button:active {
+            transform: scale(0.98);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3), inset 0 0 15px rgba(0, 255, 0, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .control-btn {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #0f0;
+            color: #0f0;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 255, 0, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+
+        .control-btn.active {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        .upgrade-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .upgrade-item {
+            background: rgba(0, 50, 0, 0.3);
+            border: 1px solid #0f0;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+        }
+
+        .upgrade-item:hover {
+            background: rgba(0, 100, 0, 0.4);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .upgrade-item.purchased {
+            background: rgba(0, 150, 0, 0.2);
+            border-color: #0a0;
+        }
+
+        .upgrade-name {
+            color: #0f0;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .upgrade-cost {
+            color: #0a0;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .upgrade-desc {
+            color: #088;
+            font-size: 0.85em;
+            line-height: 1.3;
+        }
+
+        .terminal-output {
+            background: #000;
+            border: 1px solid #0f0;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            line-height: 1.5;
+            color: #0f0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .terminal-line {
+            margin: 3px 0;
+            word-break: break-word;
+        }
+
+        .terminal-prompt {
+            color: #0a0;
+        }
+
+        .terminal-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-output::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        .terminal-output::-webkit-scrollbar-thumb {
+            background: #0f0;
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+        }
+
+        .info-box {
+            background: rgba(0, 100, 0, 0.1);
+            border-left: 3px solid #0f0;
+            padding: 15px;
+            margin: 15px 0;
+            color: #0a0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .info-box strong {
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .phase-indicator {
+            display: inline-block;
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #0f0;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 3px;
+            color: #0f0;
+            font-weight: bold;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .phase-indicator.active {
+            background: rgba(0, 255, 0, 0.4);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .code-block {
+            background: #000;
+            border: 1px solid #0f0;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-size: 0.85em;
+            color: #0f0;
+            position: relative;
+            z-index: 2;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .game-canvas {
+                padding: 15px;
+            }
+
+            .clicker-button {
+                padding: 15px 30px;
+                font-size: 1em;
+            }
+
+            .stats-display {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .upgrade-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .floating-text {
+            position: absolute;
+            pointer-events: none;
+            font-weight: bold;
+            animation: float-up 1s ease-out forwards;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        @keyframes float-up {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        .dark-mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .dark-mode-toggle:hover {
+            background: rgba(102, 126, 234, 1);
+            transform: translateY(-2px);
+        }
+
+        .achievement-popup {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px solid #0f0;
+            padding: 20px;
+            border-radius: 5px;
+            color: #0f0;
+            z-index: 10000;
+            animation: slideIn 0.5s ease-out;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 20px;
+            border-top: 1px dashed #0f0;
+            color: #0a0;
+            font-size: 0.9em;
+        }
+
+        .tutorial-section {
+            background: rgba(0, 50, 0, 0.2);
+            border: 1px solid #0a0;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .tutorial-section h3 {
+            color: #0f0;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .tutorial-section ol, .tutorial-section ul {
+            margin-left: 20px;
+            color: #0a0;
+            line-height: 1.8;
+        }
+
+        .tutorial-section li {
+            margin-bottom: 8px;
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" class="home-link">← Home</a>
+
+    <div class="container">
+        <div class="header">
+            <h1>🐴 BUBBA CLICKER 🐴</h1>
+            <p>A Noir Terminal Clicker Adventure</p>
+            <p>From Humble Beginnings to Dark Consequences</p>
+        </div>
+
+        <!-- Main Game Demo -->
+        <div class="demo-section">
+            <h2>► MAIN GAME INTERFACE</h2>
+            <div class="game-canvas">
+                <div class="game-display" id="gameDisplay">
+                    <div class="bubba-ascii" id="bubbaAscii">
+🐴
+BUBBA
+                    </div>
+                    <div class="stats-display" id="statsDisplay">
+                        <div class="stat-box">
+                            <div class="stat-label">CLICKS</div>
+                            <div class="stat-value" id="clickCount">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">FAME</div>
+                            <div class="stat-value" id="fameCount">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">DARKNESS</div>
+                            <div class="stat-value" id="darknessCount">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">PHASE</div>
+                            <div class="stat-value" id="phaseDisplay">1</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="clicker-button" id="clickButton">CLICK BUBBA</button>
+                    <button class="control-btn" id="autoClickToggle">AUTO CLICK: OFF</button>
+                    <button class="control-btn" id="resetButton">RESET GAME</button>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>💡 How to Play:</strong> Click the BUBBA button to earn clicks and fame. Purchase upgrades to increase your earning potential. Progress through different game phases as your fame grows. Watch out for mysterious encounters that might change everything...
+            </div>
+        </div>
+
+        <!-- Upgrades Section -->
+        <div class="demo-section">
+            <h2>► UPGRADE SYSTEM</h2>
+            <div class="info-box">
+                <strong>📈 Upgrades:</strong> Invest your clicks into various upgrades to multiply your earnings and unlock new features. Each upgrade has a cost and provides permanent benefits.
+            </div>
+            <div id="upgradeContainer" class="upgrade-list">
+                <!-- Upgrades will be populated here -->
+            </div>
+        </div>
+
+        <!-- Phase System -->
+        <div class="demo-section">
+            <h2>► GAME PHASES</h2>
+            <div class="info-box">
+                <strong>🎬 Phases:</strong> Bubba's journey unfolds through multiple phases, each with unique mechanics, upgrades, and story elements.
+            </div>
+            <div id="phaseIndicators" style="text-align: center; margin: 20px 0;">
+                <div class="phase-indicator active" data-phase="1">PHASE 1: HUMBLE BEGINNINGS</div>
+                <div class="phase-indicator" data-phase="2">PHASE 2: RISING STAR</div>
+                <div class="phase-indicator" data-phase="3">PHASE 3: PEAK FAME</div>
+                <div class="phase-indicator" data-phase="4">PHASE 4: DARKNESS DESCENDS</div>
+            </div>
+            <div class="terminal-output" id="phaseDescription">
+                <div class="terminal-line"><span class="terminal-prompt">&gt;</span> PHASE 1: HUMBLE BEGINNINGS</div>
+                <div class="terminal-line">Bubba starts as an unknown horse. Build your initial following through hard work and dedication.</div>
+            </div>
+        </div>
+
+        <!-- Mysterious Encounters -->
+        <div class="demo-section">
+            <h2>► MYSTERIOUS ENCOUNTERS</h2>
+            <div class="info-box">
+                <strong>🔮 Encounters:</strong> Strange events occur as Bubba's fame grows. These encounters can have profound effects on your game state and story progression.
+            </div>
+            <div class="controls">
+                <button class="control-btn" id="triggerEncounter">TRIGGER ENCOUNTER</button>
+            </div>
+            <div class="terminal-output" id="encounterLog">
+                <div class="terminal-line"><span class="terminal-prompt">&gt;</span> Encounter log ready...</div>
+            </div>
+        </div>
+
+        <!-- Stats Tracking -->
+        <div class="demo-section">
+            <h2>► DETAILED STATISTICS</h2>
+            <div class="grid-2">
+                <div>
+                    <h3 style="color: #0f0; margin-bottom: 10px;">Performance Metrics</h3>
+                    <div class="terminal-output" id="performanceStats">
+                        <div class="terminal-line"><span class="terminal-prompt">&gt;</span> Total Clicks: <span id="totalClicks">0</span></div>
+                        <div class="terminal-line"><span class="terminal-prompt">&gt;</span> Current Fame: <span id="currentFame">0</span></div>
+                        <div class="terminal-line"><span class="terminal-prompt">&gt;</span> Darkness Level: <span id="currentDarkness">0</span></div>
+                        <div class="terminal-line"><span class="terminal-prompt">&gt;</span> CPS (Clicks/Sec): <span id="cpsDisplay">0</span></div>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="color: #0f0; margin-bottom: 10px;">Game State</h3>
+                    <div class="terminal-output" id="gameState">
+                        <div class="terminal-line"><span class="terminal-prompt">&gt;</span> Current Phase: <span id="statePhase">1</span></div>
+                        <div class="terminal-line"><span class="terminal-prompt">&gt;</span> Upgrades Purchased: <span id="upgradePurchased">0</span></div>
+                        <div class="terminal-line"><span class="terminal-prompt">&gt;</span> Encounters Triggered: <span id="encountersTriggered">0</span></div>
+                        <div class="terminal-line"><span class="terminal-prompt">&gt;</span> Play Time: <span id="playTime">0s</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Controls Info -->
+        <div class="demo-section">
+            <h2>► MOBILE TOUCH CONTROLS</h2>
+            <div class="tutorial-section">
+                <h3>📱 Touch Controls Available</h3>
+                <ul>
+                    <li><strong>Tap</strong> - Click Bubba (same as mouse click)</li>
+                    <li><strong>Double Tap</strong> - Trigger encounter (if available)</li>
+                    <li><strong>Long Press</strong> - Toggle auto-click mode</li>
+                    <li><strong>Swipe</strong> - Scroll through upgrades</li>
+                </ul>
+                <p style="margin-top: 15px; color: #0f0;"><strong>✓ Fully responsive design for all screen sizes</strong></p>
+            </div>
+        </div>
+
+        <!-- Humor & Absurdism -->
+        <div class="demo-section">
+            <h2>► ABSURDIST HUMOR ELEMENTS</h2>
+            <div class="terminal-output" id="humorLog">
+                <div class="terminal-line"><span class="terminal-prompt">&gt;</span> [SYSTEM] Bubba's journey is filled with unexpected twists...</div>
+                <div class="terminal-line"><span class="terminal-prompt">&gt;</span> [EVENT] A mysterious figure appears in the shadows...</div>
+                <div class="terminal-line"><span class="terminal-prompt">&gt;</span> [WARNING] The darkness grows stronger with each click...</div>
+            </div>
+            <button class="control-btn" id="generateHumor" style="margin-top: 15px;">GENERATE RANDOM EVENT</button>
+        </div>
+
+        <!-- Documentation -->
+        <div class="demo-section">
+            <h2>► FEATURE DOCUMENTATION</h2>
+            <div class="tutorial-section">
+                <h3>🎮 Core Features</h3>
+                <ul>
+                    <li><strong>Modular Architecture</strong> - Easily extensible game system</li>
+                    <li><strong>Multi-Phase Progression</strong> - 4 distinct game phases with unique mechanics</li>
+                    <li><strong>Dynamic Upgrade System</strong> - Purchase upgrades that stack and multiply</li>
+                    <li><strong>Stat Tracking</strong> - Comprehensive metrics and analytics</li>
+                    <li><strong>Mysterious Encounters</strong> - Random events with story implications</li>
+                    <li><strong>Absurdist Narrative</strong> - Dark humor and unexpected plot twists</li>
+                    <li><strong>CRT Terminal Aesthetic</strong> - Noir-inspired visual design</li>
+                    <li><strong>Mobile Optimized</strong> - Touch controls and responsive layout</li>
+                </ul>
+            </div>
+
+            <div class="tutorial-section" style="margin-top: 20px;">
+                <h3>⚙️ Technical Details</h3>
+                <p><strong>Initialization:</strong></p>
+                <div class="code-block">
+const game = new BubbaClicker();<br>
+game.init();<br>
+game.start();
+                </div>
+
+                <p style="margin-top: 15px;"><strong>Methods:</strong></p>
+                <div class="code-block">
+game.click() - Perform a click action<br>
+game.purchaseUpgrade(id) - Buy an upgrade<br>
+game.triggerEncounter() - Trigger random event<br>
+game.getStats() - Get current statistics<br>
+game.reset() - Reset game to initial state<br>
+game.saveGame() - Save to localStorage<br>
+game.loadGame() - Load from localStorage
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Controls -->
+        <div class="demo-section">
+            <h2>► ADVANCED CONTROLS</h2>
+            <div class="controls">
+                <button class="control-btn" id="saveGame">SAVE GAME</button>
+                <button class="control-btn" id="loadGame">LOAD GAME</button>
+                <button class="control-btn" id="exportStats">EXPORT STATS</button>
+                <button class="control-btn" id="toggleDebug">DEBUG MODE</button>
+            </div>
+            <div class="terminal-output" id="debugOutput" style="display: none; margin-top: 15px;">
+                <div class="terminal-line"><span class="terminal-prompt">&gt;</span> Debug mode activated...</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🐴 BUBBA CLICKER - A Journey Through Fame and Darkness 🐴</p>
+            <p>Built with JavaScript | Noir Terminal Aesthetic | CRT Effects Enabled</p>
+            <p style="margin-top: 10px; color: #088;">For best experience, use modern browser with JavaScript enabled</p>
+        </div>
+    </div>
+
+    <script src="bubba_clicker.js"></script>
+    <script>
+        // Initialize game
+        let game = null;
+        let autoClickInterval = null;
+        let debugMode = false;
+        let playStartTime = Date.now();
+
+        // Initialize the game
+        function initGame() {
+            if (typeof BubbaClicker === 'undefined') {
+                console.error('BubbaClicker not loaded');
+                document.getElementById('gameDisplay').innerHTML = '<div style="color: #f00; text-shadow: 0 0 10px #f00;">ERROR: bubba_clicker.js not found</div>';
+                return;
+            }
+
+            game = new BubbaClicker();
+            game.init();
+            updateUI();
+        }
+
+        // Update UI with current game state
+        function updateUI() {
+            if (!game) return;
+
+            const stats = game.getStats();
+            
+            document.getElementById('clickCount').textContent = stats.clicks;
+            document.getElementById('fameCount').textContent = stats.fame;
+            document.getElementById('darknessCount').textContent = stats.darkness;
+            document.getElementById('phaseDisplay').textContent = stats.phase;
+
+            document.getElementById('totalClicks').textContent = stats.clicks;
+            document.getElementById('currentFame').textContent = stats.fame;
+            document.getElementById('currentDarkness').textContent = stats.darkness;
+            document.getElementById('statePhase').textContent = stats.phase;
+            document.getElementById('upgradePurchased').textContent = stats.upgradePurchased || 0;
+            document.getElementById('encountersTriggered').textContent = stats.encountersTriggered || 0;
+
+            const playTime = Math.floor((Date.now() - playStartTime) / 1000);
+            document.getElementById('playTime').textContent = playTime + 's';
+
+            // Update CPS
+            if (game.lastClickTime && game.clickCount > 1) {
+                const timeDiff = (Date.now() - game.lastClickTime) / 1000;
+                const cps = timeDiff > 0 ? (1 / timeDiff).toFixed(2) : 0;
+                document.getElementById('cpsDisplay').textContent = cps;
+            }
+
+            updateUpgrades();
+            updatePhaseIndicators(stats.phase);
+        }
+
+        // Update upgrade display
+        function updateUpgrades() {
+            if (!game || !game.upgrades) return;
+
+            const container = document.getElementById('upgradeContainer');
+            container.innerHTML = '';
+
+            game.upgrades.forEach(upgrade => {
+                const div = document.createElement('div');
+                div.className = 'upgrade-item' + (upgrade.purchased ? ' purchased' : '');
+                div.innerHTML = `
+                    <div class="upgrade-name">${upgrade.name}</div>
+                    <div class="upgrade-cost">Cost: ${upgrade.cost} clicks</div>
+                    <div class="upgrade-desc">${upgrade.description}</div>
+                    <div style="margin-top: 10px; color: #0a0; font-size: 0.85em;">
+                        ${upgrade.purchased ? '✓ PURCHASED' : 'Available'}
+                    </div>
+                `;
+                div.addEventListener('click', () => {
+                    if (!upgrade.purchased && game.clickCount >= upgrade.cost) {
+                        game.purchaseUpgrade(upgrade.id);
+                        updateUI();
+                        showNotification(`Purchased: ${upgrade.name}`);
+                    }
+                });
+                container.appendChild(div);
+            });
+        }
+
+        // Update phase indicators
+        function updatePhaseIndicators(currentPhase) {
+            document.querySelectorAll('.phase-indicator').forEach(el => {
+                const phase = parseInt(el.dataset.phase);
+                el.classList.toggle('active', phase === currentPhase);
+            });
+
+            const phaseNames = [
+                'PHASE 1: HUMBLE BEGINNINGS',
+                'PHASE 2: RISING STAR',
+                'PHASE 3: PEAK FAME',
+                'PHASE 4: DARKNESS DESCENDS'
+            ];
+
+            const phaseDescriptions = [
+                'Bubba starts as an unknown horse. Build your initial following through hard work and dedication.',
+                'Bubba gains recognition! Unlock new upgrades and features as your fame grows.',
+                'Bubba reaches peak fame! But something dark stirs beneath the surface...',
+                'The darkness consumes all. Bubba\'s fate hangs in the balance. What have we created?'
+            ];
+
+            document.getElementById('phaseDescription').innerHTML = `
+                <div class="terminal-line"><span class="terminal-prompt">&gt;</span> ${phaseNames[currentPhase - 1]}</div>
+                <div class="terminal-line">${phaseDescriptions[currentPhase - 1]}</div>
+            `;
+        }
+
+        // Show notification
+        function showNotification(message) {
+            const div = document.createElement('div');
+            div.className = 'achievement-popup';
+            div.textContent = '★ ' + message + ' ★';
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 3000);
+        }
+
+        // Event Listeners
+        document.getElementById('clickButton').addEventListener('click', () => {
+            if (game) {
+                game.click();
+                updateUI();
+                createFloatingText('+1 CLICK');
+            }
+        });
+
+        document.getElementById('autoClickToggle').addEventListener('click', function() {
+            if (autoClickInterval) {
+                clearInterval(autoClickInterval);
+                autoClickInterval = null;
+                this.textContent = 'AUTO CLICK: OFF';
+                this.classList.remove('active');
+            } else {
+                autoClickInterval = setInterval(() => {
+                    if (game) {
+                        game.click();
+                        updateUI();
+                    }
+                }, 100);
+                this.textContent = 'AUTO CLICK: ON';
+                this.classList.add('active');
+            }
+        });
+
+        document.getElementById('resetButton').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset the game?')) {
+                game.reset();
+                playStartTime = Date.now();
+                updateUI();
+                showNotification('GAME RESET');
+            }
+        });
+
+        document.getElementById('triggerEncounter').addEventListener('click', () => {
+            if (game) {
+                const encounter = game.triggerEncounter();
+                const log = document.getElementById('encounterLog');
+                const line = document.createElement('div');
+                line.className = 'terminal-line';
+                line.innerHTML = `<span class="terminal-prompt">&gt;</span> [ENCOUNTER] ${encounter.message}`;
+                log.appendChild(line);
+                log.scrollTop = log.scrollHeight;
+                updateUI();
+                showNotification(encounter.title);
+            }
+        });
+
+        document.getElementById('generateHumor').addEventListener('click', () => {
+            const humors = [
+                'Bubba questions the meaning of fame...',
+                'A mysterious voice whispers: "More clicks... always more..."',
+                'Bubba realizes he\'s just a horse in a clicker game',
+                'The darkness grows stronger with each passing moment',
+                'Bubba wonders if the upgrades are actually helping',
+                'A strange feeling of inevitability washes over everything',
+                'The line between Bubba and the clicks blurs...',
+                'Bubba\'s reflection in the mirror looks different today'
+            ];
+            
+            const humor = humors[Math.floor(Math.random() * humors.length)];
+            const log = document.getElementById('humorLog');
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.innerHTML = `<span class="terminal-prompt">&gt;</span> [EVENT] ${humor}`;
+            log.appendChild(line);
+            log.scrollTop = log.scrollHeight;
+        });
+
+        document.getElementById('saveGame').addEventListener('click', () => {
+            if (game) {
+                game.saveGame();
+                showNotification('GAME SAVED');
+            }
+        });
+
+        document.getElementById('loadGame').addEventListener('click', () => {
+            if (game) {
+                game.loadGame();
+                updateUI();
+                showNotification('GAME LOADED');
+            }
+        });
+
+        document.getElementById('exportStats').addEventListener('click', () => {
+            if (game) {
+                const stats = game.getStats();
+                const json = JSON.stringify(stats, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'bubba_stats.json';
+                a.click();
+                showNotification('STATS EXPORTED');
+            }
+        });
+
+        document.getElementById('toggleDebug').addEventListener('click', function() {
+            debugMode = !debugMode;
+            const debugOutput = document.getElementById('debugOutput');
+            debugOutput.style.display = debugMode ? 'block' : 'none';
+            this.classList.toggle('active');
+            
+            if (debugMode && game) {
+                const stats = game.getStats();
+                debugOutput.innerHTML = `
+                    <div class="terminal-line"><span class="terminal-prompt">&gt;</span> DEBUG MODE ACTIVE</div>
+                    <div class="terminal-line"><span class="terminal-prompt">&gt;</span> Game Object: ${typeof game}</div>

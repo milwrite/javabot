@@ -142,5 +142,13 @@
   "ryan-pacman": {
     "icon": "🎮",
     "description": "Pac-Man style game where Ryan from Ryan's Toy"
+  },
+  "ryan-pacman-improved": {
+    "icon": "🌐",
+    "description": "Ryan Pacman Improved"
+  },
+  "bubba_clicker": {
+    "icon": "🎮",
+    "description": "Modular clicker game chronicling Bubba the Horse's"
   }
 }
