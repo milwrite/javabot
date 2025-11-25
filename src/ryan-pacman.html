@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ryan-Pacman Enhanced</title>
+    <title>Ryan-Pacman Enhanced v2</title>
     <style>
         * {
             margin: 0;
@@ -509,6 +509,8 @@
                     powerPellets.push(pos);
                 }
             });
+
+            console.log('Pellets initialized:', pellets.length, 'regular,', powerPellets.length, 'power');
         }
 
         function createParticles(x, y, color, count = 5) {
@@ -546,6 +548,7 @@
         }
 
         function startGame() {
+            console.log('=== STARTING GAME ===');
             gameRunning = true;
             gameOver = false;
             score = 0;
@@ -573,6 +576,7 @@
             });
 
             initializePellets();
+            console.log('Game state after init - lives:', lives, 'gameRunning:', gameRunning);
             startBtn.classList.add('hidden');
             restartBtn.classList.remove('hidden');
             controls.style.display = 'grid';
@@ -732,7 +736,9 @@
         }
 
         function checkLevelComplete() {
+            console.log('Checking level complete:', pellets.length, 'pellets,', powerPellets.length, 'power pellets');
             if (pellets.length === 0 && powerPellets.length === 0) {
+                console.log('Level complete!');
                 level++;
                 score += 500;
                 gameSpeed = Math.max(3, gameSpeed - 1);
