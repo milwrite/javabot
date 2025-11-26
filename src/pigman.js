@@ -37,28 +37,29 @@ const COLORS = {
     background: [15, 15, 30]
 };
 
-// Level layout (20x20 grid)
-// = wall, . pellet, o power pellet, P player start, G ghost start, space is empty
+// Level layout (20x20 grid) - Classic Pac-Man style maze
+// = wall, . pellet, o power pellet, P player start, G ghost start
+// All paths are fully connected with no dead ends
 const LEVEL_LAYOUT = [
     "====================",
-    "=........==........=",
+    "=o.......==.......o=",
     "=.==.===.==.===.==.=",
-    "=.==.===....===.==.=",
+    "=.==.===.==.===.==.=",
     "=..................=",
+    "=.==.=.====.=.==...=",
+    "=....=..==..=......=",
+    "=.==.==....==.==.=.=",
+    "=.==.==.GG.==.==.=.=",
+    "=......====........=",
+    "=.==.=......=.==.=.=",
     "=.==.=.====.=.==.=.=",
-    "=....=..==..=....=.=",
-    "====.===..===.=====",
-    "   =.=. GG .=.=    ",
-    "====...====...=====",
-    "====.=......=.=====",
-    "   =.=.==.==.=.=   ",
-    "====...====...=====",
-    "=....=...==...=....=",
-    "=.==.===....===.==.=",
-    "=..=.......P...=..=",
-    "==.=.=.====.=.=.===",
-    "=....=......=....=.=",
-    "=.======.==.======.=",
+    "=......====........=",
+    "=.==.=..==..=.==.=.=",
+    "=....=......=......=",
+    "=.==.===..P.===.==.=",
+    "=.==.=.====.=.==.=.=",
+    "=....=......=......=",
+    "=o.......==.......o=",
     "====================",
 ];
 
@@ -664,20 +665,94 @@ function loseLife() {
     gameState.lives--;
     updateScoreboard();
 
-    if (gameState.lives <= 0) {
-        gameOver();
-    } else {
-        // Reset player position
-        const pixelPos = gridToPixel(15, 15); // P position in layout
-        player.pos.x = pixelPos.x;
-        player.pos.y = pixelPos.y;
-        player.targetX = 15;
-        player.targetY = 15;
-        currentDir = k.vec2(0, 0);
-        nextDir = k.vec2(0, 0);
+    // Pause game during death animation
+    gameState.running = false;
 
-        setStatus(`Caught! ${gameState.lives} lives left!`);
+    // Show death animation
+    playDeathAnimation(() => {
+        if (gameState.lives <= 0) {
+            gameOver();
+        } else {
+            // Reset player position (find P in layout or use default)
+            const pixelPos = gridToPixel(10, 15);
+            player.pos.x = pixelPos.x;
+            player.pos.y = pixelPos.y;
+            player.targetX = 10;
+            player.targetY = 15;
+            player.text = "🐷"; // Restore pig emoji
+            currentDir = k.vec2(0, 0);
+            nextDir = k.vec2(0, 0);
+
+            setStatus(`💀 Caught! ${gameState.lives} lives left!`);
+
+            // Resume game after brief pause
+            k.wait(0.5, () => {
+                gameState.running = true;
+            });
+        }
+    });
+}
+
+/**
+ * Play death animation - screen flash, pig spins and fades
+ */
+function playDeathAnimation(onComplete) {
+    if (!player) {
+        onComplete();
+        return;
     }
+
+    // Change pig to death emoji
+    player.text = "💀";
+
+    // Create screen flash effect (red overlay)
+    const flash = k.add([
+        k.rect(CANVAS_WIDTH, CANVAS_HEIGHT),
+        k.pos(0, 0),
+        k.color(255, 0, 0),
+        k.opacity(0.6),
+        k.z(100),
+        "deathFlash"
+    ]);
+
+    // Create "CAUGHT!" text
+    const deathText = k.add([
+        k.text("CAUGHT!", { size: 32 }),
+        k.pos(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2),
+        k.anchor("center"),
+        k.color(255, 255, 255),
+        k.z(101),
+        "deathText"
+    ]);
+
+    // Animate pig spinning
+    let spinAngle = 0;
+    const spinInterval = k.onUpdate(() => {
+        if (player) {
+            spinAngle += 15;
+            player.angle = spinAngle;
+        }
+    });
+
+    // Flash and fade out sequence
+    k.wait(0.3, () => {
+        flash.opacity = 0.3;
+    });
+
+    k.wait(0.6, () => {
+        flash.opacity = 0.1;
+    });
+
+    // Clean up and complete
+    k.wait(1.0, () => {
+        spinInterval.cancel();
+        if (player) {
+            player.angle = 0;
+        }
+        k.destroy(flash);
+        k.destroy(deathText);
+        onComplete();
+    });
 }
 
 function checkLevelComplete() {
@@ -705,13 +780,69 @@ function advanceLevel() {
 
 function gameOver() {
     gameState.running = false;
-    setStatus(`GAME OVER! Final Score: ${gameState.score}`);
+
+    // Create game over overlay
+    const overlay = k.add([
+        k.rect(CANVAS_WIDTH, CANVAS_HEIGHT),
+        k.pos(0, 0),
+        k.color(0, 0, 0),
+        k.opacity(0.8),
+        k.z(200),
+        "gameOverOverlay"
+    ]);
+
+    // Game over text
+    k.add([
+        k.text("GAME OVER", { size: 36 }),
+        k.pos(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 40),
+        k.anchor("center"),
+        k.color(255, 0, 0),
+        k.z(201),
+        "gameOverText"
+    ]);
+
+    // Final score
+    k.add([
+        k.text(`Score: ${gameState.score}`, { size: 24 }),
+        k.pos(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10),
+        k.anchor("center"),
+        k.color(255, 215, 0),
+        k.z(201),
+        "gameOverText"
+    ]);
+
+    // Level reached
+    k.add([
+        k.text(`Level: ${gameState.level}`, { size: 20 }),
+        k.pos(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 45),
+        k.anchor("center"),
+        k.color(255, 255, 255),
+        k.z(201),
+        "gameOverText"
+    ]);
+
+    // Dead pig emoji
+    k.add([
+        k.text("💀🐷💀", { size: 40 }),
+        k.pos(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 90),
+        k.anchor("center"),
+        k.z(201),
+        "gameOverText"
+    ]);
+
+    setStatus(`💀 GAME OVER! Final Score: ${gameState.score}`);
     startBtn.classList.remove("hidden");
     restartBtn.classList.add("hidden");
 }
 
 function startGame() {
     console.log("=== STARTING GAME (Kaboom.js) ===");
+
+    // Clean up any game over elements
+    k.destroyAll("gameOverOverlay");
+    k.destroyAll("gameOverText");
+    k.destroyAll("deathFlash");
+    k.destroyAll("deathText");
 
     // Reset game state
     gameState.score = 0;
@@ -724,7 +855,7 @@ function startGame() {
     nextDir = k.vec2(0, 0);
 
     updateScoreboard();
-    setStatus(`Level ${gameState.level} - Collect all pellets!`);
+    setStatus(`🐷 Level ${gameState.level} - Collect all pellets!`);
     startBtn.classList.add("hidden");
     restartBtn.classList.remove("hidden");
 

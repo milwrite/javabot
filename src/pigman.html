@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pigman</title>
+    <title>Pigman (Kaboom.js)</title>
     <style>
         * {
             margin: 0;
@@ -74,29 +74,17 @@
             color: #ffd93d;
         }
 
-        #gameCanvas {
-            display: block;
-            background: #0f0f1e;
+        /* Kaboom.js canvas container */
+        #game-root {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        #game-root canvas {
             border: 3px solid #667ee6;
             border-radius: 10px;
-            margin: 0 auto 20px;
             max-width: 100%;
-            width: 500px;
-            height: 500px;
-        }
-
-        @media (max-width: 768px) {
-            #gameCanvas {
-                width: min(90vw, 400px);
-                height: min(90vw, 400px);
-            }
-        }
-
-        @media (max-width: 480px) {
-            #gameCanvas {
-                width: min(95vw, 350px);
-                height: min(95vw, 350px);
-            }
         }
 
         .controls {
@@ -132,24 +120,10 @@
             background: linear-gradient(135deg, #764ba2, #667ee6);
         }
 
-        .control-btn.up {
-            grid-column: 2;
-        }
-
-        .control-btn.left {
-            grid-column: 1;
-            grid-row: 2;
-        }
-
-        .control-btn.down {
-            grid-column: 2;
-            grid-row: 2;
-        }
-
-        .control-btn.right {
-            grid-column: 3;
-            grid-row: 2;
-        }
+        .control-btn.up { grid-column: 2; }
+        .control-btn.left { grid-column: 1; grid-row: 2; }
+        .control-btn.down { grid-column: 2; grid-row: 2; }
+        .control-btn.right { grid-column: 3; grid-row: 2; }
 
         .game-info {
             background: rgba(255, 255, 255, 0.1);
@@ -166,7 +140,7 @@
             margin-bottom: 10px;
         }
 
-        .start-btn, .restart-btn {
+        .action-btn {
             width: 100%;
             padding: 15px;
             background: linear-gradient(135deg, #ff6b6b, #ffd93d);
@@ -178,55 +152,19 @@
             font-weight: bold;
             transition: all 0.3s;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
         }
 
-        .start-btn:hover, .restart-btn:hover {
+        .action-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
         }
 
-        .start-btn:active, .restart-btn:active {
+        .action-btn:active {
             transform: translateY(0);
         }
 
-        .hidden {
-            display: none;
-        }
-
-        .game-over-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .game-over-content {
-            background: #1a1a2e;
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-            color: white;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            border: 2px solid #ffd93d;
-        }
-
-        .game-over-content h2 {
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            color: #ffd93d;
-        }
-
-        .game-over-content p {
-            font-size: 1.3em;
-            margin-bottom: 20px;
-            color: #fff;
-        }
+        .hidden { display: none; }
 
         .keyboard-hint {
             color: #aaa;
@@ -235,123 +173,59 @@
             margin-top: 15px;
         }
 
+        /* Responsive styles */
         @media (max-width: 768px) {
             body {
                 align-items: flex-start;
                 padding: 10px;
                 padding-top: 80px;
             }
-
-            .game-container {
-                padding: 15px;
-            }
-
-            .game-header h1 {
-                font-size: 2em;
-            }
-
-            .game-stats {
-                flex-direction: row;
-                gap: 10px;
-                padding: 12px;
-            }
-
-            .stat-value {
-                font-size: 1.5em;
-            }
-
+            .game-container { padding: 15px; }
+            .game-header h1 { font-size: 2em; }
+            .game-stats { gap: 10px; padding: 12px; }
+            .stat-value { font-size: 1.5em; }
             .control-btn {
                 padding: 15px;
                 font-size: 1.5em;
                 min-height: 60px;
                 min-width: 60px;
             }
-
-            .game-info {
-                font-size: 0.9em;
-                padding: 12px;
-            }
-
-            .start-btn, .restart-btn {
-                min-height: 50px;
-            }
+            .game-info { font-size: 0.9em; padding: 12px; }
+            .action-btn { min-height: 50px; }
         }
 
         @media (max-width: 480px) {
-            body {
-                padding: 8px;
-                padding-top: 70px;
-            }
-
-            .game-container {
-                padding: 12px;
-            }
-
-            .game-header h1 {
-                font-size: 1.5em;
-            }
-
-            .game-header p {
-                font-size: 0.85em;
-            }
-
-            .stat-label {
-                font-size: 0.75em;
-            }
-
-            .stat-value {
-                font-size: 1.3em;
-            }
-
+            body { padding: 8px; padding-top: 70px; }
+            .game-container { padding: 12px; }
+            .game-header h1 { font-size: 1.5em; }
+            .game-header p { font-size: 0.85em; }
+            .stat-label { font-size: 0.75em; }
+            .stat-value { font-size: 1.3em; }
             .control-btn {
                 padding: 12px;
                 font-size: 1.3em;
                 min-height: 55px;
                 min-width: 55px;
             }
-
-            .game-info {
-                font-size: 0.85em;
-                padding: 10px;
-            }
-
-            .game-info p {
-                margin-bottom: 5px;
-            }
-
-            .start-btn, .restart-btn {
-                font-size: 1.1em;
-                padding: 12px;
-            }
-
-            .game-over-content {
-                padding: 30px 20px;
-                margin: 20px;
-            }
-
-            .game-over-content h2 {
-                font-size: 2em;
-            }
-
-            .game-over-content p {
-                font-size: 1.1em;
-            }
-
-            .keyboard-hint {
-                font-size: 0.75em;
-            }
+            .game-info { font-size: 0.85em; padding: 10px; }
+            .game-info p { margin-bottom: 5px; }
+            .action-btn { font-size: 1.1em; padding: 12px; }
+            .keyboard-hint { font-size: 0.75em; }
         }
     </style>
 </head>
 <body>
+    <!-- Home link -->
     <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2);font-weight:bold;">← Home</a>
 
     <div class="game-container">
+        <!-- Game header -->
         <div class="game-header">
-            <h1>🐷 PIGMAN 🐷</h1>
+            <h1>PIGMAN</h1>
             <p style="color: #aaa; margin-top: 5px;">Help the pig escape the people!</p>
         </div>
 
+        <!-- Scoreboard -->
         <div class="game-stats">
             <div class="stat">
                 <div class="stat-label">SCORE</div>
@@ -367,15 +241,18 @@
             </div>
         </div>
 
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <!-- Kaboom.js renders here -->
+        <div id="game-root"></div>
 
-        <div class="controls" id="controls" style="display: grid;">
-            <button class="control-btn up">▲</button>
-            <button class="control-btn left">◄</button>
-            <button class="control-btn down">▼</button>
-            <button class="control-btn right">►</button>
+        <!-- Mobile controls -->
+        <div class="controls" id="controls">
+            <button class="control-btn up" id="btnUp">▲</button>
+            <button class="control-btn left" id="btnLeft">◄</button>
+            <button class="control-btn down" id="btnDown">▼</button>
+            <button class="control-btn right" id="btnRight">►</button>
         </div>
 
+        <!-- Instructions -->
         <div class="game-info">
             <h3>How to Play:</h3>
             <p>🐷 Collect all pellets to advance levels!</p>
@@ -385,629 +262,16 @@
             <p id="gameStatus" style="color: #ffd93d; margin-top: 10px; font-weight: bold;">Ready to play? Press START!</p>
         </div>
 
-        <button class="start-btn" id="startBtn">START GAME</button>
-        <button class="restart-btn hidden" id="restartBtn">RESTART GAME</button>
+        <!-- Action buttons -->
+        <button class="action-btn" id="startBtn">START GAME</button>
+        <button class="action-btn hidden" id="restartBtn">RESTART GAME</button>
 
         <div class="keyboard-hint">
-            💡 Use arrow keys or touch buttons to move
+            Use arrow keys or touch buttons to move
         </div>
     </div>
 
-
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const startBtn = document.getElementById('startBtn');
-        const restartBtn = document.getElementById('restartBtn');
-        const controls = document.getElementById('controls');
-        const scoreDisplay = document.getElementById('score');
-        const levelDisplay = document.getElementById('level');
-        const livesDisplay = document.getElementById('lives');
-        const gameStatus = document.getElementById('gameStatus');
-
-        // Game variables
-        let gameRunning = false;
-        let gameOver = false;
-        let score = 0;
-        let level = 1;
-        let lives = 3;
-        let gameSpeed = 12; // Higher = slower (movement every N frames)
-        let ghostSpeed = 14; // Ghosts slightly slower than player
-
-        // Grid setup
-        const gridSize = 20;
-        const cols = canvas.width / gridSize;
-        const rows = canvas.height / gridSize;
-
-        // Maze walls (1 = wall, 0 = path)
-        const maze = [
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
-            [1,0,1,1,0,1,1,1,0,1,1,0,1,1,1,0,1,1,0,1],
-            [1,0,1,1,0,1,1,1,0,0,0,0,1,1,1,0,1,1,0,1],
-            [1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
-            [1,0,1,1,0,1,0,1,1,1,1,1,1,0,1,0,1,1,0,1],
-            [1,0,0,0,0,1,0,0,0,1,1,0,0,0,1,0,0,0,0,1],
-            [1,1,1,1,0,1,1,1,0,0,0,0,1,1,1,0,1,1,1,1],
-            [0,0,0,1,0,1,0,0,0,1,1,0,0,0,1,0,1,0,0,0],
-            [1,1,1,1,0,0,0,1,1,1,1,1,1,0,0,0,1,1,1,1],
-            [1,1,1,1,0,1,0,0,0,0,0,0,0,0,1,0,1,1,1,1],
-            [0,0,0,1,0,1,0,1,1,0,0,1,1,0,1,0,1,0,0,0],
-            [1,1,1,1,0,0,0,1,1,1,1,1,1,0,0,0,1,1,1,1],
-            [1,0,0,0,0,1,0,0,0,1,1,0,0,0,1,0,0,0,0,1],
-            [1,0,1,1,0,1,1,1,0,0,0,0,1,1,1,0,1,1,0,1],
-            [1,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,1,0,0,1],
-            [1,1,0,1,0,1,0,1,1,1,1,1,1,0,1,0,1,0,1,1],
-            [1,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1],
-            [1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-        ];
-
-        // Particles for visual effects
-        let particles = [];
-
-        // Ryan (Pac-Man)
-        const ryan = {
-            x: 1,
-            y: 1,
-            vx: 0,
-            vy: 0,
-            nextVx: 0,
-            nextVy: 0,
-            mouthOpen: 0,
-            invincible: false,
-            invincibleTime: 0,
-            direction: 0,
-            frameCounter: 0
-        };
-
-        // Ghosts with unique AI behaviors - different skin tone emojis
-        // Blinky: Direct chase - always follows player
-        // Pinky: Ambush - targets 4 tiles ahead of player
-        // Inky: Unpredictable - alternates between chase and random
-        // Clyde: Shy - runs away when close, chases when far
-        const ghosts = [
-            { x: 9, y: 9, vx: 0, vy: 0, emoji: '👨🏻', name: 'Blinky', behavior: 'chase', frightened: false, frameCounter: 0, scatterTimer: 0 },
-            { x: 10, y: 9, vx: 0, vy: 0, emoji: '👨🏼', name: 'Pinky', behavior: 'ambush', frightened: false, frameCounter: 0, scatterTimer: 0 },
-            { x: 9, y: 10, vx: 0, vy: 0, emoji: '👨🏽', name: 'Inky', behavior: 'unpredictable', frightened: false, frameCounter: 0, scatterTimer: 0 },
-            { x: 10, y: 10, vx: 0, vy: 0, emoji: '👨🏿', name: 'Clyde', behavior: 'shy', frightened: false, frameCounter: 0, scatterTimer: 0 }
-        ];
-
-        // Pellets
-        let pellets = [];
-        let powerPellets = [];
-
-        function initializePellets() {
-            pellets = [];
-            powerPellets = [];
-
-            // Place pellets in all open spaces
-            for (let j = 0; j < rows; j++) {
-                for (let i = 0; i < cols; i++) {
-                    if (maze[j][i] === 0) {
-                        // Don't place regular pellets where power pellets will go
-                        if (!((i === 1 && j === 1) || (i === 18 && j === 1) || (i === 1 && j === 18) || (i === 18 && j === 18))) {
-                            pellets.push({ x: i, y: j });
-                        }
-                    }
-                }
-            }
-
-            // Add power pellets at corners
-            const powerPositions = [
-                { x: 1, y: 1 },
-                { x: 18, y: 1 },
-                { x: 1, y: 18 },
-                { x: 18, y: 18 }
-            ];
-
-            powerPositions.forEach(pos => {
-                if (maze[pos.y][pos.x] === 0) {
-                    powerPellets.push(pos);
-                }
-            });
-
-            console.log('Pellets initialized:', pellets.length, 'regular,', powerPellets.length, 'power');
-        }
-
-        function createParticles(x, y, color, count = 5) {
-            for (let i = 0; i < count; i++) {
-                particles.push({
-                    x: (x + 0.5) * gridSize,
-                    y: (y + 0.5) * gridSize,
-                    vx: (Math.random() - 0.5) * 4,
-                    vy: (Math.random() - 0.5) * 4,
-                    life: 30,
-                    color: color
-                });
-            }
-        }
-
-        function updateParticles() {
-            particles.forEach(p => {
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life--;
-                p.vy += 0.1; // gravity
-            });
-            particles = particles.filter(p => p.life > 0);
-        }
-
-        function drawParticles() {
-            particles.forEach(p => {
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = p.life / 30;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-                ctx.fill();
-            });
-            ctx.globalAlpha = 1;
-        }
-
-        function startGame() {
-            console.log('=== STARTING GAME ===');
-            gameRunning = true;
-            gameOver = false;
-            score = 0;
-            level = 1;
-            lives = 3;
-            gameSpeed = 12; // Slower base speed
-            ghostSpeed = 14; // Ghosts slightly slower than player
-            ryan.x = 1;
-            ryan.y = 1;
-            ryan.vx = 0;
-            ryan.vy = 0;
-            ryan.nextVx = 0;
-            ryan.nextVy = 0;
-            ryan.invincible = false;
-            ryan.invincibleTime = 0;
-            ryan.frameCounter = 0;
-            particles = [];
-
-            ghosts.forEach((g, i) => {
-                g.x = [9, 10, 9, 10][i];
-                g.y = [9, 9, 10, 10][i];
-                g.vx = 0;
-                g.vy = 0;
-                g.frightened = false;
-                g.frameCounter = 0;
-                g.scatterTimer = 0;
-            });
-
-            initializePellets();
-            console.log('Game state after init - lives:', lives, 'gameRunning:', gameRunning);
-            startBtn.classList.add('hidden');
-            restartBtn.classList.remove('hidden');
-            gameStatus.textContent = `🎮 Level ${level} - Collect all pellets!`;
-            gameLoop();
-        }
-
-        function updateRyan() {
-            ryan.frameCounter++;
-            if (ryan.frameCounter % gameSpeed !== 0) return;
-
-            // Try to change direction if requested
-            const nextX = ryan.x + ryan.nextVx;
-            const nextY = ryan.y + ryan.nextVy;
-
-            if (nextX >= 0 && nextX < cols && nextY >= 0 && nextY < rows && maze[nextY][nextX] === 0) {
-                ryan.vx = ryan.nextVx;
-                ryan.vy = ryan.nextVy;
-            }
-
-            // Continue current direction
-            const continueX = ryan.x + ryan.vx;
-            const continueY = ryan.y + ryan.vy;
-
-            if (continueX >= 0 && continueX < cols && continueY >= 0 && continueY < rows && maze[continueY][continueX] === 0) {
-                ryan.x = continueX;
-                ryan.y = continueY;
-            }
-
-            // Update mouth animation
-            ryan.mouthOpen = (ryan.mouthOpen + 0.15) % (Math.PI * 2);
-
-            // Update direction for drawing
-            if (ryan.vx === 1) ryan.direction = 0;
-            else if (ryan.vx === -1) ryan.direction = Math.PI;
-            else if (ryan.vy === 1) ryan.direction = Math.PI / 2;
-            else if (ryan.vy === -1) ryan.direction = 3 * Math.PI / 2;
-
-            // Check pellet collision
-            pellets = pellets.filter(p => {
-                if (p.x === ryan.x && p.y === ryan.y) {
-                    score += 10;
-                    createParticles(p.x, p.y, '#FFB6C1', 3);
-                    return false;
-                }
-                return true;
-            });
-
-            // Check power pellet collision
-            powerPellets = powerPellets.filter(p => {
-                if (p.x === ryan.x && p.y === ryan.y) {
-                    score += 50;
-                    ryan.invincible = true;
-                    ryan.invincibleTime = 200;
-                    createParticles(p.x, p.y, '#FFD700', 15);
-                    ghosts.forEach(g => g.frightened = true);
-                    gameStatus.textContent = '⭐ POWER MODE! Chase the ghosts!';
-                    return false;
-                }
-                return true;
-            });
-
-            if (ryan.invincible) {
-                ryan.invincibleTime--;
-                if (ryan.invincibleTime <= 0) {
-                    ryan.invincible = false;
-                    ghosts.forEach(g => g.frightened = false);
-                    gameStatus.textContent = '🎮 Keep collecting pellets!';
-                }
-            }
-        }
-
-        function getDistance(x1, y1, x2, y2) {
-            return Math.abs(x1 - x2) + Math.abs(y1 - y2);
-        }
-
-        // Get ALL valid directions a ghost can move to
-        function getAllDirections(ghost) {
-            const directions = [];
-            if (ghost.x > 0 && maze[ghost.y][ghost.x - 1] === 0) {
-                directions.push({ vx: -1, vy: 0, x: ghost.x - 1, y: ghost.y });
-            }
-            if (ghost.x < cols - 1 && maze[ghost.y][ghost.x + 1] === 0) {
-                directions.push({ vx: 1, vy: 0, x: ghost.x + 1, y: ghost.y });
-            }
-            if (ghost.y > 0 && maze[ghost.y - 1][ghost.x] === 0) {
-                directions.push({ vx: 0, vy: -1, x: ghost.x, y: ghost.y - 1 });
-            }
-            if (ghost.y < rows - 1 && maze[ghost.y + 1][ghost.x] === 0) {
-                directions.push({ vx: 0, vy: 1, x: ghost.x, y: ghost.y + 1 });
-            }
-            return directions;
-        }
-
-        function updateGhosts() {
-            ghosts.forEach((ghost, index) => {
-                ghost.frameCounter++;
-                const currentGhostSpeed = Math.max(8, ghostSpeed - (level - 1));
-                if (ghost.frameCounter % currentGhostSpeed !== 0) return;
-
-                // Get all possible directions
-                let directions = getAllDirections(ghost);
-                if (directions.length === 0) return;
-
-                // Filter out reverse direction if we have other options
-                const nonReverse = directions.filter(d =>
-                    !(d.vx === -ghost.vx && d.vy === -ghost.vy && (ghost.vx !== 0 || ghost.vy !== 0))
-                );
-                if (nonReverse.length > 0) {
-                    directions = nonReverse;
-                }
-
-                // Determine target based on ghost behavior
-                let targetX = ryan.x;
-                let targetY = ryan.y;
-
-                if (ghost.frightened) {
-                    // Run away - target opposite corner from Ryan
-                    targetX = ryan.x < 10 ? 18 : 1;
-                    targetY = ryan.y < 10 ? 18 : 1;
-                } else {
-                    // Unique behaviors
-                    switch (ghost.behavior) {
-                        case 'chase': // Blinky - direct chase
-                            targetX = ryan.x;
-                            targetY = ryan.y;
-                            break;
-
-                        case 'ambush': // Pinky - target ahead of player
-                            targetX = Math.max(0, Math.min(cols - 1, ryan.x + ryan.vx * 4));
-                            targetY = Math.max(0, Math.min(rows - 1, ryan.y + ryan.vy * 4));
-                            break;
-
-                        case 'unpredictable': // Inky - mix of chase and wander
-                            ghost.scatterTimer = (ghost.scatterTimer || 0) + 1;
-                            if (ghost.scatterTimer % 100 < 50) {
-                                targetX = ryan.x;
-                                targetY = ryan.y;
-                            } else {
-                                // Wander to corners
-                                const corners = [[1,1], [18,1], [1,18], [18,18]];
-                                const corner = corners[Math.floor(ghost.scatterTimer / 50) % 4];
-                                targetX = corner[0];
-                                targetY = corner[1];
-                            }
-                            break;
-
-                        case 'shy': // Clyde - runs when close
-                            const dist = getDistance(ghost.x, ghost.y, ryan.x, ryan.y);
-                            if (dist < 6) {
-                                targetX = 1;
-                                targetY = 18;
-                            } else {
-                                targetX = ryan.x;
-                                targetY = ryan.y;
-                            }
-                            break;
-                    }
-                }
-
-                // Sort directions by distance to target
-                directions.sort((a, b) => {
-                    const distA = getDistance(a.x, a.y, targetX, targetY);
-                    const distB = getDistance(b.x, b.y, targetX, targetY);
-                    return ghost.frightened ? distB - distA : distA - distB;
-                });
-
-                // Pick best direction (with small random chance for variety)
-                const choice = (Math.random() < 0.15 && directions.length > 1) ? 1 : 0;
-                ghost.vx = directions[choice].vx;
-                ghost.vy = directions[choice].vy;
-
-                // Move ghost
-                ghost.x += ghost.vx;
-                ghost.y += ghost.vy;
-            });
-        }
-
-        function checkCollisions() {
-            ghosts.forEach(ghost => {
-                if (ghost.x === ryan.x && ghost.y === ryan.y) {
-                    if (ryan.invincible && ghost.frightened) {
-                        // Eat the ghost
-                        score += 200;
-                        createParticles(ghost.x, ghost.y, '#FFD700', 10);
-                        ghost.x = [9, 10, 9, 10][ghosts.indexOf(ghost)];
-                        ghost.y = [9, 9, 10, 10][ghosts.indexOf(ghost)];
-                        ghost.frightened = false;
-                        gameStatus.textContent = '🎉 Ghost eaten! +200 points!';
-                    } else if (!ryan.invincible && !ghost.frightened) {
-                        // Ghost caught the pig
-                        lives--;
-                        createParticles(ryan.x, ryan.y, '#FF69B4', 15);
-                        if (lives <= 0) {
-                            endGame();
-                        } else {
-                            ryan.x = 1;
-                            ryan.y = 1;
-                            ryan.vx = 0;
-                            ryan.vy = 0;
-                            gameStatus.textContent = `💔 Caught! ${lives} lives left!`;
-                        }
-                    }
-                }
-            });
-        }
-
-        function checkLevelComplete() {
-            console.log('Checking level complete:', pellets.length, 'pellets,', powerPellets.length, 'power pellets');
-            if (pellets.length === 0 && powerPellets.length === 0) {
-                console.log('Level complete!');
-                level++;
-                score += 500 * level; // More points for higher levels
-
-                // Gradually speed up the game (lower = faster)
-                gameSpeed = Math.max(8, gameSpeed - 1);
-                ghostSpeed = Math.max(6, ghostSpeed - 1);
-
-                // Reset positions
-                ryan.x = 1;
-                ryan.y = 1;
-                ryan.vx = 0;
-                ryan.vy = 0;
-                ryan.invincible = false;
-                ryan.invincibleTime = 0;
-
-                ghosts.forEach((g, i) => {
-                    g.x = [9, 10, 9, 10][i];
-                    g.y = [9, 9, 10, 10][i];
-                    g.vx = 0;
-                    g.vy = 0;
-                    g.frightened = false;
-                    g.scatterTimer = 0;
-                });
-
-                initializePellets();
-                createParticles(10, 10, '#FFD700', 30);
-
-                // Level-specific messages
-                const levelMessages = [
-                    `🎉 Level ${level}! Ghosts getting smarter!`,
-                    `🔥 Level ${level}! Watch out for Blinky!`,
-                    `⚡ Level ${level}! They're speeding up!`,
-                    `💀 Level ${level}! Good luck!`,
-                    `🏆 Level ${level}! You're a pro!`
-                ];
-                gameStatus.textContent = levelMessages[Math.min(level - 2, levelMessages.length - 1)];
-            }
-        }
-
-        function endGame() {
-            console.log('=== GAME OVER ===');
-            gameRunning = false;
-            gameOver = true;
-            gameStatus.textContent = `💀 GAME OVER! Score: ${score} Level: ${level}`;
-            startBtn.classList.remove('hidden');
-            restartBtn.classList.add('hidden');
-        }
-
-        function drawMaze() {
-            for (let j = 0; j < rows; j++) {
-                for (let i = 0; i < cols; i++) {
-                    if (maze[j][i] === 1) {
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.fillRect(i * gridSize, j * gridSize, gridSize, gridSize);
-                        ctx.strokeStyle = '#3b82f6';
-                        ctx.lineWidth = 1;
-                        ctx.strokeRect(i * gridSize, j * gridSize, gridSize, gridSize);
-                    }
-                }
-            }
-        }
-
-        function drawRyan() {
-            const centerX = (ryan.x + 0.5) * gridSize;
-            const centerY = (ryan.y + 0.5) * gridSize;
-
-            ctx.save();
-            ctx.font = `${gridSize * 0.9}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            // Invincibility glow
-            if (ryan.invincible) {
-                ctx.shadowColor = '#FFD700';
-                ctx.shadowBlur = 15;
-            }
-
-            ctx.fillText('🐷', centerX, centerY);
-            ctx.restore();
-        }
-
-        function drawGhosts() {
-            ghosts.forEach(ghost => {
-                const centerX = (ghost.x + 0.5) * gridSize;
-                const centerY = (ghost.y + 0.5) * gridSize;
-
-                ctx.save();
-                ctx.font = `${gridSize * 0.9}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-
-                if (ghost.frightened) {
-                    // Show scared emoji when frightened
-                    ctx.fillText('😱', centerX, centerY);
-                } else {
-                    // Show person emoji
-                    ctx.fillText(ghost.emoji, centerX, centerY);
-                }
-
-                ctx.restore();
-            });
-        }
-
-        function drawPellets() {
-            ctx.fillStyle = '#FFB6C1';
-            pellets.forEach(p => {
-                ctx.beginPath();
-                ctx.arc((p.x + 0.5) * gridSize, (p.y + 0.5) * gridSize, 2, 0, Math.PI * 2);
-                ctx.fill();
-            });
-
-            // Animated power pellets
-            const pulseSize = 4 + Math.sin(Date.now() / 200) * 2;
-            ctx.fillStyle = '#FFD700';
-            powerPellets.forEach(p => {
-                ctx.beginPath();
-                ctx.arc((p.x + 0.5) * gridSize, (p.y + 0.5) * gridSize, pulseSize, 0, Math.PI * 2);
-                ctx.fill();
-            });
-        }
-
-        function draw() {
-            ctx.fillStyle = '#0f0f1e';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            drawMaze();
-            drawPellets();
-            drawParticles();
-            drawGhosts();
-            drawRyan();
-        }
-
-        function gameLoop() {
-            if (!gameRunning) return;
-
-            updateRyan();
-            updateGhosts();
-            updateParticles();
-            checkCollisions();
-            checkLevelComplete();
-            draw();
-            updateUI();
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        function updateUI() {
-            scoreDisplay.textContent = score;
-            levelDisplay.textContent = level;
-            livesDisplay.textContent = lives;
-        }
-
-        // Keyboard controls
-        document.addEventListener('keydown', (e) => {
-            if (!gameRunning) return;
-            switch (e.key) {
-                case 'ArrowUp':
-                case 'w':
-                case 'W':
-                    ryan.nextVx = 0;
-                    ryan.nextVy = -1;
-                    e.preventDefault();
-                    break;
-                case 'ArrowDown':
-                case 's':
-                case 'S':
-                    ryan.nextVx = 0;
-                    ryan.nextVy = 1;
-                    e.preventDefault();
-                    break;
-                case 'ArrowLeft':
-                case 'a':
-                case 'A':
-                    ryan.nextVx = -1;
-                    ryan.nextVy = 0;
-                    e.preventDefault();
-                    break;
-                case 'ArrowRight':
-                case 'd':
-                case 'D':
-                    ryan.nextVx = 1;
-                    ryan.nextVy = 0;
-                    e.preventDefault();
-                    break;
-            }
-        });
-
-        // Touch controls with proper passive handling
-        document.querySelectorAll('.control-btn').forEach(btn => {
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                handleControlButton(btn);
-            }, { passive: false });
-
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                handleControlButton(btn);
-            });
-        });
-
-        function handleControlButton(btn) {
-            if (!gameRunning) return;
-            if (btn.classList.contains('up')) {
-                ryan.nextVx = 0;
-                ryan.nextVy = -1;
-            } else if (btn.classList.contains('down')) {
-                ryan.nextVx = 0;
-                ryan.nextVy = 1;
-            } else if (btn.classList.contains('left')) {
-                ryan.nextVx = -1;
-                ryan.nextVy = 0;
-            } else if (btn.classList.contains('right')) {
-                ryan.nextVx = 1;
-                ryan.nextVy = 0;
-            }
-        }
-
-        startBtn.addEventListener('click', startGame);
-        restartBtn.addEventListener('click', startGame);
-
-        // Initial draw (without pellets - just show empty maze)
-        draw();
-    </script>
+    <!-- Load game module -->
+    <script type="module" src="./pigman.js"></script>
 </body>
 </html>
