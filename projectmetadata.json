@@ -158,5 +158,9 @@
   "pigman-kaboom": {
     "icon": "🐷",
     "description": "Pigman rebuilt with Kaboom.js - grid movement, ghost AI, and power pellets"
+  },
+  "ai-agency-flier": {
+    "icon": "🌐",
+    "description": "Interactive touch-responsive flier exploring Gen-Z"
   }
 }

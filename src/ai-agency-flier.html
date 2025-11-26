@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agency Flier - Interactive Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0e27;
+            color: #00ff41;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* CRT Scanlines effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            z-index: 9998;
+        }
+
+        /* Glitch effect */
+        @keyframes glitch {
+            0% {
+                text-shadow: 2px 0 #ff006e, -2px 0 #00f5ff;
+            }
+            50% {
+                text-shadow: -2px 0 #ff006e, 2px 0 #00f5ff;
+            }
+            100% {
+                text-shadow: 2px 0 #ff006e, -2px 0 #00f5ff;
+            }
+        }
+
+        .glitch {
+            animation: glitch 0.3s infinite;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 3px solid #00ff41;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+            color: white;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.9);
+            font-style: italic;
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            text-decoration: none;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .home-link:hover {
+            background: rgba(102, 126, 234, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .demo-section {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.2), inset 0 0 20px rgba(102, 126, 234, 0.1);
+        }
+
+        .demo-section h2 {
+            color: #00ff41;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .misconception-card {
+            background: rgba(102, 126, 234, 0.1);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .misconception-card:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-left-color: #00ff41;
+            transform: translateX(10px);
+        }
+
+        .misconception-card.expanded {
+            background: rgba(102, 126, 234, 0.3);
+            border-left-color: #00ff41;
+        }
+
+        .card-title {
+            font-size: 1.2em;
+            color: #00ff41;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-toggle {
+            color: #667eea;
+            font-size: 1.5em;
+            transition: transform 0.3s ease;
+        }
+
+        .misconception-card.expanded .card-toggle {
+            transform: rotate(180deg);
+        }
+
+        .card-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            color: #b0b0b0;
+            margin-top: 0;
+        }
+
+        .misconception-card.expanded .card-content {
+            max-height: 500px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(102, 126, 234, 0.5);
+        }
+
+        .data-viz {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 5px 5px 0 0;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bar:hover {
+            background: linear-gradient(180deg, #00ff41 0%, #667eea 100%);
+            transform: scaleY(1.05);
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.9em;
+            color: #b0b0b0;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #00ff41;
+            font-weight: bold;
+        }
+
+        .philosophy-quote {
+            background: rgba(255, 0, 110, 0.1);
+            border-left: 4px solid #ff006e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-style: italic;
+            color: #ff99bb;
+        }
+
+        .interactive-toggle {
+            background: rgba(102, 126, 234, 0.2);
+            border: 2px solid #667eea;
+            color: #00ff41;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin: 10px 5px 10px 0;
+        }
+
+        .interactive-toggle:hover {
+            background: rgba(102, 126, 234, 0.4);
+            border-color: #00ff41;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .interactive-toggle.active {
+            background: rgba(0, 255, 65, 0.2);
+            border-color: #00ff41;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+        }
+
+        .touch-indicator {
+            display: none;
+            position: fixed;
+            width: 50px;
+            height: 50px;
+            border: 3px solid #00ff41;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            animation: pulse 0.6s ease-out;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        .instruction-box {
+            background: rgba(0, 255, 65, 0.05);
+            border: 2px dashed #00ff41;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            color: #00ff41;
+        }
+
+        .instruction-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .demo-section {
+                padding: 20px;
+            }
+
+            .bar-chart {
+                height: 150px;
+            }
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid #667eea;
+            padding: 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .feature-item h3 {
+            color: #00ff41;
+            margin-bottom: 10px;
+        }
+
+        .feature-item p {
+            color: #b0b0b0;
+            font-size: 0.95em;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 2px solid #667eea;
+            color: #b0b0b0;
+            margin-top: 60px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00ff41;
+            margin-right: 8px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 49% {
+                opacity: 1;
+            }
+            50%, 100% {
+                opacity: 0.3;
+            }
+        }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" class="home-link">← Home</a>
+
+    <header>
+        <h1>🤖 AI Agency Flier</h1>
+        <p class="subtitle">Exploring Gen-Z Misconceptions About AI Agency and Human Control</p>
+    </header>
+
+    <div class="container">
+        <!-- Introduction Section -->
+        <div class="demo-section">
+            <h2>Welcome to the Interactive Demo</h2>
+            <p>This interactive flier explores critical misconceptions about AI agency and human capacity for control. Touch or click to expand cards and interact with visualizations.</p>
+            <div class="instruction-box">
+                <h3>📱 How to Use:</h3>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Click or tap on misconception cards to expand them</li>
+                    <li>Interact with data visualizations by hovering or tapping</li>
+                    <li>Use touch gestures on mobile devices</li>
+                    <li>Watch for the CRT scanlines and noir terminal aesthetic</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="demo-section">
+            <h2>Key Features</h2>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <h3>📊 Expandable Cards</h3>
+                    <p>Interactive misconception cards that expand to reveal detailed information and philosophical commentary.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>📈 Data Visualizations</h3>
+                    <p>Interactive charts and graphs showing AI development statistics and misconception prevalence.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>📱 Touch Responsive</h3>
+                    <p>Mobile-first design with optimized touch interactions and gesture support.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>🎨 Noir Terminal</h3>
+                    <p>Stylish CRT scanlines and dark theme with neon accents for immersive experience.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>💭 Philosophical Commentary</h3>
+                    <p>Deep dives into AI development practices and the nature of agency and control.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>🔧 Customizable</h3>
+                    <p>Easy to integrate and customize for your own AI education projects.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Misconceptions Section -->
+        <div class="demo-section">
+            <h2>Common AI Misconceptions</h2>
+            <p style="margin-bottom: 20px; color: #b0b0b0;">Click on each card to explore the misconception and learn the reality:</p>
+
+            <div class="misconception-card" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span>❌ "AI is becoming sentient and will soon control humanity"</span>
+                    <span class="card-toggle">▼</span>
+                </div>
+                <div class="card-content">
+                    <p><strong>The Reality:</strong></p>
+                    <p>Current AI systems, including large language models, operate through statistical pattern matching and optimization. There's no evidence of sentience, consciousness, or independent agency. AI systems execute instructions defined by their training data and parameters.</p>
+                    <p><strong>Philosophical Insight:</strong></p>
+                    <p>The question of AI agency often conflates optimization with intention. An AI system optimizing for a goal is fundamentally different from an agent choosing goals. The distinction is crucial for understanding control and responsibility.</p>
+                    <div class="data-viz">
+                        <p style="color: #00ff41; margin-bottom: 10px;">📊 Misconception Prevalence Among Gen-Z:</p>
+                        <div class="bar-chart">
+                            <div class="bar" style="height: 65%;">
+                                <div class="bar-value">65%</div>
+                                <div class="bar-label">Believe AI will be sentient</div>
+                            </div>
+                            <div class="bar" style="height: 35%;">
+                                <div class="bar-value">35%</div>
+                                <div class="bar-label">Understand current limitations</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="misconception-card" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span>❌ "We've lost control of AI development"</span>
+                    <span class="card-toggle">▼</span>
+                </div>
+                <div class="card-content">
+                    <p><strong>The Reality:</strong></p>
+                    <p>AI systems are developed, trained, and deployed by humans at every stage. Control exists at multiple levels: architectural choices, training data selection, optimization objectives, deployment decisions, and usage policies.</p>
+                    <p><strong>The Challenge:</strong></p>
+                    <p>While control exists, it's complex. Emergent behaviors can arise from complex systems, making prediction difficult. This is a control problem, not a loss of control.</p>
+                    <div class="data-viz">
+                        <p style="color: #00ff41; margin-bottom: 10px;">🎯 Control Points in AI Development:</p>
+                        <div class="bar-chart">
+                            <div class="bar" style="height: 100%;">
+                                <div class="bar-value">100%</div>
+                                <div class="bar-label">Architecture Design</div>
+                            </div>
+                            <div class="bar" style="height: 100%;">
+                                <div class="bar-value">100%</div>
+                                <div class="bar-label">Training Data</div>
+                            </div>
+                            <div class="bar" style="height: 100%;">
+                                <div class="bar-value">100%</div>
+                                <div class="bar-label">Objectives</div>
+                            </div>
+                            <div class="bar" style="height: 100%;">
+                                <div class="bar-value">100%</div>
+                                <div class="bar-label">Deployment</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="misconception-card" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span>❌ "AI will inevitably pursue goals misaligned with humanity"</span>
+                    <span class="card-toggle">▼</span>
+                </div>
+                <div class="card-content">
+                    <p><strong>The Reality:</strong></p>
+                    <p>Misalignment is a risk that requires active mitigation through careful design and deployment practices. It's not inevitable but requires intentional work to prevent.</p>
+                    <p><strong>Mitigation Strategies:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px; color: #b0b0b0;">
+                        <li>Clear objective specification</li>
+                        <li>Robust testing and evaluation</li>
+                        <li>Human oversight and review</li>
+                        <li>Gradual deployment with monitoring</li>
+                        <li>Alignment research and development</li>
+                    </ul>
+                    <div class="philosophy-quote">
+                        "The alignment problem is not about AI becoming evil, but about ensuring AI systems reliably pursue the objectives humans intend them to pursue." - Stuart Russell
+                    </div>
+                </div>
+            </div>
+
+            <div class="misconception-card" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span>❌ "AI development is completely unpredictable and uncontrollable"</span>
+                    <span class="card-toggle">▼</span>
+                </div>
+                <div class="card-content">
+                    <p><strong>The Reality:</strong></p>
+                    <p>While some aspects of AI systems can be surprising, development is fundamentally guided by human choices. Scaling laws, emergent abilities, and training dynamics follow predictable patterns that researchers study and understand.</p>
+                    <p><strong>Predictable Aspects:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px; color: #b0b0b0;">
+                        <li>Scaling laws for model performance</li>
+                        <li>Training dynamics and convergence</li>
+                        <li>Benchmark performance trends</li>
+                        <li>Capability progression with scale</li>
+                    </ul>
+                    <p style="margin-top: 15px;"><strong>Unpredictable Aspects:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px; color: #b0b0b0;">
+                        <li>Specific emergent capabilities</li>
+                        <li>Novel failure modes</li>
+                        <li>Exact timing of capability jumps</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="misconception-card" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span>❌ "Humans have no responsibility in AI outcomes"</span>
+                    <span class="card-toggle">▼</span>
+                </div>
+                <div class="card-content">
+                    <p><strong>The Reality:</strong></p>
+                    <p>Humans bear full responsibility for AI development, deployment, and consequences. Every choice in building AI systems—from architecture to training data to deployment—is a human choice with human consequences.</p>
+                    <p><strong>Responsibility Layers:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px; color: #b0b0b0;">
+                        <li><strong>Developers:</strong> Responsible for architecture, safety measures, and testing</li>
+                        <li><strong>Organizations:</strong> Responsible for deployment decisions and policies</li>
+                        <li><strong>Regulators:</strong> Responsible for governance frameworks</li>
+                        <li><strong>Society:</strong> Responsible for collective choices about AI</li>
+                    </ul>
+                    <div class="philosophy-quote">
+                        "Responsibility cannot be outsourced to the artifact. The creators and deployers of AI systems bear the ethical weight of their creations."
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Visualizations Section -->
+        <div class="demo-section">
+            <h2>Interactive Analysis</h2>
+            <p style="margin-bottom: 20px; color: #b0b0b0;">Toggle different views to explore AI development data:</p>
+
+            <div style="margin-bottom: 20px;">
+                <button class="interactive-toggle active" onclick="toggleView('timeline')">Timeline View</button>
+                <button class="interactive-toggle" onclick="toggleView('comparison')">Capability Comparison</button>
+                <button class="interactive-toggle" onclick="toggleView('control')">Control Analysis</button>
+            </div>
+
+            <div id="timeline-view" class="data-viz">
+                <h3 style="color: #00ff41; margin-bottom: 15px;">AI Development Timeline</h3>
+                <p style="color: #b0b0b0; margin-bottom: 15px;">Key milestones in AI history and their implications for agency and control:</p>
+                <div style="margin-top: 20px;">
+                    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(102, 126, 234, 0.3);">
+                        <p style="color: #00ff41; font-weight: bold;">1956 - Dartmouth Conference</p>
+                        <p style="color: #b0b0b0;">Birth of AI as academic field. Initial optimism about human-level AI.</p>
+                    </div>
+                    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(102, 126, 234, 0.3);">
+                        <p style="color: #00ff41; font-weight: bold;">1974-1980 - First AI Winter</p>
+                        <p style="color: #b0b0b0;">Realization of limitations. Control and predictability become central concerns.</p>
+                    </div>
+                    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(102, 126, 234, 0.3);">
+                        <p style="color: #00ff41; font-weight: bold;">1997 - Deep Blue defeats Kasparov</p>
+                        <p style="color: #b0b0b0;">Narrow AI achieves superhuman performance in specific domain. Control mechanisms well-understood.</p>
+                    </div>
+                    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(102, 126, 234, 0.3);">
+                        <p style="color: #00ff41; font-weight: bold;">2011 - IBM Watson wins Jeopardy</p>
+                        <p style="color: #b0b0b0;">AI demonstrates broad knowledge retrieval. Predictability and control remain high.</p>
+                    </div>
+                    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(102, 126, 234, 0.3);">
+                        <p style="color: #00ff41; font-weight: bold;">2016 - AlphaGo defeats Lee Sedol</p>
+                        <p style="color: #b0b0b0;">Deep learning demonstrates emergent strategic thinking. New questions about interpretability.</p>
+                    </div>
+                    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(102, 126, 234, 0.3);">
+                        <p style="color: #00ff41; font-weight: bold;">2022-2024 - Large Language Models</p>
+                        <p style="color: #b0b0b0;">Emergence of general capabilities. Control challenges become more nuanced but remain manageable.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="comparison-view" class="data-viz" style="display: none;">
+                <h3 style="color: #00ff41; margin-bottom: 15px;">AI Capability Progression</h3>
+                <p style="color: #b0b0b0; margin-bottom: 20px;">Comparing capabilities across different AI systems:</p>
+                <div class="bar-chart" style="height: 250px;">
+                    <div class="bar" style="height: 20%;" onclick="this.style.height = this.style.height === '20%' ? '40%' : '20%';">
+                        <div class="bar-value">20%</div>
+                        <div class="bar-label">Chess AI</div>
+                    </div>
+                    <div class="bar" style="height: 35%;" onclick="this.style.height = this.style.height === '35%' ? '60%' : '35%';">
+                        <div class="bar-value">35%</div>
+                        <div class="bar-label">Go AI</div>
+                    </div>
+                    <div class="bar" style="height: 45%;" onclick="this.style.height = this.style.height === '45%' ? '70%' : '45%';">
+                        <div class="bar-value">45%</div>
+                        <div class="bar-label">Image Recognition</div>
+                    </div>
+                    <div class="bar" style="height: 70%;" onclick="this.style.height = this.style.height === '70%' ? '85%' : '70%';">
+                        <div class="bar-value">70%</div>
+                        <div class="bar-label">Language Models</div>
+                    </div>
+                    <div class="bar" style="height: 55%;" onclick="this.style.height = this.style.height === '55%' ? '75%' : '55%';">
+                        <div class="bar-value">55%</div>
+                        <div class="bar-label">Robotics</div>
+                    </div>
+                </div>
+                <p style="color: #b0b0b0; margin-top: 30px; font-style: italic;">Click bars to interact. Note: Heights represent relative capability breadth, not superiority.</p>
+            </div>
+
+            <div id="control-view" class="data-viz" style="display: none;">
+                <h3 style="color: #00ff41; margin-bottom: 15px;">Control Mechanisms Across AI Systems</h3>
+                <p style="color: #b0b0b0; margin-bottom: 20px;">How humans maintain control at different stages:</p>
+                <div class="bar-chart" style="height: 250px;">
+                    <div class="bar" style="height: 95%;">
+                        <div class="bar-value">95%</div>
+                        <div class="bar-label">Design Phase</div>
+                    </div>
+                    <div class="bar" style="height: 90%;">
+                        <div class="bar-value">90%</div>
+                        <div class="bar-label">Training Phase</div>
+                    </div>
+                    <div class="bar" style="height: 85%;">
+                        <div class="bar-value">85%</div>
+                        <div class="bar-label">Testing Phase</div>
+                    </div>
+                    <div class="bar" style="height: 80%;">
+                        <div class="bar-value">80%</div>
+                        <div class="bar-label">Deployment</div>
+                    </div>
+                    <div class="bar" style="height: 75%;">
+                        <div class="bar-value">75%</div>
+                        <div class="bar-label">Runtime Monitoring</div>
+                    </div>
+                </div>
+                <p style="color: #b0b0b0; margin-top: 20px;">Higher percentages indicate greater human control and decision-making authority.</p>
+            </div>
+        </div>
+
+        <!-- Philosophical Commentary Section -->
+        <div class="demo-section">
+            <h2>Philosophical Framework</h2>
+
+            <div class="philosophy-quote">
+                "The question of AI agency is fundamentally about the nature of intention and choice. An AI system that optimizes for a goal is executing a human intention, not pursuing its own. This distinction is crucial for understanding responsibility and control."
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h3 style="color: #00ff41; margin-bottom: 15px;">Key Philosophical Distinctions</h3>
+
+                <div style="background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; padding: 20px; margin: 15px 0; border-radius: 5px;">
+                    <p style="color: #00ff41; font-weight: bold; margin-bottom: 10px;">Agency vs. Optimization</p>
+                    <p style="color: #b0b0b0;">Agency implies autonomous goal-setting and decision-making. Optimization is the execution of predetermined objectives. Current AI systems optimize; they don't exhibit agency.</p>
+                </div>
+
+                <div style="background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; padding: 20px; margin: 15px 0; border-radius: 5px;">
+                    <p style="color: #00ff41; font-weight: bold; margin-bottom: 10px;">Control vs. Predictability</p>
+                    <p style="color: #b0b0b0;">Control means the ability to direct outcomes. Predictability means understanding what will happen. Both are possible without the other, but control requires understanding the system.</p>
+                </div>
+
+                <div style="background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; padding: 20px; margin: 15px 0; border-radius: 5px;">
+                    <p style="color: #00ff41; font-weight: bold; margin-bottom: 10px;">Responsibility vs. Causation</p>
+                    <p style="color: #b0b0b0;">Responsibility requires intentionality and choice. An AI system causing harm is not responsible—its creators and deployers are. This is a moral and legal distinction with practical implications.</p>
+                </div>
+
+                <div style="background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; padding: 20px; margin: 15px 0; border-radius: 5px;">
+                    <p style="color: #00ff41; font-weight: bold; margin-bottom: 10px;">Emergence vs. Surprise</p>
+                    <p style="color: #b0b0b0;">Emergent properties arise from complex interactions of simpler components. Surprising properties are unexpected outcomes. Not all emergent properties are surprising, and not all surprises indicate loss of control.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Implementation Section -->
+        <div class="demo-section">
+            <h2>Technical Implementation</h2>
+            <p style="margin-bottom: 20px; color: #b0b0b0;">This demo uses the ai-agency-flier.js library to create interactive experiences:</p>
+
+            <div class="code-block">
+&lt;script src="ai-agency-flier.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  // Initialize the flier with options
+  const flier = new AIAgencyFlier({
+    theme: 'noir-terminal',
+    enableTouchInteractions: true,
+    enableCRTEffect: true,
+    animationDuration: 300,
+    responsiveBreakpoints: {
+      mobile: 768,
+      tablet: 1024
+    }
+  });
+
+  // Create misconception cards
+  flier.addMisconceptionCard({
+    title: 'Misconception Title',
+    content: 'Detailed explanation',
+    philosophy: 'Philosophical insight',
+    data: { /* visualization data */ }
+  });
+
+  // Enable touch interactions
+  flier.enableTouchGestures();
+&lt;/script&gt;
+            </div>
+
+            <h3 style="color: #00ff41; margin-top: 20px; margin-bottom: 15px;">Features Implemented</h3>
+            <ul style="margin-left: 20px; color: #b0b0b0;">
+                <li><strong>Expandable Cards:</strong> Click to toggle detailed content</li>
+                <li><strong>Data Visualizations:</strong> Interactive bar charts and graphs</li>
+                <li><strong>Touch Interactions:</strong> Swipe, tap, and gesture support</li>
+                <li><strong>CRT Scanlines:</strong> Authentic retro terminal aesthetic</li>
+                <li><strong>Responsive Design:</strong> Mobile-first approach</li>
+                <li><strong>Accessibility:</strong> Keyboard navigation support</li>
+            </ul>
+        </div>
+
+        <!-- Usage Instructions -->
+        <div class="demo-section">
+            <h2>How to Use This Demo</h2>
+
+            <div class="instruction-box">
+                <h3>🖱️ Desktop Interactions:</h3>
+                <ul style="margin-left: 20px; margin-top: 10px; color: #00ff41;">
+                    <li>Click on misconception cards to expand/collapse</li>
+                    <li>Hover over bars in charts to see interactions</li>
+                    <li>Click toggle buttons to switch views</li>
+                    <li>Use keyboard navigation (Tab to focus, Enter to activate)</li>
+                </ul>
+            </div>
+
+            <div class="instruction-box">
+                <h3>📱 Mobile Interactions:</h3>
+                <ul style="margin-left: 20px; margin-top: 10px; color: #00ff41;">
+                    <li>Tap misconception cards to expand/collapse</li>
+                    <li>Tap bars in charts for interactions</li>
+                    <li>Tap toggle buttons to switch views</li>
+                    <li>Watch for touch feedback indicators</li>
+                </ul>
+            </div>
+
+            <div class="instruction-box">
+                <h3>🎨 Visual Elements:</h3>
+                <ul style="margin-left: 20px; margin-top: 10px; color: #00ff41;">
+                    <li><span class="status-indicator"></span>Green text = Active/Important information</li>
+                    <li>Purple borders = Interactive elements</li>
+                    <li>Pink quotes = Philosophical insights</li>
+                    <li>CRT scanlines = Authentic terminal aesthetic</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Integration Guide -->
+        <div class="demo-section">
+            <h2>Integration Guide</h2>
+            <p style="margin-bottom: 20px; color: #b0b0b0;">To use ai-agency-flier.js in your own projects:</p>
+
+            <h3 style="color: #00ff41; margin: 20px 0 10px;">Step 1: Include the Library</h3>
+            <div class="code-block">
+&lt;script src="path/to/ai-agency-flier.js"&gt;&lt;/script&gt;
+            </div>
+
+            <h3 style="color: #00ff41; margin: 20px 0 10px;">Step 2: Initialize the Flier</h3>
+            <div class="code-block">
+const flier = new AIAgencyFlier({
+  container: '#flier-container',
+  theme: 'noir-terminal',
+  enableAnimations: true
+});
+            </div>
+
+            <h3 style="color: #00ff41; margin: 20px 0 10px;">Step 3: Add Content</h3>
+            <div class="code-block">
+flier.addContent({
+  type: 'misconception',
+  title: 'Title',
+  content: 'Content',
+  expandable: true
+});
