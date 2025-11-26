@@ -159,8 +159,8 @@
     "icon": "🌐",
     "description": "Interactive touch-responsive flier exploring Gen-Z"
   },
-  "space-invaders-twist": {
-    "icon": "🎮",
-    "description": "Space Invaders game"
+  "space-invaders": {
+    "icon": "👾",
+    "description": "Classic Space Invaders - destroy aliens, defend Earth with shields"
   }
 }
