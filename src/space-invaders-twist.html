@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Space Invaders Twist - AI vs Humans</title>
-    <script src="https://kaboomjs.com/lib/0.5.0/kaboom.js"></script>
     <style>
         * {
             margin: 0;
@@ -14,552 +13,258 @@
 
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
             padding: 20px;
+            padding-top: 80px;
+            overflow-x: auto;
+            overflow-y: auto;
         }
 
-        .container {
-            width: 100%;
-            max-width: 800px;
-        }
-
-        #game-container {
-            position: relative;
-            background: rgba(0, 0, 0, 0.8);
+        .game-container {
+            background: #0f0f1e;
             border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        canvas {
-            display: block;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            max-width: 600px;
             width: 100%;
-            height: auto;
         }
 
-        .game-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            background: rgba(0, 0, 0, 0.9);
-            color: #00ff00;
-            font-size: 18px;
-            font-weight: bold;
-            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-        }
-
-        .game-info span {
-            margin: 0 10px;
-        }
-
-        .controls-info {
+        .game-header {
             text-align: center;
             color: #fff;
-            margin-top: 15px;
-            font-size: 14px;
+            margin-bottom: 20px;
         }
 
-        .touch-controls {
-            display: none;
-            margin-top: 20px;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
+        .game-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #00ff00, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .touch-controls.active {
+        .game-header p {
+            color: #aaa;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+        }
+
+        .game-stats {
             display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            background: rgba(0, 255, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
         }
 
-        .touch-btn {
-            padding: 15px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: 2px solid #00ff00;
-            border-radius: 10px;
-            font-size: 16px;
+        .stat {
+            color: #fff;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
             font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 80px;
+            color: #00ff00;
             text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
         }
 
-        .touch-btn:active {
+        /* Kaboom.js canvas container */
+        #game-root {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #game-root canvas {
+            border: 3px solid #00ff00;
+            border-radius: 10px;
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .mobile-controls {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            touch-action: manipulation;
+        }
+
+        .mobile-controls.active {
+            display: grid;
+        }
+
+        .control-btn {
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 50px;
+            min-width: 50px;
+        }
+
+        .control-btn:active {
             transform: scale(0.95);
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+        .control-btn:hover {
+            background: linear-gradient(135deg, #764ba2, #667eea);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
         }
 
-        .modal.active {
-            display: flex;
-        }
+        .control-btn.up { grid-column: 2; }
+        .control-btn.left { grid-column: 1; grid-row: 2; }
+        .control-btn.down { grid-column: 2; grid-row: 2; }
+        .control-btn.right { grid-column: 3; grid-row: 2; }
+        .control-btn.shoot { grid-column: 1 / -1; grid-row: 3; }
 
-        .modal-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-            color: white;
-            max-width: 500px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .modal-content h2 {
-            font-size: 32px;
+        .game-info {
+            background: rgba(0, 255, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            color: #fff;
             margin-bottom: 20px;
+            font-size: 0.95em;
+            line-height: 1.6;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        .game-info h3 {
+            color: #00ff00;
+            margin-bottom: 10px;
             text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
         }
 
-        .modal-content p {
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        .modal-content button {
-            margin-top: 20px;
-            padding: 12px 30px;
-            background: #00ff00;
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #00ff00, #00ffff);
             color: #000;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 1.2em;
             cursor: pointer;
-            transition: all 0.3s ease;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
         }
 
-        .modal-content button:hover {
-            background: #00dd00;
-            transform: scale(1.05);
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
         }
 
-        .level-indicator {
-            display: inline-block;
-            background: rgba(0, 255, 0, 0.2);
-            padding: 5px 15px;
-            border-radius: 5px;
-            border: 1px solid #00ff00;
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .hidden { display: none; }
+
+        .keyboard-hint {
+            color: #aaa;
+            font-size: 0.85em;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 60px;
+            }
+            .game-container { padding: 15px; }
+            .game-header h1 { font-size: 2em; }
+            .game-stats { gap: 10px; padding: 12px; }
+            .mobile-controls.active { display: grid; }
+        }
+
+        @media (max-width: 480px) {
+            .game-header h1 { font-size: 1.5em; }
+            .stat-value { font-size: 1.5em; }
+            .control-btn { font-size: 1.2em; padding: 12px; }
         }
     </style>
-
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../page-theme.css">
 </head>
 <body>
-    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2);font-weight:bold">← Home</a>
 
-    <div class="container">
-        <div id="game-container">
-            <div class="game-info">
-                <span>Score: <span id="score">0</span></span>
-                <span>Health: <span id="health">100</span>%</span>
-                <span class="level-indicator">Level: <span id="level">1</span></span>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>SPACE INVADERS: TWIST</h1>
+            <p>AI and Humans are the Invaders. Defend Your Ship!</p>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">SCORE</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">HEALTH</div>
+                <div class="stat-value" id="health">100</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">LEVEL</div>
+                <div class="stat-value" id="level">1</div>
             </div>
         </div>
-        <div class="controls-info">
-            <p>Desktop: Arrow Keys to Move, Space to Shoot | Mobile: Use buttons below</p>
+
+        <!-- Kaboom.js Game Root -->
+        <div id="game-root"></div>
+
+        <!-- Mobile Touch Controls -->
+        <div class="mobile-controls active" id="mobileControls">
+            <button class="control-btn up" data-action="up">▲</button>
+            <button class="control-btn left" data-action="left">◀</button>
+            <button class="control-btn down" data-action="down">▼</button>
+            <button class="control-btn right" data-action="right">▶</button>
+            <button class="control-btn shoot" data-action="shoot">SHOOT</button>
         </div>
-        <div class="touch-controls" id="touchControls">
-            <button class="touch-btn" id="leftBtn">← Left</button>
-            <button class="touch-btn" id="shootBtn">🔫 Shoot</button>
-            <button class="touch-btn" id="rightBtn">Right →</button>
+
+        <div class="game-info">
+            <h3>HOW TO PLAY</h3>
+            <p><strong>Desktop:</strong> Arrow Keys to move, SPACE to shoot</p>
+            <p><strong>Mobile:</strong> Tap arrow buttons to move, SHOOT button to fire</p>
+            <p>Destroy incoming AI and Human invaders. Avoid their fire. Survive 5 levels!</p>
+        </div>
+
+        <button class="action-btn" id="startBtn">START GAME</button>
+        <button class="action-btn hidden" id="restartBtn">RESTART GAME</button>
+
+        <div class="keyboard-hint">
+            Keyboard Shortcut: Press SPACE to start
         </div>
     </div>
 
-    <div class="modal" id="startModal">
-        <div class="modal-content">
-            <h2>Space Invaders Twist</h2>
-            <p>Defend Earth from AI invaders!</p>
-            <p style="font-size: 14px; margin-top: 20px;">The twist: Both AI and human players are invaders trying to destroy your defenses!</p>
-            <button onclick="startGame()">Start Game</button>
-        </div>
-    </div>
-
-    <div class="modal" id="gameOverModal">
-        <div class="modal-content">
-            <h2 id="gameOverTitle">Game Over</h2>
-            <p>Final Score: <span id="finalScore">0</span></p>
-            <p>Level Reached: <span id="finalLevel">1</span></p>
-            <button onclick="restartGame()">Play Again</button>
-        </div>
-    </div>
-
-    <script>
-        let gameState = {
-            score: 0,
-            health: 100,
-            level: 1,
-            gameActive: false,
-            playerX: 0,
-            playerY: 0,
-            enemies: [],
-            bullets: [],
-            aiInvaders: [],
-            gameWidth: 800,
-            gameHeight: 600
-        };
-
-        // Initialize Kaboom
-        kaboot({
-            width: gameState.gameWidth,
-            height: gameState.gameHeight,
-            canvas: document.querySelector('#game-container'),
-            background: [0, 0, 0]
-        });
-
-        // Check if touch controls are needed
-        function checkTouchSupport() {
-            const isTouchDevice = () => {
-                return (('ontouchstart' in window) ||
-                    (navigator.maxTouchPoints > 0) ||
-                    (navigator.msMaxTouchPoints > 0));
-            };
-
-            if (isTouchDevice()) {
-                document.getElementById('touchControls').classList.add('active');
-            }
-        }
-
-        // Initialize touch controls
-        function initTouchControls() {
-            document.getElementById('leftBtn').addEventListener('touchstart', () => {
-                if (gameState.gameActive) {
-                    gameState.playerX = Math.max(0, gameState.playerX - 30);
-                }
-            });
-
-            document.getElementById('rightBtn').addEventListener('touchstart', () => {
-                if (gameState.gameActive) {
-                    gameState.playerX = Math.min(gameState.gameWidth - 40, gameState.playerX + 30);
-                }
-            });
-
-            document.getElementById('shootBtn').addEventListener('touchstart', () => {
-                if (gameState.gameActive) {
-                    shootBullet();
-                }
-            });
-        }
-
-        // Game initialization
-        function initGame() {
-            gameState.enemies = [];
-            gameState.bullets = [];
-            gameState.aiInvaders = [];
-            gameState.playerX = gameState.gameWidth / 2 - 20;
-            gameState.playerY = gameState.gameHeight - 60;
-
-            // Spawn initial enemies
-            spawnEnemies();
-            spawnAIInvaders();
-        }
-
-        function spawnEnemies() {
-            const enemyCount = 3 + gameState.level;
-            for (let i = 0; i < enemyCount; i++) {
-                gameState.enemies.push({
-                    x: Math.random() * (gameState.gameWidth - 40),
-                    y: Math.random() * (gameState.gameHeight / 3),
-                    width: 40,
-                    height: 30,
-                    vx: (Math.random() - 0.5) * 3,
-                    vy: Math.random() * 2 + 1,
-                    shootTimer: 0
-                });
-            }
-        }
-
-        function spawnAIInvaders() {
-            const aiCount = Math.floor(gameState.level * 0.5) + 1;
-            for (let i = 0; i < aiCount; i++) {
-                gameState.aiInvaders.push({
-                    x: Math.random() * (gameState.gameWidth - 40),
-                    y: Math.random() * (gameState.gameHeight / 2),
-                    width: 40,
-                    height: 30,
-                    vx: (Math.random() - 0.5) * 2,
-                    vy: Math.random() * 1.5 + 0.5,
-                    shootTimer: 0,
-                    targetX: gameState.playerX,
-                    updateTimer: 0
-                });
-            }
-        }
-
-        function shootBullet() {
-            gameState.bullets.push({
-                x: gameState.playerX + 20,
-                y: gameState.playerY,
-                width: 5,
-                height: 15,
-                vy: -8
-            });
-        }
-
-        function updateGame() {
-            if (!gameState.gameActive) return;
-
-            // Update player position with keyboard
-            if (isKeyDown('left')) {
-                gameState.playerX = Math.max(0, gameState.playerX - 5);
-            }
-            if (isKeyDown('right')) {
-                gameState.playerX = Math.min(gameState.gameWidth - 40, gameState.playerX + 5);
-            }
-            if (isKeyDown('space')) {
-                shootBullet();
-            }
-
-            // Update bullets
-            gameState.bullets = gameState.bullets.filter(bullet => {
-                bullet.y -= 8;
-                return bullet.y > 0;
-            });
-
-            // Update enemies
-            gameState.enemies.forEach((enemy, index) => {
-                enemy.x += enemy.vx;
-                enemy.y += enemy.vy;
-
-                // Bounce off walls
-                if (enemy.x <= 0 || enemy.x + enemy.width >= gameState.gameWidth) {
-                    enemy.vx *= -1;
-                }
-
-                // Bounce off top
-                if (enemy.y <= 0) {
-                    enemy.vy *= -1;
-                }
-
-                // Shoot randomly
-                enemy.shootTimer++;
-                if (enemy.shootTimer > 60 && Math.random() < 0.3) {
-                    gameState.bullets.push({
-                        x: enemy.x + enemy.width / 2,
-                        y: enemy.y + enemy.height,
-                        width: 5,
-                        height: 15,
-                        vy: 5,
-                        isEnemy: true
-                    });
-                    enemy.shootTimer = 0;
-                }
-
-                // Check collision with player bullets
-                gameState.bullets.forEach((bullet, bIndex) => {
-                    if (!bullet.isEnemy &&
-                        bullet.x < enemy.x + enemy.width &&
-                        bullet.x + bullet.width > enemy.x &&
-                        bullet.y < enemy.y + enemy.height &&
-                        bullet.y + bullet.height > enemy.y) {
-                        gameState.bullets.splice(bIndex, 1);
-                        gameState.enemies.splice(index, 1);
-                        gameState.score += 10;
-                    }
-                });
-
-                // Check collision with player
-                if (enemy.x < gameState.playerX + 40 &&
-                    enemy.x + enemy.width > gameState.playerX &&
-                    enemy.y < gameState.playerY + 40 &&
-                    enemy.y + enemy.height > gameState.playerY) {
-                    gameState.health -= 5;
-                    gameState.enemies.splice(index, 1);
-                }
-            });
-
-            // Update AI invaders
-            gameState.aiInvaders.forEach((ai, index) => {
-                ai.x += ai.vx;
-                ai.y += ai.vy;
-
-                // Bounce off walls
-                if (ai.x <= 0 || ai.x + ai.width >= gameState.gameWidth) {
-                    ai.vx *= -1;
-                }
-
-                // Bounce off top
-                if (ai.y <= 0) {
-                    ai.vy *= -1;
-                }
-
-                // AI targeting
-                ai.updateTimer++;
-                if (ai.updateTimer > 30) {
-                    ai.targetX = gameState.playerX + Math.random() * 40 - 20;
-                    ai.updateTimer = 0;
-                }
-
-                // AI movement toward target
-                if (ai.x < ai.targetX) {
-                    ai.vx = Math.max(ai.vx, -2);
-                } else {
-                    ai.vx = Math.min(ai.vx, 2);
-                }
-
-                // AI shooting
-                ai.shootTimer++;
-                if (ai.shootTimer > 80 && Math.random() < 0.4) {
-                    gameState.bullets.push({
-                        x: ai.x + ai.width / 2,
-                        y: ai.y + ai.height,
-                        width: 5,
-                        height: 15,
-                        vy: 6,
-                        isEnemy: true
-                    });
-                    ai.shootTimer = 0;
-                }
-
-                // Check collision with player bullets
-                gameState.bullets.forEach((bullet, bIndex) => {
-                    if (!bullet.isEnemy &&
-                        bullet.x < ai.x + ai.width &&
-                        bullet.x + bullet.width > ai.x &&
-                        bullet.y < ai.y + ai.height &&
-                        bullet.y + bullet.height > ai.y) {
-                        gameState.bullets.splice(bIndex, 1);
-                        gameState.aiInvaders.splice(index, 1);
-                        gameState.score += 20;
-                    }
-                });
-
-                // Check collision with player
-                if (ai.x < gameState.playerX + 40 &&
-                    ai.x + ai.width > gameState.playerX &&
-                    ai.y < gameState.playerY + 40 &&
-                    ai.y + ai.height > gameState.playerY) {
-                    gameState.health -= 8;
-                    gameState.aiInvaders.splice(index, 1);
-                }
-            });
-
-            // Check enemy bullets hitting player
-            gameState.bullets = gameState.bullets.filter(bullet => {
-                if (bullet.isEnemy) {
-                    if (bullet.x < gameState.playerX + 40 &&
-                        bullet.x + bullet.width > gameState.playerX &&
-                        bullet.y < gameState.playerY + 40 &&
-                        bullet.y + bullet.height > gameState.playerY) {
-                        gameState.health -= 2;
-                        return false;
-                    }
-                    return bullet.y < gameState.gameHeight;
-                }
-                return true;
-            });
-
-            // Update UI
-            document.getElementById('score').textContent = gameState.score;
-            document.getElementById('health').textContent = Math.max(0, gameState.health);
-            document.getElementById('level').textContent = gameState.level;
-
-            // Check level completion
-            if (gameState.enemies.length === 0 && gameState.aiInvaders.length === 0) {
-                gameState.level++;
-                initGame();
-            }
-
-            // Check game over
-            if (gameState.health <= 0) {
-                endGame();
-            }
-        }
-
-        function drawGame() {
-            // Draw player
-            add([
-                rect(40, 40),
-                pos(gameState.playerX, gameState.playerY),
-                color(0, 255, 0)
-            ]);
-
-            // Draw bullets
-            gameState.bullets.forEach(bullet => {
-                add([
-                    rect(bullet.width, bullet.height),
-                    pos(bullet.x, bullet.y),
-                    color(bullet.isEnemy ? 255 : 0, bullet.isEnemy ? 0 : 255, 0)
-                ]);
-            });
-
-            // Draw enemies
-            gameState.enemies.forEach(enemy => {
-                add([
-                    rect(enemy.width, enemy.height),
-                    pos(enemy.x, enemy.y),
-                    color(255, 0, 0)
-                ]);
-            });
-
-            // Draw AI invaders
-            gameState.aiInvaders.forEach(ai => {
-                add([
-                    rect(ai.width, ai.height),
-                    pos(ai.x, ai.y),
-                    color(255, 100, 200)
-                ]);
-            });
-        }
-
-        function startGame() {
-            document.getElementById('startModal').classList.remove('active');
-            gameState.gameActive = true;
-            gameState.score = 0;
-            gameState.health = 100;
-            gameState.level = 1;
-            initGame();
-        }
-
-        function endGame() {
-            gameState.gameActive = false;
-            document.getElementById('gameOverTitle').textContent = gameState.health > 0 ? 'Level Complete!' : 'Game Over';
-            document.getElementById('finalScore').textContent = gameState.score;
-            document.getElementById('finalLevel').textContent = gameState.level;
-            document.getElementById('gameOverModal').classList.add('active');
-        }
-
-        function restartGame() {
-            document.getElementById('gameOverModal').classList.remove('active');
-            document.getElementById('startModal').classList.add('active');
-        }
-
-        // Main game loop
-        onUpdate(() => {
-            updateGame();
-            clear();
-            drawGame();
-        });
-
-        // Keyboard input
-        onKeyPress('space', () => {
-            if (gameState.gameActive) {
-                shootBullet();
-            }
-        });
-
-        // Initialize
-        checkTouchSupport();
-        initTouchControls();
-        document.getElementById('startModal').classList.add('active');
-    </script>
+    <script type="module" src="space-invaders-twist.js"></script>
 </body>
 </html>
