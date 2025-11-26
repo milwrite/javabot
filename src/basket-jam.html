@@ -8,34 +8,36 @@
     <style>
         body {
             padding-top: 80px;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            gap: 10px;
         }
 
         .game-title {
             text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .game-title h1 {
-            font-size: 2.5em;
             margin-bottom: 10px;
         }
 
-        .game-stats {
+        .game-title h1 {
+            font-size: clamp(1.8rem, 5vw, 2.6rem);
+            margin-bottom: 5px;
+        }
+
+        .stat-board {
             display: flex;
-            gap: 30px;
-            justify-content: center;
-            margin-bottom: 20px;
+            gap: 18px;
             flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 10px;
         }
 
         .stat-display {
+            min-width: 120px;
             background: rgba(0, 0, 0, 0.6);
             border: 2px solid #7ec8e3;
-            padding: 15px 25px;
+            padding: 12px 18px;
             text-align: center;
         }
 
@@ -47,123 +49,29 @@
         }
 
         .stat-display .value {
-            font-size: 2em;
+            font-size: 1.8em;
             color: #7ec8e3;
-            text-shadow: 0 0 10px rgba(126, 200, 227, 0.5);
+            text-shadow: 0 0 10px rgba(126, 200, 227, 0.6);
         }
 
-        .game-area {
+        .game-wrapper {
+            width: min(440px, 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+        }
+
+        .canvas-shell {
             position: relative;
-            width: 400px;
-            height: 500px;
-            background: linear-gradient(180deg, #0a0a0a 0%, #1a0a0a 100%);
             border: 3px solid #ff0000;
-            overflow: hidden;
-            touch-action: none;
+            background: radial-gradient(circle at top, rgba(255, 0, 0, 0.1), rgba(0, 0, 0, 0.85));
         }
 
-        .backboard {
-            position: absolute;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120px;
-            height: 80px;
-            background: rgba(255, 0, 0, 0.3);
-            border: 3px solid #ff0000;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-        }
-
-        .rim {
-            position: absolute;
-            bottom: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 8px;
-            background: #ff0000;
-            border-radius: 4px;
-        }
-
-        .net {
-            position: absolute;
-            bottom: -45px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50px;
-            height: 35px;
-            border-left: 2px dashed rgba(255, 255, 255, 0.5);
-            border-right: 2px dashed rgba(255, 255, 255, 0.5);
-            border-bottom: 2px dashed rgba(255, 255, 255, 0.5);
-        }
-
-        .ball {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background: radial-gradient(circle at 30% 30%, #ff6600, #cc3300);
-            border-radius: 50%;
-            border: 2px solid #ff0000;
-            cursor: grab;
-            transition: transform 0.1s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .ball::before {
-            content: '';
-            position: absolute;
+        canvas {
             width: 100%;
-            height: 2px;
-            background: #000;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .ball::after {
-            content: '';
-            position: absolute;
-            width: 2px;
-            height: 100%;
-            background: #000;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .ball.dragging {
-            cursor: grabbing;
-            transform: scale(1.1);
-        }
-
-        .aim-line {
-            position: absolute;
-            width: 3px;
-            background: rgba(126, 200, 227, 0.6);
-            transform-origin: bottom center;
-            pointer-events: none;
-            display: none;
-        }
-
-        .power-meter {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 20px;
-            height: 150px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #7ec8e3;
-        }
-
-        .power-fill {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            background: linear-gradient(180deg, #ff0000 0%, #7ec8e3 100%);
-            transition: height 0.1s;
+            height: auto;
+            display: block;
         }
 
         .message {
@@ -171,70 +79,64 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 2em;
+            font-size: 1.8rem;
             color: #00ffff;
-            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+            text-shadow: 0 0 25px rgba(0, 255, 255, 0.8);
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.25s ease;
             pointer-events: none;
             text-align: center;
         }
 
         .message.show {
             opacity: 1;
-            animation: messagePopup 0.5s ease;
         }
 
-        @keyframes messagePopup {
-            0% { transform: translate(-50%, -50%) scale(0.5); }
-            50% { transform: translate(-50%, -50%) scale(1.2); }
-            100% { transform: translate(-50%, -50%) scale(1); }
+        .aim-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
         }
 
-        .streak-indicator {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 0, 0, 0.8);
-            color: #7ec8e3;
-            padding: 10px 15px;
-            font-size: 0.9em;
-            display: none;
+        .readout {
+            background: rgba(0, 0, 0, 0.65);
+            border: 2px solid rgba(126, 200, 227, 0.5);
+            padding: 10px 12px;
+            font-size: 0.9rem;
         }
 
-        .streak-indicator.show {
+        .readout span {
+            color: #00ffff;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .readout strong {
             display: block;
-            animation: pulse 0.5s ease infinite;
-        }
-
-        .controls-container {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
+            font-size: 1.1rem;
+            color: #7ec8e3;
         }
 
         .mobile-controls {
+            margin-top: 18px;
             display: none;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
-            margin-top: 20px;
-            width: 100%;
-            max-width: 400px;
+            gap: 14px;
+            width: min(440px, 95vw);
         }
 
         .aim-controls {
             display: grid;
-            grid-template-columns: repeat(3, 60px);
+            grid-template-columns: repeat(3, 70px);
             gap: 10px;
         }
 
         .aim-btn {
-            width: 60px;
-            height: 60px;
-            font-size: 1.5em;
+            width: 70px;
+            height: 70px;
+            font-size: 1.6rem;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
@@ -244,128 +146,97 @@
         }
 
         .shoot-btn {
-            width: 200px;
+            width: 220px;
             height: 60px;
             font-size: 1.2em;
-            background: rgba(255, 0, 0, 0.8);
+            background: rgba(255, 0, 0, 0.85);
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
 
-        .instructions {
-            max-width: 400px;
+        .tuning-controls {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tuning-controls .btn {
+            flex: 1;
+        }
+
+        .tuning-readout {
+            flex: 1;
             text-align: center;
-            margin-top: 20px;
+            border: 2px solid rgba(126, 200, 227, 0.4);
+            padding: 8px 10px;
+            font-size: 0.95rem;
+        }
+
+        .controls-container {
+            margin-top: 10px;
+        }
+
+        .instructions {
+            max-width: 460px;
+            text-align: center;
+            margin: 10px auto 30px;
             padding: 15px;
             background: rgba(26, 0, 0, 0.4);
             border: 2px solid #ff0000;
+            font-size: 0.9rem;
         }
 
-        .instructions p {
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }
-
-        .instructions .desktop-hint {
-            color: #00ffff;
-        }
-
-        .instructions .mobile-hint {
-            display: none;
+        .instructions strong {
             color: #00ffff;
         }
 
         @media (max-width: 768px) {
-            .game-area {
-                width: 90vw;
-                max-width: 350px;
-                height: 450px;
-            }
-
-            .game-title h1 {
-                font-size: 1.8em;
-            }
-
-            .game-stats {
-                gap: 15px;
-            }
-
-            .stat-display {
-                padding: 10px 15px;
-            }
-
-            .stat-display .value {
-                font-size: 1.5em;
+            body {
+                padding-top: 70px;
             }
 
             .mobile-controls {
                 display: flex;
             }
 
-            .instructions .desktop-hint {
-                display: none;
+            .aim-controls {
+                grid-template-columns: repeat(3, 60px);
             }
 
-            .instructions .mobile-hint {
-                display: block;
+            .aim-btn {
+                width: 60px;
+                height: 60px;
             }
 
-            .backboard {
-                width: 100px;
-                height: 70px;
-            }
-
-            .rim {
-                width: 50px;
-            }
-
-            .ball {
-                width: 35px;
-                height: 35px;
+            .shoot-btn {
+                width: 100%;
             }
         }
 
         @media (max-width: 480px) {
-            body {
-                padding-top: 70px;
-            }
-
-            .game-area {
-                width: 95vw;
-                height: 400px;
-            }
-
-            .game-title h1 {
-                font-size: 1.5em;
-            }
-
-            .stat-display .value {
-                font-size: 1.3em;
+            .aim-controls {
+                grid-template-columns: repeat(3, 54px);
             }
 
             .aim-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2em;
-            }
-
-            .shoot-btn {
-                width: 160px;
-                height: 50px;
-                font-size: 1em;
+                width: 54px;
+                height: 54px;
+                font-size: 1.4rem;
             }
         }
     </style>
 </head>
 <body>
-    <a href="../index.html" class="home-link">HOME</a>
+    <a href="../index.html" class="home-link">← HOME</a>
 
     <div class="game-title">
         <h1>BASKET JAM</h1>
-        <p class="subtitle">Arcade Hoops</p>
+        <p class="subtitle">Kaboom.js physics hoops</p>
     </div>
 
-    <div class="game-stats">
+    <div class="stat-board">
         <div class="stat-display">
             <div class="label">Score</div>
             <div class="value" id="score">0</div>
@@ -380,18 +251,33 @@
         </div>
     </div>
 
-    <div class="game-area" id="gameArea">
-        <div class="backboard">
-            <div class="rim"></div>
-            <div class="net"></div>
+    <div class="game-wrapper">
+        <div class="canvas-shell">
+            <canvas id="hoopsCanvas" width="420" height="520"></canvas>
+            <div class="message" id="message"></div>
         </div>
-        <div class="ball" id="ball"></div>
-        <div class="aim-line" id="aimLine"></div>
-        <div class="power-meter">
-            <div class="power-fill" id="powerFill"></div>
+        <div class="aim-panel">
+            <div class="readout">
+                <span>Level</span>
+                <strong id="levelName">Warmup Arc</strong>
+            </div>
+            <div class="readout">
+                <span>Next Goal</span>
+                <strong id="levelGoal">Hit 12 pts</strong>
+            </div>
+            <div class="readout">
+                <span>Angle</span>
+                <strong><span id="angleValue">18</span>°</strong>
+            </div>
+            <div class="readout">
+                <span>Power</span>
+                <strong id="powerValue">520</strong>
+            </div>
+            <div class="readout">
+                <span>Best Streak</span>
+                <strong id="bestStreak">0</strong>
+            </div>
         </div>
-        <div class="message" id="message"></div>
-        <div class="streak-indicator" id="streakIndicator">ON FIRE!</div>
     </div>
 
     <div class="mobile-controls" id="mobileControls">
@@ -406,6 +292,11 @@
             <button class="btn aim-btn" id="aimDown">↓</button>
             <div class="aim-btn empty"></div>
         </div>
+        <div class="tuning-controls">
+            <button class="btn" id="powerDown">Power -</button>
+            <div class="tuning-readout">Power <span id="powerText">520</span></div>
+            <button class="btn" id="powerUp">Power +</button>
+        </div>
         <button class="btn shoot-btn" id="mobileShoot">SHOOT!</button>
     </div>
 
@@ -414,323 +305,279 @@
     </div>
 
     <div class="instructions">
-        <p class="desktop-hint">Drag the ball and release to shoot. Aim for the rim!</p>
-        <p class="mobile-hint">Use arrows to aim, center or SHOOT! to fire</p>
+        <p>Use <strong>arrow keys / WASD</strong> to move the shooter and tune the arc. Tap <strong>Space</strong> to fire. Hit streaks for extra points as the hoop starts drifting across the glass.</p>
+        <p>On mobile, nudge with the arrows, adjust power, and slap SHOOT!. Kaboom.js keeps the physics stable even on touch.</p>
     </div>
 
-    <script>
-        const gameArea = document.getElementById('gameArea');
-        const ball = document.getElementById('ball');
-        const aimLine = document.getElementById('aimLine');
-        const powerFill = document.getElementById('powerFill');
-        const messageEl = document.getElementById('message');
-        const streakIndicator = document.getElementById('streakIndicator');
+    <script type="module">
+        import kaboom from "https://unpkg.com/kaboom/dist/kaboom.mjs";
+
         const scoreEl = document.getElementById('score');
         const shotsEl = document.getElementById('shots');
         const streakEl = document.getElementById('streak');
+        const levelNameEl = document.getElementById('levelName');
+        const levelGoalEl = document.getElementById('levelGoal');
+        const angleValueEl = document.getElementById('angleValue');
+        const powerValueEl = document.getElementById('powerValue');
+        const powerTextEl = document.getElementById('powerText');
+        const bestStreakEl = document.getElementById('bestStreak');
+        const messageEl = document.getElementById('message');
 
+        const canvas = document.getElementById('hoopsCanvas');
+        const k = kaboom({
+            global: false,
+            canvas,
+            width: 420,
+            height: 520,
+            background: [5, 5, 5],
+            letterbox: true,
+            touchToMouse: false
+        });
+
+        const levels = [
+            { name: 'Warmup Arc', target: 12, hoopSpeed: 0, gravity: 1800 },
+            { name: 'Side Drift', target: 26, hoopSpeed: 35, gravity: 1850 },
+            { name: 'Turbo Pulse', target: Infinity, hoopSpeed: 65, gravity: 1950 }
+        ];
+
+        let currentLevel = 0;
+        let hoopDirection = 1;
         let score = 0;
         let shots = 0;
         let streak = 0;
-        let maxStreak = 0;
-        let isDragging = false;
-        let startX, startY;
-        let ballStartX, ballStartY;
-        let isAnimating = false;
+        let bestStreak = 0;
+        let aimAngle = 18;
+        let power = 520;
+        let ballReady = true;
 
-        // Initial ball position
-        const initialBallX = gameArea.offsetWidth / 2 - 20;
-        const initialBallY = gameArea.offsetHeight - 80;
+        const angleLimits = { min: 8, max: 35 };
+        const powerLimits = { min: 460, max: 720 };
+        const launchY = k.height() - 80;
 
-        // Rim position (center of the rim)
-        const rimCenterX = gameArea.offsetWidth / 2;
-        const rimCenterY = 125; // Approximate y position of rim
+        const glass = k.add([
+            k.pos(k.width() / 2, 110),
+            k.rect(130, 90, { radius: 12 }),
+            k.color(200, 30, 30),
+            k.opacity(0.2),
+            k.anchor('center')
+        ]);
 
-        function resetBall() {
-            ball.style.left = initialBallX + 'px';
-            ball.style.top = initialBallY + 'px';
-            ball.style.display = 'block';
-            isAnimating = false;
-        }
+        const hoop = k.add([
+            k.pos(k.width() / 2, 150),
+            k.anchor('center'),
+            'hoop'
+        ]);
 
-        function showMessage(text, duration = 1000) {
-            messageEl.textContent = text;
-            messageEl.classList.add('show');
-            setTimeout(() => {
-                messageEl.classList.remove('show');
-            }, duration);
+        hoop.add([
+            k.rect(80, 10, { radius: 4 }),
+            k.color(255, 0, 0),
+            k.anchor('center'),
+            k.area(),
+            'rim'
+        ]);
+
+        hoop.add([
+            k.pos(0, 20),
+            k.rect(50, 14),
+            k.area({ sensor: true }),
+            k.color(0, 0, 0),
+            k.opacity(0),
+            'scoreZone'
+        ]);
+
+        const shooterBase = k.add([
+            k.pos(k.width() / 2, launchY + 10),
+            k.rect(90, 6, { radius: 3 }),
+            k.anchor('center'),
+            k.color(255, 0, 0)
+        ]);
+
+        const shooterGlow = k.add([
+            k.pos(k.width() / 2, launchY),
+            k.circle(18),
+            k.color(255, 120, 0),
+            k.outline(4, k.rgb(255, 0, 0)),
+            k.anchor('center')
+        ]);
+
+        function clamp(val, min, max) {
+            return Math.max(min, Math.min(max, val));
         }
 
         function updateStats() {
             scoreEl.textContent = score;
             shotsEl.textContent = shots;
             streakEl.textContent = streak;
+            bestStreakEl.textContent = bestStreak;
+            angleValueEl.textContent = Math.round(aimAngle);
+            powerValueEl.textContent = Math.round(power);
+            powerTextEl.textContent = Math.round(power);
+        }
 
-            if (streak >= 3) {
-                streakIndicator.classList.add('show');
-            } else {
-                streakIndicator.classList.remove('show');
+        function updateLevelOverlay() {
+            const level = levels[currentLevel];
+            levelNameEl.textContent = level.name;
+            levelGoalEl.textContent = level.target === Infinity ? 'Final wave' : `Hit ${level.target} pts`;
+            k.setGravity(level.gravity);
+        }
+
+        function showMessage(text) {
+            messageEl.textContent = text;
+            messageEl.classList.add('show');
+            setTimeout(() => messageEl.classList.remove('show'), 700);
+        }
+
+        function moveShooter(delta) {
+            const nextX = clamp(shooterGlow.pos.x + delta, 50, k.width() - 50);
+            shooterGlow.pos.x = nextX;
+            shooterBase.pos.x = nextX;
+        }
+
+        function adjustAngle(delta) {
+            aimAngle = clamp(aimAngle + delta, angleLimits.min, angleLimits.max);
+            updateStats();
+        }
+
+        function adjustPower(delta) {
+            power = clamp(power + delta, powerLimits.min, powerLimits.max);
+            updateStats();
+        }
+
+        function finishShot(made) {
+            if (!made) {
+                streak = 0;
+                showMessage('BRICK');
+            }
+            updateStats();
+            setTimeout(() => {
+                ballReady = true;
+            }, 250);
+        }
+
+        function handleScore(points) {
+            streak++;
+            bestStreak = Math.max(bestStreak, streak);
+            score += points;
+            showMessage(points === 3 ? 'ON FIRE +3' : 'SWISH +2');
+            updateStats();
+
+            const level = levels[currentLevel];
+            if (score >= level.target && currentLevel < levels.length - 1) {
+                currentLevel++;
+                hoopDirection = hoopDirection * -1;
+                updateLevelOverlay();
+                showMessage(`${levels[currentLevel].name}!`);
             }
         }
 
-        function checkScore(endX, endY) {
-            // Check if ball passes through the rim area
-            const rimLeft = rimCenterX - 30;
-            const rimRight = rimCenterX + 30;
-            const rimTop = rimCenterY - 10;
-            const rimBottom = rimCenterY + 20;
-
-            if (endX > rimLeft && endX < rimRight && endY > rimTop && endY < rimBottom) {
-                // Score!
-                const points = streak >= 3 ? 3 : 2;
-                score += points;
-                streak++;
-                if (streak > maxStreak) maxStreak = streak;
-
-                if (streak >= 3) {
-                    showMessage('ON FIRE! +' + points);
-                } else if (streak >= 2) {
-                    showMessage('SWISH! +' + points);
-                } else {
-                    showMessage('SCORE! +' + points);
-                }
-                return true;
-            }
-            return false;
-        }
-
-        function shootBall(velocityX, velocityY, power) {
-            if (isAnimating) return;
-            isAnimating = true;
+        function fireShot() {
+            if (!ballReady) return;
+            ballReady = false;
             shots++;
+            updateStats();
 
-            let x = parseFloat(ball.style.left) || initialBallX;
-            let y = parseFloat(ball.style.top) || initialBallY;
+            const angleRad = (Math.PI / 180) * aimAngle;
+            const velocity = k.vec2(Math.sin(angleRad) * power, -Math.cos(angleRad) * power);
 
-            // Scale velocity by power
-            velocityX *= power * 0.15;
-            velocityY *= power * 0.15;
+            const ball = k.add([
+                k.pos(shooterGlow.pos.x, launchY),
+                k.circle(14),
+                k.area(),
+                k.color(255, 150, 0),
+                k.outline(2, k.rgb(255, 0, 0)),
+                k.body({ mass: 0.8 }),
+                'ball'
+            ]);
 
-            const gravity = 0.5;
-            let scored = false;
-            let hasPassedRim = false;
+            ball.vel = velocity;
+            ball.scored = false;
 
-            function animate() {
-                x += velocityX;
-                y += velocityY;
-                velocityY += gravity;
-
-                ball.style.left = x + 'px';
-                ball.style.top = y + 'px';
-
-                // Check scoring when ball is near rim height
-                if (!scored && y < rimCenterY + 30 && y > rimCenterY - 30) {
-                    if (checkScore(x + 20, y + 20)) {
-                        scored = true;
-                    }
-                    hasPassedRim = true;
+            ball.onUpdate(() => {
+                ball.angle += ball.vel.x * 0.01;
+                if (ball.pos.y > k.height() + 80 || ball.pos.x < -80 || ball.pos.x > k.width() + 80) {
+                    if (!ball.scored) finishShot(false);
+                    ball.destroy();
                 }
+            });
 
-                // Ball out of bounds or stopped
-                if (y > gameArea.offsetHeight + 50 || x < -50 || x > gameArea.offsetWidth + 50) {
-                    if (!scored && hasPassedRim) {
-                        streak = 0;
-                        showMessage('MISS!');
-                    } else if (!scored && !hasPassedRim) {
-                        streak = 0;
-                        showMessage('AIR BALL!');
-                    }
-                    updateStats();
-                    setTimeout(resetBall, 500);
-                    return;
+            ball.onCollide('scoreZone', () => {
+                if (ball.vel.y > 0 && !ball.scored) {
+                    ball.scored = true;
+                    const points = streak >= 2 ? 3 : 2;
+                    handleScore(points);
+                    finishShot(true);
+                    ball.destroy();
                 }
+            });
 
-                requestAnimationFrame(animate);
+            ball.onCollide('rim', () => {
+                ball.vel.x *= 0.8;
+                ball.vel.y *= -0.4;
+            });
+
+            k.wait(2, () => {
+                if (ball.exists() && !ball.scored) {
+                    finishShot(false);
+                    ball.destroy();
+                }
+            });
+        }
+
+        k.onUpdate(() => {
+            const level = levels[currentLevel];
+            if (level.hoopSpeed > 0) {
+                hoop.pos.x += level.hoopSpeed * hoopDirection * k.dt();
+                glass.pos.x = hoop.pos.x;
+                if (hoop.pos.x > k.width() - 40 || hoop.pos.x < 40) {
+                    hoopDirection *= -1;
+                }
             }
-
-            animate();
-        }
-
-        // Desktop drag controls
-        ball.addEventListener('mousedown', (e) => {
-            if (isAnimating) return;
-            isDragging = true;
-            ball.classList.add('dragging');
-            startX = e.clientX;
-            startY = e.clientY;
-            ballStartX = parseFloat(ball.style.left) || initialBallX;
-            ballStartY = parseFloat(ball.style.top) || initialBallY;
-            aimLine.style.display = 'block';
-            e.preventDefault();
         });
 
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
+        k.onKeyDown('left', () => moveShooter(-140 * k.dt()));
+        k.onKeyDown('right', () => moveShooter(140 * k.dt()));
+        k.onKeyDown('a', () => moveShooter(-140 * k.dt()));
+        k.onKeyDown('d', () => moveShooter(140 * k.dt()));
+        k.onKeyDown('up', () => adjustAngle(18 * k.dt()));
+        k.onKeyDown('down', () => adjustAngle(-18 * k.dt()));
+        k.onKeyDown('w', () => adjustAngle(18 * k.dt()));
+        k.onKeyDown('s', () => adjustAngle(-18 * k.dt()));
+        k.onKeyPress('space', fireShot);
 
-            const dx = startX - e.clientX;
-            const dy = startY - e.clientY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const angle = Math.atan2(dx, dy);
-
-            // Update aim line
-            aimLine.style.height = Math.min(distance, 150) + 'px';
-            aimLine.style.left = (ballStartX + 20) + 'px';
-            aimLine.style.bottom = (gameArea.offsetHeight - ballStartY - 20) + 'px';
-            aimLine.style.transform = `rotate(${angle}rad)`;
-
-            // Update power meter
-            const power = Math.min(distance / 150, 1);
-            powerFill.style.height = (power * 100) + '%';
-        });
-
-        document.addEventListener('mouseup', (e) => {
-            if (!isDragging) return;
-            isDragging = false;
-            ball.classList.remove('dragging');
-            aimLine.style.display = 'none';
-
-            const dx = startX - e.clientX;
-            const dy = startY - e.clientY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance > 20) {
-                shootBall(dx / 10, dy / 10, distance);
-            }
-
-            powerFill.style.height = '0%';
-        });
-
-        // Touch controls
-        ball.addEventListener('touchstart', (e) => {
-            if (isAnimating) return;
-            isDragging = true;
-            ball.classList.add('dragging');
-            const touch = e.touches[0];
-            startX = touch.clientX;
-            startY = touch.clientY;
-            ballStartX = parseFloat(ball.style.left) || initialBallX;
-            ballStartY = parseFloat(ball.style.top) || initialBallY;
-            aimLine.style.display = 'block';
-            e.preventDefault();
-        });
-
-        document.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            const touch = e.touches[0];
-
-            const dx = startX - touch.clientX;
-            const dy = startY - touch.clientY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const angle = Math.atan2(dx, dy);
-
-            aimLine.style.height = Math.min(distance, 150) + 'px';
-            aimLine.style.left = (ballStartX + 20) + 'px';
-            aimLine.style.bottom = (gameArea.offsetHeight - ballStartY - 20) + 'px';
-            aimLine.style.transform = `rotate(${angle}rad)`;
-
-            const power = Math.min(distance / 150, 1);
-            powerFill.style.height = (power * 100) + '%';
-            e.preventDefault();
-        });
-
-        document.addEventListener('touchend', (e) => {
-            if (!isDragging) return;
-            isDragging = false;
-            ball.classList.remove('dragging');
-            aimLine.style.display = 'none';
-
-            const touch = e.changedTouches[0];
-            const dx = startX - touch.clientX;
-            const dy = startY - touch.clientY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance > 20) {
-                shootBall(dx / 10, dy / 10, distance);
-            }
-
-            powerFill.style.height = '0%';
-        });
-
-        // Mobile button controls
-        let aimX = 0;
-        let aimY = -10; // Default aim upward
-        let power = 80;
-
-        function handleAimUp(e) {
-            e.preventDefault();
-            aimY = Math.max(aimY - 2, -15);
-            updateAimDisplay();
-        }
-
-        function handleAimDown(e) {
-            e.preventDefault();
-            aimY = Math.min(aimY + 2, -5);
-            updateAimDisplay();
-        }
-
-        function handleAimLeft(e) {
-            e.preventDefault();
-            aimX = Math.max(aimX - 2, -8);
-            updateAimDisplay();
-        }
-
-        function handleAimRight(e) {
-            e.preventDefault();
-            aimX = Math.min(aimX + 2, 8);
-            updateAimDisplay();
-        }
-
-        function handleShoot(e) {
-            e.preventDefault();
-            if (isAnimating) return;
-            aimLine.style.display = 'none';
-            shootBall(aimX, aimY, power);
-        }
-
-        // Touch events (prevent zoom)
-        document.getElementById('aimUp').addEventListener('touchstart', handleAimUp, { passive: false });
-        document.getElementById('aimDown').addEventListener('touchstart', handleAimDown, { passive: false });
-        document.getElementById('aimLeft').addEventListener('touchstart', handleAimLeft, { passive: false });
-        document.getElementById('aimRight').addEventListener('touchstart', handleAimRight, { passive: false });
-        document.getElementById('mobileShoot').addEventListener('touchstart', handleShoot, { passive: false });
-        document.getElementById('shootBtn').addEventListener('touchstart', handleShoot, { passive: false });
-
-        // Click fallbacks
-        document.getElementById('aimUp').addEventListener('click', handleAimUp);
-        document.getElementById('aimDown').addEventListener('click', handleAimDown);
-        document.getElementById('aimLeft').addEventListener('click', handleAimLeft);
-        document.getElementById('aimRight').addEventListener('click', handleAimRight);
-        document.getElementById('mobileShoot').addEventListener('click', handleShoot);
-        document.getElementById('shootBtn').addEventListener('click', handleShoot);
-
-        function updateAimDisplay() {
-            const angle = Math.atan2(aimX, -aimY);
-            const distance = Math.sqrt(aimX * aimX + aimY * aimY) * 10;
-            aimLine.style.display = 'block';
-            aimLine.style.height = distance + 'px';
-            aimLine.style.left = (initialBallX + 20) + 'px';
-            aimLine.style.bottom = (gameArea.offsetHeight - initialBallY - 20) + 'px';
-            aimLine.style.transform = `rotate(${angle}rad)`;
-        }
-
-        // Reset button
         document.getElementById('resetBtn').addEventListener('click', () => {
             score = 0;
             shots = 0;
             streak = 0;
+            bestStreak = 0;
+            currentLevel = 0;
+            shooterGlow.pos.x = k.width() / 2;
+            shooterBase.pos.x = k.width() / 2;
+            aimAngle = 18;
+            power = 520;
+            updateLevelOverlay();
             updateStats();
-            resetBall();
-            showMessage('GAME RESET');
+            showMessage('RESET');
         });
 
-        // Initialize
-        resetBall();
-        updateStats();
-
-        // Show initial aim on mobile
-        if (window.innerWidth <= 768) {
-            setTimeout(updateAimDisplay, 100);
+        function bindControl(id, handler) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); handler(); }, { passive: false });
+            el.addEventListener('click', (e) => { e.preventDefault(); handler(); });
         }
+
+        bindControl('aimLeft', () => moveShooter(-16));
+        bindControl('aimRight', () => moveShooter(16));
+        bindControl('aimUp', () => adjustAngle(2));
+        bindControl('aimDown', () => adjustAngle(-2));
+        bindControl('shootBtn', fireShot);
+        bindControl('mobileShoot', fireShot);
+        bindControl('powerUp', () => adjustPower(20));
+        bindControl('powerDown', () => adjustPower(-20));
+
+        updateLevelOverlay();
+        updateStats();
     </script>
+    <script src="../stars.js" defer></script>
 </body>
 </html>
