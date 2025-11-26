@@ -4,123 +4,173 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bot Sportello's Web Projects</title>
-    <link rel="stylesheet" href="page-theme.css">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            color-scheme: dark;
+        }
+        * {
+            box-sizing: border-box;
+        }
         body {
-            background: #0a0a0a;
-            color: #7ec8e3;
-            font-family: 'Courier Prime', monospace;
-            padding: 20px;
+            margin: 0;
             min-height: 100vh;
+            font-family: 'Courier Prime', monospace;
+            background: radial-gradient(circle at top, rgba(255,0,0,0.15), transparent 60%), #050505;
+            color: #7ec8e3;
+            padding: 40px 20px 120px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .stars {
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: transparent;
+        }
+        .star {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 999px;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+        .star.blue { background: rgba(126, 200, 227, 0.8); }
+        .star.cyan { background: rgba(0, 255, 255, 0.8); }
+        .star.red { background: rgba(255, 0, 0, 0.8); }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.75); }
+            50% { opacity: 1; transform: scale(1); }
         }
         .home-container {
-            max-width: 1200px;
+            width: min(1200px, 100%);
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
         .header-section {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 40px;
         }
         h1 {
-            font-size: 2.5em;
+            margin: 0;
+            font-size: clamp(1.8rem, 4vw, 3rem);
             color: #ff0000;
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+            text-shadow: 0 0 18px rgba(255, 0, 0, 0.65);
         }
         .subtitle {
-            font-size: 1em;
             color: #00ffff;
-            margin-bottom: 30px;
             letter-spacing: 1px;
+            font-size: 0.95rem;
+            margin: 10px 0 5px;
         }
-        .section-title {
-            font-size: 1.5em;
-            color: #ff0000;
-            margin-top: 40px;
+        .sync-hint {
+            font-size: 0.85rem;
+            color: rgba(126, 200, 227, 0.85);
+            margin: 0;
+        }
+        .collection {
+            margin-bottom: 60px;
+        }
+        .collection-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 2px solid rgba(126,200,227,0.4);
+            padding-bottom: 8px;
             margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-            border-bottom: 2px solid #7ec8e3;
-            padding-bottom: 10px;
+        }
+        .collection-title {
+            font-size: 1.4rem;
+            color: #ff0000;
+            text-shadow: 0 0 12px rgba(255,0,0,0.5);
+        }
+        .collection-description {
+            font-size: 0.9rem;
+            color: rgba(126, 200, 227, 0.85);
         }
         .projects-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+        .collection-featured .projects-grid {
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         }
         .project-card {
-            background: rgba(26, 0, 0, 0.4);
-            border: 2px solid #ff0000;
+            border: 1px solid rgba(126, 200, 227, 0.35);
+            background: rgba(10, 10, 10, 0.85);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.35);
             padding: 20px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+            min-height: 210px;
+        }
+        .collection-featured .project-card {
+            min-height: 240px;
+            border-width: 2px;
+            background: rgba(24, 0, 0, 0.75);
         }
         .project-card:hover {
-            border-color: #7ec8e3;
-            box-shadow: 0 0 20px rgba(126, 200, 227, 0.3);
-            transform: translateY(-5px);
-            background: rgba(126, 200, 227, 0.1);
+            transform: translateY(-6px);
+            border-color: #ff0000;
+            box-shadow: 0 20px 60px rgba(255, 0, 0, 0.18);
         }
-        .project-card h3 {
-            font-size: 1.1em;
+        .project-name {
+            font-size: 1.1rem;
+            margin: 0;
             color: #00ffff;
-            margin-bottom: 10px;
-            word-break: break-word;
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.35);
         }
-        .project-card p {
-            font-size: 0.9em;
-            color: #7ec8e3;
-            margin-bottom: 15px;
-            line-height: 1.6;
+        .project-description {
+            margin: 0;
+            font-size: 0.95rem;
+            color: rgba(126, 200, 227, 0.92);
+        }
+        .project-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: rgba(126, 200, 227, 0.8);
         }
         .project-link {
-            display: inline-block;
-            background: rgba(255, 0, 0, 0.7);
-            color: #7ec8e3;
-            padding: 10px 18px;
-            text-decoration: none;
-            font-size: 0.9em;
-            border: 2px solid #7ec8e3;
-            transition: all 0.2s ease;
-            min-height: 44px;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: 8px;
+            margin-top: auto;
+            padding: 12px 16px;
+            border: 1px solid #7ec8e3;
+            color: #7ec8e3;
+            text-decoration: none;
+            letter-spacing: 1px;
+            transition: background 160ms ease, color 160ms ease, transform 160ms ease;
         }
         .project-link:hover {
             background: #ff0000;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+            color: #050505;
+            transform: translateY(-2px);
         }
-        .featured-card {
-            grid-column: span 1;
+        .status-line {
+            text-align: center;
+            margin: 30px auto 10px;
+            font-size: 0.9rem;
+            color: rgba(126, 200, 227, 0.75);
+        }
+        .error-line {
+            color: #ff6b6b;
         }
         @media (max-width: 768px) {
-            .projects-grid {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 15px;
+            body {
+                padding: 24px 16px 90px;
             }
-            h1 {
-                font-size: 1.5em;
-            }
-            .project-card {
-                padding: 15px;
-            }
-        }
-        @media (max-width: 480px) {
-            .projects-grid {
-                grid-template-columns: 1fr;
-            }
-            h1 {
-                font-size: 1.2em;
-            }
-            .project-card h3 {
-                font-size: 1em;
-            }
-            .project-card p {
-                font-size: 0.85em;
+            .collection-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
             }
         }
     </style>
@@ -129,242 +179,136 @@
     <div class="home-container">
         <div class="header-section">
             <h1>🎮 Bot Sportello's Projects</h1>
-            <p class="subtitle">A collection of arcade-themed web apps & games</p>
+            <p class="subtitle">Noir arcade experiments deployed live from Discord</p>
+            <p class="sync-hint">Add a new page, run <code>/sync-index</code>, and it shows up here automatically.</p>
         </div>
 
-        <div class="section-title">🎯 FEATURED</div>
-        <div class="projects-grid">
-            <div class="project-card featured-card">
-                <h3>Zach & Cen's Amtrak Journey</h3>
-                <p>Interactive journey from Penn Station to Rochester with games at each stop.</p>
-                <a href="src/amtrak-journey.html" class="project-link">PLAY →</a>
-            </div>
-        </div>
-
-        <div class="section-title">🕹️ ARCADE GAMES</div>
-        <div class="projects-grid">
-            <div class="project-card">
-                <h3>🐷 Pigman</h3>
-                <p>Help the pig escape! Collect pellets while avoiding people with unique AI personalities. Power pellets let you fight back!</p>
-                <a href="src/pigman.html" class="project-link">PLAY →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Frogger</h3>
-                <p>Classic arcade frogger game. Jump across logs and lily pads to reach the other side!</p>
-                <a href="src/frogger.html" class="project-link">PLAY →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Snaker</h3>
-                <p>Classic snake game with arcade vibes. Eat pellets and grow your snake!</p>
-                <a href="src/snaker.html" class="project-link">PLAY →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Sudoku</h3>
-                <p>Retro sudoku puzzle game with number pad controls. Solve the grid!</p>
-                <a href="src/sudoku.html" class="project-link">PLAY →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Frog Whack-a-Mole</h3>
-                <p>Tap the frogs before they disappear. Fast-paced arcade action!</p>
-                <a href="src/frog_whack_a_mole.html" class="project-link">PLAY →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Bills QB Game</h3>
-                <p>Football throwing game. Test your accuracy and arm strength!</p>
-                <a href="src/bills_qb_game.html" class="project-link">PLAY →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Jackson Biscuit Game</h3>
-                <p>Catch the falling biscuits! How many can you grab?</p>
-                <a href="src/jackson_biscuit_game.html" class="project-link">PLAY →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Terminal Memory</h3>
-                <p>Memory matching game with a terminal aesthetic. Test your recall!</p>
-                <a href="src/terminal-memory.html" class="project-link">PLAY →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Double Dragon Beat 'Em Up</h3>
-                <p>Classic beat-em-up arcade action. Fight your way through!</p>
-                <a href="src/double_dragon_beatem_up.html" class="project-link">PLAY →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>🏀 Basket Jam</h3>
-                <p>Arcade basketball game. Shoot hoops and rack up points!</p>
-                <a href="src/basket-jam.html" class="project-link">PLAY →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>🐴 Bubba Clicker</h3>
-                <p>Clicker game chronicling Bubba the Horse's journey. Click to progress!</p>
-                <a href="src/bubba_clicker.html" class="project-link">PLAY →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Ryan Pacman</h3>
-                <p>Pac-Man style game featuring Ryan from Ryan's Toy Review!</p>
-                <a href="src/ryan-pacman-improved.html" class="project-link">PLAY →</a>
-            </div>
-        </div>
-
-        <div class="section-title">📋 UTILITIES & APPS</div>
-        <div class="projects-grid">
-            <div class="project-card">
-                <h3>Noodle Inventory</h3>
-                <p>Track your noodle collection with style. Organize, categorize, and manage all your noodle types.</p>
-                <a href="src/noodle_inventory.html" class="project-link">PLAY →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Cen's Todo List</h3>
-                <p>Task management with style. Keep track of what needs to be done.</p>
-                <a href="src/cen-todo-list.html" class="project-link">OPEN →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Cen Sunday Todo</h3>
-                <p>Weekly task planner. Organize your Sunday activities.</p>
-                <a href="src/cen-sunday-todo.html" class="project-link">OPEN →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Weekend Planner</h3>
-                <p>Plan your weekend activities and keep track of your schedule.</p>
-                <a href="src/weekend%20planner.html" class="project-link">OPEN →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Zach Work Schedule</h3>
-                <p>Track work shifts and schedule information.</p>
-                <a href="src/zach_work_schedule.html" class="project-link">OPEN →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Zach Errands</h3>
-                <p>Manage your errands and to-do items.</p>
-                <a href="src/zach-errands.html" class="project-link">OPEN →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Parlay Probability Viz</h3>
-                <p>Visualize and calculate parlay betting probabilities.</p>
-                <a href="src/parlay_probability_viz.html" class="project-link">OPEN →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>📋 Planner</h3>
-                <p>Daily planner app to organize your tasks and schedule.</p>
-                <a href="src/planner.html" class="project-link">OPEN →</a>
-            </div>
-        </div>
-
-        <div class="section-title">📖 STORIES & CONTENT</div>
-        <div class="projects-grid">
-            <div class="project-card">
-                <h3>Zach Sleep Letter</h3>
-                <p>A letter about the importance of sleep. Thoughtful and informative.</p>
-                <a href="src/zach-sleep-letter.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Borscht Recipe</h3>
-                <p>Interactive borscht recipe. Learn to make this classic dish!</p>
-                <a href="src/borscht.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Bushwick</h3>
-                <p>Explore the neighborhood with this interactive guide.</p>
-                <a href="src/bushwick.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Alex's Dog Mess</h3>
-                <p>A story about dog mishaps and cleanup.</p>
-                <a href="src/alex_dog_mess.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Cen's Veggie Haul</h3>
-                <p>A story about vegetable shopping and cooking adventures.</p>
-                <a href="src/cen_veggie_haul.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Rat Bushwick</h3>
-                <p>A tale from the streets of Bushwick.</p>
-                <a href="src/rat_bushwick.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Red Siren Protocol</h3>
-                <p>A noir-themed alert system and warning page.</p>
-                <a href="src/red-siren-protocol.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Rubi Infomercial</h3>
-                <p>An over-the-top infomercial experience.</p>
-                <a href="src/rubi_infomercial.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Sampson Deodorant</h3>
-                <p>A humorous product page for a fictional deodorant.</p>
-                <a href="src/sampson_deodorant.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Radish Love</h3>
-                <p>A quirky love letter to radishes.</p>
-                <a href="src/radish_love.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Droid Union</h3>
-                <p>A story about robot labor rights.</p>
-                <a href="src/droid-union.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Digital Sisyphus</h3>
-                <p>A philosophical take on digital existence.</p>
-                <a href="src/digital_sisyphus.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Subway Sub Ratio</h3>
-                <p>An analysis of sandwich proportions.</p>
-                <a href="src/subway_sub_ratio.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Task Warning</h3>
-                <p>A flashing noir warning page for important tasks.</p>
-                <a href="src/task-warning.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>Anniversary</h3>
-                <p>A special anniversary celebration page.</p>
-                <a href="src/anniversary.html" class="project-link">READ →</a>
-            </div>
-
-            <div class="project-card">
-                <h3>🏈 Bills Superbowl Infographic</h3>
-                <p>Interactive infographic showcasing why the Buffalo Bills will win the Super Bowl.</p>
-                <a href="src/bills-superbowl-infographic.html" class="project-link">READ →</a>
-            </div>
-        </div>
+        <p class="status-line" id="status-line">Syncing latest project metadata…</p>
+        <div id="collections"></div>
     </div>
+
+    <script src="stars.js" defer></script>
+    <script>
+        const statusLine = document.getElementById('status-line');
+        const collectionsContainer = document.getElementById('collections');
+
+        function formatLink(slug) {
+            return `src/${encodeURIComponent(slug)}.html`;
+        }
+
+        function createProjectCard(slug, project) {
+            const card = document.createElement('article');
+            card.className = 'project-card';
+
+            const title = document.createElement('h3');
+            title.className = 'project-name';
+            title.textContent = `${project.icon || '🌐'} ${project.title || slug}`;
+
+            const desc = document.createElement('p');
+            desc.className = 'project-description';
+            desc.textContent = project.description || 'Interactive web project';
+
+            const meta = document.createElement('div');
+            meta.className = 'project-meta';
+            meta.innerHTML = `<span>${slug}</span><span>${project.collection || 'unsorted'}</span>`;
+
+            const link = document.createElement('a');
+            link.className = 'project-link';
+            link.href = formatLink(slug);
+            link.textContent = 'OPEN →';
+
+            link.setAttribute('aria-label', `Open ${project.title || slug}`);
+
+            card.appendChild(title);
+            card.appendChild(desc);
+            card.appendChild(meta);
+            card.appendChild(link);
+            return card;
+        }
+
+        function renderCollections(data) {
+            const collections = data.collections || {};
+            const projects = data.projects || {};
+            const grouped = {};
+
+            Object.entries(projects).forEach(([slug, project]) => {
+                if (project.hidden) {
+                    return;
+                }
+                const collectionId = collections[project.collection] ? project.collection : 'unsorted';
+                if (!grouped[collectionId]) {
+                    grouped[collectionId] = [];
+                }
+                grouped[collectionId].push({ slug, ...project });
+            });
+
+            const orderedCollections = Object.entries(collections)
+                .sort(([, a], [, b]) => (a.order || 99) - (b.order || 99));
+
+            let totalProjects = 0;
+
+            orderedCollections.forEach(([id, meta]) => {
+                const items = grouped[id] || [];
+                if (!items.length) {
+                    return;
+                }
+                totalProjects += items.length;
+
+                const section = document.createElement('section');
+                section.className = `collection ${id === 'featured' ? 'collection-featured' : ''}`;
+                section.dataset.collection = id;
+
+                const header = document.createElement('div');
+                header.className = 'collection-header';
+
+                const title = document.createElement('h2');
+                title.className = 'collection-title';
+                title.textContent = meta.title || id;
+
+                const description = document.createElement('p');
+                description.className = 'collection-description';
+                description.textContent = meta.description || '';
+
+                header.appendChild(title);
+                header.appendChild(description);
+
+                const grid = document.createElement('div');
+                grid.className = 'projects-grid';
+
+                items
+                    .sort((a, b) => (a.title || a.slug).localeCompare(b.title || b.slug))
+                    .forEach(item => {
+                        grid.appendChild(createProjectCard(item.slug, item));
+                    });
+
+                section.appendChild(header);
+                section.appendChild(grid);
+                collectionsContainer.appendChild(section);
+            });
+
+            if (!totalProjects) {
+                statusLine.textContent = 'No projects found. Run /sync-index after shipping something new.';
+            } else {
+                statusLine.textContent = `Showing ${totalProjects} deployed projects.`;
+            }
+        }
+
+        async function loadProjects() {
+            try {
+                const response = await fetch(`projectmetadata.json?${Date.now()}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load metadata');
+                }
+                const data = await response.json();
+                renderCollections(data);
+            } catch (error) {
+                console.error(error);
+                statusLine.textContent = 'Could not load metadata. Run /sync-index after the next deploy.';
+                statusLine.classList.add('error-line');
+            }
+        }
+
+        loadProjects();
+    </script>
 </body>
 </html>

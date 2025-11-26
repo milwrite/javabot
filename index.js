@@ -40,6 +40,14 @@ const CONFIG = {
     AGENTS_UPDATE_DELAY: 5000
 };
 
+const DEFAULT_COLLECTIONS = {
+    'featured': { title: '🎯 Featured', description: 'Spotlight builds and journeys', order: 1 },
+    'arcade-games': { title: '🕹️ Arcade Games', description: 'Mobile-ready noir cabinets', order: 2 },
+    'utilities-apps': { title: '📋 Utilities & Apps', description: 'Planners, trackers, calculators', order: 3 },
+    'stories-content': { title: '📖 Stories & Content', description: 'Letters, recipes, transmissions', order: 4 },
+    'unsorted': { title: '🗂️ Unsorted', description: 'Pages awaiting placement', order: 99 }
+};
+
 // Error tracking to prevent loops
 const errorTracker = new Map();
 const MAX_ERROR_COUNT = 3;
@@ -214,13 +222,13 @@ WHEN CREATING PAGES:
 7. Keep noir terminal colors (#7ec8e3, #ff0000, #00ffff, #0a0a0a)
 8. Test scrollability on mobile - no overflow: hidden on body
 
-PROJECT METADATA CAPTIONS (for projectmetadata.json):
-- MUST be concise one-liners: 3-6 words maximum
-- Format: "[Adjective] [noun] [type]" - e.g., "Classic frogger game", "Interactive borscht recipe"
-- NEVER include the user's full prompt or feature lists
-- NEVER start with verbs like "Create", "Build", "Make"
-- Good: "Arcade basketball game", "Noir task warning page", "Sleep importance letter"
-- Bad: "Create a flashing warning page with the message...", "Work schedule for Zach to fix..."
+PROJECT METADATA SYSTEM:
+- projectmetadata.json has { collections: {}, projects: {} }
+- Collections: featured, arcade-games, utilities-apps, stories-content, unsorted (fallback)
+- index.html auto-loads this file to render each collection, so keep metadata accurate
+- Every project entry needs: title, emoji icon, 3-6 word caption, collection ID, optional hidden flag
+- Captions follow "[adjective] [noun] [type]" style, no long prompts or verb starts
+- Run /sync-index after adding/editing pages so metadata and index stay aligned
 
 AFTER CREATING A PAGE - EXPLAIN WHAT YOU BUILT:
 When you finish creating a page, briefly tell the user what you made:
@@ -663,7 +671,7 @@ Return ONLY the complete updated file content. No explanations, no markdown code
 }
 
 // Helper function to pick emoji based on description
-function getIconForDescription(description) {
+function getIconForDescription(description = '') {
     const lowerDesc = description.toLowerCase();
 
     if (lowerDesc.includes('game')) return '🎮';
@@ -681,33 +689,74 @@ function getIconForDescription(description) {
     return '🌐'; // Default
 }
 
-// Helper function to condense long descriptions into one-liner captions
-function condenseDescription(description, pageName) {
-    // If already short enough (under 60 chars), use as-is
-    if (description.length <= 60) {
-        return description;
-    }
+function formatProjectTitle(pageName = '') {
+    return pageName
+        .replace(/[_-]+/g, ' ')
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ') || 'Untitled Project';
+}
 
-    // Remove common verbose patterns
+// Helper function to condense long descriptions into one-liner captions (3-6 words)
+function condenseDescription(description = '', pageName = '') {
+    const fallback = `${formatProjectTitle(pageName)} project`;
+
     let condensed = description
         .replace(/^(Create|Build|Make|Design|Generate|Implement)\s+(a\s+)?/i, '')
         .replace(/\s+with\s+(the\s+)?message[:\s].*/i, '')
         .replace(/\s+(using|with|featuring|including)\s+.*/i, '')
-        .replace(/\.\s+.*/g, '') // Remove everything after first sentence
-        .replace(/[.!?]+$/, '')  // Remove trailing punctuation
+        .replace(/\.\s+.*/g, '')
+        .replace(/[.!?]+$/, '')
         .trim();
 
-    // If still too long, truncate intelligently
-    if (condensed.length > 60) {
-        // Find a good break point (space) near 50 chars
-        const breakPoint = condensed.lastIndexOf(' ', 50);
-        condensed = condensed.substring(0, breakPoint > 20 ? breakPoint : 50).trim();
+    if (!condensed) {
+        condensed = fallback;
     }
 
-    // Capitalize first letter
+    let words = condensed.split(/\s+/).filter(Boolean);
+
+    if (words.length > 6) {
+        words = words.slice(0, 6);
+    } else if (words.length < 3) {
+        const filler = fallback.split(/\s+/).filter(Boolean);
+        while (words.length < 3 && filler.length) {
+            words.push(filler.shift());
+        }
+    }
+
+    condensed = words.join(' ');
     condensed = condensed.charAt(0).toUpperCase() + condensed.slice(1);
 
-    return condensed || pageName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    return condensed || fallback;
+}
+
+function normalizeMetadata(rawMetadata = {}) {
+    const normalized = {
+        collections: { ...(rawMetadata.collections || {}) },
+        projects: rawMetadata.projects || {}
+    };
+
+    let collectionsChanged = false;
+
+    for (const [key, defaults] of Object.entries(DEFAULT_COLLECTIONS)) {
+        const existing = normalized.collections[key] || {};
+        const next = {
+            title: existing.title || defaults.title,
+            description: existing.description || defaults.description,
+            order: typeof existing.order === 'number' ? existing.order : defaults.order
+        };
+
+        if (!normalized.collections[key] ||
+            existing.title !== next.title ||
+            existing.description !== next.description ||
+            existing.order !== next.order) {
+            normalized.collections[key] = next;
+            collectionsChanged = true;
+        }
+    }
+
+    return { metadata: normalized, collectionsChanged };
 }
 
 // Helper function to update projectmetadata.json with new page
@@ -717,29 +766,54 @@ async function updateIndexWithPage(pageName, description) {
         const condensedDesc = condenseDescription(description, pageName);
         const icon = getIconForDescription(description);
 
-        // Read existing metadata
-        let metadata = {};
+        let rawMetadata = {};
         try {
             const content = await fs.readFile(metadataPath, 'utf-8');
-            metadata = JSON.parse(content);
+            rawMetadata = JSON.parse(content);
         } catch (error) {
-            // If file doesn't exist, start with empty object
             console.log('Creating new projectmetadata.json file');
         }
 
-        // Check if page already exists
-        if (metadata[pageName]) {
+        const { metadata, collectionsChanged } = normalizeMetadata(rawMetadata);
+        const projects = metadata.projects;
+
+        const defaultEntry = {
+            title: formatProjectTitle(pageName),
+            description: condensedDesc,
+            icon,
+            collection: 'unsorted'
+        };
+
+        let updated = false;
+
+        if (!projects[pageName]) {
+            projects[pageName] = defaultEntry;
+            updated = true;
+        } else {
+            const projectEntry = projects[pageName];
+            if (!projectEntry.title) {
+                projectEntry.title = defaultEntry.title;
+                updated = true;
+            }
+            if (!projectEntry.description) {
+                projectEntry.description = defaultEntry.description;
+                updated = true;
+            }
+            if (!projectEntry.icon) {
+                projectEntry.icon = defaultEntry.icon;
+                updated = true;
+            }
+            if (!projectEntry.collection) {
+                projectEntry.collection = 'unsorted';
+                updated = true;
+            }
+        }
+
+        if (!updated && !collectionsChanged) {
             console.log(`Page ${pageName} already exists in metadata`);
             return `Page ${pageName} already in metadata`;
         }
 
-        // Add new page with condensed description
-        metadata[pageName] = {
-            icon: icon,
-            description: condensedDesc
-        };
-
-        // Write updated metadata
         await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
         console.log(`✅ Updated projectmetadata.json with ${pageName}`);
         return `Updated projectmetadata.json with ${pageName}`;
@@ -754,50 +828,49 @@ async function syncIndexWithSrcFiles() {
     try {
         console.log('🔄 Syncing projectmetadata.json with /src directory...');
 
-        // Read all HTML files in src directory
         const srcFiles = await fs.readdir('./src');
         const htmlFiles = srcFiles.filter(file => file.endsWith('.html'));
-
         console.log(`Found ${htmlFiles.length} HTML files in /src`);
 
-        // Read current metadata
         const metadataPath = './projectmetadata.json';
-        let metadata = {};
+        let rawMetadata = {};
         try {
             const content = await fs.readFile(metadataPath, 'utf-8');
-            metadata = JSON.parse(content);
+            rawMetadata = JSON.parse(content);
         } catch (error) {
             console.log('No existing metadata file, creating new one');
         }
 
-        const existingPages = new Set(Object.keys(metadata));
+        const { metadata, collectionsChanged } = normalizeMetadata(rawMetadata);
+        const projects = metadata.projects;
+        const existingPages = new Set(Object.keys(projects));
 
-        // Find missing pages
-        const missingPages = [];
-        for (const htmlFile of htmlFiles) {
-            const pageName = htmlFile.replace('.html', '');
-            if (!existingPages.has(pageName)) {
-                missingPages.push(pageName);
-            }
+        const missingPages = htmlFiles
+            .map(file => file.replace('.html', ''))
+            .filter(pageName => !existingPages.has(pageName));
+
+        let addedCount = 0;
+
+        for (const pageName of missingPages) {
+            const title = formatProjectTitle(pageName);
+            const description = condenseDescription(`${title} noir project`, pageName);
+
+            projects[pageName] = {
+                title,
+                description,
+                icon: getIconForDescription(description),
+                collection: 'unsorted'
+            };
+            addedCount++;
         }
 
-        if (missingPages.length === 0) {
+        if (!addedCount && !collectionsChanged) {
             console.log('✅ All pages are already in projectmetadata.json');
             return;
         }
 
-        console.log(`📝 Adding ${missingPages.length} missing pages: ${missingPages.join(', ')}`);
-
-        // Add missing pages with default metadata
-        for (const pageName of missingPages) {
-            const icon = getIconForDescription(pageName);
-            const description = `${pageName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`;
-
-            await updateIndexWithPage(pageName, description);
-        }
-
-        console.log('✅ Metadata sync complete!');
-
+        await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+        console.log(`✅ Metadata sync complete! Added ${addedCount} new pages.`);
     } catch (error) {
         console.error('Error syncing projectmetadata.json:', error);
     }

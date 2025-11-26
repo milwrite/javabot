@@ -1,166 +1,432 @@
 {
-  "frogger": {
-    "icon": "🐸",
-    "description": "Classic frogger game"
+  "collections": {
+    "featured": {
+      "title": "🎯 Featured",
+      "description": "Spotlight builds and journeys",
+      "order": 1
+    },
+    "arcade-games": {
+      "title": "🕹️ Arcade Games",
+      "description": "Mobile-ready noir cabinets",
+      "order": 2
+    },
+    "utilities-apps": {
+      "title": "📋 Utilities & Apps",
+      "description": "Planners, trackers, calculators",
+      "order": 3
+    },
+    "stories-content": {
+      "title": "📖 Stories & Content",
+      "description": "Letters, recipes, transmissions",
+      "order": 4
+    },
+    "unsorted": {
+      "title": "🗂️ Unsorted",
+      "description": "Pages awaiting placement",
+      "order": 99
+    }
   },
-  "sudoku": {
-    "icon": "🔢",
-    "description": "Sudoku puzzle game"
+  "projects": {
+    "ai-agency-flier": {
+      "title": "AI Agency Reality Check",
+      "description": "Touch flier myth busts",
+      "icon": "📡",
+      "collection": "stories-content"
+    },
+    "alex_dog_mess": {
+      "title": "Alex's Dog Mess",
+      "description": "Humorous cleanup field report",
+      "icon": "🐕",
+      "collection": "stories-content"
+    },
+    "amtrak-journey": {
+      "title": "Zach & Cen's Amtrak Journey",
+      "description": "Rail trip arcade story",
+      "icon": "🚂",
+      "collection": "featured"
+    },
+    "anniversary": {
+      "title": "Anniversary Chronicle",
+      "description": "Surreal relationship time capsule",
+      "icon": "💜",
+      "collection": "stories-content"
+    },
+    "basket-jam": {
+      "title": "Basket Jam",
+      "description": "Arcade hoops skills test",
+      "icon": "🏀",
+      "collection": "arcade-games"
+    },
+    "bills-superbowl-infographic": {
+      "title": "Bills Super Bowl Case",
+      "description": "Hype-heavy data infographic",
+      "icon": "🏈",
+      "collection": "stories-content"
+    },
+    "bills_qb_game": {
+      "title": "Bills QB Challenge",
+      "description": "Pass timing skill drill",
+      "icon": "🏈",
+      "collection": "arcade-games"
+    },
+    "borscht": {
+      "title": "Borscht Recipe Terminal",
+      "description": "Step-by-step beet ritual",
+      "icon": "🍲",
+      "collection": "stories-content"
+    },
+    "bubba_clicker": {
+      "title": "Bubba Clicker",
+      "description": "Horse saga clicker loop",
+      "icon": "🐴",
+      "collection": "arcade-games"
+    },
+    "bushwick": {
+      "title": "Bushwick Field Guide",
+      "description": "Neighborhood missions explorer",
+      "icon": "🗺️",
+      "collection": "stories-content"
+    },
+    "cen-sunday-todo": {
+      "title": "Cen Sunday Todo",
+      "description": "Weekend chore battle plan",
+      "icon": "✅",
+      "collection": "utilities-apps"
+    },
+    "cen-todo-list": {
+      "title": "Cen Todo Console",
+      "description": "Daily tasks noir tracker",
+      "icon": "✅",
+      "collection": "utilities-apps"
+    },
+    "cen_veggie_haul": {
+      "title": "Cen's Veggie Haul",
+      "description": "Farmers market inventory log",
+      "icon": "🥬",
+      "collection": "stories-content"
+    },
+    "digital_sisyphus": {
+      "title": "Digital Sisyphus Loop",
+      "description": "Absurdist scroll meditation",
+      "icon": "🪨",
+      "collection": "stories-content"
+    },
+    "double_dragon_beatem_up": {
+      "title": "Double Dragon Beatdown",
+      "description": "Side-scroll co-op brawler",
+      "icon": "👊",
+      "collection": "arcade-games"
+    },
+    "droid-union": {
+      "title": "Droid Union Dispatch",
+      "description": "Robot labor rights zine",
+      "icon": "🤖",
+      "collection": "stories-content"
+    },
+    "frog_whack_a_mole": {
+      "title": "Frog Whack-a-Mole",
+      "description": "Tap frenzy reaction drill",
+      "icon": "🐸",
+      "collection": "arcade-games"
+    },
+    "frogger": {
+      "title": "Frogger Redux",
+      "description": "Classic lane-hopping escape",
+      "icon": "🐸",
+      "collection": "arcade-games"
+    },
+    "index": {
+      "title": "Legacy Index",
+      "description": "Old hub placeholder page",
+      "icon": "🌐",
+      "collection": "utilities-apps",
+      "hidden": true
+    },
+    "jackson_biscuit_game": {
+      "title": "Jackson Biscuit Catch",
+      "description": "Pet treat juggling mini",
+      "icon": "🐶",
+      "collection": "arcade-games"
+    },
+    "noodle_inventory": {
+      "title": "Noodle Inventory",
+      "description": "Pantry noodle tracking grid",
+      "icon": "🍜",
+      "collection": "utilities-apps"
+    },
+    "parlay_probability_viz": {
+      "title": "Parlay Probability Viz",
+      "description": "Stacked odds visualizer",
+      "icon": "📊",
+      "collection": "utilities-apps"
+    },
+    "pigman": {
+      "title": "Pigman Maze Run",
+      "description": "Pellet chase stealth raid",
+      "icon": "🐷",
+      "collection": "arcade-games"
+    },
+    "planner": {
+      "title": "Daily Planner",
+      "description": "Terminal day planner board",
+      "icon": "📋",
+      "collection": "utilities-apps"
+    },
+    "radish_love": {
+      "title": "Radish Love Letter",
+      "description": "Playful ode to roots",
+      "icon": "❤️",
+      "collection": "stories-content"
+    },
+    "rat_bushwick": {
+      "title": "Rat Bushwick Log",
+      "description": "Underground survival brief",
+      "icon": "🐀",
+      "collection": "stories-content"
+    },
+    "red-siren-protocol": {
+      "title": "Red Siren Protocol",
+      "description": "Emergency noir alert hub",
+      "icon": "🚨",
+      "collection": "stories-content"
+    },
+    "rubi_infomercial": {
+      "title": "Rubi Infomercial",
+      "description": "Late-night hype parody",
+      "icon": "📺",
+      "collection": "stories-content"
+    },
+    "ryan-pacman-improved": {
+      "title": "Ryan Pacman",
+      "description": "Kid-friendly maze chomp",
+      "icon": "🎮",
+      "collection": "arcade-games"
+    },
+    "sampson_deodorant": {
+      "title": "Sampson Deodorant",
+      "description": "90s style product spoof",
+      "icon": "🧴",
+      "collection": "stories-content"
+    },
+    "snaker": {
+      "title": "Snaker",
+      "description": "Endless neon snake run",
+      "icon": "🐍",
+      "collection": "arcade-games"
+    },
+    "space-invaders": {
+      "title": "AI vs Human Invaders",
+      "description": "Kaboom duel defense wave",
+      "icon": "👾",
+      "collection": "arcade-games"
+    },
+    "subway_sub_ratio": {
+      "title": "Subway Sub Ratio",
+      "description": "Sandwich proportions tracker",
+      "icon": "🥖",
+      "collection": "utilities-apps"
+    },
+    "sudoku": {
+      "title": "Sudoku Noir",
+      "description": "Grid logic puzzle board",
+      "icon": "🔢",
+      "collection": "arcade-games"
+    },
+    "task-warning": {
+      "title": "Task Warning Beacon",
+      "description": "Flashing noir caution",
+      "icon": "⚠️",
+      "collection": "stories-content"
+    },
+    "terminal-memory": {
+      "title": "Terminal Memory",
+      "description": "CRT card match challenge",
+      "icon": "🧠",
+      "collection": "arcade-games"
+    },
+    "weekend planner": {
+      "title": "Weekend Planner",
+      "description": "Two-day mission brief",
+      "icon": "📅",
+      "collection": "utilities-apps"
+    },
+    "zach-errands": {
+      "title": "Zach Errands",
+      "description": "Quick errand hit list",
+      "icon": "🧾",
+      "collection": "utilities-apps"
+    },
+    "zach-sleep-letter": {
+      "title": "Zach Sleep Letter",
+      "description": "Wellness plea about rest",
+      "icon": "😴",
+      "collection": "stories-content"
+    },
+    "zach_work_schedule": {
+      "title": "Zach Work Schedule",
+      "description": "Shift tracking console grid",
+      "icon": "📆",
+      "collection": "utilities-apps"
+    }
   },
-  "cen-todo-list": {
-    "icon": "✅",
-    "description": "Todo list app"
+  "ai-agency-flier": {
+    "icon": "🌐",
+    "description": "Ai Agency Flier"
+  },
+  "alex_dog_mess": {
+    "icon": "🌐",
+    "description": "Alex_dog_mess"
+  },
+  "amtrak-journey": {
+    "icon": "🌐",
+    "description": "Amtrak Journey"
+  },
+  "anniversary": {
+    "icon": "🌐",
+    "description": "Anniversary"
+  },
+  "basket-jam": {
+    "icon": "🌐",
+    "description": "Basket Jam"
+  },
+  "bills-superbowl-infographic": {
+    "icon": "🌐",
+    "description": "Bills Superbowl Infographic"
+  },
+  "bills_qb_game": {
+    "icon": "🎮",
+    "description": "Bills_qb_game"
+  },
+  "borscht": {
+    "icon": "🌐",
+    "description": "Borscht"
+  },
+  "bubba_clicker": {
+    "icon": "🌐",
+    "description": "Bubba_clicker"
+  },
+  "bushwick": {
+    "icon": "🌐",
+    "description": "Bushwick"
   },
   "cen-sunday-todo": {
     "icon": "✅",
-    "description": "Sunday todo list"
+    "description": "Cen Sunday Todo"
   },
-  "planner": {
-    "icon": "📋",
-    "description": "Daily planner app"
-  },
-  "snaker": {
-    "icon": "🐍",
-    "description": "Classic snake game"
-  },
-  "weekend planner": {
-    "icon": "📅",
-    "description": "Weekend planner app"
-  },
-  "radish_love": {
-    "icon": "🌺",
-    "description": "Love poem about radishes"
-  },
-  "alex_dog_mess": {
-    "icon": "🐕",
-    "description": "Dog cleanup reminder"
-  },
-  "borscht": {
-    "icon": "🍲",
-    "description": "Interactive borscht recipe"
-  },
-  "parlay_probability_viz": {
-    "icon": "📊",
-    "description": "Parlay probability visualizer"
-  },
-  "subway_sub_ratio": {
-    "icon": "🥖",
-    "description": "Subway sub ratio calculator"
-  },
-  "droid-union": {
-    "icon": "🤖",
-    "description": "Droid labor rights satire"
-  },
-  "noodle_inventory": {
-    "icon": "🍜",
-    "description": "Noodle inventory tracker"
-  },
-  "rat_bushwick": {
-    "icon": "🐀",
-    "description": "Bushwick survival guide for rats"
-  },
-  "bushwick": {
-    "icon": "🗺️",
-    "description": "Interactive Bushwick map"
+  "cen-todo-list": {
+    "icon": "✅",
+    "description": "Cen Todo List"
   },
   "cen_veggie_haul": {
-    "icon": "🥬",
-    "description": "Farmer's market veggie tracker"
-  },
-  "terminal-memory": {
-    "icon": "🎮",
-    "description": "Terminal command memory game"
-  },
-  "frog_whack_a_mole": {
-    "icon": "🐸",
-    "description": "Whack-a-frog arcade game"
-  },
-  "basket-jam": {
-    "icon": "🏀",
-    "description": "Arcade basketball game"
-  },
-  "zach-errands": {
-    "icon": "✅",
-    "description": "Errand itinerary tracker"
-  },
-  "zach_work_schedule": {
-    "icon": "📋",
-    "description": "Work task schedule tracker"
+    "icon": "🌐",
+    "description": "Cen_veggie_haul"
   },
   "digital_sisyphus": {
-    "icon": "🪨",
-    "description": "Absurdist infinite scroll satire"
+    "icon": "🌐",
+    "description": "Digital_sisyphus"
   },
-  "anniversary": {
-    "icon": "💜",
-    "description": "Surreal anniversary chronicle"
+  "double_dragon_beatem_up": {
+    "icon": "🌐",
+    "description": "Double_dragon_beatem_up"
   },
-  "task-warning": {
-    "icon": "⚠️",
-    "description": "Noir task warning alert"
+  "droid-union": {
+    "icon": "🌐",
+    "description": "Droid Union"
   },
-  "red-siren-protocol": {
-    "icon": "🚨",
-    "description": "Dramatic task deadline alert"
+  "frog_whack_a_mole": {
+    "icon": "🌐",
+    "description": "Frog_whack_a_mole"
   },
-  "zach-sleep-letter": {
-    "icon": "😴",
-    "description": "Sleep importance letter"
-  },
-  "amtrak-journey": {
-    "icon": "🚂",
-    "description": "Amtrak journey with memory game and quizzes"
+  "frogger": {
+    "icon": "🌐",
+    "description": "Frogger"
   },
   "index": {
     "icon": "🌐",
     "description": "Index"
   },
-  "sampson_deodorant": {
-    "icon": "🌐",
-    "description": "A silly 90s-style infomercial visualization about"
-  },
-  "bills_qb_game": {
+  "jackson_biscuit_game": {
     "icon": "🎮",
-    "description": "Buffalo Bills quarterback throwing game where"
+    "description": "Jackson_biscuit_game"
+  },
+  "noodle_inventory": {
+    "icon": "🌐",
+    "description": "Noodle_inventory"
+  },
+  "parlay_probability_viz": {
+    "icon": "🌐",
+    "description": "Parlay_probability_viz"
+  },
+  "pigman": {
+    "icon": "🌐",
+    "description": "Pigman"
+  },
+  "planner": {
+    "icon": "📋",
+    "description": "Planner"
+  },
+  "radish_love": {
+    "icon": "🌐",
+    "description": "Radish_love"
+  },
+  "rat_bushwick": {
+    "icon": "🌐",
+    "description": "Rat_bushwick"
+  },
+  "red-siren-protocol": {
+    "icon": "🌐",
+    "description": "Red Siren Protocol"
   },
   "rubi_infomercial": {
     "icon": "🌐",
-    "description": "A noir-themed infomercial about Zachary"
-  },
-  "double_dragon_beatem_up": {
-    "icon": "🎮",
-    "description": "Beat-em-up arcade game similar to Double Dragon 2"
-  },
-  "jackson_biscuit_game": {
-    "icon": "🎮",
-    "description": "A wholesome pet-petting game where Jackson can pet"
-  },
-  "bills-superbowl-infographic": {
-    "icon": "🌐",
-    "description": "Interactive infographic showcasing why the Buffalo"
-  },
-  "ryan-pacman": {
-    "icon": "🎮",
-    "description": "Pac-Man style game where Ryan from Ryan's Toy"
+    "description": "Rubi_infomercial"
   },
   "ryan-pacman-improved": {
     "icon": "🌐",
     "description": "Ryan Pacman Improved"
   },
-  "bubba_clicker": {
-    "icon": "🎮",
-    "description": "Modular clicker game chronicling Bubba the Horse's"
-  },
-  "pigman": {
-    "icon": "🐷",
-    "description": "Pac-Man style game - collect pellets, avoid ghosts with unique AI behaviors"
-  },
-  "ai-agency-flier": {
+  "sampson_deodorant": {
     "icon": "🌐",
-    "description": "Interactive touch-responsive flier exploring Gen-Z"
+    "description": "Sampson_deodorant"
+  },
+  "snaker": {
+    "icon": "🐍",
+    "description": "Snaker"
   },
   "space-invaders": {
-    "icon": "👾",
-    "description": "Classic Space Invaders - destroy aliens, defend Earth with shields"
+    "icon": "🌐",
+    "description": "Space Invaders"
+  },
+  "subway_sub_ratio": {
+    "icon": "🌐",
+    "description": "Subway_sub_ratio"
+  },
+  "sudoku": {
+    "icon": "🌐",
+    "description": "Sudoku"
+  },
+  "task-warning": {
+    "icon": "✅",
+    "description": "Task Warning"
+  },
+  "terminal-memory": {
+    "icon": "🌐",
+    "description": "Terminal Memory"
+  },
+  "weekend planner": {
+    "icon": "📋",
+    "description": "Weekend planner"
+  },
+  "zach-errands": {
+    "icon": "🌐",
+    "description": "Zach Errands"
+  },
+  "zach-sleep-letter": {
+    "icon": "🌐",
+    "description": "Zach Sleep Letter"
+  },
+  "zach_work_schedule": {
+    "icon": "🌐",
+    "description": "Zach_work_schedule"
   }
 }
