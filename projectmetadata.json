@@ -196,12 +196,6 @@
       "icon": "📺",
       "collection": "stories-content"
     },
-    "ryan-pacman-improved": {
-      "title": "Ryan Pacman",
-      "description": "Kid-friendly maze chomp",
-      "icon": "🎮",
-      "collection": "arcade-games"
-    },
     "sampson_deodorant": {
       "title": "Sampson Deodorant",
       "description": "90s style product spoof",
@@ -380,10 +374,6 @@
   "rubi_infomercial": {
     "icon": "🌐",
     "description": "Rubi_infomercial"
-  },
-  "ryan-pacman-improved": {
-    "icon": "🌐",
-    "description": "Ryan Pacman Improved"
   },
   "sampson_deodorant": {
     "icon": "🌐",
