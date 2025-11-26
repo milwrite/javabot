@@ -158,5 +158,9 @@
   "ai-agency-flier": {
     "icon": "🌐",
     "description": "Interactive touch-responsive flier exploring Gen-Z"
+  },
+  "space-invaders-twist": {
+    "icon": "🎮",
+    "description": "Space Invaders game"
   }
 }
