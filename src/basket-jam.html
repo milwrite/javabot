@@ -337,7 +337,7 @@
         const levels = [
             { name: 'Warmup Arc', target: 12, hoopSpeed: 0, gravity: 1800 },
             { name: 'Side Drift', target: 26, hoopSpeed: 35, gravity: 1850 },
-            { name: 'Turbo Pulse', target: Infinity, hoopSpeed: 65, gravity: 1950 }
+            { name: 'Turbo Pulse', target: 45, hoopSpeed: 65, gravity: 1950 }
         ];
 
         let currentLevel = 0;
@@ -417,7 +417,7 @@
         function updateLevelOverlay() {
             const level = levels[currentLevel];
             levelNameEl.textContent = level.name;
-            levelGoalEl.textContent = level.target === Infinity ? 'Final wave' : `Hit ${level.target} pts`;
+            levelGoalEl.textContent = `Hit ${level.target} pts`;
             k.setGravity(level.gravity);
         }
 
@@ -462,11 +462,19 @@
             updateStats();
 
             const level = levels[currentLevel];
-            if (score >= level.target && currentLevel < levels.length - 1) {
-                currentLevel++;
-                hoopDirection = hoopDirection * -1;
-                updateLevelOverlay();
-                showMessage(`${levels[currentLevel].name}!`);
+            if (score >= level.target) {
+                if (currentLevel < levels.length - 1) {
+                    currentLevel++;
+                    hoopDirection = hoopDirection * -1;
+                    updateLevelOverlay();
+                    showMessage(`${levels[currentLevel].name}!`);
+                } else {
+                    // Game won!
+                    levelNameEl.textContent = 'CHAMPION';
+                    levelGoalEl.textContent = 'You won!';
+                    showMessage('GAME WON!');
+                    ballReady = false;
+                }
             }
         }
 
@@ -550,6 +558,7 @@
             streak = 0;
             bestStreak = 0;
             currentLevel = 0;
+            ballReady = true;
             shooterGlow.pos.x = k.width() / 2;
             shooterBase.pos.x = k.width() / 2;
             aimAngle = 18;
