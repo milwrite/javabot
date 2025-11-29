@@ -13,6 +13,7 @@
             flex-direction: column;
             align-items: center;
             gap: 10px;
+            overflow-y: auto;
         }
 
         .game-title {
@@ -23,6 +24,12 @@
         .game-title h1 {
             font-size: clamp(1.8rem, 5vw, 2.6rem);
             margin-bottom: 5px;
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { text-shadow: 0 0 10px rgba(0, 255, 255, 0.5); }
+            50% { text-shadow: 0 0 20px rgba(0, 255, 255, 0.8); }
         }
 
         .stat-board {
@@ -39,6 +46,13 @@
             border: 2px solid #7ec8e3;
             padding: 12px 18px;
             text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-display.highlight {
+            border-color: #00ff41;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+            transform: scale(1.05);
         }
 
         .stat-display .label {
@@ -52,6 +66,11 @@
             font-size: 1.8em;
             color: #7ec8e3;
             text-shadow: 0 0 10px rgba(126, 200, 227, 0.6);
+            transition: color 0.3s ease;
+        }
+
+        .stat-display.highlight .value {
+            color: #00ff41;
         }
 
         .game-wrapper {
@@ -66,6 +85,7 @@
             position: relative;
             border: 3px solid #ff0000;
             background: radial-gradient(circle at top, rgba(255, 0, 0, 0.1), rgba(0, 0, 0, 0.85));
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
         }
 
         canvas {
@@ -86,10 +106,19 @@
             transition: opacity 0.25s ease;
             pointer-events: none;
             text-align: center;
+            z-index: 10;
+            will-change: opacity;
         }
 
         .message.show {
             opacity: 1;
+            animation: messageFloat 0.7s ease-out;
+        }
+
+        @keyframes messageFloat {
+            0% { transform: translate(-50%, -50%) scale(0.8); }
+            50% { transform: translate(-50%, -60%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
         }
 
         .aim-panel {
@@ -103,6 +132,11 @@
             border: 2px solid rgba(126, 200, 227, 0.5);
             padding: 10px 12px;
             font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .readout:hover {
+            border-color: rgba(126, 200, 227, 0.8);
         }
 
         .readout span {
@@ -139,6 +173,11 @@
             font-size: 1.6rem;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
+            transition: transform 0.1s ease;
+        }
+
+        .aim-btn:active {
+            transform: scale(0.95);
         }
 
         .aim-btn.empty {
@@ -152,6 +191,11 @@
             background: rgba(255, 0, 0, 0.85);
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
+            transition: transform 0.1s ease;
+        }
+
+        .shoot-btn:active {
+            transform: scale(0.98);
         }
 
         .tuning-controls {
@@ -176,6 +220,13 @@
 
         .controls-container {
             margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .controls-container .btn {
+            min-width: 100px;
         }
 
         .instructions {
@@ -186,10 +237,40 @@
             background: rgba(26, 0, 0, 0.4);
             border: 2px solid #ff0000;
             font-size: 0.9rem;
+            line-height: 1.6;
         }
 
         .instructions strong {
             color: #00ffff;
+        }
+
+        .paused-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+        }
+
+        .paused-overlay.show {
+            display: flex;
+        }
+
+        .paused-text {
+            font-size: 2.5rem;
+            color: #00ffff;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+            animation: pausePulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pausePulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
         }
 
         @media (max-width: 768px) {
@@ -225,6 +306,15 @@
                 height: 54px;
                 font-size: 1.4rem;
             }
+
+            .stat-board {
+                gap: 10px;
+            }
+
+            .stat-display {
+                min-width: 100px;
+                padding: 8px 12px;
+            }
         }
     </style>
 </head>
@@ -237,15 +327,15 @@
     </div>
 
     <div class="stat-board">
-        <div class="stat-display">
+        <div class="stat-display" id="scoreDisplay">
             <div class="label">Score</div>
             <div class="value" id="score">0</div>
         </div>
-        <div class="stat-display">
+        <div class="stat-display" id="shotsDisplay">
             <div class="label">Shots</div>
             <div class="value" id="shots">0</div>
         </div>
-        <div class="stat-display">
+        <div class="stat-display" id="streakDisplay">
             <div class="label">Streak</div>
             <div class="value" id="streak">0</div>
         </div>
@@ -255,6 +345,9 @@
         <div class="canvas-shell">
             <canvas id="hoopsCanvas" width="420" height="520"></canvas>
             <div class="message" id="message"></div>
+            <div class="paused-overlay" id="pausedOverlay">
+                <div class="paused-text">PAUSED</div>
+            </div>
         </div>
         <div class="aim-panel">
             <div class="readout">
@@ -276,6 +369,10 @@
             <div class="readout">
                 <span>Best Streak</span>
                 <strong id="bestStreak">0</strong>
+            </div>
+            <div class="readout">
+                <span>Multiplier</span>
+                <strong id="multiplier">×1</strong>
             </div>
         </div>
     </div>
@@ -301,28 +398,47 @@
     </div>
 
     <div class="controls-container">
+        <button class="btn" id="pauseBtn">PAUSE</button>
         <button class="btn" id="resetBtn">RESET</button>
     </div>
 
     <div class="instructions">
-        <p>Use <strong>arrow keys / WASD</strong> to move the shooter and tune the arc. Tap <strong>Space</strong> to fire. Hit streaks for extra points as the hoop starts drifting across the glass.</p>
-        <p>On mobile, nudge with the arrows, adjust power, and slap SHOOT!. Kaboom.js keeps the physics stable even on touch.</p>
+        <p>Use <strong>arrow keys / WASD</strong> to move the shooter and adjust angle. Press <strong>Space</strong> to fire. Press <strong>P</strong> to pause.</p>
+        <p>Build streaks for score multipliers! The hoop moves faster at higher levels. Aim for the dotted trajectory guide.</p>
+        <p>On mobile: use arrows to aim, adjust power, and tap SHOOT! Combo shots for bonus points.</p>
     </div>
 
     <script type="module">
         import kaboom from "https://unpkg.com/kaboom/dist/kaboom.mjs";
 
-        const scoreEl = document.getElementById('score');
-        const shotsEl = document.getElementById('shots');
-        const streakEl = document.getElementById('streak');
-        const levelNameEl = document.getElementById('levelName');
-        const levelGoalEl = document.getElementById('levelGoal');
-        const angleValueEl = document.getElementById('angleValue');
-        const powerValueEl = document.getElementById('powerValue');
-        const powerTextEl = document.getElementById('powerText');
-        const bestStreakEl = document.getElementById('bestStreak');
-        const messageEl = document.getElementById('message');
+        // ==================== PERFORMANCE CONFIG ====================
+        const isMobile = window.innerWidth <= 768;
+        const PERF = {
+            maxParticles: isMobile ? 8 : 15,
+            maxTrailDots: isMobile ? 4 : 8,
+            particlePoolSize: 30,
+            trajectoryDots: isMobile ? 10 : 15
+        };
 
+        // ==================== DOM CACHE ====================
+        const DOM = {
+            score: document.getElementById('score'),
+            shots: document.getElementById('shots'),
+            streak: document.getElementById('streak'),
+            scoreDisplay: document.getElementById('scoreDisplay'),
+            streakDisplay: document.getElementById('streakDisplay'),
+            levelName: document.getElementById('levelName'),
+            levelGoal: document.getElementById('levelGoal'),
+            angleValue: document.getElementById('angleValue'),
+            powerValue: document.getElementById('powerValue'),
+            powerText: document.getElementById('powerText'),
+            bestStreak: document.getElementById('bestStreak'),
+            multiplier: document.getElementById('multiplier'),
+            message: document.getElementById('message'),
+            pausedOverlay: document.getElementById('pausedOverlay')
+        };
+
+        // ==================== KABOOM SETUP ====================
         const canvas = document.getElementById('hoopsCanvas');
         const k = kaboom({
             global: false,
@@ -334,26 +450,86 @@
             touchToMouse: false
         });
 
-        const levels = [
-            { name: 'Warmup Arc', target: 12, hoopSpeed: 0, gravity: 1800 },
-            { name: 'Side Drift', target: 26, hoopSpeed: 35, gravity: 1850 },
-            { name: 'Turbo Pulse', target: 45, hoopSpeed: 65, gravity: 1950 }
-        ];
+        // ==================== GAME CONFIG ====================
+        const CONFIG = {
+            levels: [
+                { name: 'Warmup Arc', target: 12, hoopSpeed: 0, gravity: 1800 },
+                { name: 'Side Drift', target: 26, hoopSpeed: 35, gravity: 1850 },
+                { name: 'Turbo Pulse', target: 45, hoopSpeed: 65, gravity: 1950 },
+                { name: 'Fast Break', target: 70, hoopSpeed: 90, gravity: 2000 },
+                { name: 'Championship', target: 100, hoopSpeed: 120, gravity: 2100 }
+            ],
+            angleLimits: { min: 8, max: 35 },
+            powerLimits: { min: 460, max: 720 },
+            launchY: 440,
+            colors: {
+                primary: k.rgb(255, 0, 0),
+                ball: k.rgb(255, 150, 0),
+                particle: k.rgb(0, 255, 255),
+                trail: k.rgb(255, 200, 100),
+                trajectoryDot: k.rgb(0, 255, 255)
+            },
+            messages: {
+                1: ['SWISH', 'NICE', 'SMOOTH'],
+                2: ['ON FIRE +2×', 'HEATING UP', 'STREAK!'],
+                3: ['UNSTOPPABLE +3×', 'LEGENDARY', 'DOMINATING']
+            }
+        };
 
-        let currentLevel = 0;
-        let hoopDirection = 1;
-        let score = 0;
-        let shots = 0;
-        let streak = 0;
-        let bestStreak = 0;
-        let aimAngle = 18;
-        let power = 520;
-        let ballReady = true;
+        // ==================== GAME STATE ====================
+        const state = {
+            currentLevel: 0,
+            hoopDirection: 1,
+            score: 0,
+            shots: 0,
+            streak: 0,
+            bestStreak: 0,
+            aimAngle: 18,
+            power: 520,
+            ballReady: true,
+            paused: false,
+            multiplier: 1,
+            lastTrajectoryUpdate: 0
+        };
 
-        const angleLimits = { min: 8, max: 35 };
-        const powerLimits = { min: 460, max: 720 };
-        const launchY = k.height() - 80;
+        // ==================== PARTICLE POOL ====================
+        const particlePool = [];
+        function initParticlePool() {
+            for (let i = 0; i < PERF.particlePoolSize; i++) {
+                const particle = k.add([
+                    k.pos(0, 0),
+                    k.circle(3),
+                    k.color(255, 255, 255),
+                    k.opacity(0),
+                    k.z(10),
+                    { active: false, vx: 0, vy: 0 }
+                ]);
+                particle.hidden = true;
+                particlePool.push(particle);
+            }
+        }
 
+        function getParticle() {
+            return particlePool.find(p => !p.active);
+        }
+
+        function activateParticle(particle, x, y, color, vx, vy) {
+            particle.pos = k.vec2(x, y);
+            particle.color = color;
+            particle.opacity = 1;
+            particle.active = true;
+            particle.hidden = false;
+            particle.vx = vx;
+            particle.vy = vy;
+        }
+
+        function deactivateParticle(particle) {
+            particle.active = false;
+            particle.opacity = 0;
+            particle.hidden = true;
+        }
+
+        // ==================== GAME OBJECTS ====================
         const glass = k.add([
             k.pos(k.width() / 2, 110),
             k.rect(130, 90, { radius: 12 }),
@@ -386,124 +562,253 @@
         ]);
 
         const shooterBase = k.add([
-            k.pos(k.width() / 2, launchY + 10),
+            k.pos(k.width() / 2, CONFIG.launchY + 10),
             k.rect(90, 6, { radius: 3 }),
             k.anchor('center'),
             k.color(255, 0, 0)
         ]);
 
         const shooterGlow = k.add([
-            k.pos(k.width() / 2, launchY),
+            k.pos(k.width() / 2, CONFIG.launchY),
             k.circle(18),
             k.color(255, 120, 0),
-            k.outline(4, k.rgb(255, 0, 0)),
-            k.anchor('center')
+            k.outline(4, CONFIG.colors.primary),
+            k.anchor('center'),
+            k.z(5)
         ]);
 
-        function clamp(val, min, max) {
-            return Math.max(min, Math.min(max, val));
+        // Trajectory guide
+        const trajectoryGuide = [];
+        for (let i = 0; i < PERF.trajectoryDots; i++) {
+            trajectoryGuide.push(k.add([
+                k.pos(0, 0),
+                k.circle(2),
+                k.color(CONFIG.colors.trajectoryDot),
+                k.opacity(0),
+                k.z(1)
+            ]));
         }
 
+        // ==================== UTILITY FUNCTIONS ====================
+        const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+        const getMultiplier = () => state.streak >= 5 ? 3 : state.streak >= 3 ? 2 : 1;
+        const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+        let highlightTimer = null;
+        function highlightStat(element) {
+            element.classList.add('highlight');
+            if (highlightTimer) clearTimeout(highlightTimer);
+            highlightTimer = setTimeout(() => element.classList.remove('highlight'), 500);
+        }
+
+        // ==================== UPDATE FUNCTIONS ====================
         function updateStats() {
-            scoreEl.textContent = score;
-            shotsEl.textContent = shots;
-            streakEl.textContent = streak;
-            bestStreakEl.textContent = bestStreak;
-            angleValueEl.textContent = Math.round(aimAngle);
-            powerValueEl.textContent = Math.round(power);
-            powerTextEl.textContent = Math.round(power);
+            DOM.score.textContent = state.score;
+            DOM.shots.textContent = state.shots;
+            DOM.streak.textContent = state.streak;
+            DOM.bestStreak.textContent = state.bestStreak;
+            DOM.angleValue.textContent = Math.round(state.aimAngle);
+            DOM.powerValue.textContent = Math.round(state.power);
+            DOM.powerText.textContent = Math.round(state.power);
+            state.multiplier = getMultiplier();
+            DOM.multiplier.textContent = `×${state.multiplier}`;
+            DOM.multiplier.style.color = state.multiplier > 1 ? '#00ff41' : '#7ec8e3';
         }
 
         function updateLevelOverlay() {
-            const level = levels[currentLevel];
-            levelNameEl.textContent = level.name;
-            levelGoalEl.textContent = `Hit ${level.target} pts`;
+            const level = CONFIG.levels[state.currentLevel];
+            DOM.levelName.textContent = level.name;
+            DOM.levelGoal.textContent = `Hit ${level.target} pts`;
             k.setGravity(level.gravity);
         }
 
-        function showMessage(text) {
-            messageEl.textContent = text;
-            messageEl.classList.add('show');
-            setTimeout(() => messageEl.classList.remove('show'), 700);
-        }
+        function updateTrajectoryGuide() {
+            const now = Date.now();
+            if (now - state.lastTrajectoryUpdate < 50) return; // Throttle to 20fps
+            state.lastTrajectoryUpdate = now;
 
-        function moveShooter(delta) {
-            const nextX = clamp(shooterGlow.pos.x + delta, 50, k.width() - 50);
-            shooterGlow.pos.x = nextX;
-            shooterBase.pos.x = nextX;
-        }
+            const angleRad = (Math.PI / 180) * state.aimAngle;
+            const vx = Math.sin(angleRad) * state.power;
+            const vy = -Math.cos(angleRad) * state.power;
+            const gravity = CONFIG.levels[state.currentLevel].gravity;
+            const canvasWidth = k.width();
+            const canvasHeight = k.height();
 
-        function adjustAngle(delta) {
-            aimAngle = clamp(aimAngle + delta, angleLimits.min, angleLimits.max);
-            updateStats();
-        }
+            for (let i = 0; i < trajectoryGuide.length; i++) {
+                const t = (i + 1) * 0.05;
+                const x = shooterGlow.pos.x + vx * t;
+                const y = CONFIG.launchY + vy * t + 0.5 * gravity * t * t;
 
-        function adjustPower(delta) {
-            power = clamp(power + delta, powerLimits.min, powerLimits.max);
-            updateStats();
-        }
-
-        function finishShot(made) {
-            if (!made) {
-                streak = 0;
-                showMessage('BRICK');
-            }
-            updateStats();
-            setTimeout(() => {
-                ballReady = true;
-            }, 250);
-        }
-
-        function handleScore(points) {
-            streak++;
-            bestStreak = Math.max(bestStreak, streak);
-            score += points;
-            showMessage(points === 3 ? 'ON FIRE +3' : 'SWISH +2');
-            updateStats();
-
-            const level = levels[currentLevel];
-            if (score >= level.target) {
-                if (currentLevel < levels.length - 1) {
-                    currentLevel++;
-                    hoopDirection = hoopDirection * -1;
-                    updateLevelOverlay();
-                    showMessage(`${levels[currentLevel].name}!`);
+                if (y < canvasHeight && x > 0 && x < canvasWidth) {
+                    trajectoryGuide[i].pos.x = x;
+                    trajectoryGuide[i].pos.y = y;
+                    trajectoryGuide[i].opacity = 0.3 * (1 - i / trajectoryGuide.length);
                 } else {
-                    // Game won!
-                    levelNameEl.textContent = 'CHAMPION';
-                    levelGoalEl.textContent = 'You won!';
-                    showMessage('GAME WON!');
-                    ballReady = false;
+                    trajectoryGuide[i].opacity = 0;
                 }
             }
         }
 
-        function fireShot() {
-            if (!ballReady) return;
-            ballReady = false;
-            shots++;
+        let messageTimer = null;
+        function showMessage(text) {
+            DOM.message.textContent = text;
+            DOM.message.classList.add('show');
+            if (messageTimer) clearTimeout(messageTimer);
+            messageTimer = setTimeout(() => DOM.message.classList.remove('show'), 700);
+        }
+
+        // ==================== MOVEMENT & CONTROLS ====================
+        function moveShooter(delta) {
+            if (state.paused) return;
+            const nextX = clamp(shooterGlow.pos.x + delta, 50, k.width() - 50);
+            shooterGlow.pos.x = nextX;
+            shooterBase.pos.x = nextX;
+            updateTrajectoryGuide();
+        }
+
+        function adjustAngle(delta) {
+            if (state.paused) return;
+            state.aimAngle = clamp(state.aimAngle + delta, CONFIG.angleLimits.min, CONFIG.angleLimits.max);
+            updateStats();
+            updateTrajectoryGuide();
+        }
+
+        function adjustPower(delta) {
+            if (state.paused) return;
+            state.power = clamp(state.power + delta, CONFIG.powerLimits.min, CONFIG.powerLimits.max);
+            updateStats();
+            updateTrajectoryGuide();
+        }
+
+        // ==================== PARTICLE EFFECTS ====================
+        function createParticles(x, y, count, color) {
+            const actualCount = Math.min(count, PERF.maxParticles);
+            for (let i = 0; i < actualCount; i++) {
+                const particle = getParticle();
+                if (!particle) break;
+
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 80 + Math.random() * 120;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+
+                activateParticle(particle, x, y, color, vx, vy);
+            }
+        }
+
+        // Update all active particles
+        k.onUpdate(() => {
+            if (state.paused) return;
+
+            const dt = k.dt();
+            for (let i = 0; i < particlePool.length; i++) {
+                const p = particlePool[i];
+                if (!p.active) continue;
+
+                p.pos.x += p.vx * dt;
+                p.pos.y += p.vy * dt;
+                p.opacity -= dt * 2;
+
+                if (p.opacity <= 0) deactivateParticle(p);
+            }
+        });
+
+        // ==================== SCORING & GAME LOGIC ====================
+        function finishShot(made) {
+            if (!made) {
+                state.streak = 0;
+                showMessage('BRICK');
+            }
+            updateStats();
+            setTimeout(() => { state.ballReady = true; }, 250);
+        }
+
+        function handleScore(points) {
+            state.streak++;
+            state.bestStreak = Math.max(state.bestStreak, state.streak);
+
+            const scoreGained = points * state.multiplier;
+            state.score += scoreGained;
+
+            highlightStat(DOM.scoreDisplay);
+            highlightStat(DOM.streakDisplay);
+
+            const msg = getRandom(CONFIG.messages[state.multiplier] || CONFIG.messages[1]);
+            showMessage(`${msg} +${scoreGained}`);
+
             updateStats();
 
-            const angleRad = (Math.PI / 180) * aimAngle;
-            const velocity = k.vec2(Math.sin(angleRad) * power, -Math.cos(angleRad) * power);
+            const level = CONFIG.levels[state.currentLevel];
+            if (state.score >= level.target) {
+                if (state.currentLevel < CONFIG.levels.length - 1) {
+                    state.currentLevel++;
+                    state.hoopDirection *= -1;
+                    updateLevelOverlay();
+                    showMessage(`${CONFIG.levels[state.currentLevel].name}!`);
+                } else {
+                    DOM.levelName.textContent = 'CHAMPION';
+                    DOM.levelGoal.textContent = 'You won!';
+                    showMessage('GAME WON!');
+                    state.ballReady = false;
+                }
+            }
+        }
+
+        // ==================== SHOOTING MECHANICS ====================
+        function fireShot() {
+            if (!state.ballReady || state.paused) return;
+            state.ballReady = false;
+            state.shots++;
+            updateStats();
+
+            const angleRad = (Math.PI / 180) * state.aimAngle;
+            const vx = Math.sin(angleRad) * state.power;
+            const vy = -Math.cos(angleRad) * state.power;
 
             const ball = k.add([
-                k.pos(shooterGlow.pos.x, launchY),
+                k.pos(shooterGlow.pos.x, CONFIG.launchY),
                 k.circle(14),
                 k.area(),
-                k.color(255, 150, 0),
-                k.outline(2, k.rgb(255, 0, 0)),
+                k.color(CONFIG.colors.ball),
+                k.outline(2, CONFIG.colors.primary),
                 k.body({ mass: 0.8 }),
+                k.z(3),
                 'ball'
             ]);
 
-            ball.vel = velocity;
+            ball.vel = k.vec2(vx, vy);
             ball.scored = false;
+            ball.trail = [];
 
             ball.onUpdate(() => {
                 ball.angle += ball.vel.x * 0.01;
+
+                // Optimized trail
+                if (ball.trail.length < PERF.maxTrailDots && k.time() % 2 === 0) {
+                    const trailDot = k.add([
+                        k.pos(ball.pos),
+                        k.circle(8),
+                        k.color(CONFIG.colors.trail),
+                        k.opacity(0.4),
+                        k.z(2)
+                    ]);
+                    ball.trail.push(trailDot);
+                }
+
+                // Cleanup trail
+                ball.trail = ball.trail.filter(t => {
+                    t.opacity -= k.dt() * 1.5;
+                    if (t.opacity <= 0) {
+                        t.destroy();
+                        return false;
+                    }
+                    return true;
+                });
+
+                // Out of bounds check
                 if (ball.pos.y > k.height() + 80 || ball.pos.x < -80 || ball.pos.x > k.width() + 80) {
                     if (!ball.scored) finishShot(false);
+                    ball.trail.forEach(t => t.destroy());
                     ball.destroy();
                 }
             });
@@ -511,63 +816,95 @@
             ball.onCollide('scoreZone', () => {
                 if (ball.vel.y > 0 && !ball.scored) {
                     ball.scored = true;
-                    const points = streak >= 2 ? 3 : 2;
-                    handleScore(points);
+                    handleScore(2);
+                    createParticles(ball.pos.x, ball.pos.y, 20, CONFIG.colors.particle);
                     finishShot(true);
+                    ball.trail.forEach(t => t.destroy());
                     ball.destroy();
                 }
             });
 
             ball.onCollide('rim', () => {
-                ball.vel.x *= 0.8;
-                ball.vel.y *= -0.4;
+                ball.vel.x *= 0.75;
+                ball.vel.y *= -0.45;
+                createParticles(ball.pos.x, ball.pos.y, 5, CONFIG.colors.primary);
             });
 
-            k.wait(2, () => {
+            k.wait(2.5, () => {
                 if (ball.exists() && !ball.scored) {
                     finishShot(false);
+                    ball.trail.forEach(t => t.destroy());
                     ball.destroy();
                 }
             });
         }
 
+        // ==================== GAME LOOP ====================
         k.onUpdate(() => {
-            const level = levels[currentLevel];
+            if (state.paused) return;
+
+            const level = CONFIG.levels[state.currentLevel];
             if (level.hoopSpeed > 0) {
-                hoop.pos.x += level.hoopSpeed * hoopDirection * k.dt();
+                const movement = level.hoopSpeed * state.hoopDirection * k.dt();
+                hoop.pos.x += movement;
                 glass.pos.x = hoop.pos.x;
+
                 if (hoop.pos.x > k.width() - 40 || hoop.pos.x < 40) {
-                    hoopDirection *= -1;
+                    state.hoopDirection *= -1;
                 }
             }
         });
 
-        k.onKeyDown('left', () => moveShooter(-140 * k.dt()));
-        k.onKeyDown('right', () => moveShooter(140 * k.dt()));
-        k.onKeyDown('a', () => moveShooter(-140 * k.dt()));
-        k.onKeyDown('d', () => moveShooter(140 * k.dt()));
-        k.onKeyDown('up', () => adjustAngle(18 * k.dt()));
-        k.onKeyDown('down', () => adjustAngle(-18 * k.dt()));
-        k.onKeyDown('w', () => adjustAngle(18 * k.dt()));
-        k.onKeyDown('s', () => adjustAngle(-18 * k.dt()));
+        // ==================== KEYBOARD CONTROLS ====================
+        const keySpeed = 140;
+        const angleSpeed = 18;
+        k.onKeyDown('left', () => moveShooter(-keySpeed * k.dt()));
+        k.onKeyDown('right', () => moveShooter(keySpeed * k.dt()));
+        k.onKeyDown('a', () => moveShooter(-keySpeed * k.dt()));
+        k.onKeyDown('d', () => moveShooter(keySpeed * k.dt()));
+        k.onKeyDown('up', () => adjustAngle(angleSpeed * k.dt()));
+        k.onKeyDown('down', () => adjustAngle(-angleSpeed * k.dt()));
+        k.onKeyDown('w', () => adjustAngle(angleSpeed * k.dt()));
+        k.onKeyDown('s', () => adjustAngle(-angleSpeed * k.dt()));
         k.onKeyPress('space', fireShot);
+        k.onKeyPress('p', togglePause);
+
+        // ==================== PAUSE FUNCTIONALITY ====================
+        function togglePause() {
+            state.paused = !state.paused;
+            DOM.pausedOverlay.classList.toggle('show', state.paused);
+        }
+
+        // ==================== UI CONTROLS ====================
+        document.getElementById('pauseBtn').addEventListener('click', togglePause);
 
         document.getElementById('resetBtn').addEventListener('click', () => {
-            score = 0;
-            shots = 0;
-            streak = 0;
-            bestStreak = 0;
-            currentLevel = 0;
-            ballReady = true;
+            Object.assign(state, {
+                score: 0,
+                shots: 0,
+                streak: 0,
+                bestStreak: 0,
+                currentLevel: 0,
+                ballReady: true,
+                paused: false,
+                aimAngle: 18,
+                power: 520
+            });
+
             shooterGlow.pos.x = k.width() / 2;
             shooterBase.pos.x = k.width() / 2;
-            aimAngle = 18;
-            power = 520;
+            DOM.pausedOverlay.classList.remove('show');
+
+            // Clean up all active particles
+            particlePool.forEach(deactivateParticle);
+
             updateLevelOverlay();
             updateStats();
+            updateTrajectoryGuide();
             showMessage('RESET');
         });
 
+        // ==================== MOBILE CONTROLS ====================
         function bindControl(id, handler) {
             const el = document.getElementById(id);
             if (!el) return;
@@ -584,8 +921,11 @@
         bindControl('powerUp', () => adjustPower(20));
         bindControl('powerDown', () => adjustPower(-20));
 
+        // ==================== INITIALIZATION ====================
+        initParticlePool();
         updateLevelOverlay();
         updateStats();
+        updateTrajectoryGuide();
     </script>
     <script src="../stars.js" defer></script>
 </body>
