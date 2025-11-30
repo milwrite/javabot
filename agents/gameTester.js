@@ -155,6 +155,37 @@ function runAutomatedChecks(html, plan) {
                 severity: 'warning'
             });
         }
+
+        // Check canvas sizing (games only)
+        const canvasMatch = html.match(/<canvas[^>]*width="(\d+)"/);
+        if (canvasMatch) {
+            const width = parseInt(canvasMatch[1]);
+            if (width > 450) {
+                warnings.push({
+                    code: 'CANVAS_TOO_LARGE',
+                    message: `Canvas width ${width}px exceeds mobile-friendly size (max 400px recommended)`,
+                    severity: 'warning'
+                });
+            }
+        }
+
+        // Check if canvas has responsive sizing in CSS
+        if (html.includes('<canvas') && !html.includes('canvas { max-width: 95vw')) {
+            warnings.push({
+                code: 'CANVAS_NOT_RESPONSIVE',
+                message: 'Canvas should have responsive sizing in @media query (e.g., canvas { max-width: 95vw; height: auto; })',
+                severity: 'warning'
+            });
+        }
+    }
+
+    // Check for padding conflicts
+    if (html.includes('padding-top:') && html.includes('padding:')) {
+        warnings.push({
+            code: 'PADDING_CONFLICT',
+            message: 'Body has both padding-top and padding properties - use shorthand padding: 80px 20px 20px 20px instead',
+            severity: 'warning'
+        });
     }
 
     // Check for common syntax errors

@@ -134,6 +134,17 @@ REQUIREMENTS:
 7. Test on mobile sizes (320px-768px)
 8. NO placeholder or TODO comments - complete implementations only
 
+MOBILE-FIRST CANVAS SIZING (CRITICAL):
+- Canvas MAXIMUM 400x400px (not 600px or larger)
+- Add responsive CSS: @media (max-width: 768px) { canvas { max-width: 95vw; height: auto; } }
+- Never use fixed large canvas sizes - mobile screens are 360-428px wide
+- Example: <canvas width="400" height="400"></canvas>
+
+BODY PADDING (CRITICAL):
+- Use shorthand: padding: 80px 20px 20px 20px; (top right bottom left)
+- DO NOT use separate padding-top and padding properties - they conflict
+- Mobile breakpoint: padding: 60px 5px 20px 5px;
+
 MOBILE D-PAD PATTERN (use this for directional games):
 <div class="mobile-controls-label">Tap arrows to move →</div>
 <div class="mobile-controls" id="mobileControls">
