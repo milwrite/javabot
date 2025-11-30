@@ -14,11 +14,11 @@
 
         body {
             font-family: 'VT323', monospace;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: #7ec8e3;
+            background: #0a0a0a;
+            color: #00ff9f;
             overflow-x: hidden;
             min-height: 100vh;
-            text-shadow: 0 0 10px rgba(126, 200, 227, 0.5);
+            text-shadow: 0 0 8px rgba(0, 255, 159, 0.3);
         }
 
         .scanlines {
@@ -41,14 +41,14 @@
         header {
             text-align: center;
             padding: 40px 20px;
-            border-bottom: 3px solid #7ec8e3;
-            box-shadow: 0 0 20px rgba(126, 200, 227, 0.3);
+            border-bottom: 3px solid #00ff9f;
+            box-shadow: 0 0 20px rgba(0, 255, 159, 0.4);
             animation: glitch 3s infinite;
         }
 
         @keyframes glitch {
-            0%, 100% { text-shadow: 0 0 10px rgba(126, 200, 227, 0.5); }
-            50% { text-shadow: 0 0 20px rgba(255, 0, 127, 0.5), 0 0 10px rgba(126, 200, 227, 0.3); }
+            0%, 100% { text-shadow: 0 0 10px rgba(0, 255, 159, 0.5); }
+            50% { text-shadow: 0 0 20px rgba(255, 85, 255, 0.5), 0 0 10px rgba(0, 255, 159, 0.3); }
         }
 
         h1 {
@@ -61,7 +61,7 @@
 
         .subtitle {
             font-size: 1.2em;
-            color: #ff006e;
+            color: #ff55ff;
             animation: blink 1s infinite;
         }
 
@@ -96,20 +96,20 @@
         }
 
         .menu-item {
-            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
-            border: 2px solid #7ec8e3;
+            background: #1a1a1a;
+            border: 2px solid #00ff9f;
             padding: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 0 10px rgba(126, 200, 227, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
         }
 
         .menu-item:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(126, 200, 227, 0.6);
-            border-color: #ff006e;
+            box-shadow: 0 0 30px rgba(0, 255, 159, 0.7);
+            border-color: #ff55ff;
         }
 
         .menu-item::before {
@@ -132,7 +132,7 @@
             font-family: 'Courier Prime', monospace;
             font-size: 1.3em;
             margin-bottom: 10px;
-            color: #ff006e;
+            color: #ff55ff;
             position: relative;
             z-index: 1;
         }
@@ -426,33 +426,57 @@
         }
 
         .mobile-game-controls {
-            display: none;
-            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 220px;
+            margin: 20px auto 0;
         }
 
         .control-row {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-            margin: 5px 0;
+            display: contents;
         }
 
         .game-control-btn {
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
-            background: rgba(255, 0, 110, 0.8);
-            color: #7ec8e3;
-            border: 3px solid #7ec8e3;
+            min-width: 64px;
+            min-height: 64px;
+            font-size: 28px;
+            background: rgba(0, 255, 159, 0.3);
+            color: #00ff9f;
+            border: 3px solid #00ff9f;
+            border-radius: 8px;
             cursor: pointer;
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
+            transition: all 0.1s;
+            font-weight: bold;
         }
 
         .game-control-btn:active {
-            background: #7ec8e3;
+            background: #00ff9f;
             color: #000;
+            transform: scale(0.95);
+        }
+
+        .game-control-btn[data-dir="up"] {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .game-control-btn[data-dir="left"] {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .game-control-btn[data-dir="down"] {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        .game-control-btn[data-dir="right"] {
+            grid-column: 3;
+            grid-row: 2;
         }
 
         @media (max-width: 768px) {
@@ -517,144 +541,17 @@
             STAY ALERT. STAY HUNGRY. STAY RAT.
         </div>
 
-        <div class="menu-grid">
-            <!-- Dumpster Diving -->
-            <div class="menu-item">
-                <h3>🗑️ DUMPSTER DIVE</h3>
-                <p>Behind Bushwick's finest restaurants. Gourmet leftovers await.</p>
-                <div class="ascii-art">
-    ___
-   /   \
-  | O_O |
-   \_-_/
-    |_|
-   /| |\
-    | |
-   _| |_</div>
-                <div class="difficulty">DIFFICULTY: EASY</div>
-                <button class="btn" onclick="openActivity('dumpster')">ENGAGE MISSION</button>
-            </div>
-
-            <!-- Pizza Rat Expedition -->
-            <div class="menu-item">
-                <h3>🍕 PIZZA RAT QUEST</h3>
-                <p>Hunt down the legendary pizza slices. The holy grail of rat cuisine.</p>
-                <div class="ascii-art">
-  /\_/\
- ( o.o )
-  > ^ <
- /|   |\
-(_|   |_)</div>
-                <div class="difficulty">DIFFICULTY: MEDIUM</div>
-                <button class="btn" onclick="openActivity('pizza')">START QUEST</button>
-            </div>
-
-            <!-- Bodega Raid -->
-            <div class="menu-item">
-                <h3>🏪 BODEGA RAID</h3>
-                <p>Sneak into the corner bodega. Cheese, crackers, and pastries await!</p>
-                <div class="ascii-art">
-   ^_^
-  /   \
- | r r |
-  \___/
-   | |
-  /| |\
-   | |</div>
-                <div class="difficulty">DIFFICULTY: HARD</div>
-                <button class="btn" onclick="openActivity('bodega')">INFILTRATE</button>
-            </div>
-
-            <!-- Bakery Heist -->
-            <div class="menu-item">
-                <h3>🥐 BAKERY HEIST</h3>
-                <p>Raid the local bakery at dawn. Croissants and danishes galore!</p>
-                <div class="ascii-art">
-   ~~~
-  (o o)
-   \ - /
-    | |
-   /| |\
-    | |
-   _| |_</div>
-                <div class="difficulty">DIFFICULTY: EXTREME</div>
-                <button class="btn" onclick="openActivity('bakery')">PLAN HEIST</button>
-            </div>
-
-            <!-- Subway Scavenging -->
-            <div class="menu-item">
-                <h3>🚇 SUBWAY SCAVENGE</h3>
-                <p>The L train is a buffet. Pretzels, popcorn, and mystery meats.</p>
-                <div class="ascii-art">
-  ╭─ ─╮
-  │ ◉◉ │
-  │ ▼▼ │
-  ╰─ ─╯
-    |||
-   /|||</div>
-                <div class="difficulty">DIFFICULTY: MEDIUM</div>
-                <button class="btn" onclick="openActivity('subway')">BOARD TRAIN</button>
-            </div>
-
-            <!-- Late Night Taco Truck -->
-            <div class="menu-item">
-                <h3>🌮 TACO TRUCK RAID</h3>
-                <p>The midnight taco truck. Carnitas, cilantro, and chaos.</p>
-                <div class="ascii-art">
-    ___
-   /   \
-  | @ @ |
-   \ - /
-    |O|
-   /| |\
-    | |</div>
-                <div class="difficulty">DIFFICULTY: HARD</div>
-                <button class="btn" onclick="openActivity('taco')">RAID TRUCK</button>
-            </div>
-
-            <!-- Street Vendor Conquest -->
-            <div class="menu-item">
-                <h3>🥒 VENDOR CONQUEST</h3>
-                <p>Pretzels, hot dogs, and knishes from street vendors.</p>
-                <div class="ascii-art">
-   ○_○
-  /   \
- | ◉ ◉ |
-  \ ▼ /
-   |_|
-  /| |\</div>
-                <div class="difficulty">DIFFICULTY: EASY</div>
-                <button class="btn" onclick="openActivity('vendor')">APPROACH VENDOR</button>
-            </div>
-
-            <!-- Rooftop Party Crash -->
-            <div class="menu-item">
-                <h3>🎉 ROOFTOP CRASH</h3>
-                <p>Bushwick's rooftop parties. Artisanal snacks and craft beer spills.</p>
-                <div class="ascii-art">
-    ~~~
-   (o_o)
-    \_/
-    /|\
-    | |
-   /| |\
-    | |</div>
-                <div class="difficulty">DIFFICULTY: EXTREME</div>
-                <button class="btn" onclick="openActivity('rooftop')">CLIMB UP</button>
-            </div>
-        </div>
-
-        <!-- Mini Game Section -->
-        <div class="mini-game">
-            <h2 style="font-family: 'Courier Prime', monospace; color: #ff006e; margin-bottom: 20px;">🎮 PIZZA COLLECTOR 🎮</h2>
-            <p style="margin-bottom: 15px;">Collect 🍕 pizza! Avoid 🐱 cats! Grab 🧀 cheese for speed boost!</p>
-            <div class="game-canvas" id="gameCanvas"></div>
-            <div class="game-stats" style="display: flex; gap: 20px; justify-content: center; margin: 10px 0;">
+        <!-- Mini Game Section - FEATURED -->
+        <div class="mini-game" style="margin-bottom: 40px;">
+            <h2 style="font-family: 'Courier Prime', monospace; color: #ff006e; margin-bottom: 20px; font-size: 2em;">🎮 PIZZA COLLECTOR 🎮</h2>
+            <p style="margin-bottom: 15px; font-size: 1.2em;">Collect 🍕 pizza! Avoid 🐱 cats! Grab 🧀 cheese for speed boost!</p>
+            <div class="game-canvas" id="gameCanvas" style="max-width: 500px; height: 400px;"></div>
+            <div class="game-stats" style="display: flex; gap: 20px; justify-content: center; margin: 15px 0; font-size: 1.2em;">
                 <span style="color: #ffbe0b;">Score: <span id="gameScore">0</span></span>
                 <span style="color: #ff006e;">Lives: <span id="gameLives">3</span></span>
                 <span style="color: #7ec8e3;">Level: <span id="gameLevel">1</span></span>
             </div>
-            <button class="btn" onclick="startGame()">START GAME</button>
+            <button class="btn" onclick="startGame()" style="font-size: 1.2em; padding: 15px 30px;">START GAME</button>
             <!-- Mobile Controls -->
             <div class="mobile-game-controls" id="mobileGameControls">
                 <div class="control-row">
@@ -665,6 +562,131 @@
                     <button class="game-control-btn" data-dir="down">↓</button>
                     <button class="game-control-btn" data-dir="right">→</button>
                 </div>
+            </div>
+        </div>
+
+        <h2 style="font-family: 'Courier Prime', monospace; color: #ff006e; text-align: center; margin: 40px 0 30px; font-size: 1.8em; border-top: 2px solid #7ec8e3; padding-top: 30px;">🧩 RAT BRAIN TEASERS 🧩</h2>
+
+        <div class="menu-grid">
+            <!-- Cheese Maze Puzzle -->
+            <div class="menu-item">
+                <h3>🧀 CHEESE MAZE</h3>
+                <p>Navigate the ASCII maze to reach the legendary cheese wheel!</p>
+                <div class="ascii-art">
+█████████
+█ 🐀    █
+█ ███ █ █
+█   █ █ █
+█ █   █ █
+█ █████ █
+█     🧀█
+█████████</div>
+                <div class="difficulty">DIFFICULTY: EASY</div>
+                <button class="btn" onclick="openActivity('maze')">SOLVE PUZZLE</button>
+            </div>
+
+            <!-- Rat Trivia -->
+            <div class="menu-item">
+                <h3>🧠 RAT TRIVIA</h3>
+                <p>Test your knowledge of Bushwick rat culture and survival tactics!</p>
+                <div class="ascii-art">
+  /\_/\
+ ( ?.? )
+  > ^ <
+ /|   |\
+(_|   |_)
+ Q: WHAT?</div>
+                <div class="difficulty">DIFFICULTY: MEDIUM</div>
+                <button class="btn" onclick="openActivity('trivia')">START QUIZ</button>
+            </div>
+
+            <!-- Pizza Math -->
+            <div class="menu-item">
+                <h3>🍕 PIZZA MATH</h3>
+                <p>Calculate optimal pizza slice ratios for the rat colony!</p>
+                <div class="ascii-art">
+   8 rats
+   3 slices
+   = ???
+
+  SOLVE TO
+  SURVIVE</div>
+                <div class="difficulty">DIFFICULTY: HARD</div>
+                <button class="btn" onclick="openActivity('math')">CALCULATE</button>
+            </div>
+
+            <!-- Word Scramble -->
+            <div class="menu-item">
+                <h3>📝 RAT SCRAMBLE</h3>
+                <p>Unscramble rat-related words to unlock secret knowledge!</p>
+                <div class="ascii-art">
+   ~~~
+  (o o)
+   \ - /
+    | |
+
+ZZEIP = ?
+EHSECE = ?</div>
+                <div class="difficulty">DIFFICULTY: EASY</div>
+                <button class="btn" onclick="openActivity('scramble')">UNSCRAMBLE</button>
+            </div>
+
+            <!-- Logic Puzzle -->
+            <div class="menu-item">
+                <h3>🔍 RAT LOGIC</h3>
+                <p>Deduce which rat stole the pizza using clues and deduction!</p>
+                <div class="ascii-art">
+  ╭─ ─╮
+  │ 🐀 │ Suspect A
+  │ 🐀 │ Suspect B
+  │ 🐀 │ Suspect C
+  ╰─ ─╯
+  WHO DID IT?</div>
+                <div class="difficulty">DIFFICULTY: HARD</div>
+                <button class="btn" onclick="openActivity('logic')">INVESTIGATE</button>
+            </div>
+
+            <!-- Pattern Recognition -->
+            <div class="menu-item">
+                <h3>🎯 PATTERN RAT</h3>
+                <p>Identify the pattern in rat movements to predict the next location!</p>
+                <div class="ascii-art">
+🐀 → 🧀 → 🐀
+🧀 → 🐀 → 🧀
+🐀 → 🧀 → ?</div>
+                <div class="difficulty">DIFFICULTY: MEDIUM</div>
+                <button class="btn" onclick="openActivity('pattern')">FIND PATTERN</button>
+            </div>
+
+            <!-- Memory Challenge -->
+            <div class="menu-item">
+                <h3>💭 MEMORY TEST</h3>
+                <p>Memorize the locations of hidden cheese stashes!</p>
+                <div class="ascii-art">
+   ○_○
+  /   \
+ | ◉ ◉ |
+  \ ▼ /
+   |_|
+  REMEMBER!</div>
+                <div class="difficulty">DIFFICULTY: MEDIUM</div>
+                <button class="btn" onclick="openActivity('memory')">TEST MEMORY</button>
+            </div>
+
+            <!-- Riddles -->
+            <div class="menu-item">
+                <h3>❓ RAT RIDDLES</h3>
+                <p>Solve ancient rat riddles passed down through generations!</p>
+                <div class="ascii-art">
+    ~~~
+   (o_o)
+    \_/
+    /|\
+
+"I run but
+never walk..."</div>
+                <div class="difficulty">DIFFICULTY: EXTREME</div>
+                <button class="btn" onclick="openActivity('riddles')">SOLVE RIDDLES</button>
             </div>
         </div>
 
@@ -743,133 +765,149 @@
         let mobileControlsSetup = false;
 
         const activities = {
-            dumpster: {
-                title: "🗑️ DUMPSTER DIVE MISSION",
+            maze: {
+                title: "🧀 CHEESE MAZE PUZZLE",
                 ascii: `
-    ╔════════╗
-    ║ TRASH  ║
-    ║ ╱╲╱╲   ║
-    ║ ▓▓▓▓   ║
-    ║ ▓▓▓▓   ║
-    ║ ▓▓▓▓   ║
-    ╚════════╝
-    
-    STATUS: DIVING...
-    FOUND: 3 pizza crusts, 2 mozzarella sticks, 1 whole sandwich
+    █████████████████
+    █ 🐀 START     █
+    █ ███████ ███ █
+    █ █     █   █ █
+    █ █ ███ ███ █ █
+    █ █ █ █     █ █
+    █ █ █ █████ █ █
+    █ █          █
+    █ ███████████ █
+    █ FINISH 🧀   █
+    █████████████████
+
+    PATH FOUND: ↓→→↓↓→↓→→↑→↓
+    SUCCESS!
                 `,
-                reward: 'Found delicious leftovers! +50 hunger, +10 cheese'
+                reward: 'Maze solved! +5 cheese, +20 IQ points'
             },
-            pizza: {
-                title: "🍕 PIZZA RAT EXPEDITION",
+            trivia: {
+                title: "🧠 RAT TRIVIA CHALLENGE",
                 ascii: `
-         ╱╲
-        ╱  ╲
-       ╱ 🍕 ╲
-      ╱──────╲
-      │ ───── │
-      │ ───── │
-      │ ───── │
-      ╰───────╯
-      
-    LEGENDARY PIZZA SPOTTED!
-    CHEESE: 100% | GREASE: MAXIMUM
+    ╔═══════════════╗
+    ║ QUESTION 1/5  ║
+    ╚═══════════════╝
+
+    What year did the
+    famous NYC Pizza Rat
+    video go viral?
+
+    A) 2014
+    B) 2015 ✓
+    C) 2016
+    D) 2017
+
+    CORRECT! +10 POINTS
                 `,
-                reward: 'Secured legendary pizza slice! +60 hunger, +5 pizza'
+                reward: 'Perfect score! +15 cheese, +1 achievement'
             },
-            bodega: {
-                title: "🏪 BODEGA INFILTRATION",
+            math: {
+                title: "🍕 PIZZA MATH PROBLEM",
                 ascii: `
-    ┌─────────────┐
-    │ BODEGA      │
-    │ ┌─ ─ ─┐    │
-    │ │🧀🥛 │    │
-    │ │ 🥒   │    │
-    │ └─ ─ ─┘    │
-    │ ALARM: OFF  │
-    └─────────────┘
-    
-    STEALTH: MAXIMUM
-    LOOT: SECURED
+    ╔═══════════════╗
+    ║ CALCULATION   ║
+    ╚═══════════════╝
+
+    8 rats share 3 slices
+    Each slice = 8 pieces
+
+    3 × 8 = 24 pieces
+    24 ÷ 8 = 3 pieces/rat
+
+    ANSWER: 3 pieces each!
+    SOLUTION: CORRECT ✓
                 `,
-                reward: 'Raided bodega successfully! +40 hunger, +15 cheese'
+                reward: 'Math genius! +10 cheese, +25 IQ points'
             },
-            bakery: {
-                title: "🥐 BAKERY HEIST",
+            scramble: {
+                title: "📝 RAT WORD SCRAMBLE",
                 ascii: `
-    ╔═══════════╗
-    ║ BAKERY    ║
-    ║ 🥐 🥐 🥐  ║
-    ║ 🍰 🍰 🍰  ║
-    ║ 🧁 🧁 🧁  ║
-    ║ GUARDS: 0 ║
-    ╚═══════════╝
-    
-    STEALTH LEVEL: EXPERT
-    RISK: EXTREME
+    ╔═══════════════╗
+    ║ UNSCRAMBLE!   ║
+    ╚═══════════════╝
+
+    ZZEIP → PIZZA ✓
+    EHSECE → CHEESE ✓
+    ARUBGES → GARBAGE ✓
+    KBWHSCUI → BUSHWICK ✓
+
+    ALL CORRECT!
+    WORD MASTER!
                 `,
-                reward: 'Epic bakery raid! +80 hunger, +20 cheese, +1 achievement'
+                reward: 'All words correct! +12 cheese, +1 achievement'
             },
-            subway: {
-                title: "🚇 SUBWAY SCAVENGE",
+            logic: {
+                title: "🔍 RAT DETECTIVE LOGIC",
                 ascii: `
-    ┌─ L TRAIN ─┐
-    │ ▓▓▓▓▓▓▓▓  │
-    │ 🧀 🥒 🍿  │
-    │ ▓▓▓▓▓▓▓▓  │
-    │ MOVING...  │
-    └────────────┘
-    
-    STATIONS CLEARED: 3
-    FOOD FOUND: ABUNDANT
+    ╔═══════════════╗
+    ║ CLUES:        ║
+    ╚═══════════════╝
+
+    1. Suspect A was sleeping
+    2. Suspect B hates pizza
+    3. Suspect C loves pizza
+    4. Pizza vanished at 2am
+
+    DEDUCTION: Suspect C!
+    CASE SOLVED ✓
                 `,
-                reward: 'Subway buffet acquired! +55 hunger, +8 cheese, +2 pizza'
+                reward: 'Mystery solved! +18 cheese, Detective Badge unlocked'
             },
-            taco: {
-                title: "🌮 TACO TRUCK RAID",
+            pattern: {
+                title: "🎯 PATTERN RECOGNITION",
                 ascii: `
-    ╭─────────────╮
-    │ TACO TRUCK  │
-    │ ┌─────────┐ │
-    │ │ 🌮 🌮   │ │
-    │ │ 🌮 🌮   │ │
-    │ └─────────┘ │
-    ╰─────────────╯
-    
-    SALSA LEVEL: SPICY
-    CHAOS LEVEL: HIGH
+    ╔═══════════════╗
+    ║ FIND PATTERN  ║
+    ╚═══════════════╝
+
+    🐀 → 🧀 → 🐀
+    🧀 → 🐀 → 🧀
+    🐀 → 🧀 → [🐀]
+
+    PATTERN: Alternating!
+    ANSWER: 🐀 ✓
+    GENIUS LEVEL!
                 `,
-                reward: 'Taco truck conquest! +70 hunger, +12 cheese, +3 pizza'
+                reward: 'Pattern mastered! +14 cheese, +30 IQ points'
             },
-            vendor: {
-                title: "🥒 STREET VENDOR CONQUEST",
+            memory: {
+                title: "💭 MEMORY CHALLENGE",
                 ascii: `
-    ┌──────────┐
-    │ VENDOR   │
-    │ 🥨 🌭 🥒 │
-    │ CART     │
-    │ ▓▓▓▓▓▓   │
-    └──────────┘
-    
-    APPROACH: CAUTIOUS
-    SUCCESS RATE: 95%
+    ╔═══════════════╗
+    ║ MEMORIZE:     ║
+    ╚═══════════════╝
+
+    🧀 ░ ░ 🧀 ░
+    ░ 🧀 ░ ░ 🧀
+    🧀 ░ 🧀 ░ ░
+
+    [3 seconds later...]
+
+    ALL LOCATIONS RECALLED!
+    PERFECT MEMORY ✓
                 `,
-                reward: 'Vendor food secured! +35 hunger, +6 cheese'
+                reward: 'Memory master! +16 cheese, Photographic Memory badge'
             },
-            rooftop: {
-                title: "🎉 ROOFTOP PARTY CRASH",
+            riddles: {
+                title: "❓ ANCIENT RAT RIDDLES",
                 ascii: `
-    ╔═════════════╗
-    ║ ROOFTOP     ║
-    ║ 🍾 🍾 🍾    ║
-    ║ 🧀 🥓 🍤    ║
-    ║ 🎵 🎵 🎵    ║
-    ║ HUMANS: 50  ║
-    ╚═════════════╝
-    
-    RISK LEVEL: MAXIMUM
-    REWARD: LEGENDARY
+    ╔═══════════════╗
+    ║ RIDDLE:       ║
+    ╚═══════════════╝
+
+    "I run but never walk,
+    have a mouth but never talk,
+    have a bed but never sleep"
+
+    ANSWER: A RIVER ✓
+
+    ANCIENT WISDOM UNLOCKED!
                 `,
-                reward: 'Party raided! +90 hunger, +25 cheese, +5 pizza, +1 achievement'
+                reward: 'Riddle solved! +20 cheese, Wisdom of the Elders unlocked'
             }
         };
 
@@ -998,7 +1036,7 @@
         function spawnCat() {
             const side = Math.floor(Math.random() * 4);
             let x, y, vx, vy;
-            const speed = 1 + (gameLevel * 0.3);
+            const speed = 0.5 + (gameLevel * 0.15);
 
             switch(side) {
                 case 0: // top
@@ -1208,8 +1246,8 @@
                 const dy = playerY - cat.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist > 0) {
-                    cat.vx = (dx / dist) * (1 + gameLevel * 0.2);
-                    cat.vy = (dy / dist) * (1 + gameLevel * 0.2);
+                    cat.vx = (dx / dist) * (0.6 + gameLevel * 0.1);
+                    cat.vy = (dy / dist) * (0.6 + gameLevel * 0.1);
                 }
 
                 cat.x += cat.vx;

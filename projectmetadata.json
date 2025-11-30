@@ -27,6 +27,48 @@
     }
   },
   "projects": {
+    "double_dragon_beatem_up": {
+      "title": "Double Dragon Beatdown",
+      "description": "Side-scroll co-op brawler",
+      "icon": "👊",
+      "collection": "featured"
+    },
+    "pigman": {
+      "title": "Pigman Maze Run",
+      "description": "Pellet chase stealth raid",
+      "icon": "🐷",
+      "collection": "featured"
+    },
+    "terminal-memory": {
+      "title": "Terminal Memory",
+      "description": "CRT card match challenge",
+      "icon": "🧠",
+      "collection": "featured"
+    },
+    "anniversary": {
+      "title": "Anniversary Chronicle",
+      "description": "Surreal relationship time capsule",
+      "icon": "💜",
+      "collection": "featured"
+    },
+    "radish_love": {
+      "title": "Radish Love Letter",
+      "description": "Playful ode to roots",
+      "icon": "❤️",
+      "collection": "featured"
+    },
+    "rat_bushwick": {
+      "title": "Rat Bushwick Pizza Hunt",
+      "description": "Arcade rat survival game",
+      "icon": "🐀",
+      "collection": "featured"
+    },
+    "amtrak-journey": {
+      "title": "Zach & Cen's Amtrak Journey",
+      "description": "Rail trip arcade story",
+      "icon": "🚂",
+      "collection": "featured"
+    },
     "ai-agency-flier": {
       "title": "AI Agency Reality Check",
       "description": "Touch flier myth busts",
@@ -37,18 +79,6 @@
       "title": "Alex's Dog Mess",
       "description": "Humorous cleanup field report",
       "icon": "🐕",
-      "collection": "stories-content"
-    },
-    "amtrak-journey": {
-      "title": "Zach & Cen's Amtrak Journey",
-      "description": "Rail trip arcade story",
-      "icon": "🚂",
-      "collection": "featured"
-    },
-    "anniversary": {
-      "title": "Anniversary Chronicle",
-      "description": "Surreal relationship time capsule",
-      "icon": "💜",
       "collection": "stories-content"
     },
     "basket-jam": {
@@ -111,12 +141,6 @@
       "icon": "🪨",
       "collection": "stories-content"
     },
-    "double_dragon_beatem_up": {
-      "title": "Double Dragon Beatdown",
-      "description": "Side-scroll co-op brawler",
-      "icon": "👊",
-      "collection": "arcade-games"
-    },
     "droid-union": {
       "title": "Droid Union Dispatch",
       "description": "Robot labor rights zine",
@@ -160,23 +184,11 @@
       "icon": "📊",
       "collection": "utilities-apps"
     },
-    "pigman": {
-      "title": "Pigman Maze Run",
-      "description": "Pellet chase stealth raid",
-      "icon": "🐷",
-      "collection": "arcade-games"
-    },
     "planner": {
       "title": "Daily Planner",
       "description": "Terminal day planner board",
       "icon": "📋",
       "collection": "utilities-apps"
-    },
-    "radish_love": {
-      "title": "Radish Love Letter",
-      "description": "Playful ode to roots",
-      "icon": "❤️",
-      "collection": "stories-content"
     },
     "rat_bushwick": {
       "title": "Rat Bushwick Log",
@@ -231,12 +243,6 @@
       "description": "Flashing noir caution",
       "icon": "⚠️",
       "collection": "stories-content"
-    },
-    "terminal-memory": {
-      "title": "Terminal Memory",
-      "description": "CRT card match challenge",
-      "icon": "🧠",
-      "collection": "arcade-games"
     },
     "weekend planner": {
       "title": "Weekend Planner",
