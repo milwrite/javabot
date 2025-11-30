@@ -375,6 +375,28 @@
                 display: block;
                 margin: 8px 0;
             }
+
+            .winner-content {
+                padding: 20px;
+            }
+
+            .winner-icon {
+                font-size: 3em;
+            }
+
+            .winner-text {
+                font-size: 1.5em;
+            }
+
+            .winner-subtext {
+                font-size: 1em;
+                margin-bottom: 20px;
+            }
+
+            .winner-buttons .btn {
+                min-width: 120px;
+                padding: 12px 20px;
+            }
         }
 
         .particle {
@@ -427,6 +449,7 @@
             border-radius: 20px;
             text-align: center;
             animation: scaleIn 0.4s ease;
+            max-width: 90vw;
         }
 
         @keyframes scaleIn {
@@ -689,9 +712,13 @@
         }
 
         function celebrateWin() {
+            // Scale confetti based on viewport for better mobile performance
+            const isMobile = window.innerWidth < 768;
+            const particleMultiplier = isMobile ? 0.6 : 1;
+
             // Confetti animation
             confetti({
-                particleCount: 100,
+                particleCount: Math.floor(100 * particleMultiplier),
                 spread: 70,
                 origin: { y: 0.6 }
             });
@@ -699,7 +726,7 @@
             // Additional confetti bursts
             setTimeout(() => {
                 confetti({
-                    particleCount: 50,
+                    particleCount: Math.floor(50 * particleMultiplier),
                     angle: 60,
                     spread: 55,
                     origin: { x: 0, y: 0.5 }
@@ -708,7 +735,7 @@
 
             setTimeout(() => {
                 confetti({
-                    particleCount: 50,
+                    particleCount: Math.floor(50 * particleMultiplier),
                     angle: 120,
                     spread: 55,
                     origin: { x: 1, y: 0.5 }
@@ -721,6 +748,11 @@
 
         function createCustomParticles() {
             const emojis = ['🎉', '🎊', '🏆', '⭐', '✨', '🌟'];
+            // Scale particle size based on viewport width
+            const viewportWidth = window.innerWidth;
+            const baseSize = viewportWidth < 480 ? 15 : viewportWidth < 768 ? 20 : 25;
+            const sizeVariation = viewportWidth < 480 ? 15 : viewportWidth < 768 ? 20 : 25;
+
             for (let i = 0; i < 20; i++) {
                 setTimeout(() => {
                     const particle = document.createElement('div');
@@ -728,7 +760,7 @@
                     particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
                     particle.style.left = Math.random() * 100 + '%';
                     particle.style.top = Math.random() * 50 + '%';
-                    particle.style.fontSize = (Math.random() * 30 + 20) + 'px';
+                    particle.style.fontSize = (Math.random() * sizeVariation + baseSize) + 'px';
                     document.body.appendChild(particle);
 
                     setTimeout(() => particle.remove(), 2000);
