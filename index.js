@@ -7,6 +7,10 @@ const path = require('path');
 const axios = require('axios');
 const axiosRetry = require('axios-retry').default;
 
+// Game pipeline modules (system-v1)
+const { runGamePipeline, commitGameFiles, isGameRequest } = require('./services/gamePipeline');
+const { getRecentPatternsSummary } = require('./services/buildLogs');
+
 // Validate required environment variables
 const REQUIRED_ENV_VARS = [
     'DISCORD_TOKEN',
@@ -408,6 +412,163 @@ function ensureStylesheetInHTML(htmlContent) {
         }
     }
     return htmlContent;
+}
+
+// Content Quality Validation System
+function validateHTMLContent(htmlContent, context = {}) {
+    const issues = [];
+    const warnings = [];
+
+    // Critical checks - these fail validation
+    if (!htmlContent.includes('</html>')) {
+        issues.push('HTML appears incomplete - missing closing </html> tag');
+    }
+
+    if (!htmlContent.includes('<!DOCTYPE html>') && !htmlContent.includes('<!doctype html>')) {
+        warnings.push('Missing DOCTYPE declaration');
+    }
+
+    if (!htmlContent.includes('<html')) {
+        issues.push('Missing <html> opening tag');
+    }
+
+    if (!htmlContent.includes('<head>')) {
+        issues.push('Missing <head> section');
+    }
+
+    if (!htmlContent.includes('<body')) {
+        issues.push('Missing <body> tag');
+    }
+
+    // Required elements check
+    if (!htmlContent.includes('viewport')) {
+        issues.push('Missing viewport meta tag - required for mobile responsiveness');
+    }
+
+    if (!htmlContent.includes('page-theme.css') && !htmlContent.includes('stylesheet')) {
+        warnings.push('No stylesheet link found');
+    }
+
+    if (!htmlContent.includes('index.html') && !htmlContent.includes('HOME')) {
+        warnings.push('No home link found');
+    }
+
+    // Mobile-specific checks for games
+    if (context.isGame) {
+        if (!htmlContent.includes('mobile-controls') && !htmlContent.includes('touch')) {
+            issues.push('Game missing mobile controls - required for Discord mobile users');
+        }
+
+        if (!htmlContent.includes('touch-action')) {
+            warnings.push('Missing touch-action CSS to prevent zoom on button tap');
+        }
+
+        if (!htmlContent.includes('@media') && !htmlContent.includes('max-width')) {
+            issues.push('No responsive breakpoints found - mobile users will have poor experience');
+        }
+    }
+
+    // Check for common syntax errors
+    const openScriptTags = (htmlContent.match(/<script/g) || []).length;
+    const closeScriptTags = (htmlContent.match(/<\/script>/g) || []).length;
+    if (openScriptTags !== closeScriptTags) {
+        issues.push(`Mismatched script tags - ${openScriptTags} open, ${closeScriptTags} close`);
+    }
+
+    const openDivTags = (htmlContent.match(/<div/g) || []).length;
+    const closeDivTags = (htmlContent.match(/<\/div>/g) || []).length;
+    if (Math.abs(openDivTags - closeDivTags) > 2) {
+        warnings.push(`Possibly mismatched div tags - ${openDivTags} open, ${closeDivTags} close`);
+    }
+
+    return {
+        isValid: issues.length === 0,
+        issues: issues,
+        warnings: warnings,
+        score: calculateQualityScore(htmlContent, issues, warnings, context)
+    };
+}
+
+function validateJSContent(jsContent) {
+    const issues = [];
+    const warnings = [];
+
+    // Check for basic JS syntax issues
+    if (jsContent.includes('```')) {
+        issues.push('JavaScript contains markdown code blocks - needs cleaning');
+    }
+
+    // Check for common patterns indicating incomplete code
+    if (jsContent.includes('// TODO') || jsContent.includes('// FIXME')) {
+        warnings.push('Code contains TODO/FIXME comments');
+    }
+
+    // Check if file is suspiciously short (likely incomplete)
+    if (jsContent.trim().length < 100) {
+        issues.push('JavaScript file appears too short to be functional');
+    }
+
+    // Basic bracket matching
+    const openBraces = (jsContent.match(/\{/g) || []).length;
+    const closeBraces = (jsContent.match(/\}/g) || []).length;
+    if (Math.abs(openBraces - closeBraces) > 0) {
+        issues.push(`Mismatched braces - ${openBraces} open, ${closeBraces} close`);
+    }
+
+    const openParens = (jsContent.match(/\(/g) || []).length;
+    const closeParens = (jsContent.match(/\)/g) || []).length;
+    if (Math.abs(openParens - closeParens) > 0) {
+        issues.push(`Mismatched parentheses - ${openParens} open, ${closeParens} close`);
+    }
+
+    return {
+        isValid: issues.length === 0,
+        issues: issues,
+        warnings: warnings
+    };
+}
+
+function calculateQualityScore(htmlContent, issues, warnings, context) {
+    let score = 100;
+
+    // Deduct for issues
+    score -= issues.length * 15;
+    score -= warnings.length * 5;
+
+    // Bonus for best practices
+    if (htmlContent.includes('viewport')) score += 5;
+    if (htmlContent.includes('@media')) score += 5;
+    if (htmlContent.includes('page-theme.css')) score += 5;
+    if (htmlContent.includes('index.html')) score += 3;
+
+    // Game-specific bonuses
+    if (context.isGame) {
+        if (htmlContent.includes('mobile-controls')) score += 10;
+        if (htmlContent.includes('touch-action')) score += 5;
+        if (htmlContent.includes('touchstart')) score += 5;
+    }
+
+    return Math.max(0, Math.min(100, score));
+}
+
+function buildValidationFeedback(validation, contentType = 'HTML') {
+    const parts = [];
+
+    if (validation.issues.length > 0) {
+        parts.push(`CRITICAL ISSUES in ${contentType}:`);
+        validation.issues.forEach(issue => parts.push(`- ${issue}`));
+    }
+
+    if (validation.warnings.length > 0) {
+        parts.push(`\nWARNINGS:`);
+        validation.warnings.forEach(warning => parts.push(`- ${warning}`));
+    }
+
+    if (validation.score !== undefined) {
+        parts.push(`\nQuality Score: ${validation.score}/100`);
+    }
+
+    return parts.join('\n');
 }
 
 // Message history and agents.md management
@@ -879,8 +1040,21 @@ async function syncIndexWithSrcFiles() {
 // Tool functions that AI can call via @ mentions
 async function createPage(name, description) {
     console.log(`[CREATE_PAGE] Starting: ${name}`);
+
+    // Detect if this is a game for enhanced validation
+    const isGame = /game|play|arcade|puzzle|snake|tetris|pong|match|guess|quiz|battle|shooter/i.test(description);
+    const context = { isGame };
+
+    const MAX_RETRIES = 2;
+    let attempt = 0;
+    let htmlContent = null;
+    let validation = null;
+
     try {
-        const webPrompt = `Build "${name}": ${description}
+        while (attempt <= MAX_RETRIES) {
+            attempt++;
+
+            const webPrompt = `Build "${name}": ${description}
 
 Output a single HTML file with embedded CSS and JavaScript. Requirements:
 - Fully functional and interactive
@@ -888,26 +1062,44 @@ Output a single HTML file with embedded CSS and JavaScript. Requirements:
 - Vanilla JS (CDN libraries allowed)
 - Creative implementation
 - Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
+${isGame ? '- CRITICAL FOR GAMES: Include mobile touch controls with class="mobile-controls" and CSS touch-action: manipulation\n- Add responsive breakpoints @media (max-width: 768px) and (max-width: 480px)\n- Use touchstart events with preventDefault for buttons' : ''}
+${validation && !validation.isValid ? '\nPREVIOUS ATTEMPT HAD ISSUES - FIX THESE:\n' + buildValidationFeedback(validation) : ''}
 
 Return only HTML, no markdown blocks or explanations.`;
 
-        const response = await axios.post(OPENROUTER_URL, {
-            model: MODEL,
-            messages: [{ role: 'user', content: webPrompt }],
-            max_tokens: CONFIG.AI_MAX_TOKENS,
-            temperature: CONFIG.AI_TEMPERATURE
-        }, {
-            headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: CONFIG.API_TIMEOUT
-        });
+            const response = await axios.post(OPENROUTER_URL, {
+                model: MODEL,
+                messages: [{ role: 'user', content: webPrompt }],
+                max_tokens: CONFIG.AI_MAX_TOKENS,
+                temperature: CONFIG.AI_TEMPERATURE
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: CONFIG.API_TIMEOUT
+            });
 
-        let htmlContent = response.data.choices[0].message.content;
-        htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
-        htmlContent = ensureStylesheetInHTML(htmlContent);
-        htmlContent = ensureHomeLinkInHTML(htmlContent);
+            htmlContent = response.data.choices[0].message.content;
+            htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
+            htmlContent = ensureStylesheetInHTML(htmlContent);
+            htmlContent = ensureHomeLinkInHTML(htmlContent);
+
+            // Validate the generated content
+            validation = validateHTMLContent(htmlContent, context);
+
+            logEvent('CREATE_PAGE', `Attempt ${attempt}/${MAX_RETRIES + 1} - Quality Score: ${validation.score}/100`);
+
+            if (validation.isValid || attempt > MAX_RETRIES) {
+                if (!validation.isValid) {
+                    logEvent('CREATE_PAGE', `Proceeding despite validation issues after ${MAX_RETRIES} retries`);
+                    console.log(buildValidationFeedback(validation));
+                }
+                break;
+            }
+
+            logEvent('CREATE_PAGE', `Validation failed, retrying... Issues: ${validation.issues.length}`);
+        }
 
         const fileName = `src/${name}.html`;
         await fs.mkdir('src', { recursive: true });
@@ -924,8 +1116,9 @@ Return only HTML, no markdown blocks or explanations.`;
         const currentBranch = status.current || 'main';
         await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
 
-        console.log(`[CREATE_PAGE] Success + pushed: ${fileName}`);
-        return `Created ${fileName} and pushed. Live at: https://milwrite.github.io/javabot/src/${name}.html (give it 1-2 min to deploy)`;
+        const qualityNote = validation.score >= 80 ? '✨ High quality' : validation.score >= 60 ? '✓ Good quality' : '⚠️ May need refinement';
+        console.log(`[CREATE_PAGE] Success + pushed: ${fileName} (Score: ${validation.score}/100)`);
+        return `Created ${fileName} and pushed. ${qualityNote} (${validation.score}/100). Live at: https://milwrite.github.io/javabot/src/${name}.html (give it 1-2 min to deploy)`;
     } catch (error) {
         console.error(`[CREATE_PAGE] Error:`, error.message);
         return `Error creating page: ${error.message}`;
@@ -934,9 +1127,21 @@ Return only HTML, no markdown blocks or explanations.`;
 
 async function createFeature(name, description) {
     console.log(`[CREATE_FEATURE] Starting: ${name}`);
+
+    const MAX_RETRIES = 2;
+    let jsAttempt = 0;
+    let htmlAttempt = 0;
+    let jsContent = null;
+    let htmlContent = null;
+    let jsValidation = null;
+    let htmlValidation = null;
+
     try {
-        // Generate JS feature/library/component
-        const jsPrompt = `Create a JavaScript feature called "${name}".
+        // Generate JS feature/library/component with retry logic
+        while (jsAttempt <= MAX_RETRIES) {
+            jsAttempt++;
+
+            const jsPrompt = `Create a JavaScript feature called "${name}".
 Description: ${description}
 
 Output clean, well-documented JavaScript with:
@@ -945,27 +1150,49 @@ Output clean, well-documented JavaScript with:
 - Export as module or global object
 - Practical, reusable implementation
 - Handle edge cases and provide good defaults
+${jsValidation && !jsValidation.isValid ? '\nPREVIOUS ATTEMPT HAD ISSUES - FIX THESE:\n' + buildValidationFeedback(jsValidation, 'JavaScript') : ''}
 
 Return only JavaScript code, no markdown blocks or explanations.`;
 
-        const jsResponse = await axios.post(OPENROUTER_URL, {
-            model: MODEL,
-            messages: [{ role: 'user', content: jsPrompt }],
-            max_tokens: CONFIG.AI_MAX_TOKENS,
-            temperature: CONFIG.AI_TEMPERATURE
-        }, {
-            headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: CONFIG.API_TIMEOUT
-        });
+            const jsResponse = await axios.post(OPENROUTER_URL, {
+                model: MODEL,
+                messages: [{ role: 'user', content: jsPrompt }],
+                max_tokens: CONFIG.AI_MAX_TOKENS,
+                temperature: CONFIG.AI_TEMPERATURE
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: CONFIG.API_TIMEOUT
+            });
 
-        let jsContent = jsResponse.data.choices[0].message.content;
-        jsContent = cleanMarkdownCodeBlocks(jsContent, 'javascript');
+            jsContent = jsResponse.data.choices[0].message.content;
+            jsContent = cleanMarkdownCodeBlocks(jsContent, 'javascript');
 
-        // Generate demo HTML
-        const htmlPrompt = `Create an interactive demo page for "${name}" JavaScript feature.
+            // Validate JavaScript
+            jsValidation = validateJSContent(jsContent);
+            logEvent('CREATE_FEATURE', `JS Attempt ${jsAttempt}/${MAX_RETRIES + 1} - Valid: ${jsValidation.isValid}`);
+
+            if (jsValidation.isValid || jsAttempt > MAX_RETRIES) {
+                if (!jsValidation.isValid) {
+                    logEvent('CREATE_FEATURE', `Proceeding with JS despite issues after ${MAX_RETRIES} retries`);
+                    console.log(buildValidationFeedback(jsValidation, 'JavaScript'));
+                }
+                break;
+            }
+
+            logEvent('CREATE_FEATURE', `JS validation failed, retrying... Issues: ${jsValidation.issues.length}`);
+        }
+
+        // Generate demo HTML with retry logic
+        const isGame = /game|play|arcade|puzzle|interactive/i.test(description);
+        const context = { isGame };
+
+        while (htmlAttempt <= MAX_RETRIES) {
+            htmlAttempt++;
+
+            const htmlPrompt = `Create an interactive demo page for "${name}" JavaScript feature.
 Feature description: ${description}
 
 Output a single HTML file that:
@@ -974,26 +1201,43 @@ Output a single HTML file that:
 - Modern, polished UI with embedded CSS
 - Clear documentation/instructions for users
 - Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
+${isGame ? '- CRITICAL FOR INTERACTIVE FEATURES: Include mobile touch controls if needed\n- Add responsive breakpoints @media (max-width: 768px) and (max-width: 480px)' : ''}
+${htmlValidation && !htmlValidation.isValid ? '\nPREVIOUS ATTEMPT HAD ISSUES - FIX THESE:\n' + buildValidationFeedback(htmlValidation) : ''}
 
 Return only HTML code, no markdown blocks or explanations.`;
 
-        const htmlResponse = await axios.post(OPENROUTER_URL, {
-            model: MODEL,
-            messages: [{ role: 'user', content: htmlPrompt }],
-            max_tokens: CONFIG.AI_MAX_TOKENS,
-            temperature: CONFIG.AI_TEMPERATURE
-        }, {
-            headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: CONFIG.API_TIMEOUT
-        });
+            const htmlResponse = await axios.post(OPENROUTER_URL, {
+                model: MODEL,
+                messages: [{ role: 'user', content: htmlPrompt }],
+                max_tokens: CONFIG.AI_MAX_TOKENS,
+                temperature: CONFIG.AI_TEMPERATURE
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: CONFIG.API_TIMEOUT
+            });
 
-        let htmlContent = htmlResponse.data.choices[0].message.content;
-        htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
-        htmlContent = ensureStylesheetInHTML(htmlContent);
-        htmlContent = ensureHomeLinkInHTML(htmlContent);
+            htmlContent = htmlResponse.data.choices[0].message.content;
+            htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
+            htmlContent = ensureStylesheetInHTML(htmlContent);
+            htmlContent = ensureHomeLinkInHTML(htmlContent);
+
+            // Validate HTML
+            htmlValidation = validateHTMLContent(htmlContent, context);
+            logEvent('CREATE_FEATURE', `HTML Attempt ${htmlAttempt}/${MAX_RETRIES + 1} - Quality Score: ${htmlValidation.score}/100`);
+
+            if (htmlValidation.isValid || htmlAttempt > MAX_RETRIES) {
+                if (!htmlValidation.isValid) {
+                    logEvent('CREATE_FEATURE', `Proceeding with HTML despite issues after ${MAX_RETRIES} retries`);
+                    console.log(buildValidationFeedback(htmlValidation));
+                }
+                break;
+            }
+
+            logEvent('CREATE_FEATURE', `HTML validation failed, retrying... Issues: ${htmlValidation.issues.length}`);
+        }
 
         await fs.mkdir('src', { recursive: true });
         const jsFileName = `src/${name}.js`;
@@ -1012,8 +1256,9 @@ Return only HTML code, no markdown blocks or explanations.`;
         const currentBranch = status.current || 'main';
         await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
 
-        console.log(`[CREATE_FEATURE] Success + pushed: ${jsFileName}, ${htmlFileName}`);
-        return `Created ${jsFileName} and ${htmlFileName}, pushed. Live demo: https://milwrite.github.io/javabot/src/${name}.html (give it 1-2 min to deploy)`;
+        const qualityNote = htmlValidation.score >= 80 ? '✨ High quality' : htmlValidation.score >= 60 ? '✓ Good quality' : '⚠️ May need refinement';
+        console.log(`[CREATE_FEATURE] Success + pushed: ${jsFileName}, ${htmlFileName} (Score: ${htmlValidation.score}/100)`);
+        return `Created ${jsFileName} and ${htmlFileName}, pushed. ${qualityNote} (${htmlValidation.score}/100). Live demo: https://milwrite.github.io/javabot/src/${name}.html (give it 1-2 min to deploy)`;
     } catch (error) {
         console.error(`[CREATE_FEATURE] Error:`, error.message);
         return `Error creating feature: ${error.message}`;
@@ -1406,6 +1651,29 @@ const commands = [
                 .setRequired(true)),
 
     new SlashCommandBuilder()
+        .setName('build-game')
+        .setDescription('Build a complete game using AI-driven pipeline (Architect → Builder → Tester → Scribe)')
+        .addStringOption(option =>
+            option.setName('title')
+                .setDescription('Game title (e.g., "Snake", "Space Maze")')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('prompt')
+                .setDescription('Describe what the game should do (mechanics, theme, features)')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('type')
+                .setDescription('Optional: game type hint')
+                .setRequired(false)
+                .addChoices(
+                    { name: 'Auto-detect (default)', value: 'auto' },
+                    { name: 'Arcade / 2D Game', value: 'arcade-2d' },
+                    { name: 'Interactive Fiction', value: 'interactive-fiction' },
+                    { name: 'Infographic / Visual', value: 'infographic' },
+                    { name: 'Utility / App', value: 'utility' }
+                )),
+
+    new SlashCommandBuilder()
         .setName('status')
         .setDescription('Check repository status'),
         
@@ -1568,6 +1836,9 @@ client.on('interactionCreate', async interaction => {
             case 'add-feature':
                 await handleAddFeature(interaction);
                 break;
+            case 'build-game':
+                await handleBuildGame(interaction);
+                break;
             case 'status':
                 await handleStatus(interaction);
                 break;
@@ -1680,6 +1951,69 @@ async function handleMentionAsync(message) {
 
         // Send thinking message
         let thinkingMsg = await message.reply(getBotResponse('thinking'));
+
+        // Check if this is a game request - route to game pipeline
+        if (isGameRequest(content)) {
+            logEvent('MENTION', 'Detected game request - routing to game pipeline');
+
+            try {
+                await thinkingMsg.edit('📝 detected game request - firing up the game builder...');
+
+                const triggerSource = {
+                    kind: 'mention',
+                    userId: message.author.id,
+                    username: message.author.username,
+                    messageId: message.id
+                };
+
+                const result = await runGamePipeline({
+                    userPrompt: content,
+                    triggerSource,
+                    onStatusUpdate: async (msg) => {
+                        try {
+                            await thinkingMsg.edit(msg);
+                        } catch (err) {
+                            console.error('Status update error:', err);
+                        }
+                    },
+                    preferredType: 'auto'
+                });
+
+                if (!result.ok) {
+                    await thinkingMsg.edit(`${getBotResponse('errors')}\n\nBuild failed: ${result.error}\n\nCheck \`build-logs/${result.buildId}.json\` for details.`);
+                    return;
+                }
+
+                // Commit and push
+                await thinkingMsg.edit('💾 committing to repo...');
+                const commitSuccess = await commitGameFiles(result);
+
+                if (commitSuccess) {
+                    await thinkingMsg.edit('🚀 pushing to github pages...');
+                    try {
+                        await git.push('origin', 'main');
+                    } catch (pushError) {
+                        console.error('Push error (non-fatal):', pushError);
+                    }
+                }
+
+                // Success message
+                const scoreEmoji = result.testResult.score >= 80 ? '✨' : result.testResult.score >= 60 ? '✓' : '⚠️';
+                const successMsg = `${scoreEmoji} **${result.plan.metadata.title}** built and deployed!\n\n${result.docs.releaseNotes}\n\n🎮 **Play now:** ${result.liveUrl}\n\n📊 Quality: ${result.testResult.score}/100 | ⏱️ Build time: ${result.duration}\n\n*Give it a minute or two to deploy to GitHub Pages*`;
+
+                await thinkingMsg.edit(successMsg);
+
+                // Add to history
+                addToHistory(username, content, false);
+                addToHistory('Bot Sportello', successMsg, true);
+
+                return; // Exit early - game pipeline handled everything
+            } catch (gameError) {
+                console.error('Game pipeline error in mention handler:', gameError);
+                // Fall through to normal AI response if game pipeline fails
+                await thinkingMsg.edit('hmm the game builder hit a snag... lemme try the regular chat flow...');
+            }
+        }
 
         // Build conversation context
         const conversationMessages = buildMessagesFromHistory(50);
@@ -2041,66 +2375,26 @@ async function handleAddPage(interaction) {
     try {
         const name = sanitizeFileName(interaction.options.getString('name'));
         const description = validateInput(interaction.options.getString('description'), 1000);
-        // Use AI to generate pure web development project
-        const webPrompt = `Build "${name}": ${description}
 
-Output a single HTML file. Requirements:
-- Link to shared arcade theme: <link rel="stylesheet" href="../page-theme.css"> in <head>
-- Add Google Font for Press Start 2P: <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-- Include home link after <body>: <a href="../index.html" class="home-link">← HOME</a>
-- Use arcade color palette: mint green (#7dd3a0), dark backgrounds (#1a1d23, #252a32)
-- Fully functional and interactive JavaScript
-- Vanilla JS (CDN libraries allowed for functionality)
-- Creative implementation matching the retro arcade aesthetic
-- Use CSS classes from page-theme.css: .container, .card, .btn, etc.
+        // Use the unified createPage function with validation and retry logic
+        const result = await createPage(name, description);
 
-Return only HTML, no markdown blocks or explanations.`;
-
-        const response = await axios.post(OPENROUTER_URL, {
-            model: MODEL,
-            messages: [
-                {
-                    role: 'user',
-                    content: webPrompt
-                }
-            ],
-            max_tokens: CONFIG.AI_MAX_TOKENS,
-            temperature: CONFIG.AI_TEMPERATURE
-        }, {
-            headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: CONFIG.API_TIMEOUT
-        });
-
-        let htmlContent = response.data.choices[0].message.content;
-        htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
-        htmlContent = ensureStylesheetInHTML(htmlContent);
-        htmlContent = ensureHomeLinkInHTML(htmlContent);
-
-        const fileName = `src/${name}.html`;
-
-        // Create src directory if it doesn't exist
-        await fs.mkdir('src', { recursive: true });
-
-        // Write the HTML file
-        await fs.writeFile(fileName, htmlContent);
-
-        // Update index.html to include the new page
-        await updateIndexWithPage(name, description);
+        // Extract quality score if present in result message
+        const scoreMatch = result.match(/\((\d+)\/100\)/);
+        const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
+        const qualityIndicator = score >= 80 ? '✨' : score >= 60 ? '✓' : '⚠️';
 
         const embed = new EmbedBuilder()
-            .setTitle('🌐 Page Added')
-            .setDescription(getBotResponse('success') + '\n\n**Note:** Changes have been pushed to GitHub. GitHub Pages will deploy in 1-2 minutes.')
+            .setTitle(`${qualityIndicator} Page Added`)
+            .setDescription(getBotResponse('success') + '\n\n' + result)
             .addFields(
                 { name: 'Name', value: name, inline: true },
                 { name: 'Description', value: description, inline: false },
-                { name: 'File', value: fileName, inline: false },
+                { name: 'File', value: `src/${name}.html`, inline: false },
                 { name: 'Live URL', value: `https://milwrite.github.io/javabot/src/${name}.html`, inline: false },
-                { name: 'Deployment', value: '⏳ Deploying... Please be patient (1-2 min)', inline: false }
+                ...(score ? [{ name: 'Quality Score', value: `${score}/100`, inline: true }] : [])
             )
-            .setColor(0x9b59b6)
+            .setColor(score >= 80 ? 0x00ff00 : score >= 60 ? 0x9b59b6 : 0xff9900)
             .setTimestamp();
 
         await interaction.editReply({ content: '', embeds: [embed] });
@@ -2116,100 +2410,134 @@ async function handleAddFeature(interaction) {
     try {
         const name = sanitizeFileName(interaction.options.getString('name'));
         const description = validateInput(interaction.options.getString('description'), 1000);
-        // Use AI to generate JavaScript feature/library/component
-        const jsPrompt = `Create a JavaScript feature called "${name}".
-Description: ${description}
 
-Output clean, well-documented JavaScript with:
-- Pure functions or component code (minimal dependencies)
-- JSDoc comments for functions/methods
-- Export as module or global object
-- Practical, reusable implementation
-- Handle edge cases and provide good defaults
+        // Use the unified createFeature function with validation and retry logic
+        const result = await createFeature(name, description);
 
-Return only JavaScript code, no markdown blocks or explanations.`;
-
-        const jsResponse = await axios.post(OPENROUTER_URL, {
-            model: MODEL,
-            messages: [{ role: 'user', content: jsPrompt }],
-            max_tokens: CONFIG.AI_MAX_TOKENS,
-            temperature: CONFIG.AI_TEMPERATURE
-        }, {
-            headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: CONFIG.API_TIMEOUT
-        });
-
-        let jsContent = jsResponse.data.choices[0].message.content;
-        jsContent = cleanMarkdownCodeBlocks(jsContent, 'javascript');
-
-        // Generate demo HTML page
-        const htmlPrompt = `Create an interactive demo page for "${name}" JavaScript feature.
-Feature description: ${description}
-
-Output a single HTML file that:
-- Links to shared arcade theme: <link rel="stylesheet" href="../page-theme.css"> in <head>
-- Add Google Font: <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-- Loads ${name}.js via <script src="${name}.js"></script>
-- Include home link after <body>: <a href="../index.html" class="home-link">← HOME</a>
-- Use arcade colors: mint green (#7dd3a0), dark backgrounds (#1a1d23, #252a32)
-- Provides interactive examples showing all capabilities
-- Clear documentation/instructions for users
-- Use CSS classes from page-theme.css: .container, .card, .btn, etc.
-- Match retro arcade aesthetic
-
-Return only HTML code, no markdown blocks or explanations.`;
-
-        const htmlResponse = await axios.post(OPENROUTER_URL, {
-            model: MODEL,
-            messages: [{ role: 'user', content: htmlPrompt }],
-            max_tokens: CONFIG.AI_MAX_TOKENS,
-            temperature: CONFIG.AI_TEMPERATURE
-        }, {
-            headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: CONFIG.API_TIMEOUT
-        });
-
-        let htmlContent = htmlResponse.data.choices[0].message.content;
-        htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
-        htmlContent = ensureStylesheetInHTML(htmlContent);
-        htmlContent = ensureHomeLinkInHTML(htmlContent);
-
-        // Create src directory if it doesn't exist
-        await fs.mkdir('src', { recursive: true });
-
-        // Write both files
-        const jsFileName = `src/${name}.js`;
-        const htmlFileName = `src/${name}.html`;
-
-        await fs.writeFile(jsFileName, jsContent);
-        await fs.writeFile(htmlFileName, htmlContent);
-
-        // Update index.html to include the new page
-        await updateIndexWithPage(name, description);
+        // Extract quality score if present in result message
+        const scoreMatch = result.match(/\((\d+)\/100\)/);
+        const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
+        const qualityIndicator = score >= 80 ? '✨' : score >= 60 ? '✓' : '⚠️';
 
         const embed = new EmbedBuilder()
-            .setTitle('⚡ Feature Added')
-            .setDescription(getBotResponse('success') + '\n\n**Note:** Changes have been pushed to GitHub. GitHub Pages will deploy in 1-2 minutes.')
+            .setTitle(`${qualityIndicator} Feature Added`)
+            .setDescription(getBotResponse('success') + '\n\n' + result)
             .addFields(
                 { name: 'Name', value: name, inline: true },
                 { name: 'Description', value: description, inline: false },
-                { name: 'Files', value: `${jsFileName}\n${htmlFileName}`, inline: false },
+                { name: 'Files', value: `src/${name}.js\nsrc/${name}.html`, inline: false },
                 { name: 'Live Demo', value: `https://milwrite.github.io/javabot/src/${name}.html`, inline: false },
-                { name: 'Deployment', value: '⏳ Deploying... Please be patient (1-2 min)', inline: false }
+                ...(score ? [{ name: 'Quality Score', value: `${score}/100`, inline: true }] : [])
             )
-            .setColor(0xf39c12)
+            .setColor(score >= 80 ? 0x00ff00 : score >= 60 ? 0xf39c12 : 0xff9900)
             .setTimestamp();
 
         await interaction.editReply({ content: '', embeds: [embed] });
 
     } catch (error) {
         throw new Error(`Feature creation failed: ${error.message}`);
+    }
+}
+
+async function handleBuildGame(interaction) {
+    const title = interaction.options.getString('title');
+    const prompt = interaction.options.getString('prompt');
+    const type = interaction.options.getString('type') || 'auto';
+
+    try {
+        const userPrompt = `${title}\n\n${prompt}${type !== 'auto' ? `\n\nPreferred type: ${type}` : ''}`;
+        const triggerSource = {
+            kind: 'slash',
+            userId: interaction.user.id,
+            username: interaction.user.username
+        };
+
+        // Run the game pipeline with status updates
+        const result = await runGamePipeline({
+            userPrompt,
+            triggerSource,
+            onStatusUpdate: async (msg) => {
+                try {
+                    await interaction.editReply(msg);
+                } catch (err) {
+                    console.error('Status update error:', err);
+                }
+            },
+            preferredType: type
+        });
+
+        if (!result.ok) {
+            // Build failed
+            const errorEmbed = new EmbedBuilder()
+                .setTitle('❌ Build Failed')
+                .setDescription(result.error || 'Build failed after multiple attempts')
+                .addFields(
+                    { name: 'Title', value: title, inline: true },
+                    { name: 'Build ID', value: result.buildId, inline: true },
+                    { name: 'Build Log', value: `\`build-logs/${result.buildId}.json\``, inline: false }
+                )
+                .setColor(0xff0000)
+                .setTimestamp();
+
+            if (result.testResult && result.testResult.issues.length > 0) {
+                const issuesList = result.testResult.issues
+                    .slice(0, 5)
+                    .map(issue => `• ${issue.message}`)
+                    .join('\n');
+                errorEmbed.addFields({ name: 'Issues Found', value: issuesList, inline: false });
+            }
+
+            await interaction.editReply({ content: '', embeds: [errorEmbed] });
+            return;
+        }
+
+        // Success! Commit the files
+        await interaction.editReply('💾 committing files to repo...');
+        const commitSuccess = await commitGameFiles(result);
+
+        if (commitSuccess) {
+            await interaction.editReply('🚀 pushing to github pages...');
+            try {
+                await git.push('origin', 'main');
+            } catch (pushError) {
+                console.error('Push error (non-fatal):', pushError);
+            }
+        }
+
+        // Build success embed
+        const successEmbed = new EmbedBuilder()
+            .setTitle(`🎮 ${result.plan.metadata.title}`)
+            .setDescription(`${result.docs.releaseNotes}\n\n${result.testResult.score >= 80 ? '✨ High quality build!' : result.testResult.score >= 60 ? '✓ Good build!' : '⚠️ Build passed with minor issues'}`)
+            .addFields(
+                { name: 'Type', value: result.plan.type, inline: true },
+                { name: 'Collection', value: result.docs.metadata.collection, inline: true },
+                { name: 'Quality Score', value: `${result.testResult.score}/100`, inline: true },
+                { name: 'Files', value: result.buildResult.files.join('\n'), inline: false },
+                { name: 'Play Now', value: result.liveUrl, inline: false },
+                { name: 'Build Time', value: result.duration, inline: true }
+            )
+            .setColor(result.testResult.score >= 80 ? 0x00ff00 : 0xf39c12)
+            .setFooter({ text: 'Give it a minute or two to deploy to GitHub Pages' })
+            .setTimestamp();
+
+        if (result.docs.howToPlay) {
+            successEmbed.addFields({ name: 'How to Play', value: result.docs.howToPlay, inline: false });
+        }
+
+        if (result.testResult.warnings.length > 0) {
+            const warningsList = result.testResult.warnings
+                .slice(0, 3)
+                .map(w => `• ${w.message}`)
+                .join('\n');
+            successEmbed.addFields({ name: 'Minor Warnings', value: warningsList, inline: false });
+        }
+
+        await interaction.editReply({ content: '', embeds: [successEmbed] });
+
+    } catch (error) {
+        console.error('Build game error:', error);
+        const errorMsg = getBotResponse('errors') + ` Build pipeline error: ${error.message}`;
+        await interaction.editReply(errorMsg);
     }
 }
 

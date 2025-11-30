@@ -70,6 +70,76 @@ The entire bot is contained in `index.js` (~2000+ lines) with these key sections
 - `page-theme.css` - Shared arcade theme for all /src/ pages
 - `projectmetadata.json` - Project collections + metadata (title, icon, caption) loaded dynamically by index.html
 
+### System-V1: Modular Game Pipeline (NEW)
+
+**Branch**: `system-v1` introduces a modular architecture for AI-driven game development.
+
+**New Directory Structure**:
+```
+/services/
+  buildLogs.js         - Build logging and pattern analysis
+  llmClient.js         - Unified OpenRouter API client with role-specific prompts
+  gamePipeline.js      - Orchestrator for Architect → Builder → Tester → Scribe flow
+
+/agents/
+  gameArchitect.js     - Plans game structure from user prompt
+  gameBuilder.js       - Generates HTML/JS code with mobile-first standards
+  gameTester.js        - Validates code quality and responsiveness
+  gameScribe.js        - Creates metadata and documentation
+
+/build-logs/           - JSON logs of each build (created on first run)
+
+SYSTEM_V1.md           - Complete architecture documentation
+TESTING.md             - Comprehensive test checklist
+```
+
+**Game Pipeline Flow**:
+1. **Architect**: Analyzes user request → creates JSON plan (game type, mechanics, files)
+2. **Builder**: Generates complete code → injects mobile controls, noir theme
+3. **Tester**: Validates HTML structure, mobile responsiveness → scores quality (0-100)
+   - If failed: sends issues back to Builder (up to 3 attempts)
+   - If passed: proceed to Scribe
+4. **Scribe**: Generates metadata → updates projectmetadata.json → writes release notes
+
+**Key Features**:
+- **Automatic mobile-first enforcement**: Viewport tags, 44px touch targets, D-pad controls
+- **Iterative quality loop**: Builder retries with specific fixes until tests pass
+- **Learning from history**: Recent build failures inform future planning
+- **Dual triggers**: `/build-game` slash command OR @mention with game keywords
+- **Build logging**: Complete audit trail in `/build-logs/{timestamp}.json`
+- **Reusable modules**: Core agents work across different bot platforms
+
+**New Slash Command**: `/build-game`
+- **Parameters**: `title` (required), `prompt` (required), `type` (optional)
+- **Output**: Complete game with tests, committed to GitHub, live URL returned
+- **Progress**: Real-time status updates via edited Discord reply
+
+**@Mention Game Detection**:
+- Bot detects game-related keywords (game, arcade, maze, puzzle, etc.)
+- Automatically routes to game pipeline instead of normal chat
+- Falls back to normal AI response if pipeline fails
+
+**Mobile-First Standards Enforced**:
+- Viewport meta tag (required)
+- Responsive breakpoints @768px, @480px (required for games)
+- Touch controls with `touch-action: manipulation` (required for games)
+- Min 44px touch targets (W3C AAA accessibility)
+- `touchstart` + `preventDefault` event handling (prevents zoom)
+- Standard D-pad pattern for directional games
+
+**Build Log Pattern Learning**:
+- System analyzes last 10 builds for common failures
+- Summarizes issues like "Missing mobile controls (seen 3 times)"
+- Feeds summary into Architect's prompt for next build
+- Creates feedback loop without model fine-tuning
+
+**Reusability**:
+- `/services` and `/agents` are portable across bot frameworks
+- Only `index.js` and `gamePipeline.js` have Discord/git dependencies
+- Can adapt for Slack, Teams, CLI tools by swapping orchestrator
+
+See `SYSTEM_V1.md` for complete architecture documentation.
+
 ### Key Integrations
 
 **Discord API**: discord.js v14 with slash commands
@@ -121,6 +191,7 @@ The entire bot is contained in `index.js` (~2000+ lines) with these key sections
 | `/commit <message> [files]` | `handleCommit` | Git add, commit, push to main |
 | `/add-page <name> <description>` | `handleAddPage` | Generate self-contained HTML page |
 | `/add-feature <name> <description>` | `handleAddFeature` | Generate JS feature/component + demo |
+| `/build-game <title> <prompt> [type]` | `handleBuildGame` | **NEW**: AI-driven game pipeline (Architect→Builder→Tester→Scribe) |
 | `/status` | `handleStatus` | Show repo status + live site link |
 | `/chat <message>` | `handleChat` | AI conversation with context |
 | `/search <query>` | `handleSearch` | Web search via OpenRouter |
