@@ -58,10 +58,10 @@
       "collection": "featured"
     },
     "rat_bushwick": {
-      "title": "Rat Bushwick Pizza Hunt",
-      "description": "Arcade rat survival game",
+      "title": "Rat Bushwick Log",
+      "description": "Underground survival brief",
       "icon": "🐀",
-      "collection": "featured"
+      "collection": "stories-content"
     },
     "amtrak-journey": {
       "title": "Zach & Cen's Amtrak Journey",
@@ -190,12 +190,6 @@
       "icon": "📋",
       "collection": "utilities-apps"
     },
-    "rat_bushwick": {
-      "title": "Rat Bushwick Log",
-      "description": "Underground survival brief",
-      "icon": "🐀",
-      "collection": "stories-content"
-    },
     "red-siren-protocol": {
       "title": "Red Siren Protocol",
       "description": "Emergency alert hub",
@@ -279,6 +273,13 @@
       "description": "Snake game where you control a",
       "icon": "🎮",
       "collection": "unsorted"
+    },
+    "dmv-maze": {
+      "title": "DMV Maze of Despair",
+      "icon": "📋",
+      "description": "bureaucratic nightmare simulator",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }
