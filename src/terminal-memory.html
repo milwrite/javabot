@@ -6,268 +6,245 @@
     <title>Terminal Memory - Command Match</title>
     <link rel="stylesheet" href="../page-theme.css">
     <style>
-        /* Game-specific overrides for Terminal Memory */
         body {
             padding: 80px 20px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
+            overflow-x: auto;
+            overflow-y: auto;
         }
-        
-        .scanlines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 0, 0, 0.15),
-                rgba(0, 0, 0, 0.15) 1px,
-                transparent 1px,
-                transparent 2px
-            );
-            pointer-events: none;
-            z-index: 1000;
-        }
-        
+
         .container {
             max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            position: relative;
-            z-index: 1;
         }
-        
+
         header {
             text-align: center;
             margin-bottom: 30px;
             animation: glitch 3s infinite;
         }
-        
+
         h1 {
-            font-size: 4em;
-            text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00;
+            font-size: 3.5em;
+            text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41;
             margin-bottom: 10px;
             letter-spacing: 4px;
         }
-        
+
         .subtitle {
             font-size: 1.5em;
             color: #00ffff;
             text-shadow: 0 0 5px #00ffff;
         }
-        
+
         .stats {
             display: flex;
             justify-content: center;
-            gap: 40px;
+            gap: 30px;
             margin-bottom: 30px;
             flex-wrap: wrap;
         }
-        
+
         .stat-box {
-            background: rgba(0, 255, 0, 0.1);
-            border: 2px solid #00ff00;
+            background: rgba(0, 255, 65, 0.1);
+            border: 2px solid #00ff41;
             padding: 15px 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            border-radius: 5px;
             min-width: 150px;
             text-align: center;
         }
-        
+
         .stat-label {
-            font-size: 1.2em;
+            font-size: 1em;
             color: #00ffff;
+            margin-bottom: 5px;
         }
-        
+
         .stat-value {
-            font-size: 2.5em;
-            color: #00ff00;
-            text-shadow: 0 0 10px #00ff00;
+            font-size: 2em;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            font-weight: bold;
         }
-        
+
         .game-board {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 15px;
             margin-bottom: 30px;
-            perspective: 1000px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
         }
-        
+
         .card {
             aspect-ratio: 1;
             position: relative;
             cursor: pointer;
-            transform-style: preserve-3d;
-            transition: transform 0.6s;
-            transform: rotateY(0deg);
-        }
-
-        .card.flipped {
-            transform: rotateY(180deg) !important;
-        }
-        
-        .card.matched {
-            animation: matchPulse 0.6s ease-out;
-        }
-        
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-            border-radius: 10px;
+            border: 2px solid #00ff41;
+            background: rgba(0, 10, 0, 0.8);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 15px;
-            text-align: center;
-            border: 3px solid;
-            box-shadow: 0 0 20px;
-            top: 0;
-            left: 0;
+            padding: 10px;
+            border-radius: 5px;
+            transition: all 0.3s;
+            touch-action: manipulation;
+            user-select: none;
+            min-height: 120px;
         }
-        
+
+        .card:hover:not(.matched):not(.flipped) {
+            background: rgba(0, 255, 65, 0.1);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+        }
+
+        .card.flipped {
+            background: rgba(0, 50, 50, 0.9);
+            border-color: #00ffff;
+        }
+
+        .card.matched {
+            background: rgba(0, 100, 0, 0.9);
+            border-color: #00ff41;
+            cursor: default;
+            animation: matchPulse 0.6s ease-out;
+        }
+
+        .card.locked {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
         .card-back {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            border-color: #00ff00;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
-            transform: rotateY(0deg);
-        }
-        
-        .card-back::before {
-            content: '>';
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 3em;
-            color: #00ff00;
-            text-shadow: 0 0 10px #00ff00;
-            animation: blink 1.5s infinite;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
         }
-        
+
         .card-front {
-            background: linear-gradient(135deg, #0f3460, #16213e);
-            border-color: #00ffff;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-            transform: rotateY(180deg);
-            font-size: 1.3em;
-            overflow: hidden;
-        }
-        
-        .card-front.command {
-            background: linear-gradient(135deg, #1a472a, #0d2818);
-            border-color: #00ff00;
-        }
-        
-        .card-front.description {
-            background: linear-gradient(135deg, #2a1a47, #18152d);
-            border-color: #00ffff;
-        }
-        
-        .card-content {
+            font-size: 1.1em;
+            text-align: center;
             color: #00ffff;
             text-shadow: 0 0 5px #00ffff;
+            line-height: 1.4;
             word-wrap: break-word;
         }
-        
-        .card-front.command .card-content {
-            color: #00ff00;
-            text-shadow: 0 0 5px #00ff00;
-            font-size: 1.5em;
+
+        .card.command .card-front {
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+            font-size: 1.8em;
             font-weight: bold;
         }
-        
-        .card-front.description .card-content {
-            color: #00ffff;
-            text-shadow: 0 0 5px #00ffff;
-            font-size: 1em;
-            line-height: 1.3;
+
+        .card-content {
+            display: none;
         }
-        
+
+        .card.flipped .card-back,
+        .card.matched .card-back {
+            display: none;
+        }
+
+        .card.flipped .card-content,
+        .card.matched .card-content {
+            display: block;
+        }
+
         .controls {
             text-align: center;
             margin-bottom: 20px;
         }
-        
+
         .btn {
-            font-family: 'VT323', monospace;
-            font-size: 1.8em;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1.5em;
             padding: 15px 40px;
-            background: rgba(0, 255, 0, 0.2);
-            border: 3px solid #00ff00;
-            color: #00ff00;
+            background: rgba(0, 255, 65, 0.2);
+            border: 2px solid #00ff41;
+            color: #00ff41;
             cursor: pointer;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            border-radius: 5px;
             transition: all 0.3s;
-            text-shadow: 0 0 5px #00ff00;
+            text-shadow: 0 0 5px #00ff41;
+            touch-action: manipulation;
+            min-height: 44px;
         }
-        
+
         .btn:hover {
-            background: rgba(0, 255, 0, 0.3);
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.8);
-            transform: scale(1.05);
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.7);
         }
-        
+
         .btn:active {
             transform: scale(0.95);
         }
-        
+
         .message {
             text-align: center;
-            font-size: 2em;
+            font-size: 1.8em;
             min-height: 40px;
-            color: #ffff00;
-            text-shadow: 0 0 10px #ffff00;
             margin-bottom: 20px;
+            text-shadow: 0 0 10px currentColor;
         }
-        
+
+        .message.success {
+            color: #00ff41;
+        }
+
+        .message.error {
+            color: #ff0000;
+        }
+
         .victory {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 2000;
         }
-        
+
         .victory.show {
             display: flex;
             animation: fadeIn 0.5s;
         }
-        
+
         .victory-content {
-            background: linear-gradient(135deg, #0f0c29, #302b63);
-            border: 5px solid #00ff00;
-            border-radius: 20px;
+            background: rgba(0, 10, 0, 0.95);
+            border: 3px solid #00ff41;
+            border-radius: 10px;
             padding: 50px;
             text-align: center;
-            box-shadow: 0 0 50px rgba(0, 255, 0, 0.8);
-            animation: victoryPulse 2s infinite;
+            box-shadow: 0 0 50px rgba(0, 255, 65, 0.8);
+            max-width: 90%;
         }
-        
+
         .victory-title {
-            font-size: 4em;
-            color: #00ff00;
-            text-shadow: 0 0 20px #00ff00;
+            font-size: 3em;
+            color: #00ff41;
+            text-shadow: 0 0 20px #00ff41;
             margin-bottom: 20px;
         }
-        
+
         .victory-stats {
-            font-size: 2em;
+            font-size: 1.5em;
             color: #00ffff;
             margin-bottom: 30px;
         }
-        
-        @keyframes blink {
-            0%, 49% { opacity: 1; }
-            50%, 100% { opacity: 0.3; }
+
+        .victory-stats div {
+            margin: 10px 0;
         }
-        
+
         @keyframes glitch {
             0%, 90%, 100% { transform: translate(0); }
             92% { transform: translate(-2px, 2px); }
@@ -275,66 +252,103 @@
             96% { transform: translate(-2px, -2px); }
             98% { transform: translate(2px, 2px); }
         }
-        
+
         @keyframes matchPulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.1); box-shadow: 0 0 40px rgba(0, 255, 0, 1); }
+            50% { transform: scale(1.1); box-shadow: 0 0 30px rgba(0, 255, 65, 1); }
             100% { transform: scale(1); }
         }
-        
+
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-        
-        @keyframes victoryPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-        
+
         @media (max-width: 768px) {
+            body {
+                padding: 80px 10px 20px;
+            }
+
             .game-board {
                 grid-template-columns: repeat(3, 1fr);
                 gap: 10px;
             }
-            
+
             h1 {
-                font-size: 2.5em;
+                font-size: 2em;
             }
-            
-            .card-front {
-                font-size: 1em;
+
+            .subtitle {
+                font-size: 1.1em;
             }
-            
+
+            .card {
+                min-height: 100px;
+                font-size: 0.9em;
+            }
+
             .stat-box {
-                min-width: 120px;
+                min-width: 100px;
                 padding: 10px 20px;
             }
+
+            .stat-value {
+                font-size: 1.5em;
+            }
+
+            .btn {
+                padding: 12px 30px;
+                font-size: 1.3em;
+            }
         }
-        
+
         @media (max-width: 480px) {
             .game-board {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
             }
-            
+
             .stats {
-                gap: 15px;
+                gap: 10px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .card {
+                min-height: 80px;
+                font-size: 0.8em;
+                padding: 5px;
+            }
+
+            .card.command .card-front {
+                font-size: 1.3em;
+            }
+
+            .stat-box {
+                padding: 8px 15px;
+            }
+
+            .victory-content {
+                padding: 30px;
+            }
+
+            .victory-title {
+                font-size: 2em;
             }
         }
     </style>
-
 </head>
 <body>
     <a href="../index.html" class="home-link">HOME</a>
-    
-    <div class="scanlines"></div>
-    
+
     <div class="container">
         <header>
             <h1>TERMINAL MEMORY</h1>
             <div class="subtitle">&gt; Match Commands with Descriptions_</div>
         </header>
-        
+
         <div class="stats">
             <div class="stat-box">
                 <div class="stat-label">TIME</div>
@@ -349,16 +363,16 @@
                 <div class="stat-value" id="matches">0/12</div>
             </div>
         </div>
-        
+
         <div class="message" id="message"></div>
-        
+
         <div class="game-board" id="gameBoard"></div>
-        
+
         <div class="controls">
             <button class="btn" id="resetBtn">NEW GAME</button>
         </div>
     </div>
-    
+
     <div class="victory" id="victory">
         <div class="victory-content">
             <div class="victory-title">LEVEL COMPLETE!</div>
@@ -369,7 +383,7 @@
             <button class="btn" onclick="resetGame()">PLAY AGAIN</button>
         </div>
     </div>
-    
+
     <script>
         const commands = [
             { command: 'ls', description: 'List directory contents' },
@@ -385,174 +399,208 @@
             { command: 'touch', description: 'Create empty file' },
             { command: 'sudo', description: 'Execute as superuser' }
         ];
-        
-        let cards = [];
-        let flippedCards = [];
-        let matchedPairs = 0;
-        let moves = 0;
-        let timer = 0;
-        let timerInterval = null;
-        let gameStarted = false;
-        
+
+        // Game state
+        const state = {
+            cards: [],
+            flippedCards: [],
+            matchedPairs: 0,
+            moves: 0,
+            timer: 0,
+            timerInterval: null,
+            gameStarted: false,
+            locked: false  // Prevents clicking during animations
+        };
+
         function initGame() {
             const gameBoard = document.getElementById('gameBoard');
             gameBoard.innerHTML = '';
-            cards = [];
-            flippedCards = [];
-            matchedPairs = 0;
-            moves = 0;
-            timer = 0;
-            gameStarted = false;
-            
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
+
+            // Reset state
+            state.cards = [];
+            state.flippedCards = [];
+            state.matchedPairs = 0;
+            state.moves = 0;
+            state.timer = 0;
+            state.gameStarted = false;
+            state.locked = false;
+
+            if (state.timerInterval) {
+                clearInterval(state.timerInterval);
+                state.timerInterval = null;
             }
-            
+
             updateStats();
-            document.getElementById('message').textContent = '';
-            
+            showMessage('', '');
+
             // Create card pairs
             const cardPairs = [];
             commands.forEach((cmd, index) => {
                 cardPairs.push({
-                    id: index,
+                    id: `cmd-${index}`,
                     type: 'command',
                     content: cmd.command,
                     pairId: index
                 });
                 cardPairs.push({
-                    id: index + commands.length,
+                    id: `desc-${index}`,
                     type: 'description',
                     content: cmd.description,
                     pairId: index
                 });
             });
-            
+
             // Shuffle cards
             cardPairs.sort(() => Math.random() - 0.5);
-            
+
             // Create card elements
-            cardPairs.forEach((cardData, index) => {
+            cardPairs.forEach((cardData) => {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.dataset.id = cardData.id;
                 card.dataset.pairId = cardData.pairId;
                 card.dataset.type = cardData.type;
-                
+
+                if (cardData.type === 'command') {
+                    card.classList.add('command');
+                }
+
                 card.innerHTML = `
-                    <div class="card-face card-back"></div>
-                    <div class="card-face card-front ${cardData.type}">
-                        <div class="card-content">${cardData.content}</div>
-                    </div>
+                    <div class="card-back">&gt;</div>
+                    <div class="card-content card-front">${cardData.content}</div>
                 `;
-                
+
                 card.addEventListener('click', () => flipCard(card));
+                card.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    flipCard(card);
+                }, { passive: false });
+
                 gameBoard.appendChild(card);
-                cards.push(card);
+                state.cards.push(card);
             });
         }
-        
+
         function flipCard(card) {
-            if (!gameStarted) {
-                gameStarted = true;
+            // Start timer on first click
+            if (!state.gameStarted) {
+                state.gameStarted = true;
                 startTimer();
             }
-            
-            if (flippedCards.length >= 2) return;
+
+            // Prevent flipping if:
+            // - Game is locked (during animation)
+            // - Card is already flipped
+            // - Card is already matched
+            // - Two cards are already flipped
+            if (state.locked) return;
             if (card.classList.contains('flipped')) return;
             if (card.classList.contains('matched')) return;
-            
+            if (state.flippedCards.length >= 2) return;
+
+            // Flip the card
             card.classList.add('flipped');
-            flippedCards.push(card);
-            
-            if (flippedCards.length === 2) {
-                moves++;
+            state.flippedCards.push(card);
+
+            // Check for match when two cards are flipped
+            if (state.flippedCards.length === 2) {
+                state.locked = true;  // Lock the board
+                state.moves++;
                 updateStats();
                 checkMatch();
             }
         }
-        
+
         function checkMatch() {
-            const [card1, card2] = flippedCards;
+            const [card1, card2] = state.flippedCards;
             const pairId1 = card1.dataset.pairId;
             const pairId2 = card2.dataset.pairId;
-            
+
             if (pairId1 === pairId2) {
-                // Match found
+                // Match found!
                 setTimeout(() => {
                     card1.classList.add('matched');
                     card2.classList.add('matched');
-                    matchedPairs++;
+                    state.matchedPairs++;
                     updateStats();
-                    showMessage('MATCH! ✓', '#00ff00');
-                    
-                    if (matchedPairs === commands.length) {
+                    showMessage('MATCH! ✓', 'success');
+
+                    // Check if game is complete
+                    if (state.matchedPairs === commands.length) {
                         endGame();
                     }
-                    
-                    flippedCards = [];
+
+                    // Clear flipped cards and unlock
+                    state.flippedCards = [];
+                    state.locked = false;
                 }, 600);
             } else {
                 // No match
-                showMessage('TRY AGAIN...', '#ff0000');
+                showMessage('TRY AGAIN...', 'error');
                 setTimeout(() => {
                     card1.classList.remove('flipped');
                     card2.classList.remove('flipped');
-                    flippedCards = [];
+                    state.flippedCards = [];
+                    state.locked = false;
                 }, 1000);
             }
         }
-        
+
         function startTimer() {
-            timerInterval = setInterval(() => {
-                timer++;
+            state.timerInterval = setInterval(() => {
+                state.timer++;
                 updateStats();
             }, 1000);
         }
-        
+
         function updateStats() {
-            const minutes = Math.floor(timer / 60);
-            const seconds = timer % 60;
-            document.getElementById('timer').textContent = 
+            const minutes = Math.floor(state.timer / 60);
+            const seconds = state.timer % 60;
+            document.getElementById('timer').textContent =
                 `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            document.getElementById('moves').textContent = moves;
-            document.getElementById('matches').textContent = `${matchedPairs}/${commands.length}`;
+            document.getElementById('moves').textContent = state.moves;
+            document.getElementById('matches').textContent = `${state.matchedPairs}/${commands.length}`;
         }
-        
-        function showMessage(text, color) {
+
+        function showMessage(text, type) {
             const messageEl = document.getElementById('message');
             messageEl.textContent = text;
-            messageEl.style.color = color;
-            messageEl.style.textShadow = `0 0 10px ${color}`;
-            
-            setTimeout(() => {
-                messageEl.textContent = '';
-            }, 1500);
+            messageEl.className = `message ${type}`;
+
+            if (text) {
+                setTimeout(() => {
+                    messageEl.textContent = '';
+                    messageEl.className = 'message';
+                }, 1500);
+            }
         }
-        
+
         function endGame() {
-            clearInterval(timerInterval);
-            
-            const minutes = Math.floor(timer / 60);
-            const seconds = timer % 60;
+            clearInterval(state.timerInterval);
+
+            const minutes = Math.floor(state.timer / 60);
+            const seconds = state.timer % 60;
             const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            
+
             document.getElementById('finalTime').textContent = timeStr;
-            document.getElementById('finalMoves').textContent = moves;
-            
+            document.getElementById('finalMoves').textContent = state.moves;
+
             setTimeout(() => {
                 document.getElementById('victory').classList.add('show');
             }, 1000);
         }
-        
+
         function resetGame() {
             document.getElementById('victory').classList.remove('show');
             initGame();
         }
-        
+
         document.getElementById('resetBtn').addEventListener('click', resetGame);
-        
+        document.getElementById('resetBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            resetGame();
+        }, { passive: false });
+
         // Initialize game on load
         initGame();
     </script>
