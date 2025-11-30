@@ -263,16 +263,16 @@
       "collection": "utilities-apps"
     },
     "tictactoe-confetti": {
-      "title": "Tictactoe Confetti",
-      "description": "Tic-tac-toe game Tictactoe",
-      "icon": "🎮",
-      "collection": "unsorted"
+      "title": "Tic-Tac-Toe Confetti",
+      "description": "Two-player board with celebrations",
+      "icon": "🎉",
+      "collection": "arcade-games"
     },
     "snake-retriever": {
       "title": "Snake Retriever",
-      "description": "Snake game where you control a",
-      "icon": "🎮",
-      "collection": "unsorted"
+      "description": "Golden retriever snake variant",
+      "icon": "🐕",
+      "collection": "arcade-games"
     },
     "dmv-maze": {
       "title": "DMV Maze of Despair",
