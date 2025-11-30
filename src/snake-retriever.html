@@ -133,36 +133,50 @@
             box-shadow: 0 0 20px rgba(0, 255, 255, 0.7);
         }
 
+        /* STANDARD MOBILE CONTROLS - Reusable pattern */
         .mobile-controls {
             display: none;
             grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            max-width: 180px;
-            margin: 10px auto 20px;
+            gap: 4px;
+            max-width: 140px;
+            margin: 15px auto 10px;
         }
 
         .mobile-controls.show {
             display: grid;
         }
 
+        .mobile-controls-label {
+            text-align: center;
+            color: #00ffff;
+            font-size: 0.75em;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+
         .dpad-btn {
-            padding: 8px;
-            background: rgba(0, 255, 65, 0.2);
+            padding: 0;
+            background: rgba(0, 255, 65, 0.15);
             border: 2px solid #00ff41;
             color: #00ff41;
-            font-size: 1.4em;
-            border-radius: 4px;
+            font-size: 1.1em;
+            border-radius: 3px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s;
             touch-action: manipulation;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
             min-height: 44px;
             min-width: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .dpad-btn:active {
-            background: rgba(0, 255, 65, 0.4);
-            transform: scale(0.95);
+            background: rgba(0, 255, 65, 0.5);
+            transform: scale(0.92);
+            border-color: #00ffff;
         }
 
         .dpad-up { grid-column: 2; grid-row: 1; }
@@ -170,9 +184,10 @@
         .dpad-center {
             grid-column: 2;
             grid-row: 2;
-            opacity: 0.3;
+            opacity: 0.2;
             cursor: default;
             border-style: dashed;
+            pointer-events: none;
         }
         .dpad-right { grid-column: 3; grid-row: 2; }
         .dpad-down { grid-column: 2; grid-row: 3; }
@@ -320,15 +335,14 @@
             }
 
             .dpad-btn {
-                padding: 6px;
-                font-size: 1.3em;
+                font-size: 1em;
                 min-height: 44px;
                 min-width: 44px;
             }
 
             .mobile-controls {
-                max-width: 160px;
-                gap: 4px;
+                max-width: 132px;
+                gap: 3px;
             }
         }
     </style>
@@ -364,22 +378,22 @@
             <button class="btn secondary" id="pauseBtn">PAUSE</button>
         </div>
 
+        <div class="mobile-controls-label">Tap arrows to move →</div>
         <div class="mobile-controls" id="mobileControls">
-            <button class="dpad-btn dpad-up" data-direction="up">▲</button>
-            <button class="dpad-btn dpad-left" data-direction="left">◄</button>
-            <button class="dpad-btn dpad-center" disabled>●</button>
-            <button class="dpad-btn dpad-right" data-direction="right">►</button>
-            <button class="dpad-btn dpad-down" data-direction="down">▼</button>
+            <button class="dpad-btn dpad-up" data-direction="up" aria-label="Move up">▲</button>
+            <button class="dpad-btn dpad-left" data-direction="left" aria-label="Move left">◄</button>
+            <button class="dpad-btn dpad-center" disabled aria-hidden="true">●</button>
+            <button class="dpad-btn dpad-right" data-direction="right" aria-label="Move right">►</button>
+            <button class="dpad-btn dpad-down" data-direction="down" aria-label="Move down">▼</button>
         </div>
 
         <div class="instructions">
             <h3>LAB PROTOCOL</h3>
             <ul>
-                <li>Navigate lab floor with arrow keys or WASD</li>
-                <li>Collect red samples (🧪) for 10 points</li>
-                <li>Collect DNA strands (🧬) for 25 points</li>
-                <li>Avoid lab walls and hazards</li>
-                <li>Speed increases with each level</li>
+                <li>Collect 🧪 samples (10 pts) & 🧬 DNA (25 pts)</li>
+                <li>Avoid walls and hazards</li>
+                <li>Speed increases each level</li>
+                <li>Desktop: Arrow keys or WASD</li>
             </ul>
         </div>
     </div>

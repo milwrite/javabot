@@ -68,7 +68,7 @@ The entire bot is contained in `index.js` (~2000+ lines) with these key sections
 - `agents.md` - Conversation history (last 100 messages)
 - `index.html` - Main hub page with embedded CSS (no longer uses style.css)
 - `page-theme.css` - Shared arcade theme for all /src/ pages
-- `projectmetadata.json` - Project metadata (icon, description) loaded dynamically by index.html
+- `projectmetadata.json` - Project collections + metadata (title, icon, caption) loaded dynamically by index.html
 
 ### Key Integrations
 
@@ -107,11 +107,12 @@ The entire bot is contained in `index.js` (~2000+ lines) with these key sections
 
 **Project Metadata System**:
 - **Location**: `projectmetadata.json` (separate file, loaded via fetch)
-- **Structure**: `{ "page-name": { "icon": "🎮", "description": "Page description" } }`
-- **Auto-update**: `updateIndexWithPage()` function adds new pages to projectmetadata.json
+- **Structure**: `{ "collections": { ... }, "projects": { "slug": { "title", "icon", "description", "collection" } } }`
+- **Collections**: `featured`, `arcade-games`, `utilities-apps`, `stories-content`, `unsorted` (fallback)
+- **Auto-update**: `updateIndexWithPage()` and `/sync-index` ensure new pages land in metadata (defaults to `unsorted`)
 - **Icon selection**: `getIconForDescription()` auto-assigns emoji based on keywords in description
-- **Fallback**: Pages without metadata display with default 🌐 icon and "Interactive web project" description
-- **Dynamic loading**: index.html fetches projectmetadata.json on page load and generates cards
+- **Captions**: 3-6 word summaries generated via `condenseDescription()` but can be edited manually
+- **Dynamic loading**: `index.html` fetches `projectmetadata.json`, groups projects by collection, and renders cards automatically
 
 ### Available Slash Commands
 
@@ -400,6 +401,109 @@ btn.addEventListener('click', (e) => {
 ```
 
 **Control Positioning** - Place mobile controls DIRECTLY below canvas, before other content.
+
+### Standard Mobile D-Pad Controls (USE THIS PATTERN)
+
+**CRITICAL**: All games with directional input MUST use this standardized mobile control pattern for consistency and optimal playability:
+
+```css
+/* STANDARD MOBILE CONTROLS - Reusable pattern */
+.mobile-controls {
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    max-width: 140px;
+    margin: 15px auto 10px;
+}
+
+.mobile-controls.show {
+    display: grid;
+}
+
+.mobile-controls-label {
+    text-align: center;
+    color: #00ffff;
+    font-size: 0.75em;
+    margin-bottom: 5px;
+    opacity: 0.8;
+}
+
+.dpad-btn {
+    padding: 0;
+    background: rgba(0, 255, 65, 0.15);
+    border: 2px solid #00ff41;
+    color: #00ff41;
+    font-size: 1.1em;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dpad-btn:active {
+    background: rgba(0, 255, 65, 0.5);
+    transform: scale(0.92);
+    border-color: #00ffff;
+}
+
+.dpad-up { grid-column: 2; grid-row: 1; }
+.dpad-left { grid-column: 1; grid-row: 2; }
+.dpad-center {
+    grid-column: 2;
+    grid-row: 2;
+    opacity: 0.2;
+    cursor: default;
+    border-style: dashed;
+    pointer-events: none;
+}
+.dpad-right { grid-column: 3; grid-row: 2; }
+.dpad-down { grid-column: 2; grid-row: 3; }
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+    .dpad-btn {
+        font-size: 1em;
+        min-height: 44px;
+        min-width: 44px;
+    }
+    .mobile-controls {
+        max-width: 132px;
+        gap: 3px;
+    }
+}
+```
+
+**HTML Structure**:
+```html
+<div class="mobile-controls-label">Tap arrows to move →</div>
+<div class="mobile-controls" id="mobileControls">
+    <button class="dpad-btn dpad-up" data-direction="up" aria-label="Move up">▲</button>
+    <button class="dpad-btn dpad-left" data-direction="left" aria-label="Move left">◄</button>
+    <button class="dpad-btn dpad-center" disabled aria-hidden="true">●</button>
+    <button class="dpad-btn dpad-right" data-direction="right" aria-label="Move right">►</button>
+    <button class="dpad-btn dpad-down" data-direction="down" aria-label="Move down">▼</button>
+</div>
+```
+
+**Key Benefits**:
+- Compact 140px width (doesn't obscure game)
+- Tight 4px gaps for precision
+- Instructional label above controls
+- Aria labels for accessibility
+- Touch-optimized with no zoom
+- Consistent across all games
+
+**When to Use**:
+- Any game requiring directional movement (snake, maze, etc.)
+- Games where precision is important
+- Mobile-first experiences
 
 ### Game-Specific Mobile Patterns
 

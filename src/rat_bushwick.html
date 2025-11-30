@@ -544,7 +544,7 @@
         <!-- Mini Game Section - FEATURED -->
         <div class="mini-game" style="margin-bottom: 40px;">
             <h2 style="font-family: 'Courier Prime', monospace; color: #ff006e; margin-bottom: 20px; font-size: 2em;">🎮 PIZZA COLLECTOR 🎮</h2>
-            <p style="margin-bottom: 15px; font-size: 1.2em;">Collect 🍕 pizza! Avoid 🐱 cats! Grab 🧀 cheese for speed boost!</p>
+            <p style="margin-bottom: 15px; font-size: 1.2em;">Collect 🍕 pizza! Avoid 🐱 cats! Grab 🧀 cheese for speed! Press SPACE or tap HIDE to escape!</p>
             <div class="game-canvas" id="gameCanvas" style="max-width: 500px; height: 400px;"></div>
             <div class="game-stats" style="display: flex; gap: 20px; justify-content: center; margin: 15px 0; font-size: 1.2em;">
                 <span style="color: #ffbe0b;">Score: <span id="gameScore">0</span></span>
@@ -562,6 +562,7 @@
                     <button class="game-control-btn" data-dir="down">↓</button>
                     <button class="game-control-btn" data-dir="right">→</button>
                 </div>
+                <button class="game-control-btn" id="hideBtn" style="grid-column: 1 / -1; margin-top: 8px; background: rgba(255, 85, 255, 0.3); border-color: #ff55ff; color: #ff55ff;">🫣 HIDE</button>
             </div>
         </div>
 
@@ -758,6 +759,9 @@ never walk..."</div>
         let nextLevelScore = 100;
         let playerSpeed = 15;
         let speedBoostTimer = 0;
+        let isHiding = false;
+        let hideTimer = 0;
+        let hideCooldown = 0;
         let gameCanvas = null;
         let gameCtx = null;
         let canvasWidth = 400;
@@ -995,6 +999,9 @@ never walk..."</div>
             nextLevelScore = 100;
             playerSpeed = 15;
             speedBoostTimer = 0;
+            isHiding = false;
+            hideTimer = 0;
+            hideCooldown = 0;
             playerX = canvasWidth / 2 - 10;
             playerY = canvasHeight - 40;
             pizzas = [];
@@ -1078,7 +1085,7 @@ never walk..."</div>
         }
 
         function setupMobileControls() {
-            const buttons = document.querySelectorAll('.game-control-btn');
+            const buttons = document.querySelectorAll('.game-control-btn[data-dir]');
             buttons.forEach(btn => {
                 const dir = btn.dataset.dir;
 
@@ -1091,6 +1098,24 @@ never walk..."</div>
                 // Click events for desktop testing
                 btn.addEventListener('click', () => movePlayer(dir));
             });
+
+            // Hide button
+            const hideBtn = document.getElementById('hideBtn');
+            hideBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                toggleHide();
+            });
+            hideBtn.addEventListener('click', toggleHide);
+        }
+
+        function toggleHide() {
+            if (!gameRunning || hideCooldown > 0) return;
+
+            if (!isHiding) {
+                isHiding = true;
+                hideTimer = 120; // 2 seconds at 60fps
+                hideCooldown = 300; // 5 second cooldown
+            }
         }
 
         function movePlayer(dir) {
@@ -1126,6 +1151,9 @@ never walk..."</div>
             if (dirMap[e.key]) {
                 e.preventDefault();
                 movePlayer(dirMap[e.key]);
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                toggleHide();
             }
         }
 
@@ -1281,8 +1309,8 @@ never walk..."</div>
                 gameCtx.arc(cat.x + 24, cat.y + 9, 2, 0, Math.PI * 2);
                 gameCtx.fill();
 
-                // Check collision with player (only once per frame)
-                if (!playerHit && checkCollision(playerX, playerY, 20, 20, cat.x, cat.y, cat.size, cat.size)) {
+                // Check collision with player (only once per frame) - skip if hiding
+                if (!playerHit && !isHiding && checkCollision(playerX, playerY, 20, 20, cat.x, cat.y, cat.size, cat.size)) {
                     playerHit = true;
                     gameLives--;
                     updateGameUI();
@@ -1302,8 +1330,30 @@ never walk..."</div>
                 }
             }
 
-            // Draw player (rat) with speed boost effect
+            // Update hiding and cooldown timers
+            if (hideTimer > 0) {
+                hideTimer--;
+                if (hideTimer === 0) {
+                    isHiding = false;
+                }
+            }
+            if (hideCooldown > 0) {
+                hideCooldown--;
+            }
+
+            // Draw player (rat) with speed boost and hiding effects
             const ratColor = speedBoostTimer > 0 ? '#7ec8e3' : '#ff006e';
+
+            // Hiding indicator - draw box around rat
+            if (isHiding) {
+                gameCtx.fillStyle = 'rgba(255, 85, 255, 0.3)';
+                gameCtx.fillRect(playerX - 5, playerY - 5, 30, 30);
+                gameCtx.strokeStyle = '#ff55ff';
+                gameCtx.lineWidth = 2;
+                gameCtx.strokeRect(playerX - 5, playerY - 5, 30, 30);
+                gameCtx.globalAlpha = 0.5; // Semi-transparent when hiding
+            }
+
             gameCtx.fillStyle = ratColor;
 
             // Body
@@ -1338,6 +1388,22 @@ never walk..."</div>
             gameCtx.moveTo(playerX + 2, playerY + 18);
             gameCtx.quadraticCurveTo(playerX - 15, playerY + 25, playerX - 20, playerY + 15);
             gameCtx.stroke();
+
+            gameCtx.globalAlpha = 1.0; // Reset opacity
+
+            // Display hide cooldown/timer
+            if (isHiding || hideCooldown > 0) {
+                gameCtx.font = '14px VT323';
+                gameCtx.textAlign = 'center';
+                if (isHiding) {
+                    gameCtx.fillStyle = '#ff55ff';
+                    gameCtx.fillText(`HIDING: ${Math.ceil(hideTimer / 60)}s`, canvasWidth / 2, 30);
+                } else if (hideCooldown > 0) {
+                    gameCtx.fillStyle = '#00ff9f';
+                    gameCtx.fillText(`Hide Ready: ${Math.ceil(hideCooldown / 60)}s`, canvasWidth / 2, 30);
+                }
+                gameCtx.textAlign = 'left';
+            }
 
             requestAnimationFrame(gameLoop);
         }
