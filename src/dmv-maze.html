@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            padding: 80px 20px 20px 20px;
+            padding: 60px 10px 10px 10px;
             overflow-x: auto;
             overflow-y: auto;
             background: #0a0a0a;
@@ -25,17 +25,18 @@
             max-width: 800px;
             width: 100%;
             margin: 0 auto;
+            padding: 0 5px;
         }
 
         .game-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
         }
 
         .game-header h1 {
             color: #ff0000;
-            font-size: 2em;
-            margin: 0 0 10px 0;
+            font-size: 1.5em;
+            margin: 0;
             text-shadow: 0 0 10px #ff0000;
         }
 
@@ -47,7 +48,7 @@
 
         #gameCanvas {
             display: block;
-            margin: 0 auto;
+            margin: 5px auto;
             background: #1a1a1a;
             border: 2px solid #7ec8e3;
             box-shadow: 0 0 20px rgba(126, 200, 227, 0.3);
@@ -86,17 +87,18 @@
         .forms-collected {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 6px;
+            margin: 5px 0;
         }
 
         .form-badge {
             background: #0a0a0a;
             border: 2px solid #555;
-            padding: 8px 12px;
+            padding: 4px 8px;
             border-radius: 4px;
             color: #555;
             font-weight: bold;
+            font-size: 0.85em;
         }
 
         .form-badge.collected {
@@ -108,15 +110,15 @@
         .message-box {
             background: #1a1a1a;
             border: 2px solid #ff0000;
-            padding: 15px;
-            margin: 15px 0;
+            padding: 8px;
+            margin: 5px 0;
             text-align: center;
             color: #ff0000;
-            min-height: 60px;
+            min-height: 35px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1em;
+            font-size: 0.85em;
         }
 
         .controls-info {
@@ -141,8 +143,8 @@
             display: none;
             text-align: center;
             color: #00ffff;
-            font-size: 1em;
-            margin: 15px 0 5px 0;
+            font-size: 0.85em;
+            margin: 5px 0 3px 0;
         }
 
         .mobile-controls {
@@ -150,7 +152,7 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 4px;
             max-width: 160px;
-            margin: 10px auto 20px auto;
+            margin: 5px auto 8px auto;
             touch-action: manipulation;
         }
 
@@ -307,8 +309,6 @@
     <div class="game-container">
         <div class="game-header">
             <h1>DMV MAZE OF DESPAIR</h1>
-            <p class="subtitle">Department of Motor Vehicles - Form Collection Division</p>
-            <p class="subtitle">Please take a number and wait for your turn...</p>
         </div>
 
         <canvas id="gameCanvas" width="400" height="400"></canvas>
@@ -322,25 +322,6 @@
             <button class="dpad-btn dpad-down" data-direction="down">▼</button>
         </div>
 
-        <div class="stats-panel">
-            <div class="stat-item">
-                <div class="stat-label">Forms Collected</div>
-                <div class="stat-value" id="formsCount">0</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">NPCs Encountered</div>
-                <div class="stat-value" id="npcsCount">0</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Restarts</div>
-                <div class="stat-value" id="restartsCount">0</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Time Wasted</div>
-                <div class="stat-value" id="timeCount">0:00</div>
-            </div>
-        </div>
-
         <div class="forms-collected">
             <div class="form-badge" id="formA27">A-27</div>
             <div class="form-badge" id="formB14">B-14</div>
@@ -348,38 +329,7 @@
         </div>
 
         <div class="message-box" id="messageBox">
-            Welcome to the DMV. Collect all required forms to proceed.
-        </div>
-
-        <div class="controls-info">
-            <h3>Controls</h3>
-            <p>Arrow Keys: Move through the maze</p>
-            <p>Objective: Collect forms A-27, B-14, and C-9</p>
-            <p>Warning: NPCs will ask for specific forms. Give them the wrong one and...</p>
-        </div>
-
-        <div class="legend">
-            <h3>Legend</h3>
-            <div class="legend-item">
-                <span class="legend-symbol" style="color: #00ffff;">@</span>
-                <span>You (Applicant #4,782)</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-symbol" style="color: #ff0000;">N</span>
-                <span>DMV Employee (Approach with caution)</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-symbol" style="color: #ffff00;">F</span>
-                <span>Form (Required bureaucratic documentation)</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-symbol" style="color: #00ff00;">E</span>
-                <span>Exit (If you're lucky enough to see one)</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-symbol" style="color: #7ec8e3;">█</span>
-                <span>Wall (Bureaucratic barriers)</span>
-            </div>
+            Collect forms: A-27, B-14, C-9
         </div>
     </div>
 
