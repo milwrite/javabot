@@ -99,8 +99,8 @@
 
         .btn {
             font-family: 'Courier Prime', monospace;
-            font-size: 1.3em;
-            padding: 12px 30px;
+            font-size: 0.95em;
+            padding: 8px 20px;
             background: rgba(0, 255, 65, 0.2);
             border: 2px solid #00ff41;
             color: #00ff41;
@@ -373,11 +373,6 @@
             <canvas id="gameCanvas" width="600" height="600"></canvas>
         </div>
 
-        <div class="controls">
-            <button class="btn" id="startBtn">START MISSION</button>
-            <button class="btn secondary" id="pauseBtn">PAUSE</button>
-        </div>
-
         <div class="mobile-controls-label">Tap arrows to move →</div>
         <div class="mobile-controls" id="mobileControls">
             <button class="dpad-btn dpad-up" data-direction="up" aria-label="Move up">▲</button>
@@ -385,6 +380,11 @@
             <button class="dpad-btn dpad-center" disabled aria-hidden="true">●</button>
             <button class="dpad-btn dpad-right" data-direction="right" aria-label="Move right">►</button>
             <button class="dpad-btn dpad-down" data-direction="down" aria-label="Move down">▼</button>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn">START MISSION</button>
+            <button class="btn secondary" id="pauseBtn">PAUSE</button>
         </div>
 
         <div class="instructions">

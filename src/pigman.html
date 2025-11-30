@@ -131,12 +131,12 @@
 
         .action-btn {
             width: 100%;
-            padding: 15px;
+            padding: 10px;
             background: linear-gradient(135deg, #ff6b6b, #ffd93d);
             color: #1a1a2e;
             border: none;
             border-radius: 8px;
-            font-size: 1.2em;
+            font-size: 0.95em;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
@@ -175,7 +175,7 @@
             .stat-value { font-size: 1.5em; }
             .joystick-section { padding: 15px; }
             .game-info { font-size: 0.9em; padding: 12px; }
-            .action-btn { min-height: 50px; }
+            .action-btn { min-height: 44px; }
         }
 
         @media (max-width: 480px) {
@@ -230,6 +230,10 @@
             <div id="joystick-container"></div>
         </div>
 
+        <!-- Action buttons -->
+        <button class="action-btn" id="startBtn">START GAME</button>
+        <button class="action-btn hidden" id="restartBtn">RESTART GAME</button>
+
         <!-- Instructions -->
         <div class="game-info">
             <h3>How to Play:</h3>
@@ -239,10 +243,6 @@
             <p style="font-size: 0.85em; color: #aaa;">Ghosts: Blinky chases, Pinky ambushes, Inky is unpredictable, Clyde is shy</p>
             <p id="gameStatus" style="color: #ffd93d; margin-top: 10px; font-weight: bold;">Ready to play? Press START!</p>
         </div>
-
-        <!-- Action buttons -->
-        <button class="action-btn" id="startBtn">START GAME</button>
-        <button class="action-btn hidden" id="restartBtn">RESTART GAME</button>
 
         <div class="keyboard-hint">
             Desktop: Arrow keys • Mobile: Touch and drag the joystick

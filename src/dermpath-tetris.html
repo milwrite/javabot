@@ -135,15 +135,15 @@
             background-color: #ff0000;
             color: #0a0a0a;
             border: 2px solid #ff0000;
-            padding: 12px 24px;
+            padding: 8px 16px;
             font-family: 'Courier Prime', monospace;
-            font-size: 1em;
+            font-size: 0.85em;
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
             transition: all 0.3s;
             border-radius: 4px;
-            min-width: 120px;
+            min-width: 100px;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
@@ -207,13 +207,13 @@
             cursor: default;
         }
 
-        .dpad-up { grid-column: 2; }
+        .dpad-up { grid-column: 2; grid-row: 1; }
         .dpad-left { grid-column: 1; grid-row: 2; }
         .dpad-center { grid-column: 2; grid-row: 2; }
         .dpad-right { grid-column: 3; grid-row: 2; }
         .dpad-down { grid-column: 2; grid-row: 3; }
         .dpad-rotate { grid-column: 1; grid-row: 3; }
-        .dpad-drop { grid-column: 3; grid-row: 3; }
+        .dpad-harddrop { grid-column: 3; grid-row: 3; }
 
         .game-over-overlay {
             display: none;
@@ -299,9 +299,9 @@
             }
 
             .game-button {
-                padding: 10px 16px;
-                font-size: 0.9em;
-                min-width: 100px;
+                padding: 8px 14px;
+                font-size: 0.8em;
+                min-width: 90px;
             }
         }
     </style>
