@@ -73,10 +73,10 @@
 
         .game-board {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             margin-bottom: 30px;
-            max-width: 800px;
+            max-width: 600px;
             width: 100%;
             margin-left: auto;
             margin-right: auto;
@@ -267,7 +267,6 @@
             }
 
             .game-board {
-                grid-template-columns: repeat(3, 1fr);
                 gap: 10px;
                 max-width: calc(100vw - 50px);
             }
@@ -311,7 +310,6 @@
             }
 
             .game-board {
-                grid-template-columns: repeat(2, 1fr);
                 gap: 8px;
                 max-width: calc(100vw - 30px);
             }
@@ -325,13 +323,13 @@
             }
 
             .card {
-                min-height: 75px;
-                font-size: 0.75em;
-                padding: 4px;
+                min-height: 80px;
+                font-size: 0.8em;
+                padding: 5px;
             }
 
             .card.command .card-front {
-                font-size: 1.2em;
+                font-size: 1.3em;
             }
 
             .stat-box {
@@ -368,7 +366,7 @@
             </div>
             <div class="stat-box">
                 <div class="stat-label">MATCHES</div>
-                <div class="stat-value" id="matches">0/12</div>
+                <div class="stat-value" id="matches">0/6</div>
             </div>
         </div>
 
@@ -398,14 +396,8 @@
             { command: 'cd', description: 'Change directory' },
             { command: 'mkdir', description: 'Make directory' },
             { command: 'rm', description: 'Remove files' },
-            { command: 'cp', description: 'Copy files' },
-            { command: 'mv', description: 'Move or rename' },
-            { command: 'grep', description: 'Search text patterns' },
-            { command: 'chmod', description: 'Change permissions' },
             { command: 'cat', description: 'Display file contents' },
-            { command: 'pwd', description: 'Print working directory' },
-            { command: 'touch', description: 'Create empty file' },
-            { command: 'sudo', description: 'Execute as superuser' }
+            { command: 'pwd', description: 'Print working directory' }
         ];
 
         let state = {
