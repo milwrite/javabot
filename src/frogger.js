@@ -12,11 +12,13 @@ class FroggerGame {
         this.score = 0;
         this.lives = 3;
         this.level = 1;
-        
+        this.crossingsThisLevel = 0;
+        this.crossingsNeeded = 5;
+
         this.gridSize = 50;
         this.rows = this.canvas.height / this.gridSize;
         this.cols = this.canvas.width / this.gridSize;
-        
+
         this.frog = {
             x: Math.floor(this.cols / 2) * this.gridSize,
             y: (this.rows - 1) * this.gridSize,
@@ -44,7 +46,11 @@ class FroggerGame {
         this.logs = [];
         this.water = [];
         this.frogOnLog = false;
-        
+
+        // Difficulty scaling
+        const speedMultiplier = 1 + (this.level - 1) * 0.3;
+        const carDensity = Math.min(3 + Math.floor(this.level / 3), 5);
+
         // Create water rows (rows 1-5)
         for (let row = 1; row <= 5; row++) {
             this.water.push({
@@ -52,34 +58,39 @@ class FroggerGame {
                 height: this.gridSize
             });
         }
-        
-        // Create car lanes (rows 7-10)
+
+        // Create car lanes (rows 7-10) with increasing difficulty
         for (let lane = 7; lane <= 10; lane++) {
-            for (let i = 0; i < 3; i++) {
+            const baseSpeed = lane % 2 === 0 ? 2 : -2;
+            const laneSpeed = baseSpeed * speedMultiplier;
+
+            for (let i = 0; i < carDensity; i++) {
                 this.cars.push({
-                    x: -this.gridSize + (i * this.gridSize * 3),
+                    x: -this.gridSize + (i * this.gridSize * (4 - Math.floor(this.level / 4))),
                     y: lane * this.gridSize,
                     width: this.gridSize * 2,
                     height: this.gridSize - 4,
-                    speed: (lane % 2 === 0 ? 2 : -2) * this.level,
+                    speed: laneSpeed,
                     direction: lane % 2 === 0 ? 1 : -1
                 });
             }
         }
-        
-        // Create logs in water (rows 1-5)
+
+        // Create logs in water (rows 1-5) - get smaller and faster
         for (let row of [1, 2, 3, 4, 5]) {
-            const numLogs = row % 2 === 0 ? 2 : 3; // Alternate log density
-            const logWidth = row % 2 === 0 ? this.gridSize * 3 : this.gridSize * 2;
+            const numLogs = row % 2 === 0 ? 2 : 3;
+            const baseLogWidth = row % 2 === 0 ? this.gridSize * 3 : this.gridSize * 2;
+            const logWidth = Math.max(this.gridSize * 1.5, baseLogWidth - Math.floor(this.level / 2) * this.gridSize * 0.3);
             const spacing = this.canvas.width / numLogs;
+            const baseSpeed = row % 2 === 0 ? 1.5 : -1.5;
 
             for (let i = 0; i < numLogs; i++) {
                 this.logs.push({
-                    x: i * spacing + (row * 30) % 100, // Offset for variety
+                    x: i * spacing + (row * 30) % 100,
                     y: row * this.gridSize,
                     width: logWidth,
                     height: this.gridSize - 4,
-                    speed: (row % 2 === 0 ? 1.5 : -1.5) * this.level
+                    speed: baseSpeed * speedMultiplier
                 });
             }
         }
@@ -127,14 +138,17 @@ class FroggerGame {
         
         // Check if frog reached the top
         if (this.frog.y === 0) {
-            this.score += 100;
+            this.score += 100 * this.level;
+            this.crossingsThisLevel++;
 
-            // Check for level completion (every 500 points)
-            if (this.score % 500 === 0) {
+            // Check for level completion
+            if (this.crossingsThisLevel >= this.crossingsNeeded) {
                 this.level++;
+                this.crossingsThisLevel = 0;
+                this.lives = Math.min(this.lives + 1, 5); // Bonus life (max 5)
                 this.setupLevel();
                 this.showLevelUp = true;
-                this.levelUpTimer = 120; // Show for 2 seconds at 60fps
+                this.levelUpTimer = 180; // Show for 3 seconds at 60fps
             }
 
             this.resetFrog();
@@ -257,41 +271,64 @@ class FroggerGame {
         this.ctx.fillRect(0, 6 * this.gridSize - this.gridSize, this.canvas.width, this.gridSize); // Middle safe zone
         this.ctx.fillRect(0, 11 * this.gridSize, this.canvas.width, this.gridSize); // Bottom safe zone
 
-        // Draw logs - brown with red tint
+        // Draw logs with emoji
         this.ctx.fillStyle = '#663300';
         this.logs.forEach(log => {
             this.ctx.fillRect(log.x, log.y + 2, log.width, log.height);
+            // Add log texture
+            const numLogs = Math.floor(log.width / this.gridSize);
+            this.ctx.font = `${this.gridSize - 12}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            for (let i = 0; i < numLogs; i++) {
+                this.ctx.fillText('🪵', log.x + (i + 0.5) * this.gridSize, log.y + this.gridSize / 2);
+            }
         });
 
-        // Draw cars - terminal red
+        // Draw cars with emoji
         this.ctx.fillStyle = '#ff0000';
         this.cars.forEach(car => {
             this.ctx.fillRect(car.x, car.y + 2, car.width, car.height);
+            // Add car emoji
+            this.ctx.font = `${this.gridSize - 8}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            const carEmoji = car.direction === 1 ? '🚗' : '🚙';
+            this.ctx.fillText(carEmoji, car.x + car.width / 2, car.y + this.gridSize / 2);
         });
 
-        // Draw frog - terminal green
-        this.ctx.fillStyle = '#7ec8e3';
-        this.ctx.fillRect(this.frog.x + 2, this.frog.y + 2, this.frog.size, this.frog.size);
+        // Draw frog emoji
+        this.ctx.font = `${this.gridSize - 8}px Arial`;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('🐸', this.frog.x + this.gridSize / 2, this.frog.y + this.gridSize / 2);
+        this.ctx.textAlign = 'start';
+        this.ctx.textBaseline = 'alphabetic';
 
         // Draw UI - terminal green
         this.ctx.fillStyle = '#7ec8e3';
         this.ctx.font = '20px "Courier Prime", monospace';
         this.ctx.fillText(`Score: ${this.score}`, 10, 30);
-        this.ctx.fillText(`Lives: ${this.lives}`, 10, 55);
+        this.ctx.fillText(`Lives: ${'🐸'.repeat(this.lives)}`, 10, 55);
         this.ctx.fillText(`Level: ${this.level}`, 10, 80);
+        this.ctx.fillText(`Crossings: ${this.crossingsThisLevel}/${this.crossingsNeeded}`, 10, 105);
 
         // Level up notification
         if (this.showLevelUp) {
-            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            this.ctx.fillRect(this.canvas.width / 2 - 150, this.canvas.height / 2 - 40, 300, 80);
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            this.ctx.fillRect(this.canvas.width / 2 - 180, this.canvas.height / 2 - 60, 360, 120);
             this.ctx.strokeStyle = '#00ff41';
-            this.ctx.lineWidth = 3;
-            this.ctx.strokeRect(this.canvas.width / 2 - 150, this.canvas.height / 2 - 40, 300, 80);
+            this.ctx.lineWidth = 4;
+            this.ctx.strokeRect(this.canvas.width / 2 - 180, this.canvas.height / 2 - 60, 360, 120);
 
             this.ctx.fillStyle = '#00ff41';
-            this.ctx.font = '30px "Courier Prime", monospace';
+            this.ctx.font = 'bold 36px "Courier Prime", monospace';
             this.ctx.textAlign = 'center';
-            this.ctx.fillText(`LEVEL ${this.level}!`, this.canvas.width / 2, this.canvas.height / 2 + 10);
+            this.ctx.fillText(`LEVEL ${this.level}!`, this.canvas.width / 2, this.canvas.height / 2 - 10);
+
+            this.ctx.fillStyle = '#7ec8e3';
+            this.ctx.font = '20px "Courier Prime", monospace';
+            this.ctx.fillText('BONUS LIFE! +1 🐸', this.canvas.width / 2, this.canvas.height / 2 + 25);
             this.ctx.textAlign = 'start';
         }
 
@@ -301,13 +338,18 @@ class FroggerGame {
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
             this.ctx.fillStyle = '#ff0000';
-            this.ctx.font = '30px "Courier Prime", monospace';
+            this.ctx.font = 'bold 40px "Courier Prime", monospace';
             this.ctx.textAlign = 'center';
-            this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2 - 50);
+            this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2 - 60);
+
             this.ctx.fillStyle = '#7ec8e3';
-            this.ctx.font = '16px "Courier Prime", monospace';
-            this.ctx.fillText(`Final Score: ${this.score}`, this.canvas.width / 2, this.canvas.height / 2);
-            this.ctx.fillText('Refresh to play again', this.canvas.width / 2, this.canvas.height / 2 + 30);
+            this.ctx.font = '24px "Courier Prime", monospace';
+            this.ctx.fillText(`Final Score: ${this.score}`, this.canvas.width / 2, this.canvas.height / 2 - 10);
+            this.ctx.fillText(`Level Reached: ${this.level}`, this.canvas.width / 2, this.canvas.height / 2 + 20);
+
+            this.ctx.fillStyle = '#00ff41';
+            this.ctx.font = '18px "Courier Prime", monospace';
+            this.ctx.fillText('Press F5 to play again', this.canvas.width / 2, this.canvas.height / 2 + 60);
             this.ctx.textAlign = 'start';
         }
     }
