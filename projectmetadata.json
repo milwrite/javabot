@@ -7,7 +7,7 @@
     },
     "arcade-games": {
       "title": "🕹️ Arcade Games",
-      "description": "Mobile-ready noir cabinets",
+      "description": "Mobile-ready retro games",
       "order": 2
     },
     "utilities-apps": {
@@ -100,7 +100,7 @@
       "collection": "arcade-games"
     },
     "borscht": {
-      "title": "Borscht Recipe Terminal",
+      "title": "Borscht Recipe",
       "description": "Step-by-step beet ritual",
       "icon": "🍲",
       "collection": "stories-content"
@@ -125,7 +125,7 @@
     },
     "cen-todo-list": {
       "title": "Cen Todo Console",
-      "description": "Daily tasks noir tracker",
+      "description": "Daily tasks tracker",
       "icon": "✅",
       "collection": "utilities-apps"
     },
@@ -186,7 +186,7 @@
     },
     "planner": {
       "title": "Daily Planner",
-      "description": "Terminal day planner board",
+      "description": "Day planner board",
       "icon": "📋",
       "collection": "utilities-apps"
     },
@@ -198,7 +198,7 @@
     },
     "red-siren-protocol": {
       "title": "Red Siren Protocol",
-      "description": "Emergency noir alert hub",
+      "description": "Emergency alert hub",
       "icon": "🚨",
       "collection": "stories-content"
     },
@@ -233,14 +233,14 @@
       "collection": "utilities-apps"
     },
     "sudoku": {
-      "title": "Sudoku Noir",
+      "title": "Sudoku",
       "description": "Grid logic puzzle board",
       "icon": "🔢",
       "collection": "arcade-games"
     },
     "task-warning": {
       "title": "Task Warning Beacon",
-      "description": "Flashing noir caution",
+      "description": "Flashing caution beacon",
       "icon": "⚠️",
       "collection": "stories-content"
     },
