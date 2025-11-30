@@ -6,6 +6,10 @@
     <title>Terminal Memory - Command Match</title>
     <link rel="stylesheet" href="../page-theme.css">
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             padding: 80px 20px 20px;
             overflow-x: auto;
@@ -259,13 +263,13 @@
             }
 
             .container {
-                padding: 10px;
+                padding: 15px;
             }
 
             .game-board {
                 grid-template-columns: repeat(3, 1fr);
                 gap: 10px;
-                max-width: calc(100vw - 40px);
+                max-width: calc(100vw - 50px);
             }
 
             h1 {
@@ -277,9 +281,9 @@
             }
 
             .card {
-                min-height: 100px;
+                min-height: 90px;
                 font-size: 0.9em;
-                padding: 8px;
+                padding: 6px;
             }
 
             .stat-box {
@@ -303,13 +307,13 @@
             }
 
             .container {
-                padding: 5px;
+                padding: 10px;
             }
 
             .game-board {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 8px;
-                max-width: calc(100vw - 20px);
+                max-width: calc(100vw - 30px);
             }
 
             .stats {
@@ -321,13 +325,13 @@
             }
 
             .card {
-                min-height: 80px;
-                font-size: 0.8em;
-                padding: 5px;
+                min-height: 75px;
+                font-size: 0.75em;
+                padding: 4px;
             }
 
             .card.command .card-front {
-                font-size: 1.3em;
+                font-size: 1.2em;
             }
 
             .stat-box {
