@@ -451,7 +451,7 @@
         <div class="game-section">
             <div class="game-header">
                 <h1>🐕 Snake Retriever 🦴</h1>
-                <p>Guide the golden retriever to collect treats and bones!</p>
+                <p>Guide the golden labrador to collect treats and bones!</p>
             </div>
             <div class="game-canvas-wrapper">
                 <canvas id="gameCanvas" width="600" height="600"></canvas>
@@ -711,48 +711,241 @@
                 const size = gameState.gridSize - 2;
 
                 if (index === 0) {
-                    // Head - golden retriever face
-                    ctx.fillStyle = '#FFD700';
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-                    ctx.shadowBlur = 8;
-                    ctx.shadowOffsetX = 3;
+                    // HEAD - Detailed golden labrador face
+                    ctx.save();
+
+                    // Shadow for depth
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowOffsetX = 2;
                     ctx.shadowOffsetY = 3;
-                    ctx.fillRect(x + 1, y + 1, size, size);
+
+                    // Main head gradient
+                    const headGradient = ctx.createRadialGradient(x + 10, y + 8, 2, x + 10, y + 10, 12);
+                    headGradient.addColorStop(0, '#F4D6A0');
+                    headGradient.addColorStop(0.5, '#DDA15E');
+                    headGradient.addColorStop(1, '#C68642');
+                    ctx.fillStyle = headGradient;
+                    ctx.beginPath();
+                    ctx.roundRect(x + 2, y + 2, size - 2, size - 2, 6);
+                    ctx.fill();
+
                     ctx.shadowColor = 'transparent';
 
-                    // Draw eyes
-                    ctx.fillStyle = '#333';
+                    // LEFT EAR - floppy with gradient
+                    const leftEarGradient = ctx.createLinearGradient(x, y + 5, x + 6, y + 15);
+                    leftEarGradient.addColorStop(0, '#C68642');
+                    leftEarGradient.addColorStop(1, '#A06830');
+                    ctx.fillStyle = leftEarGradient;
                     ctx.beginPath();
-                    ctx.arc(x + 7, y + 7, 2, 0, Math.PI * 2);
+                    ctx.ellipse(x + 2, y + 9, 3.5, 6, -0.4, 0, Math.PI * 2);
                     ctx.fill();
+                    // Ear inner detail
+                    ctx.fillStyle = 'rgba(160, 104, 48, 0.4)';
                     ctx.beginPath();
-                    ctx.arc(x + 13, y + 7, 2, 0, Math.PI * 2);
+                    ctx.ellipse(x + 2.5, y + 9, 2, 4, -0.4, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Draw nose
-                    ctx.fillStyle = '#000';
+                    // RIGHT EAR - floppy with gradient
+                    const rightEarGradient = ctx.createLinearGradient(x + 14, y + 5, x + 20, y + 15);
+                    rightEarGradient.addColorStop(0, '#C68642');
+                    rightEarGradient.addColorStop(1, '#A06830');
+                    ctx.fillStyle = rightEarGradient;
                     ctx.beginPath();
-                    ctx.arc(x + 10, y + 12, 2, 0, Math.PI * 2);
+                    ctx.ellipse(x + 18, y + 9, 3.5, 6, 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Ear inner detail
+                    ctx.fillStyle = 'rgba(160, 104, 48, 0.4)';
+                    ctx.beginPath();
+                    ctx.ellipse(x + 17.5, y + 9, 2, 4, 0.4, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Draw tongue
-                    ctx.fillStyle = '#FF69B4';
+                    // MUZZLE/SNOUT area (lighter)
+                    ctx.fillStyle = 'rgba(244, 214, 160, 0.8)';
                     ctx.beginPath();
-                    ctx.ellipse(x + 10, y + 15, 1.5, 2, 0, 0, Math.PI * 2);
+                    ctx.ellipse(x + 10, y + 13, 5, 4, 0, 0, Math.PI * 2);
                     ctx.fill();
-                } else {
-                    // Body
-                    ctx.fillStyle = '#FFA500';
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-                    ctx.shadowBlur = 5;
+
+                    // LEFT EYE
+                    // Eye white
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.ellipse(x + 6.5, y + 8, 2.5, 2.8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Iris
+                    ctx.fillStyle = '#4A2F1A';
+                    ctx.beginPath();
+                    ctx.arc(x + 6.5, y + 8.3, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Pupil
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.arc(x + 6.5, y + 8.3, 1.2, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Eye highlight (life)
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.beginPath();
+                    ctx.arc(x + 7, y + 7.5, 0.9, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(x + 6.2, y + 8.8, 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // RIGHT EYE
+                    // Eye white
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.ellipse(x + 13.5, y + 8, 2.5, 2.8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Iris
+                    ctx.fillStyle = '#4A2F1A';
+                    ctx.beginPath();
+                    ctx.arc(x + 13.5, y + 8.3, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Pupil
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.arc(x + 13.5, y + 8.3, 1.2, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Eye highlight
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.beginPath();
+                    ctx.arc(x + 14, y + 7.5, 0.9, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(x + 13.2, y + 8.8, 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // NOSE - detailed
+                    const noseGradient = ctx.createRadialGradient(x + 10, y + 13.5, 0.5, x + 10, y + 13.5, 3);
+                    noseGradient.addColorStop(0, '#1a1a1a');
+                    noseGradient.addColorStop(1, '#000000');
+                    ctx.fillStyle = noseGradient;
+                    ctx.beginPath();
+                    ctx.ellipse(x + 10, y + 13.5, 2.8, 2.2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Nose highlight
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.beginPath();
+                    ctx.ellipse(x + 9.2, y + 12.8, 1, 0.8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // MOUTH LINE
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 0.8;
+                    ctx.beginPath();
+                    ctx.moveTo(x + 10, y + 15);
+                    ctx.lineTo(x + 10, y + 16.5);
+                    ctx.stroke();
+                    // Smile
+                    ctx.beginPath();
+                    ctx.arc(x + 7, y + 16, 3, 0.2, 0.8);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(x + 13, y + 16, 3, Math.PI - 0.8, Math.PI - 0.2);
+                    ctx.stroke();
+
+                    // TONGUE
+                    const tongueGradient = ctx.createLinearGradient(x + 8, y + 16, x + 12, y + 18);
+                    tongueGradient.addColorStop(0, '#FF85A8');
+                    tongueGradient.addColorStop(1, '#FF69B4');
+                    ctx.fillStyle = tongueGradient;
+                    ctx.beginPath();
+                    ctx.ellipse(x + 10, y + 17, 2.2, 2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Tongue center line
+                    ctx.strokeStyle = 'rgba(255, 50, 100, 0.4)';
+                    ctx.lineWidth = 0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(x + 10, y + 15.5);
+                    ctx.lineTo(x + 10, y + 18.5);
+                    ctx.stroke();
+
+                    ctx.restore();
+
+                } else if (index === gameState.snake.length - 1) {
+                    // TAIL - fluffy labrador tail
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                    ctx.shadowBlur = 6;
                     ctx.shadowOffsetX = 2;
                     ctx.shadowOffsetY = 2;
-                    ctx.fillRect(x + 1, y + 1, size, size);
+
+                    // Tail gradient
+                    const tailGradient = ctx.createRadialGradient(x + 10, y + 10, 2, x + 10, y + 10, 10);
+                    tailGradient.addColorStop(0, '#F4D6A0');
+                    tailGradient.addColorStop(0.6, '#DDA15E');
+                    tailGradient.addColorStop(1, '#C68642');
+                    ctx.fillStyle = tailGradient;
+                    ctx.beginPath();
+                    ctx.roundRect(x + 2, y + 2, size - 2, size - 2, 5);
+                    ctx.fill();
+
                     ctx.shadowColor = 'transparent';
 
-                    // Body pattern
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-                    ctx.fillRect(x + 3, y + 3, size - 4, size - 4);
+                    // Fur texture lines
+                    ctx.strokeStyle = 'rgba(198, 134, 66, 0.4)';
+                    ctx.lineWidth = 1;
+                    for (let i = 0; i < 4; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(x + 4 + i * 3, y + 4);
+                        ctx.lineTo(x + 6 + i * 3, y + 16);
+                        ctx.stroke();
+                    }
+
+                    // Highlight fur
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+                    ctx.beginPath();
+                    ctx.arc(x + 10, y + 8, 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+
+                } else {
+                    // BODY - detailed fur segments
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+                    ctx.shadowBlur = 6;
+                    ctx.shadowOffsetX = 2;
+                    ctx.shadowOffsetY = 2;
+
+                    // Body gradient
+                    const bodyGradient = ctx.createRadialGradient(x + 8, y + 8, 2, x + 10, y + 10, 10);
+                    bodyGradient.addColorStop(0, '#F4D6A0');
+                    bodyGradient.addColorStop(0.5, '#E8B45C');
+                    bodyGradient.addColorStop(1, '#D9A04D');
+                    ctx.fillStyle = bodyGradient;
+                    ctx.beginPath();
+                    ctx.roundRect(x + 2, y + 2, size - 2, size - 2, 4);
+                    ctx.fill();
+
+                    ctx.shadowColor = 'transparent';
+
+                    // Fur texture with multiple shades
+                    const furPatterns = [
+                        {x: 5, y: 5, r: 3, opacity: 0.3},
+                        {x: 12, y: 8, r: 2.5, opacity: 0.25},
+                        {x: 8, y: 12, r: 2, opacity: 0.2},
+                        {x: 14, y: 14, r: 2, opacity: 0.2}
+                    ];
+
+                    furPatterns.forEach(pattern => {
+                        ctx.fillStyle = `rgba(255, 255, 255, ${pattern.opacity})`;
+                        ctx.beginPath();
+                        ctx.arc(x + pattern.x, y + pattern.y, pattern.r, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+
+                    // Darker fur spots for texture
+                    ctx.fillStyle = 'rgba(200, 134, 66, 0.15)';
+                    ctx.beginPath();
+                    ctx.arc(x + 6, y + 10, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(x + 13, y + 6, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
                 }
             });
 
