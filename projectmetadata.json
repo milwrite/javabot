@@ -267,6 +267,12 @@
       "description": "Tic-tac-toe game Tictactoe",
       "icon": "🎮",
       "collection": "unsorted"
+    },
+    "snake-retriever": {
+      "title": "Snake Retriever",
+      "description": "Snake game where you control a",
+      "icon": "🎮",
+      "collection": "unsorted"
     }
   }
 }
