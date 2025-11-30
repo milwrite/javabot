@@ -280,6 +280,13 @@
       "description": "bureaucratic nightmare simulator",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "dermpath-tetris": {
+      "title": "DermaPath Tetris",
+      "icon": "🧬",
+      "description": "histology block stacker",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }
