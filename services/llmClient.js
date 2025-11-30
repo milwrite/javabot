@@ -219,7 +219,7 @@ THEME CHECKS:
 CODE QUALITY:
 - Matching script tags (<script> vs </script>)
 - Matching div tags (within reason)
-- No markdown code blocks (```)
+- No markdown code blocks (triple backticks)
 - No TODO/FIXME comments
 
 Be thorough but fair. Minor warnings don't fail validation.
