@@ -136,9 +136,9 @@
         .mobile-controls {
             display: none;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            max-width: 300px;
-            margin: 0 auto 20px;
+            gap: 5px;
+            max-width: 180px;
+            margin: 10px auto 20px;
         }
 
         .mobile-controls.show {
@@ -146,18 +146,18 @@
         }
 
         .dpad-btn {
-            padding: 15px;
+            padding: 8px;
             background: rgba(0, 255, 65, 0.2);
             border: 2px solid #00ff41;
             color: #00ff41;
-            font-size: 1.8em;
-            border-radius: 5px;
+            font-size: 1.4em;
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s;
             touch-action: manipulation;
             user-select: none;
-            min-height: 50px;
-            min-width: 50px;
+            min-height: 44px;
+            min-width: 44px;
         }
 
         .dpad-btn:active {
@@ -320,10 +320,15 @@
             }
 
             .dpad-btn {
-                padding: 12px;
-                font-size: 1.5em;
+                padding: 6px;
+                font-size: 1.3em;
                 min-height: 44px;
                 min-width: 44px;
+            }
+
+            .mobile-controls {
+                max-width: 160px;
+                gap: 4px;
             }
         }
     </style>
@@ -519,29 +524,49 @@
         }
 
         function draw() {
-            // Lab floor tiles
+            // Kennel floor - concrete tiles
             for (let y = 0; y < canvas.height; y += state.gridSize) {
                 for (let x = 0; x < canvas.width; x += state.gridSize) {
                     const isLight = ((x / state.gridSize) + (y / state.gridSize)) % 2 === 0;
-                    ctx.fillStyle = isLight ? '#2a2a2a' : '#222222';
+                    ctx.fillStyle = isLight ? '#3a3a3a' : '#2d2d2d';
                     ctx.fillRect(x, y, state.gridSize, state.gridSize);
                 }
             }
 
-            // Lab grid lines
-            ctx.strokeStyle = '#00ff41';
-            ctx.lineWidth = 0.5;
+            // Chain-link fence grid pattern
+            ctx.strokeStyle = 'rgba(0, 255, 65, 0.3)';
+            ctx.lineWidth = 2;
+
+            // Vertical fence lines
             for (let i = 0; i <= canvas.width; i += state.gridSize) {
                 ctx.beginPath();
                 ctx.moveTo(i, 0);
                 ctx.lineTo(i, canvas.height);
                 ctx.stroke();
             }
+
+            // Horizontal fence lines
             for (let i = 0; i <= canvas.height; i += state.gridSize) {
                 ctx.beginPath();
                 ctx.moveTo(0, i);
                 ctx.lineTo(canvas.width, i);
                 ctx.stroke();
+            }
+
+            // Diagonal chain-link pattern
+            ctx.strokeStyle = 'rgba(0, 255, 65, 0.15)';
+            ctx.lineWidth = 1;
+            for (let y = 0; y < canvas.height; y += state.gridSize) {
+                for (let x = 0; x < canvas.width; x += state.gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x + state.gridSize, y + state.gridSize);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(x + state.gridSize, y);
+                    ctx.lineTo(x, y + state.gridSize);
+                    ctx.stroke();
+                }
             }
 
             // Food items
@@ -569,28 +594,35 @@
                 const y = segment.y * state.gridSize;
 
                 if (index === 0) {
-                    // Dog head
+                    // Dog head - brighter background
                     ctx.fillStyle = '#00ff41';
                     ctx.shadowColor = '#00ff41';
-                    ctx.shadowBlur = 15;
+                    ctx.shadowBlur = 20;
+                    ctx.fillRect(x + 1, y + 1, state.gridSize - 2, state.gridSize - 2);
+                    ctx.shadowBlur = 0;
+
+                    // Dog emoji - larger and more prominent
+                    ctx.font = 'bold 22px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.shadowColor = '#ffffff';
+                    ctx.shadowBlur = 3;
+                    ctx.fillText('🐕', x + state.gridSize / 2, y + state.gridSize / 2);
+                    ctx.shadowBlur = 0;
+                } else {
+                    // Puppy body segments
+                    const opacity = 0.8 - (index / state.snake.length) * 0.4;
+                    ctx.fillStyle = `rgba(0, 255, 65, ${opacity})`;
+                    ctx.shadowColor = '#00ff41';
+                    ctx.shadowBlur = 10;
                     ctx.fillRect(x + 2, y + 2, state.gridSize - 4, state.gridSize - 4);
                     ctx.shadowBlur = 0;
 
-                    // Dog emoji
-                    ctx.font = '16px Arial';
+                    // Little puppy emoji
+                    ctx.font = '14px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText('🐕', x + state.gridSize / 2, y + state.gridSize / 2);
-                } else {
-                    // Robot body segments
-                    const opacity = 0.8 - (index / state.snake.length) * 0.4;
-                    ctx.fillStyle = `rgba(0, 255, 65, ${opacity})`;
-                    ctx.fillRect(x + 3, y + 3, state.gridSize - 6, state.gridSize - 6);
-
-                    // Body panel details
-                    ctx.strokeStyle = '#000a00';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(x + 4, y + 4, state.gridSize - 8, state.gridSize - 8);
+                    ctx.fillText('🐶', x + state.gridSize / 2, y + state.gridSize / 2);
                 }
             });
 
