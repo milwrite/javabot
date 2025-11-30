@@ -569,18 +569,18 @@
                 const y = segment.y * state.gridSize;
 
                 if (index === 0) {
-                    // Robot head
+                    // Dog head
                     ctx.fillStyle = '#00ff41';
                     ctx.shadowColor = '#00ff41';
                     ctx.shadowBlur = 15;
                     ctx.fillRect(x + 2, y + 2, state.gridSize - 4, state.gridSize - 4);
                     ctx.shadowBlur = 0;
 
-                    // Robot face
-                    ctx.fillStyle = '#000';
-                    ctx.fillRect(x + 6, y + 6, 3, 3);
-                    ctx.fillRect(x + 11, y + 6, 3, 3);
-                    ctx.fillRect(x + 7, y + 12, 6, 2);
+                    // Dog emoji
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('🐕', x + state.gridSize / 2, y + state.gridSize / 2);
                 } else {
                     // Robot body segments
                     const opacity = 0.8 - (index / state.snake.length) * 0.4;
