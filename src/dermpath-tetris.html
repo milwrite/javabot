@@ -158,62 +158,89 @@
             transform: scale(0.95);
         }
 
-        .mobile-controls-label {
+        .mobile-controls-section {
             display: none;
-            text-align: center;
-            color: #00ffff;
-            font-size: 0.9em;
-            margin: 10px 0 5px 0;
+            width: 100%;
+            max-width: 400px;
+            margin: 20px auto;
         }
 
-        .mobile-controls {
-            display: none;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 4px;
-            max-width: 180px;
-            margin: 15px auto;
-            padding: 10px;
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .control-group {
             background-color: #1a1a1a;
             border: 2px solid #7ec8e3;
-            border-radius: 4px;
+            border-radius: 8px;
+            padding: 12px;
         }
 
-        .dpad-btn {
+        .control-group h4 {
+            color: #00ffff;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            margin: 0 0 10px 0;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .move-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-btn {
             background-color: #ff0000;
             color: #0a0a0a;
             border: 2px solid #ff0000;
-            font-size: 24px;
+            font-size: 1.1em;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
-            border-radius: 4px;
-            min-height: 50px;
-            min-width: 50px;
+            border-radius: 6px;
+            min-height: 55px;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 8px;
         }
 
-        .dpad-btn:active {
+        .control-btn:active {
             background-color: #0a0a0a;
             color: #ff0000;
             transform: scale(0.95);
         }
 
-        .dpad-btn:disabled {
-            background-color: #333;
-            border-color: #555;
-            color: #666;
-            cursor: default;
+        .control-btn .btn-label {
+            font-size: 0.65em;
+            text-transform: uppercase;
+            margin-top: 3px;
+            opacity: 0.9;
         }
 
-        .dpad-up { grid-column: 2; grid-row: 1; }
-        .dpad-left { grid-column: 1; grid-row: 2; }
-        .dpad-center { grid-column: 2; grid-row: 2; }
-        .dpad-right { grid-column: 3; grid-row: 2; }
-        .dpad-down { grid-column: 2; grid-row: 3; }
-        .dpad-rotate { grid-column: 1; grid-row: 3; }
-        .dpad-harddrop { grid-column: 3; grid-row: 3; }
+        .move-buttons .control-btn {
+            flex: 1;
+            min-width: 70px;
+        }
+
+        .action-buttons .control-btn {
+            width: 100%;
+        }
 
         .game-over-overlay {
             display: none;
@@ -259,12 +286,8 @@
         }
 
         @media (max-width: 768px) {
-            .mobile-controls-label {
+            .mobile-controls-section {
                 display: block;
-            }
-
-            .mobile-controls {
-                display: grid;
             }
 
             .game-area {
@@ -352,15 +375,44 @@
             </div>
         </div>
 
-        <div class="mobile-controls-label">Mobile Controls (tap arrows + rotate/drop buttons)</div>
-        <div class="mobile-controls" id="mobileControls">
-            <button class="dpad-btn dpad-up" data-action="rotate" title="Rotate">↻</button>
-            <button class="dpad-btn dpad-left" data-action="left" title="Move Left">◄</button>
-            <button class="dpad-btn dpad-center" disabled>●</button>
-            <button class="dpad-btn dpad-right" data-action="right" title="Move Right">►</button>
-            <button class="dpad-btn dpad-rotate" disabled style="opacity: 0.3;">●</button>
-            <button class="dpad-btn dpad-down" data-action="down" title="Soft Drop">▼</button>
-            <button class="dpad-btn dpad-harddrop" data-action="harddrop" title="Hard Drop">⬇⬇</button>
+        <div class="mobile-controls-section">
+            <div class="controls-grid">
+                <!-- Movement controls -->
+                <div class="control-group">
+                    <h4>Move</h4>
+                    <div class="move-buttons">
+                        <button class="control-btn" data-action="left">
+                            <span>◄</span>
+                            <span class="btn-label">Left</span>
+                        </button>
+                        <button class="control-btn" data-action="right">
+                            <span>►</span>
+                            <span class="btn-label">Right</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action controls -->
+                <div class="control-group">
+                    <h4>Actions</h4>
+                    <div class="action-buttons">
+                        <button class="control-btn" data-action="rotate">
+                            <span>↻</span>
+                            <span class="btn-label">Rotate</span>
+                        </button>
+                        <button class="control-btn" data-action="down">
+                            <span>▼</span>
+                            <span class="btn-label">Drop</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hard drop button (full width) -->
+            <button class="control-btn" data-action="harddrop" style="width: 100%; min-height: 60px;">
+                <span style="font-size: 1.3em;">⬇</span>
+                <span class="btn-label">Hard Drop (Instant)</span>
+            </button>
         </div>
 
         <div class="button-container">
@@ -720,13 +772,13 @@
             }
         });
 
-        document.querySelectorAll('.dpad-btn').forEach(btn => {
+        document.querySelectorAll('.control-btn').forEach(btn => {
             const action = btn.dataset.action;
             if (!action) return;
-            
+
             const handleAction = () => {
                 if (isGameOver || !currentPiece || isPaused) return;
-                
+
                 switch(action) {
                     case 'left': moveLeft(); break;
                     case 'right': moveRight(); break;
@@ -735,12 +787,12 @@
                     case 'harddrop': hardDrop(); break;
                 }
             };
-            
+
             btn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 handleAction();
             }, { passive: false });
-            
+
             btn.addEventListener('click', handleAction);
         });
 
