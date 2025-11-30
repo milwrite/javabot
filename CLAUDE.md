@@ -236,8 +236,10 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 3. Prompt specifies: noir terminal colors, Courier Prime font, CSS classes to use
 4. Home link with `.home-link` class automatically included
 5. Mobile-responsive with touch controls for games
-6. File saved to `src/{name}.html` and added to `projectmetadata.json`
-7. Live URL shown in Discord embed
+6. **Layout hierarchy enforced**: Canvas → Controls → Start Button → Instructions
+7. **Economical spacing**: Tight margins (5-8px), smaller start buttons (0.85-0.95em)
+8. File saved to `src/{name}.html` and added to `projectmetadata.json`
+9. Live URL shown in Discord embed
 
 **`/add-feature`**:
 1. User provides feature name + description of what it should do
@@ -252,6 +254,8 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - Color palette: terminal green (#00ff41), red (#ff0000), cyan (#00ffff), black (#0a0a0a)
 - Available CSS classes: `.container`, `.card`, `.btn`, `.panel`, `.home-link`, `.mobile-controls`, etc.
 - Games MUST include `.mobile-controls` with touch buttons (Discord is mobile-forward)
+- **Economical design**: Small start buttons, tight spacing (5-8px margins)
+- **Layout hierarchy**: Controls → Start → Instructions (always in this order)
 - Prompts optimized for token efficiency with inline examples
 
 **`/update-style`**:
@@ -473,6 +477,65 @@ btn.addEventListener('click', (e) => {
 
 **Control Positioning** - Place mobile controls DIRECTLY below canvas, before other content.
 
+### UI Layout Hierarchy for Games (CRITICAL)
+
+**MANDATORY Element Order**: All game pages MUST follow this exact structure for optimal mobile UX:
+
+```
+1. Title/Header (compact, minimal)
+2. Game Canvas/Play Area
+3. Mobile Controls (d-pad, joystick, etc.)
+4. Start/Action Buttons (smaller, economical)
+5. Instructions/How to Play
+6. Additional Info (stats, legend - only if essential)
+```
+
+**Key Principles**:
+- **Controls above start button**: Mobile controls must be immediately visible with the canvas
+- **Start button above instructions**: Don't make users scroll past instructions to start playing
+- **Economical spacing**: Use tight margins (5-8px) instead of generous spacing (15-20px)
+- **Above-the-fold priority**: Canvas + controls must be visible without scrolling on mobile
+- **Remove unnecessary text**: If stats/legend interfere with visibility, move them below or remove them
+
+**Start Button Sizing** - Keep start buttons compact and unobtrusive:
+```css
+.start-btn, .action-btn {
+    font-size: 0.85em - 0.95em;  /* Smaller than previous 1.2-1.3em */
+    padding: 8px 20px;            /* Reduced from 12-15px */
+    min-height: 44px;             /* Maintain touch target */
+}
+```
+
+**Bad Example** (old pattern):
+```html
+<!-- DON'T DO THIS -->
+<canvas></canvas>
+<div class="instructions">Long how to play...</div>
+<div class="mobile-controls"></div>
+<button class="start-btn">START</button>  <!-- Too far down! -->
+```
+
+**Good Example** (current standard):
+```html
+<!-- DO THIS -->
+<h1>Game Title</h1>
+<canvas></canvas>
+<div class="mobile-controls"></div>
+<button class="start-btn">START</button>  <!-- Immediately accessible -->
+<div class="instructions">How to play...</div>
+```
+
+**Spacing Economy** - Reduce margins throughout:
+```css
+/* BEFORE: Too spacious */
+.game-header { margin-bottom: 20px; }
+.message-box { padding: 15px; margin: 15px 0; }
+
+/* AFTER: Economical */
+.game-header { margin-bottom: 8px; }
+.message-box { padding: 8px; margin: 5px 0; }
+```
+
 ### Standard Mobile D-Pad Controls (USE THIS PATTERN)
 
 **CRITICAL**: All games with directional input MUST use this standardized mobile control pattern for consistency and optimal playability:
@@ -664,6 +727,14 @@ body {
 
 When creating or updating any page, the bot MUST verify:
 
+**Layout & Structure**:
+- [ ] Correct element order: Canvas → Controls → Start Button → Instructions
+- [ ] Canvas + controls visible without scrolling on mobile
+- [ ] Start button uses economical sizing (0.85-0.95em font, 8-10px padding)
+- [ ] Tight spacing throughout (5-8px margins, not 15-20px)
+- [ ] No unnecessary text blocking core UI elements
+
+**Mobile Responsiveness**:
 - [ ] Viewport meta tag present
 - [ ] Body has proper overflow settings (auto, not hidden)
 - [ ] Mobile breakpoints at 768px and 480px minimum
