@@ -87,43 +87,32 @@
             max-width: 100%;
         }
 
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+        /* Arcade Joystick Container */
+        .joystick-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
             margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
         }
 
-        .control-btn {
-            padding: 15px;
-            background: linear-gradient(135deg, #667ee6, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.5em;
-            cursor: pointer;
-            transition: all 0.3s;
+        .joystick-label {
+            color: #ffd93d;
+            font-size: 0.9em;
             font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            min-height: 50px;
-            min-width: 50px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .control-btn:active {
-            transform: scale(0.95);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        #joystick-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-
-        .control-btn:hover {
-            background: linear-gradient(135deg, #764ba2, #667ee6);
-        }
-
-        .control-btn.up { grid-column: 2; }
-        .control-btn.left { grid-column: 1; grid-row: 2; }
-        .control-btn.down { grid-column: 2; grid-row: 2; }
-        .control-btn.right { grid-column: 3; grid-row: 2; }
 
         .game-info {
             background: rgba(255, 255, 255, 0.1);
@@ -184,12 +173,7 @@
             .game-header h1 { font-size: 2em; }
             .game-stats { gap: 10px; padding: 12px; }
             .stat-value { font-size: 1.5em; }
-            .control-btn {
-                padding: 15px;
-                font-size: 1.5em;
-                min-height: 60px;
-                min-width: 60px;
-            }
+            .joystick-section { padding: 15px; }
             .game-info { font-size: 0.9em; padding: 12px; }
             .action-btn { min-height: 50px; }
         }
@@ -201,12 +185,8 @@
             .game-header p { font-size: 0.85em; }
             .stat-label { font-size: 0.75em; }
             .stat-value { font-size: 1.3em; }
-            .control-btn {
-                padding: 12px;
-                font-size: 1.3em;
-                min-height: 55px;
-                min-width: 55px;
-            }
+            .joystick-section { padding: 10px; }
+            .joystick-label { font-size: 0.8em; }
             .game-info { font-size: 0.85em; padding: 10px; }
             .game-info p { margin-bottom: 5px; }
             .action-btn { font-size: 1.1em; padding: 12px; }
@@ -244,12 +224,10 @@
         <!-- Kaboom.js renders here -->
         <div id="game-root"></div>
 
-        <!-- Mobile controls -->
-        <div class="controls" id="controls">
-            <button class="control-btn up" id="btnUp">▲</button>
-            <button class="control-btn left" id="btnLeft">◄</button>
-            <button class="control-btn down" id="btnDown">▼</button>
-            <button class="control-btn right" id="btnRight">►</button>
+        <!-- Arcade Joystick -->
+        <div class="joystick-section">
+            <div class="joystick-label">🕹️ Arcade Controls</div>
+            <div id="joystick-container"></div>
         </div>
 
         <!-- Instructions -->
@@ -267,9 +245,35 @@
         <button class="action-btn hidden" id="restartBtn">RESTART GAME</button>
 
         <div class="keyboard-hint">
-            Use arrow keys or touch buttons to move
+            Desktop: Arrow keys • Mobile: Touch and drag the joystick
         </div>
     </div>
+
+    <!-- Load Arcade Joystick Component -->
+    <script src="arcade-joystick.js"></script>
+
+    <!-- Initialize Joystick -->
+    <script>
+        // Initialize arcade joystick when page loads
+        let arcadeJoystick = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            arcadeJoystick = new ArcadeJoystick('joystick-container', {
+                size: 160,
+                ballSize: 55,
+                ballColor: '#ff6b6b',        // Match pigman theme
+                baseColor: '#1a1a2e',        // Match container background
+                accentColor: '#ffd93d',      // Match score color
+                deadzone: 0.25,
+                allowDiagonal: true,
+                keyboardEmulation: true,     // Emits arrow key events for game
+                hapticFeedback: true,
+                onDirectionChange: (direction) => {
+                    console.log('Joystick direction:', direction);
+                }
+            });
+        });
+    </script>
 
     <!-- Load game module -->
     <script type="module" src="./pigman.js"></script>
