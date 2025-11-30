@@ -342,24 +342,25 @@
                 </div>
 
                 <div class="controls-info">
-                    <h3>Controls</h3>
-                    <p>← → : Move</p>
-                    <p>↓ : Soft Drop</p>
-                    <p>↑ : Rotate</p>
-                    <p>Space : Hard Drop</p>
+                    <h3>Desktop Controls</h3>
+                    <p>← → : Move Left/Right</p>
+                    <p>↑ : Rotate Piece</p>
+                    <p>↓ : Soft Drop (faster)</p>
+                    <p>Space : Hard Drop (instant)</p>
+                    <p>P : Pause</p>
                 </div>
             </div>
         </div>
 
-        <div class="mobile-controls-label">Tap to control →</div>
+        <div class="mobile-controls-label">Mobile Controls (tap arrows + rotate/drop buttons)</div>
         <div class="mobile-controls" id="mobileControls">
-            <button class="dpad-btn dpad-up" data-action="rotate">↻</button>
-            <button class="dpad-btn dpad-left" data-action="left">◄</button>
+            <button class="dpad-btn dpad-up" data-action="rotate" title="Rotate">↻</button>
+            <button class="dpad-btn dpad-left" data-action="left" title="Move Left">◄</button>
             <button class="dpad-btn dpad-center" disabled>●</button>
-            <button class="dpad-btn dpad-right" data-action="right">►</button>
-            <button class="dpad-btn dpad-rotate" data-action="drop">▼▼</button>
-            <button class="dpad-btn dpad-down" data-action="down">▼</button>
-            <button class="dpad-btn dpad-drop" data-action="harddrop">⬇</button>
+            <button class="dpad-btn dpad-right" data-action="right" title="Move Right">►</button>
+            <button class="dpad-btn dpad-rotate" disabled style="opacity: 0.3;">●</button>
+            <button class="dpad-btn dpad-down" data-action="down" title="Soft Drop">▼</button>
+            <button class="dpad-btn dpad-harddrop" data-action="harddrop" title="Hard Drop">⬇⬇</button>
         </div>
 
         <div class="button-container">
@@ -731,7 +732,6 @@
                     case 'right': moveRight(); break;
                     case 'down': moveDown(); break;
                     case 'rotate': rotate(); break;
-                    case 'drop': moveDown(); break;
                     case 'harddrop': hardDrop(); break;
                 }
             };
