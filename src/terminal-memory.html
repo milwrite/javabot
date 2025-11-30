@@ -79,7 +79,6 @@
 
         .card {
             aspect-ratio: 1;
-            position: relative;
             cursor: pointer;
             border: 2px solid #00ff41;
             background: rgba(0, 10, 0, 0.8);
@@ -111,21 +110,14 @@
             animation: matchPulse 0.6s ease-out;
         }
 
-        .card.locked {
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-
         .card-back {
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-size: 3em;
             color: #00ff41;
             text-shadow: 0 0 10px #00ff41;
         }
 
         .card-front {
+            display: none;
             font-size: 1.1em;
             text-align: center;
             color: #00ffff;
@@ -141,17 +133,13 @@
             font-weight: bold;
         }
 
-        .card-content {
-            display: none;
-        }
-
         .card.flipped .card-back,
         .card.matched .card-back {
             display: none;
         }
 
-        .card.flipped .card-content,
-        .card.matched .card-content {
+        .card.flipped .card-front,
+        .card.matched .card-front {
             display: block;
         }
 
@@ -389,51 +377,44 @@
             { command: 'ls', description: 'List directory contents' },
             { command: 'cd', description: 'Change directory' },
             { command: 'mkdir', description: 'Make directory' },
-            { command: 'rm', description: 'Remove files or directories' },
-            { command: 'cp', description: 'Copy files or directories' },
-            { command: 'mv', description: 'Move or rename files' },
+            { command: 'rm', description: 'Remove files' },
+            { command: 'cp', description: 'Copy files' },
+            { command: 'mv', description: 'Move or rename' },
             { command: 'grep', description: 'Search text patterns' },
-            { command: 'chmod', description: 'Change file permissions' },
+            { command: 'chmod', description: 'Change permissions' },
             { command: 'cat', description: 'Display file contents' },
             { command: 'pwd', description: 'Print working directory' },
             { command: 'touch', description: 'Create empty file' },
             { command: 'sudo', description: 'Execute as superuser' }
         ];
 
-        // Game state
-        const state = {
-            cards: [],
+        let state = {
             flippedCards: [],
             matchedPairs: 0,
             moves: 0,
             timer: 0,
             timerInterval: null,
             gameStarted: false,
-            locked: false  // Prevents clicking during animations
+            locked: false
         };
 
         function initGame() {
             const gameBoard = document.getElementById('gameBoard');
             gameBoard.innerHTML = '';
 
-            // Reset state
-            state.cards = [];
-            state.flippedCards = [];
-            state.matchedPairs = 0;
-            state.moves = 0;
-            state.timer = 0;
-            state.gameStarted = false;
-            state.locked = false;
-
-            if (state.timerInterval) {
-                clearInterval(state.timerInterval);
-                state.timerInterval = null;
-            }
+            state = {
+                flippedCards: [],
+                matchedPairs: 0,
+                moves: 0,
+                timer: 0,
+                timerInterval: null,
+                gameStarted: false,
+                locked: false
+            };
 
             updateStats();
             showMessage('', '');
 
-            // Create card pairs
             const cardPairs = [];
             commands.forEach((cmd, index) => {
                 cardPairs.push({
@@ -450,24 +431,19 @@
                 });
             });
 
-            // Shuffle cards
             cardPairs.sort(() => Math.random() - 0.5);
 
-            // Create card elements
             cardPairs.forEach((cardData) => {
                 const card = document.createElement('div');
                 card.className = 'card';
-                card.dataset.id = cardData.id;
-                card.dataset.pairId = cardData.pairId;
-                card.dataset.type = cardData.type;
-
                 if (cardData.type === 'command') {
                     card.classList.add('command');
                 }
+                card.dataset.pairId = cardData.pairId;
 
                 card.innerHTML = `
                     <div class="card-back">&gt;</div>
-                    <div class="card-content card-front">${cardData.content}</div>
+                    <div class="card-front">${cardData.content}</div>
                 `;
 
                 card.addEventListener('click', () => flipCard(card));
@@ -477,34 +453,25 @@
                 }, { passive: false });
 
                 gameBoard.appendChild(card);
-                state.cards.push(card);
             });
         }
 
         function flipCard(card) {
-            // Start timer on first click
             if (!state.gameStarted) {
                 state.gameStarted = true;
                 startTimer();
             }
 
-            // Prevent flipping if:
-            // - Game is locked (during animation)
-            // - Card is already flipped
-            // - Card is already matched
-            // - Two cards are already flipped
             if (state.locked) return;
             if (card.classList.contains('flipped')) return;
             if (card.classList.contains('matched')) return;
             if (state.flippedCards.length >= 2) return;
 
-            // Flip the card
             card.classList.add('flipped');
             state.flippedCards.push(card);
 
-            // Check for match when two cards are flipped
             if (state.flippedCards.length === 2) {
-                state.locked = true;  // Lock the board
+                state.locked = true;
                 state.moves++;
                 updateStats();
                 checkMatch();
@@ -517,7 +484,6 @@
             const pairId2 = card2.dataset.pairId;
 
             if (pairId1 === pairId2) {
-                // Match found!
                 setTimeout(() => {
                     card1.classList.add('matched');
                     card2.classList.add('matched');
@@ -525,17 +491,14 @@
                     updateStats();
                     showMessage('MATCH! ✓', 'success');
 
-                    // Check if game is complete
                     if (state.matchedPairs === commands.length) {
                         endGame();
                     }
 
-                    // Clear flipped cards and unlock
                     state.flippedCards = [];
                     state.locked = false;
                 }, 600);
             } else {
-                // No match
                 showMessage('TRY AGAIN...', 'error');
                 setTimeout(() => {
                     card1.classList.remove('flipped');
@@ -601,7 +564,6 @@
             resetGame();
         }, { passive: false });
 
-        // Initialize game on load
         initGame();
     </script>
 </body>

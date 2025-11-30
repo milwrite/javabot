@@ -37,30 +37,6 @@
             margin-bottom: 30px;
         }
 
-        .game-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .canvas-container {
-            border: 3px solid #00ff41;
-            background: rgba(0, 10, 0, 0.8);
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
-            border-radius: 5px;
-            padding: 10px;
-            max-width: 100%;
-        }
-
-        canvas {
-            display: block;
-            background: #000a00;
-            border: 1px solid #00ff41;
-            max-width: 100%;
-            height: auto;
-        }
-
         .stats {
             display: flex;
             justify-content: center;
@@ -88,6 +64,24 @@
             color: #00ff41;
             text-shadow: 0 0 10px #00ff41;
             font-weight: bold;
+        }
+
+        .canvas-container {
+            border: 3px solid #00ff41;
+            background: #1a1a1a;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
+            border-radius: 5px;
+            padding: 10px;
+            max-width: 100%;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            display: block;
+            background: #222;
+            border: 1px solid #00ff41;
+            max-width: 100%;
+            height: auto;
         }
 
         .controls {
@@ -139,7 +133,7 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             max-width: 300px;
-            margin: 0 auto;
+            margin: 0 auto 20px;
         }
 
         .mobile-controls.show {
@@ -184,10 +178,8 @@
             border-left: 4px solid #00ff41;
             padding: 15px;
             border-radius: 5px;
-            margin-top: 20px;
             max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+            margin: 0 auto;
         }
 
         .instructions h3 {
@@ -299,29 +291,11 @@
             .mobile-controls.show {
                 display: grid;
             }
-
-            .stat-box {
-                min-width: 100px;
-                padding: 8px 20px;
-            }
-
-            .stat-value {
-                font-size: 1.5em;
-            }
-
-            .btn {
-                padding: 10px 25px;
-                font-size: 1.1em;
-            }
         }
 
         @media (max-width: 480px) {
             h1 {
                 font-size: 1.5em;
-            }
-
-            .subtitle {
-                font-size: 0.9em;
             }
 
             .dpad-btn {
@@ -330,18 +304,6 @@
                 min-height: 44px;
                 min-width: 44px;
             }
-
-            .game-over-content {
-                padding: 25px;
-            }
-
-            .game-over-content h2 {
-                font-size: 1.8em;
-            }
-
-            .final-score {
-                font-size: 2em;
-            }
         }
     </style>
 </head>
@@ -349,61 +311,59 @@
     <a href="../index.html" class="home-link">HOME</a>
 
     <div class="container">
-        <h1>SNAKE RETRIEVER</h1>
-        <div class="subtitle">&gt; Lab Escape - Collect Treats & Survive_</div>
+        <h1>🧪 LAB ESCAPE 🧬</h1>
+        <div class="subtitle">&gt; Retrieve Samples - Avoid Hazards_</div>
 
-        <div class="game-wrapper">
-            <div class="stats">
-                <div class="stat-box">
-                    <div class="stat-label">SCORE</div>
-                    <div class="stat-value" id="score">0</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">LEVEL</div>
-                    <div class="stat-value" id="level">1</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">SPEED</div>
-                    <div class="stat-value" id="speed">5</div>
-                </div>
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">SAMPLES</div>
+                <div class="stat-value" id="score">0</div>
             </div>
+            <div class="stat-box">
+                <div class="stat-label">LEVEL</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">SPEED</div>
+                <div class="stat-value" id="speed">5</div>
+            </div>
+        </div>
 
-            <div class="canvas-container">
-                <canvas id="gameCanvas" width="600" height="600"></canvas>
-            </div>
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="600" height="600"></canvas>
+        </div>
 
-            <div class="controls">
-                <button class="btn" id="startBtn">START GAME</button>
-                <button class="btn secondary" id="pauseBtn">PAUSE</button>
-            </div>
+        <div class="controls">
+            <button class="btn" id="startBtn">START MISSION</button>
+            <button class="btn secondary" id="pauseBtn">PAUSE</button>
+        </div>
 
-            <div class="mobile-controls" id="mobileControls">
-                <button class="dpad-btn dpad-up" data-direction="up">▲</button>
-                <button class="dpad-btn dpad-left" data-direction="left">◄</button>
-                <button class="dpad-btn dpad-center" disabled>●</button>
-                <button class="dpad-btn dpad-right" data-direction="right">►</button>
-                <button class="dpad-btn dpad-down" data-direction="down">▼</button>
-            </div>
+        <div class="mobile-controls" id="mobileControls">
+            <button class="dpad-btn dpad-up" data-direction="up">▲</button>
+            <button class="dpad-btn dpad-left" data-direction="left">◄</button>
+            <button class="dpad-btn dpad-center" disabled>●</button>
+            <button class="dpad-btn dpad-right" data-direction="right">►</button>
+            <button class="dpad-btn dpad-down" data-direction="down">▼</button>
+        </div>
 
-            <div class="instructions">
-                <h3>MISSION BRIEFING</h3>
-                <ul>
-                    <li>Guide the lab dog with arrow keys or WASD</li>
-                    <li>Collect red treats for 10 points</li>
-                    <li>Collect yellow bones for 25 points</li>
-                    <li>Avoid walls and your own tail</li>
-                    <li>Speed increases every level</li>
-                </ul>
-            </div>
+        <div class="instructions">
+            <h3>LAB PROTOCOL</h3>
+            <ul>
+                <li>Navigate lab floor with arrow keys or WASD</li>
+                <li>Collect red samples (🧪) for 10 points</li>
+                <li>Collect DNA strands (🧬) for 25 points</li>
+                <li>Avoid lab walls and hazards</li>
+                <li>Speed increases with each level</li>
+            </ul>
         </div>
     </div>
 
     <div class="game-over-modal" id="gameOverModal">
         <div class="game-over-content">
             <h2>MISSION FAILED</h2>
-            <p>Lab escape terminated</p>
+            <p>Lab containment breached</p>
             <div class="final-score" id="finalScore">0</div>
-            <p>Level reached: <span id="finalLevel">1</span></p>
+            <p>Level: <span id="finalLevel">1</span></p>
             <button class="btn" id="restartBtn">RETRY MISSION</button>
         </div>
     </div>
@@ -423,8 +383,7 @@
         const mobileControls = document.getElementById('mobileControls');
         const dpadBtns = document.querySelectorAll('.dpad-btn[data-direction]');
 
-        // Game state
-        const state = {
+        let state = {
             snake: [{x: 10, y: 10}],
             direction: {x: 1, y: 0},
             nextDirection: {x: 1, y: 0},
@@ -437,8 +396,8 @@
             baseSpeed: 5,
             currentSpeed: 5,
             foodTypes: {
-                treat: {value: 10, color: '#ff0000', symbol: '🍖'},
-                bone: {value: 25, color: '#ffd700', symbol: '🦴'}
+                sample: {value: 10, color: '#ff0000', symbol: '🧪'},
+                dna: {value: 25, color: '#00ffff', symbol: '🧬'}
             }
         };
 
@@ -468,7 +427,7 @@
                 newFood = {
                     x: Math.floor(Math.random() * (canvas.width / state.gridSize)),
                     y: Math.floor(Math.random() * (canvas.height / state.gridSize)),
-                    type: Math.random() > 0.7 ? 'bone' : 'treat'
+                    type: Math.random() > 0.7 ? 'dna' : 'sample'
                 };
 
                 validPosition = !state.snake.some(segment =>
@@ -498,14 +457,12 @@
                 y: head.y + state.direction.y
             };
 
-            // Check wall collision
             if (newHead.x < 0 || newHead.x >= canvas.width / state.gridSize ||
                 newHead.y < 0 || newHead.y >= canvas.height / state.gridSize) {
                 endGame();
                 return;
             }
 
-            // Check self collision
             if (state.snake.some(segment =>
                 segment.x === newHead.x && segment.y === newHead.y)) {
                 endGame();
@@ -514,14 +471,12 @@
 
             state.snake.unshift(newHead);
 
-            // Check food collision
             let foodEaten = false;
             state.food = state.food.filter(food => {
                 if (food.x === newHead.x && food.y === newHead.y) {
                     const foodValue = state.foodTypes[food.type].value;
                     state.score += foodValue;
 
-                    // Level up every 100 points
                     const newLevel = Math.floor(state.score / 100) + 1;
                     if (newLevel > state.level) {
                         state.level = newLevel;
@@ -543,13 +498,18 @@
         }
 
         function draw() {
-            // Clear canvas
-            ctx.fillStyle = '#000a00';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Lab floor tiles
+            for (let y = 0; y < canvas.height; y += state.gridSize) {
+                for (let x = 0; x < canvas.width; x += state.gridSize) {
+                    const isLight = ((x / state.gridSize) + (y / state.gridSize)) % 2 === 0;
+                    ctx.fillStyle = isLight ? '#2a2a2a' : '#222222';
+                    ctx.fillRect(x, y, state.gridSize, state.gridSize);
+                }
+            }
 
-            // Draw grid
-            ctx.strokeStyle = 'rgba(0, 255, 65, 0.1)';
-            ctx.lineWidth = 1;
+            // Lab grid lines
+            ctx.strokeStyle = '#00ff41';
+            ctx.lineWidth = 0.5;
             for (let i = 0; i <= canvas.width; i += state.gridSize) {
                 ctx.beginPath();
                 ctx.moveTo(i, 0);
@@ -563,15 +523,17 @@
                 ctx.stroke();
             }
 
-            // Draw food
+            // Food items
             state.food.forEach(food => {
                 const x = food.x * state.gridSize;
                 const y = food.y * state.gridSize;
 
                 ctx.fillStyle = state.foodTypes[food.type].color;
-                ctx.fillRect(x + 2, y + 2, state.gridSize - 4, state.gridSize - 4);
+                ctx.shadowColor = state.foodTypes[food.type].color;
+                ctx.shadowBlur = 10;
+                ctx.fillRect(x + 3, y + 3, state.gridSize - 6, state.gridSize - 6);
+                ctx.shadowBlur = 0;
 
-                // Draw symbol
                 ctx.font = '14px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -580,32 +542,40 @@
                     y + state.gridSize / 2);
             });
 
-            // Draw snake
+            // Snake (lab robot)
             state.snake.forEach((segment, index) => {
                 const x = segment.x * state.gridSize;
                 const y = segment.y * state.gridSize;
 
                 if (index === 0) {
-                    // Head - bright green
+                    // Robot head
                     ctx.fillStyle = '#00ff41';
-                    ctx.fillRect(x + 1, y + 1, state.gridSize - 2, state.gridSize - 2);
-
-                    // Dog face
-                    ctx.font = '16px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText('🐕', x + state.gridSize / 2, y + state.gridSize / 2);
-                } else {
-                    // Body - darker green gradient
-                    const opacity = 1 - (index / state.snake.length) * 0.5;
-                    ctx.fillStyle = `rgba(0, 255, 65, ${opacity})`;
+                    ctx.shadowColor = '#00ff41';
+                    ctx.shadowBlur = 15;
                     ctx.fillRect(x + 2, y + 2, state.gridSize - 4, state.gridSize - 4);
+                    ctx.shadowBlur = 0;
+
+                    // Robot face
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(x + 6, y + 6, 3, 3);
+                    ctx.fillRect(x + 11, y + 6, 3, 3);
+                    ctx.fillRect(x + 7, y + 12, 6, 2);
+                } else {
+                    // Robot body segments
+                    const opacity = 0.8 - (index / state.snake.length) * 0.4;
+                    ctx.fillStyle = `rgba(0, 255, 65, ${opacity})`;
+                    ctx.fillRect(x + 3, y + 3, state.gridSize - 6, state.gridSize - 6);
+
+                    // Body panel details
+                    ctx.strokeStyle = '#000a00';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x + 4, y + 4, state.gridSize - 8, state.gridSize - 8);
                 }
             });
 
-            // Draw pause overlay
+            // Pause overlay
             if (state.gamePaused && state.gameRunning) {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = '#00ff41';
                 ctx.font = 'bold 40px Courier Prime, monospace';
@@ -621,9 +591,7 @@
         function gameLoop() {
             update();
             draw();
-
-            const frameDelay = 1000 / state.currentSpeed;
-            setTimeout(gameLoop, frameDelay);
+            setTimeout(gameLoop, 1000 / state.currentSpeed);
         }
 
         function startGame() {
@@ -648,7 +616,7 @@
         function endGame() {
             state.gameRunning = false;
             state.gamePaused = false;
-            startBtn.textContent = 'START GAME';
+            startBtn.textContent = 'START MISSION';
             pauseBtn.textContent = 'PAUSE';
             pauseBtn.disabled = true;
             mobileControls.classList.remove('show');
@@ -669,16 +637,12 @@
             };
 
             const newDir = directionMap[direction];
-
-            // Prevent reversing into itself
             if (state.direction.x === -newDir.x && state.direction.y === -newDir.y) {
                 return;
             }
-
             state.nextDirection = newDir;
         }
 
-        // Event listeners
         startBtn.addEventListener('click', startGame);
         startBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
@@ -701,26 +665,19 @@
             startGame();
         }, { passive: false });
 
-        // D-pad controls
         dpadBtns.forEach(btn => {
             btn.addEventListener('click', function() {
-                const direction = this.dataset.direction;
-                handleDirectionChange(direction);
+                handleDirectionChange(this.dataset.direction);
             });
-
             btn.addEventListener('touchstart', function(e) {
                 e.preventDefault();
-                const direction = this.dataset.direction;
-                handleDirectionChange(direction);
+                handleDirectionChange(this.dataset.direction);
             }, { passive: false });
         });
 
-        // Keyboard controls
         document.addEventListener('keydown', (e) => {
             if (!state.gameRunning) return;
-
             const key = e.key.toLowerCase();
-
             if (['arrowup', 'w'].includes(key)) {
                 e.preventDefault();
                 handleDirectionChange('up');
@@ -739,7 +696,6 @@
             }
         });
 
-        // Initialize game
         initGame();
     </script>
 </body>
