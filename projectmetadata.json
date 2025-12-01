@@ -287,6 +287,13 @@
       "description": "histology block stacker",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "letter-to-nancy": {
+      "title": "Letter to Nancy",
+      "icon": "✉️",
+      "description": "noir letter interactive reveal",
+      "collection": "stories-content",
+      "hidden": false
     }
   }
 }
