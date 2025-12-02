@@ -891,7 +891,7 @@ k.scene("main", () => {
         handleGhostCollision();
     });
 
-    // Keyboard controls
+    // Keyboard controls (shorthand)
     k.onKeyDown("left", () => {
         if (gameState.running) nextDir = k.vec2(-1, 0);
     });
@@ -902,6 +902,20 @@ k.scene("main", () => {
         if (gameState.running) nextDir = k.vec2(0, -1);
     });
     k.onKeyDown("down", () => {
+        if (gameState.running) nextDir = k.vec2(0, 1);
+    });
+
+    // Arrow key support for joystick
+    k.onKeyDown("ArrowLeft", () => {
+        if (gameState.running) nextDir = k.vec2(-1, 0);
+    });
+    k.onKeyDown("ArrowRight", () => {
+        if (gameState.running) nextDir = k.vec2(1, 0);
+    });
+    k.onKeyDown("ArrowUp", () => {
+        if (gameState.running) nextDir = k.vec2(0, -1);
+    });
+    k.onKeyDown("ArrowDown", () => {
         if (gameState.running) nextDir = k.vec2(0, 1);
     });
 
