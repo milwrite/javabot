@@ -22,8 +22,8 @@ async function documentGame({ plan, buildResult, testResult, buildId }) {
             role: 'user',
             content: `Generate documentation for: ${plan.metadata.title}
 
-Type: ${plan.type}
-Mechanics: ${plan.mechanics.join(', ')}
+Type: ${plan.contentType || plan.type || 'unknown'}
+Features: ${(plan.features || plan.mechanics || []).join(', ')}
 Files: ${plan.files.join(', ')}
 Test score: ${testResult.score}/100
 
