@@ -925,38 +925,8 @@ k.scene("main", () => {
 });
 
 // -----------------------------------------------------------------------------
-// MOBILE CONTROLS
-// -----------------------------------------------------------------------------
-
-function setupMobileControls() {
-    const btnUp = document.getElementById("btnUp");
-    const btnDown = document.getElementById("btnDown");
-    const btnLeft = document.getElementById("btnLeft");
-    const btnRight = document.getElementById("btnRight");
-
-    function addHandler(btn, dir) {
-        btn.addEventListener("touchstart", (e) => {
-            e.preventDefault();
-            if (gameState.running) nextDir = dir;
-        }, { passive: false });
-
-        btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            if (gameState.running) nextDir = dir;
-        });
-    }
-
-    addHandler(btnUp, k.vec2(0, -1));
-    addHandler(btnDown, k.vec2(0, 1));
-    addHandler(btnLeft, k.vec2(-1, 0));
-    addHandler(btnRight, k.vec2(1, 0));
-}
-
-// -----------------------------------------------------------------------------
 // INITIALIZATION
 // -----------------------------------------------------------------------------
-
-setupMobileControls();
 
 // HTML button handlers
 startBtn.addEventListener("click", startGame);
