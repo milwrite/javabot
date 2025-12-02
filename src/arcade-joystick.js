@@ -375,38 +375,57 @@ class ArcadeJoystick {
     }
 
     emitKeyboardEvents(direction) {
+        // Map to both standard Arrow keys AND kaboom.js key names
         const keyMap = {
-            'UP': ['ArrowUp'],
-            'DOWN': ['ArrowDown'],
-            'LEFT': ['ArrowLeft'],
-            'RIGHT': ['ArrowRight'],
-            'UP-LEFT': ['ArrowUp', 'ArrowLeft'],
-            'UP-RIGHT': ['ArrowUp', 'ArrowRight'],
-            'DOWN-LEFT': ['ArrowDown', 'ArrowLeft'],
-            'DOWN-RIGHT': ['ArrowDown', 'ArrowRight']
+            'UP': [{ key: 'ArrowUp', code: 'ArrowUp' }, { key: 'up', code: 'ArrowUp' }],
+            'DOWN': [{ key: 'ArrowDown', code: 'ArrowDown' }, { key: 'down', code: 'ArrowDown' }],
+            'LEFT': [{ key: 'ArrowLeft', code: 'ArrowLeft' }, { key: 'left', code: 'ArrowLeft' }],
+            'RIGHT': [{ key: 'ArrowRight', code: 'ArrowRight' }, { key: 'right', code: 'ArrowRight' }],
+            'UP-LEFT': [
+                { key: 'ArrowUp', code: 'ArrowUp' }, { key: 'up', code: 'ArrowUp' },
+                { key: 'ArrowLeft', code: 'ArrowLeft' }, { key: 'left', code: 'ArrowLeft' }
+            ],
+            'UP-RIGHT': [
+                { key: 'ArrowUp', code: 'ArrowUp' }, { key: 'up', code: 'ArrowUp' },
+                { key: 'ArrowRight', code: 'ArrowRight' }, { key: 'right', code: 'ArrowRight' }
+            ],
+            'DOWN-LEFT': [
+                { key: 'ArrowDown', code: 'ArrowDown' }, { key: 'down', code: 'ArrowDown' },
+                { key: 'ArrowLeft', code: 'ArrowLeft' }, { key: 'left', code: 'ArrowLeft' }
+            ],
+            'DOWN-RIGHT': [
+                { key: 'ArrowDown', code: 'ArrowDown' }, { key: 'down', code: 'ArrowDown' },
+                { key: 'ArrowRight', code: 'ArrowRight' }, { key: 'right', code: 'ArrowRight' }
+            ]
         };
 
         const keys = keyMap[direction] || [];
 
-        keys.forEach(key => {
-            if (!this.activeKeys.has(key)) {
-                this.activeKeys.add(key);
-                this.dispatchKeyEvent('keydown', key);
+        keys.forEach(keyDef => {
+            const keyId = keyDef.key;
+            if (!this.activeKeys.has(keyId)) {
+                this.activeKeys.add(keyId);
+                this.dispatchKeyEvent('keydown', keyDef);
             }
         });
     }
 
     releaseAllKeys() {
-        this.activeKeys.forEach(key => {
-            this.dispatchKeyEvent('keyup', key);
+        this.activeKeys.forEach(keyId => {
+            // Reconstruct keyDef for keyup event
+            const keyDef = {
+                key: keyId,
+                code: keyId.startsWith('Arrow') ? keyId : ('Arrow' + keyId.charAt(0).toUpperCase() + keyId.slice(1))
+            };
+            this.dispatchKeyEvent('keyup', keyDef);
         });
         this.activeKeys.clear();
     }
 
-    dispatchKeyEvent(type, key) {
+    dispatchKeyEvent(type, keyDef) {
         const event = new KeyboardEvent(type, {
-            key: key,
-            code: key,
+            key: keyDef.key,
+            code: keyDef.code,
             bubbles: true,
             cancelable: true
         });
