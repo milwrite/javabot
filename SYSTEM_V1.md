@@ -1,9 +1,9 @@
-# System V1: Modular Game Pipeline Architecture
+# System V1: Modular Content Pipeline Architecture
 
 **Branch**: `system-v1`
-**Purpose**: Transform Bot Sportello into a reusable, agent-driven game development platform
+**Purpose**: Transform Bot Sportello into a reusable, agent-driven content creation platform
 
-This document describes the modular architecture implemented in the system-v1 branch, which introduces a specialized AI-driven pipeline for building mobile-first, noir-themed games and interactive pages.
+This document describes the modular architecture implemented in the system-v1 branch, which introduces a specialized AI-driven pipeline for building mobile-first, noir-themed content across multiple types: arcade games, letters, recipes, infographics, stories, utilities, visualizations, and more.
 
 ---
 
@@ -14,34 +14,47 @@ The system-v1 architecture separates concerns into distinct modules that work to
 ```
 User Request (slash command or @mention)
     ↓
-Game Pipeline Orchestrator (gamePipeline.js)
+Content Pipeline Orchestrator (gamePipeline.js)
     ↓
 ┌─────────────────────────────────────────────────────┐
-│  PHASE 1: PLANNING                                  │
+│  PHASE 1: PLANNING & CLASSIFICATION                 │
 │  Agent: Architect (gameArchitect.js)                │
 │  - Analyzes user request                            │
-│  - Determines game type                             │
+│  - Classifies content type (game, letter, recipe,   │
+│    infographic, story, log, parody, utility, viz)   │
 │  - Plans file structure                             │
 │  - Considers recent build issues                    │
-│  Output: JSON plan with metadata                    │
+│  Output: JSON plan with contentType and metadata    │
 └─────────────────────────────────────────────────────┘
     ↓
 ┌─────────────────────────────────────────────────────┐
 │  PHASE 2: BUILD-TEST LOOP (up to 3 attempts)        │
 │                                                      │
 │  Agent: Builder (gameBuilder.js)                    │
-│  - Generates HTML/JS code                           │
+│  - Generates HTML/JS code tailored to content type  │
+│  - Applies content-specific patterns:               │
+│    * arcade-game: mobile controls, game loop        │
+│    * letter: typography, reveal animations          │
+│    * recipe: ingredients, step-by-step              │
+│    * infographic: charts, data viz                  │
+│    * story: narrative flow, atmosphere              │
+│    * log: structured lists, documentation           │
+│    * parody: humorous mockups, satire               │
+│    * utility: forms, data persistence               │
+│    * visualization: interactive charts, graphs      │
 │  - Injects mobile-first standards                   │
 │  - Ensures noir theme consistency                   │
 │  - Fixes issues from previous attempts              │
-│  Output: Complete game files                        │
+│  Output: Complete content files                     │
 │                                                      │
 │          ↓                                           │
 │                                                      │
 │  Agent: Tester (gameTester.js)                      │
 │  - Validates HTML structure                         │
 │  - Checks mobile responsiveness                     │
-│  - Verifies touch controls                          │
+│  - Content-type-aware validation:                   │
+│    * Games MUST have mobile controls                │
+│    * Non-games MUST NOT have game controls          │
 │  - Scores code quality (0-100)                      │
 │  Output: Test report with issues/warnings           │
 │                                                      │
@@ -56,11 +69,61 @@ Game Pipeline Orchestrator (gamePipeline.js)
 │  Agent: Scribe (gameScribe.js)                      │
 │  - Generates metadata for projectmetadata.json     │
 │  - Creates release notes in Bot Sportello voice    │
-│  - Writes "How to Play" instructions               │
+│    (content-type-appropriate language)              │
+│  - Writes content-specific docs as needed           │
 │  Output: Metadata and docs                          │
 └─────────────────────────────────────────────────────┘
     ↓
-Git Commit & Push → GitHub Pages Deployment → Live Game
+Git Commit & Push → GitHub Pages Deployment → Live Content
+```
+
+---
+
+## Content Types & Classification
+
+The system recognizes and handles **9 distinct content types**, each with unique requirements:
+
+| Content Type | Description | Interaction Pattern | Collections | Examples |
+|--------------|-------------|-------------------|------------|----------|
+| **arcade-game** | Interactive games with mechanics, scoring, win/loss states | `d-pad` `buttons` `tap` | arcade-games | Snake, Frogger, Sudoku, Tetris |
+| **letter** | Personal messages, notes, correspondence | `tap-reveal` `scroll` | stories-content | Letter to Nancy, Radish Love, Zach Sleep Letter |
+| **recipe** | Cooking instructions with ingredients and steps | `scroll` `tap-reveal` | stories-content | Borscht Recipe |
+| **infographic** | Data visualizations, information graphics | `scroll` `tap` | stories-content | Bills Super Bowl Infographic, AI Agency Flier |
+| **story** | Narratives, chronicles, interactive fiction | `scroll` `tap-reveal` `choice-buttons` | stories-content | Anniversary, Amtrak Journey, Digital Sisyphus |
+| **log** | Documentation, field guides, inventories, reports | `scroll` | stories-content | Bushwick Field Guide, Rat Bushwick, Veggie Haul |
+| **parody** | Humor, satire, mockups, spoofs | `scroll` `tap` | stories-content | Rubi Infomercial, Sampson Deodorant |
+| **utility** | Tools, planners, trackers, calculators | `forms` `data-input` | utilities-apps | Planners, Todo Lists, Schedulers |
+| **visualization** | Data viz, charts, probability displays | `data-input` `tap` | utilities-apps | Parlay Probability Viz |
+
+### Key Principles
+
+**Content-Specific Treatment**:
+- **Only arcade-games** need mobile game controls (D-pad, buttons)
+- **Letters/stories** focus on typography, reveal animations, narrative flow
+- **Recipes** need ingredient lists, step-by-step structure, timing info
+- **Infographics** need charts, graphs, data visualization
+- **Utilities** need functional UI (forms, inputs), NOT game controls
+- **Visualizations** need interactive charts with data input
+
+**Critical Validation Rules**:
+- ✅ **arcade-game** WITHOUT mobile controls = FAIL
+- ❌ **Non-game content** WITH game controls = FAIL
+- This prevents treating letters/recipes/utilities as games
+
+### Classification Process
+
+The **Architect agent** analyzes the user request and determines content type:
+
+```javascript
+User: "write a letter to my mom introducing the bot"
+→ Architect classifies as: contentType = "letter"
+→ Builder generates: typography-focused page with reveal animations
+→ Tester validates: NO game controls present (correct for letter)
+
+User: "make a snake game"
+→ Architect classifies as: contentType = "arcade-game"
+→ Builder generates: canvas game with D-pad mobile controls
+→ Tester validates: mobile controls present (correct for game)
 ```
 
 ---
@@ -157,7 +220,7 @@ Main orchestrator that coordinates all agents and manages the build lifecycle.
 Each agent is a thin wrapper around `llmClient.js` with role-specific logic.
 
 #### **gameArchitect.js**
-Plans game structure and implementation approach.
+Analyzes user requests, classifies content type, and plans implementation approach.
 
 **Input:**
 - User prompt
@@ -167,22 +230,54 @@ Plans game structure and implementation approach.
 **Output (JSON Plan):**
 ```json
 {
-  "type": "arcade-2d",
-  "slug": "snake-noir",
-  "files": ["src/snake-noir.html", "src/snake-noir.js"],
+  "contentType": "arcade-game" | "letter" | "recipe" | "infographic" | "story" | "log" | "parody" | "utility" | "visualization",
+  "slug": "content-name-kebab-case",
+  "files": ["src/content-name.html"],
   "metadata": {
-    "title": "Snake Noir",
-    "icon": "🐍",
-    "description": "retro snake arcade",
-    "collection": "arcade-games"
+    "title": "Content Title",
+    "icon": "📖",
+    "description": "3-6 word caption",
+    "collection": "arcade-games" | "stories-content" | "utilities-apps"
   },
-  "mechanics": ["arrow key movement", "collision detection", "score tracking"],
-  "mobileControls": "d-pad",
+  "features": ["key feature 1", "key feature 2"],
+  "interactionPattern": "none" | "tap-reveal" | "scroll" | "forms" | "d-pad" | "buttons" | "data-input",
+  "notes": ["implementation note 1", "note 2"]
+}
+```
+
+**Example Plans by Content Type:**
+
+*arcade-game:*
+```json
+{
+  "contentType": "arcade-game",
+  "slug": "snake-noir",
+  "files": ["src/snake-noir.html"],
+  "metadata": { "title": "Snake Noir", "icon": "🐍", "description": "retro snake arcade", "collection": "arcade-games" },
+  "features": ["arrow key movement", "collision detection", "score tracking"],
+  "interactionPattern": "d-pad",
   "notes": ["use standard D-pad pattern", "include CRT scanlines"]
 }
 ```
 
-**Strategy**: Architect considers recent build failures to avoid repeating mistakes. If mobile controls were missing in recent builds, it explicitly notes "MUST include mobile-controls" in the plan.
+*letter:*
+```json
+{
+  "contentType": "letter",
+  "slug": "letter-to-nancy",
+  "files": ["src/letter-to-nancy.html"],
+  "metadata": { "title": "Letter to Nancy", "icon": "✉️", "description": "noir letter interactive reveal", "collection": "stories-content" },
+  "features": ["typewriter reveal", "tap-to-expand sections", "ambient audio toggle"],
+  "interactionPattern": "tap-reveal",
+  "notes": ["focus on typography", "NO game controls", "personal tone"]
+}
+```
+
+**Strategy**: Architect considers:
+1. **Content type classification** - Determines what kind of content the user wants
+2. **Recent build failures** - Avoids repeating past mistakes
+3. **Appropriate interaction patterns** - Matches UI to content type
+4. **Collection placement** - Routes to correct section of site
 
 #### **gameBuilder.js**
 Generates complete, working code from the Architect's plan.
@@ -311,25 +406,37 @@ Generates documentation and updates project metadata.
 
 ### @Mention Auto-Detection
 
-The mention handler now includes game request classification:
+The mention handler now includes content request classification using `isContentRequest()`:
 
 ```javascript
-if (isGameRequest(content)) {
-  // Route to game pipeline instead of normal chat
-  await runGamePipeline({ ... });
+if (isContentRequest(content)) {
+  // Route to content pipeline instead of normal chat
+  await runGamePipeline({ ... });  // Note: still called gamePipeline for backwards compatibility
   // Skip normal AI response flow
   return;
 }
 ```
 
-**Detection Keywords**: game, arcade, play, platformer, puzzle, snake, tetris, pong, maze, shooter, adventure, interactive, score, highscore, controls, d-pad, etc.
+**Detection Keywords** (expanded to cover all content types):
+- **Games**: game, arcade, play, platformer, puzzle, snake, tetris, pong, maze, shooter, adventure, score, controls, d-pad
+- **Letters**: letter, note, message, write to, correspondence, introduction, memo
+- **Recipes**: recipe, cook, ingredient, bake, dish, meal, preparation, cooking
+- **Infographics**: infographic, chart, graph, data viz, visualization, statistics, comparison, analysis
+- **Stories**: story, narrative, tale, chronicle, journey, fiction, interactive fiction
+- **Logs**: log, field guide, inventory, report, documentation, catalog, list of
+- **Parodies**: parody, satire, mockup, spoof, infomercial, mock, funny
+- **Utilities**: planner, tracker, calculator, tool, utility, schedule, calendar, todo, checklist
+- **Visualizations**: visualization, chart, graph, probability
+- **General**: create, build, make, design, generate, interactive, page, website
 
 **Example User Messages That Trigger Pipeline:**
-- "@Bot Sportello make a snake game"
-- "@Bot Sportello can you build an arcade maze game?"
-- "@Bot Sportello create a puzzle with mobile controls"
+- "@Bot Sportello make a snake game" → `arcade-game`
+- "@Bot Sportello write a letter to my mom about you" → `letter`
+- "@Bot Sportello create a borscht recipe" → `recipe`
+- "@Bot Sportello build an infographic comparing quarterbacks" → `infographic`
+- "@Bot Sportello make a todo planner" → `utility`
 
-**Fallback**: If game pipeline fails mid-execution, bot falls back to normal chat flow with error context.
+**Fallback**: If content pipeline fails mid-execution, bot falls back to normal chat flow with error context.
 
 ---
 
@@ -579,17 +686,24 @@ index.js               - Added /build-game command, enhanced @mention handler
 
 ## Conclusion
 
-System V1 transforms Bot Sportello from a single-file monolith into a modular, agent-driven platform. The architecture is:
+System V1 transforms Bot Sportello from a single-file monolith into a modular, agent-driven content creation platform. The architecture is:
 
+✅ **Content-Type Aware** - Recognizes and handles 9 distinct content types appropriately
 ✅ **Reusable** - Core modules work across different bot frameworks
-✅ **Testable** - Clear separation of concerns, automated validation
-✅ **Self-improving** - Learn from build history without fine-tuning
-✅ **Mobile-first** - Enforces accessibility and responsive design
+✅ **Testable** - Clear separation of concerns, automated validation with content-specific rules
+✅ **Self-improving** - Learns from build history without fine-tuning
+✅ **Mobile-first** - Enforces accessibility and responsive design across all content
 ✅ **Noir-themed** - Maintains consistent aesthetic automatically
 
-By separating planning, building, testing, and documentation into distinct agents, the system achieves high code quality while remaining flexible and maintainable.
+By separating classification, planning, building, testing, and documentation into distinct agents, the system achieves high code quality while remaining flexible and maintainable.
 
-The pipeline can generate complete, working games from a single sentence prompt - and they'll be playable on mobile devices right out of the gate.
+The pipeline can generate complete, working content from a single sentence prompt:
+- **Games** are playable on mobile with proper controls
+- **Letters** have beautiful typography and reveal animations
+- **Recipes** have structured ingredients and steps
+- **Infographics** present data clearly with interactive elements
+- **Utilities** offer functional tools with data persistence
+- All content is mobile-responsive and noir-themed
 
 ---
 

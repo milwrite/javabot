@@ -120,8 +120,9 @@ function runAutomatedChecks(html, plan) {
         });
     }
 
-    // Mobile-specific checks for games
-    const isGame = plan.type === 'arcade-2d' || plan.type.includes('game');
+    // Mobile-specific checks for games ONLY
+    const contentType = plan.contentType || plan.type;
+    const isGame = contentType === 'arcade-game';
 
     if (isGame) {
         if (!html.includes('mobile-controls') && !html.includes('touch')) {
@@ -228,13 +229,20 @@ function runAutomatedChecks(html, plan) {
  */
 async function runLLMValidation(html, plan) {
     try {
+        const contentType = plan.contentType || plan.type;
+        const features = plan.features || plan.mechanics || [];
+
         const messages = [
             {
                 role: 'user',
                 content: `Validate this generated HTML for: ${plan.metadata.title}
 
-Expected type: ${plan.type}
-Expected mechanics: ${plan.mechanics.join(', ')}
+Expected content type: ${contentType}
+Expected features: ${features.join(', ')}
+
+IMPORTANT:
+- If content type is NOT "arcade-game", game controls (d-pad, mobile-controls) are CRITICAL FAILURES
+- If content type IS "arcade-game", MISSING game controls are CRITICAL FAILURES
 
 HTML to validate:
 ${html.length > 8000 ? html.substring(0, 8000) + '\n... [truncated]' : html}

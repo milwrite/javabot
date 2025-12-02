@@ -210,26 +210,65 @@ async function commitGameFiles(result, customMessage = null) {
 }
 
 /**
- * Classify if a user prompt is asking for a game/interactive page
+ * Classify if a user prompt is asking for interactive content
  * @param {string} prompt - User's message
- * @returns {boolean} True if game-related
+ * @returns {boolean} True if content-related (games, letters, recipes, infographics, etc.)
  */
-function isGameRequest(prompt) {
-    const gameKeywords = [
+function isContentRequest(prompt) {
+    const contentKeywords = [
+        // Games
         'game', 'arcade', 'play', 'platformer', 'puzzle', 'snake',
         'tetris', 'pong', 'breakout', 'maze', 'shooter', 'adventure',
-        'interactive', 'frogger', 'pacman', 'space invaders',
-        'tic tac toe', 'chess', 'checkers', 'solitaire', 'sudoku',
-        'wordle', 'trivia', 'quiz', 'challenge', 'level',
-        'score', 'highscore', 'controls', 'joystick', 'd-pad'
+        'frogger', 'pacman', 'space invaders', 'tic tac toe',
+        'chess', 'checkers', 'solitaire', 'sudoku', 'wordle',
+        'trivia', 'quiz', 'challenge', 'level', 'score', 'highscore',
+        'controls', 'joystick', 'd-pad',
+
+        // Letters & Messages
+        'letter', 'note', 'message', 'write to', 'letter to',
+        'correspondence', 'introduction', 'memo',
+
+        // Recipes
+        'recipe', 'cook', 'ingredient', 'bake', 'dish', 'meal',
+        'preparation', 'cooking', 'cuisine',
+
+        // Infographics & Data
+        'infographic', 'chart', 'graph', 'data viz', 'visualization',
+        'statistics', 'comparison', 'analysis',
+
+        // Stories & Narratives
+        'story', 'narrative', 'tale', 'chronicle', 'journey',
+        'adventure', 'fiction', 'interactive fiction', 'choose your own',
+
+        // Logs & Documentation
+        'log', 'field guide', 'inventory', 'report', 'documentation',
+        'catalog', 'list of', 'collection of',
+
+        // Parodies & Humor
+        'parody', 'satire', 'mockup', 'spoof', 'infomercial',
+        'mock', 'funny', 'humorous',
+
+        // Utilities & Tools
+        'planner', 'tracker', 'calculator', 'tool', 'utility',
+        'schedule', 'calendar', 'todo', 'checklist', 'organizer',
+
+        // General content creation
+        'create', 'build', 'make', 'design', 'generate',
+        'interactive', 'page', 'website'
     ];
 
     const lowerPrompt = prompt.toLowerCase();
-    return gameKeywords.some(keyword => lowerPrompt.includes(keyword));
+    return contentKeywords.some(keyword => lowerPrompt.includes(keyword));
+}
+
+// Keep old name for backwards compatibility
+function isGameRequest(prompt) {
+    return isContentRequest(prompt);
 }
 
 module.exports = {
     runGamePipeline,
     commitGameFiles,
-    isGameRequest
+    isGameRequest,
+    isContentRequest
 };

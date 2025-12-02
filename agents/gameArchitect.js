@@ -38,12 +38,18 @@ Plan a simple, mobile-first game/page that satisfies this request. Return a comp
     try {
         const plan = extractJSON(response.content);
 
-        // Validate plan structure
-        if (!plan.slug || !plan.type || !plan.files || !plan.metadata) {
-            throw new Error('Plan missing required fields');
+        // Validate plan structure (support both contentType and type for compatibility)
+        const contentType = plan.contentType || plan.type;
+        if (!plan.slug || !contentType || !plan.files || !plan.metadata) {
+            throw new Error('Plan missing required fields (slug, contentType/type, files, metadata)');
         }
 
-        console.log(`📋 Plan created: ${plan.metadata.title} (${plan.type})`);
+        // Normalize to contentType field
+        if (!plan.contentType && plan.type) {
+            plan.contentType = plan.type;
+        }
+
+        console.log(`📋 Plan created: ${plan.metadata.title} (${plan.contentType})`);
         console.log(`   Files: ${plan.files.join(', ')}`);
         console.log(`   Collection: ${plan.metadata.collection}`);
 

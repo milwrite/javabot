@@ -37,22 +37,27 @@ function cleanMarkdownCodeBlocks(content, type = 'html') {
 async function buildGame({ plan, attempt, lastIssues = [], buildId }) {
     console.log(`🔨 Builder working (attempt ${attempt}/3)...`);
 
-    // Prepare prompt
-    let prompt = `Build a ${plan.type} game: ${plan.metadata.title}
+    // Prepare prompt based on content type
+    const contentType = plan.contentType || plan.type; // Support both field names for compatibility
+    const isGame = contentType === 'arcade-game';
+
+    let prompt = `Build ${contentType === 'arcade-game' ? 'an' : 'a'} ${contentType}: ${plan.metadata.title}
 
 Plan details:
+- Content type: ${contentType}
 - Slug: ${plan.slug}
 - Files to generate: ${plan.files.join(', ')}
-- Core mechanics: ${plan.mechanics.join(', ')}
-- Mobile controls: ${plan.mobileControls}
+- Key features: ${(plan.features || plan.mechanics || []).join(', ')}
+- Interaction pattern: ${plan.interactionPattern || plan.mobileControls || 'none'}
 - Collection: ${plan.metadata.collection}
 
 Requirements:
-1. Generate COMPLETE, working code
-2. Include all required mobile-first elements
+1. Generate COMPLETE, working code appropriate for ${contentType}
+2. Include all required mobile-first elements (viewport, responsive breakpoints)
 3. Use noir terminal theme consistently
-4. Implement mobile controls using standard D-pad pattern
+4. ${isGame ? 'MUST include mobile controls (D-pad or buttons) with touch events' : 'NO game controls (this is not an arcade game)'}
 5. NO placeholders or TODO comments
+6. Follow content-type-specific patterns from the Builder prompt
 
 Generate the HTML file content now.`;
 

@@ -70,9 +70,9 @@ The entire bot is contained in `index.js` (~2000+ lines) with these key sections
 - `page-theme.css` - Shared arcade theme for all /src/ pages
 - `projectmetadata.json` - Project collections + metadata (title, icon, caption) loaded dynamically by index.html
 
-### System-V1: Modular Game Pipeline (NEW)
+### System-V1: Modular Content Pipeline (NEW)
 
-**Branch**: `system-v1` introduces a modular architecture for AI-driven game development.
+**Branch**: `system-v1` introduces a modular architecture for AI-driven content creation across 9 content types.
 
 **New Directory Structure**:
 ```
@@ -93,19 +93,33 @@ SYSTEM_V1.md           - Complete architecture documentation
 TESTING.md             - Comprehensive test checklist
 ```
 
-**Game Pipeline Flow**:
-1. **Architect**: Analyzes user request → creates JSON plan (game type, mechanics, files)
-2. **Builder**: Generates complete code → injects mobile controls, noir theme
-3. **Tester**: Validates HTML structure, mobile responsiveness → scores quality (0-100)
+**Content Pipeline Flow**:
+1. **Architect**: Analyzes user request → classifies content type → creates JSON plan
+   - Content types: arcade-game, letter, recipe, infographic, story, log, parody, utility, visualization
+2. **Builder**: Generates code tailored to content type:
+   - arcade-game: mobile controls, game loop, scoring
+   - letter: typography, reveal animations, personal tone
+   - recipe: ingredients list, step-by-step structure
+   - infographic: charts, data viz, interactive elements
+   - story: narrative flow, atmospheric design
+   - log: structured documentation, lists
+   - parody: humorous mockups, satire
+   - utility: functional UI, forms, data persistence
+   - visualization: interactive charts, data input
+3. **Tester**: Content-type-aware validation → scores quality (0-100)
+   - Games MUST have mobile controls
+   - Non-games MUST NOT have game controls
    - If failed: sends issues back to Builder (up to 3 attempts)
    - If passed: proceed to Scribe
-4. **Scribe**: Generates metadata → updates projectmetadata.json → writes release notes
+4. **Scribe**: Generates metadata → updates projectmetadata.json → writes content-appropriate release notes
 
 **Key Features**:
-- **Automatic mobile-first enforcement**: Viewport tags, 44px touch targets, D-pad controls
+- **Content-type awareness**: System classifies and handles 9 distinct content types appropriately
+- **Automatic mobile-first enforcement**: Viewport tags, responsive breakpoints for all content
+- **Content-specific patterns**: Games get D-pad controls, letters get typography focus, utilities get forms, etc.
 - **Iterative quality loop**: Builder retries with specific fixes until tests pass
 - **Learning from history**: Recent build failures inform future planning
-- **Dual triggers**: `/build-game` slash command OR @mention with game keywords
+- **Dual triggers**: `/build-game` slash command OR @mention with content keywords
 - **Build logging**: Complete audit trail in `/build-logs/{timestamp}.json`
 - **Reusable modules**: Core agents work across different bot platforms
 
@@ -114,18 +128,31 @@ TESTING.md             - Comprehensive test checklist
 - **Output**: Complete game with tests, committed to GitHub, live URL returned
 - **Progress**: Real-time status updates via edited Discord reply
 
-**@Mention Game Detection**:
-- Bot detects game-related keywords (game, arcade, maze, puzzle, etc.)
-- Automatically routes to game pipeline instead of normal chat
+**@Mention Content Detection**:
+- Bot detects content-related keywords across all types:
+  * Games: game, arcade, maze, puzzle, snake, tetris, etc.
+  * Letters: letter, note, message, write to, correspondence
+  * Recipes: recipe, cook, ingredient, bake, dish, meal
+  * Infographics: infographic, chart, graph, data viz, statistics
+  * Stories: story, narrative, tale, chronicle, journey, fiction
+  * Logs: log, field guide, inventory, report, documentation
+  * Parodies: parody, satire, mockup, spoof, infomercial
+  * Utilities: planner, tracker, calculator, tool, todo, schedule
+  * Visualizations: visualization, chart, graph, probability
+- Automatically routes to content pipeline instead of normal chat
 - Falls back to normal AI response if pipeline fails
 
-**Mobile-First Standards Enforced**:
+**Mobile-First Standards Enforced** (ALL content types):
 - Viewport meta tag (required)
-- Responsive breakpoints @768px, @480px (required for games)
-- Touch controls with `touch-action: manipulation` (required for games)
-- Min 44px touch targets (W3C AAA accessibility)
-- `touchstart` + `preventDefault` event handling (prevents zoom)
-- Standard D-pad pattern for directional games
+- Responsive breakpoints @768px, @480px (required)
+- Min 44px touch targets for interactive elements (W3C AAA accessibility)
+- **For arcade-games only**:
+  * Touch controls with `touch-action: manipulation`
+  * `touchstart` + `preventDefault` event handling (prevents zoom)
+  * Standard D-pad pattern for directional games
+- **For non-games**:
+  * NO game controls (critical validation failure if present)
+  * Typography-focused or form-focused UI as appropriate to content type
 
 **Build Log Pattern Learning**:
 - System analyzes last 10 builds for common failures
