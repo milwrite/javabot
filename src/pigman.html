@@ -265,11 +265,14 @@
                 baseColor: '#1a1a2e',        // Match container background
                 accentColor: '#ffd93d',      // Match score color
                 deadzone: 0.25,
-                allowDiagonal: true,
-                keyboardEmulation: true,     // Emits arrow key events for game
+                allowDiagonal: false,        // 4-way movement like Pac-Man
+                keyboardEmulation: false,    // Use direct callback instead
                 hapticFeedback: true,
                 onDirectionChange: (direction) => {
-                    console.log('Joystick direction:', direction);
+                    // Directly control game movement
+                    if (window.setJoystickDirection) {
+                        window.setJoystickDirection(direction);
+                    }
                 }
             });
         });

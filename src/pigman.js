@@ -865,6 +865,26 @@ function startGame() {
 // Expose to window for HTML buttons
 window.startGame = startGame;
 
+// Expose joystick control function
+window.setJoystickDirection = function(direction) {
+    if (!gameState.running) return;
+
+    const directionMap = {
+        'UP': k.vec2(0, -1),
+        'DOWN': k.vec2(0, 1),
+        'LEFT': k.vec2(-1, 0),
+        'RIGHT': k.vec2(1, 0),
+        'UP-LEFT': k.vec2(-1, -1),
+        'UP-RIGHT': k.vec2(1, -1),
+        'DOWN-LEFT': k.vec2(-1, 1),
+        'DOWN-RIGHT': k.vec2(1, 1),
+    };
+
+    if (direction && directionMap[direction]) {
+        nextDir = directionMap[direction];
+    }
+};
+
 // -----------------------------------------------------------------------------
 // MAIN SCENE
 // -----------------------------------------------------------------------------
