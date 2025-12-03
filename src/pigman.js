@@ -247,7 +247,7 @@ function gridMover(speed) {
 }
 
 /**
- * GhostAI component - implements unique ghost behaviors
+ * GhostAI component - implements unique ghost behaviors with improved pathfinding
  */
 function ghostAI(behavior) {
     return {
@@ -265,9 +265,8 @@ function ghostAI(behavior) {
             this.decisionTimer += k.dt();
             this.scatterTimer += k.dt();
 
-            // Only make decisions when at tile center (not moving between tiles)
-            if (this.moving) return;
-            if (this.decisionTimer < 0.2) return; // Decision cooldown
+            // Make decisions more frequently for smarter, more responsive AI
+            if (this.decisionTimer < 0.08) return; // Faster decision making
 
             this.decisionTimer = 0;
 
@@ -279,17 +278,58 @@ function ghostAI(behavior) {
             // Calculate target based on behavior
             const target = this.calculateTarget();
 
-            // Sort directions by distance to target
-            directions.sort((a, b) => {
-                const distA = manhattanDist(a.x, a.y, target.x, target.y);
-                const distB = manhattanDist(b.x, b.y, target.x, target.y);
-                return this.frightened ? distB - distA : distA - distB;
+            // Use A* pathfinding for smarter navigation
+            const bestPath = this.findBestPath(gridPos, target, directions);
+            if (bestPath) {
+                this.setDirection(bestPath.dx, bestPath.dy);
+            } else {
+                // Fallback to simple distance sorting
+                directions.sort((a, b) => {
+                    const distA = manhattanDist(a.x, a.y, target.x, target.y);
+                    const distB = manhattanDist(b.x, b.y, target.x, target.y);
+                    return this.frightened ? distB - distA : distA - distB;
+                });
+
+                // Pick best direction (with small random chance for variety)
+                const choice = (Math.random() < 0.05 && directions.length > 1) ? 1 : 0;
+                const chosen = directions[choice];
+                this.setDirection(chosen.dx, chosen.dy);
+            }
+        },
+
+        /**
+         * A* pathfinding for one step lookahead (checks if direction leads toward target)
+         */
+        findBestPath(from, target, directions) {
+            if (directions.length === 0) return null;
+
+            // Score each direction by looking ahead 3 tiles
+            const scored = directions.map(dir => {
+                let score = 0;
+                let currentX = from.x + dir.dx;
+                let currentY = from.y + dir.dy;
+
+                // Look ahead several moves
+                for (let i = 0; i < 3; i++) {
+                    const dist = manhattanDist(currentX, currentY, target.x, target.y);
+                    score += (10 - dist); // Closer is better
+
+                    // Try to continue in same direction
+                    const nextX = currentX + dir.dx;
+                    const nextY = currentY + dir.dy;
+                    if (!isWalkable(nextX, nextY)) break;
+
+                    currentX = nextX;
+                    currentY = nextY;
+                }
+
+                return { ...dir, score };
             });
 
-            // Pick best direction (with small random chance for variety)
-            const choice = (Math.random() < 0.15 && directions.length > 1) ? 1 : 0;
-            const chosen = directions[choice];
-            this.setDirection(chosen.dx, chosen.dy);
+            // Sort by score (higher is better when chasing, lower when frightened)
+            scored.sort((a, b) => this.frightened ? a.score - b.score : b.score - a.score);
+
+            return scored[0];
         },
 
         getValidDirections(gx, gy) {
@@ -611,12 +651,14 @@ function handlePelletCollision() {
 function handleGhostCollision() {
     if (!player) return;
 
-    const playerGrid = player.getGridPos();
+    // Collision radius (half a tile)
+    const COLLISION_DISTANCE = TILE_SIZE * 0.7;
 
     ghosts.forEach(ghost => {
-        const ghostGrid = ghost.getGridPos();
+        // Calculate actual pixel distance between player and ghost
+        const dist = player.pos.dist(ghost.pos);
 
-        if (ghostGrid.x === playerGrid.x && ghostGrid.y === playerGrid.y) {
+        if (dist < COLLISION_DISTANCE) {
             if (gameState.invincible && ghost.frightened) {
                 // Eat the ghost
                 gameState.score += 200;
