@@ -84,9 +84,14 @@
         }
 
         canvas {
-            width: 100%;
-            height: 100%;
+            width: 100% !important;
+            height: 100% !important;
             display: block;
+            touch-action: none;
+        }
+
+        #gameCanvas {
+            background: #001122;
         }
 
         .game-message {
@@ -404,17 +409,17 @@
     </div>
 
     <script type="module">
-        import kaboom from "https://unpkg.com/kaboom/dist/kaboom.mjs";
-
-        // Initialize Kaboom
-        const k = kaboom({
-            canvas: document.getElementById('gameCanvas'),
-            width: 400,
-            height: 600,
-            background: [0, 17, 34],
-            letterbox: true,
-            touchToMouse: false
-        });
+        try {
+            const kaboom = await import("https://unpkg.com/kaboom@3000/dist/kaboom.mjs");
+            const k = kaboom.default({
+                canvas: document.getElementById('gameCanvas'),
+                width: 400,
+                height: 600,
+                background: [0, 17, 34],
+                letterbox: true,
+                touchToMouse: true,
+                debug: false
+            });
 
         // Game state
         const game = {
@@ -852,6 +857,16 @@
         createGameObjects();
         updateStats();
         setupTouchEvents();
+
+        } catch (error) {
+            console.error('Failed to initialize Kaboom:', error);
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ff0000';
+            ctx.font = '20px Courier Prime';
+            ctx.fillText('Error loading game', 50, 300);
+            ctx.fillText('Please refresh the page', 50, 330);
+        }
     </script>
     <script src="../stars.js" defer></script>
 </body>
