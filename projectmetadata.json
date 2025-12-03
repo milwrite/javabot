@@ -55,13 +55,13 @@
       "title": "Radish Love Letter",
       "description": "Playful ode to roots",
       "icon": "❤️",
-      "collection": "featured"
+      "collection": "stories-content"
     },
     "rat_bushwick": {
       "title": "Rat Bushwick Log",
       "description": "Underground survival brief",
       "icon": "🐀",
-      "collection": "stories-content"
+      "collection": "featured"
     },
     "amtrak-journey": {
       "title": "Zach & Cen's Amtrak Journey",
