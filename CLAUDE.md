@@ -194,13 +194,17 @@ See `SYSTEM_V1.md` for complete architecture documentation.
 **Noir Terminal Frontend Styling**:
 - **Main page**: `index.html` with embedded CSS (self-contained, no external stylesheet)
 - **Individual pages**: Link to `page-theme.css` (shared noir theme for all /src/ pages)
-- **Current theme**: Noir Terminal (#00ff41 green, #ff0000 red, #00ffff cyan, #0a0a0a background)
-- **Typography**: Courier Prime monospace font (terminal aesthetic)
+- **Current theme**: Unified Noir Terminal across all 45 pages:
+  * Primary accent: #ff0000 (red)
+  * Secondary accent: #00ffff (cyan)
+  * Text color: #7ec8e3 (light blue)
+  * Background: #0a0a0a (true black)
+- **Typography**: Courier Prime monospace font (terminal aesthetic - standardized across all pages)
 - **Effects**: CRT scanlines, flicker animations, glitch effects
 - **Visual effects**: Simple gradient background on main page, grid + scanlines on individual pages
 - **Project discovery**: `index.html` dynamically loads projects from `projectmetadata.json`
-- **Navigation**: All pages include styled home button linking back to index.html
-- **Theme consistency**: Both index.html and page-theme.css use matching color palette
+- **Navigation**: All pages include standardized home link (`<a class="home-link" href="../index.html">← HOME</a>`)
+- **Theme consistency**: Both index.html and page-theme.css use matching noir palette (enforced Dec 2025)
 
 **Project Metadata System**:
 - **Location**: `projectmetadata.json` (separate file, loaded via fetch)
@@ -388,6 +392,31 @@ errorTracker.set(`${userId}-${commandName}`, {
 4. Use `getBotResponse()` for personality-consistent messages
 5. Include live site URL in embeds: `https://milwrite.github.io/javabot/`
 6. Commands auto-register on bot restart (no manual deployment)
+
+## Recent Updates & Style Consistency (Dec 2025)
+
+**Comprehensive Style Unification**:
+All 45 HTML pages in `/src/` have been unified to use consistent noir terminal aesthetic:
+- Fixed 2 broken CSS paths (missing `../` relative path)
+- Converted 5 purple gradient files to noir palette
+- Converted 2 green theme games to noir colors
+- Converted 4 custom-themed files to noir aesthetic
+- Standardized all 43 home links to: `<a class="home-link" href="../index.html">← HOME</a>`
+- Added missing CSS links to page-theme.css (10 files)
+- Ensured all files use Courier Prime font for consistency
+
+**Design System Enforcement**:
+When generating new pages, AI must enforce:
+1. Link to `../page-theme.css` as primary stylesheet
+2. Courier Prime font as standard (no custom fonts unless specifically requested)
+3. Noir color palette only (red #ff0000, cyan #00ffff, light blue #7ec8e3, black #0a0a0a)
+4. Standard home link pattern with "← HOME" text
+5. Conservative CSS approach: only component-specific overrides in embedded `<style>` tags
+
+**Future Maintenance**:
+- Do NOT add new color schemes or fonts without updating all 45 existing pages
+- Any style changes to `page-theme.css` automatically apply across entire site
+- Broken CSS links or custom fonts are now considered technical debt
 
 ## Key Development Patterns
 
@@ -828,6 +857,12 @@ const CONFIG = {
 - Use hyphens for page names: `amtrak-journey.html` not `amtrak_journey.html`
 - When restoring files from git, always verify completeness (check file ends with `</html>`)
 - Avoid creating duplicate files with different naming conventions
+
+**Agentic Loop Edit Optimization**:
+- Edit operations are expensive (use another LLM call to transform files)
+- System tracks edited files in a Set and blocks redundant edits within same loop (line ~1510)
+- Files can only be edited once per conversation to prevent slow repeated edits
+- If intentional re-edit needed, requires explicit request/next conversation
 
 ## Important Dependencies
 
