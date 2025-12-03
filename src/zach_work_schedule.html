@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zach's Work Schedule - Manifold HTML Fixes</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
     <style>
         * {
             margin: 0;
@@ -13,11 +14,11 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Courier Prime', monospace;
+            background: #0a0a0a;
             min-height: 100vh;
             padding: 40px 20px;
-            color: #333;
+            color: #7ec8e3;
         }
 
         .home-link {
@@ -26,8 +27,8 @@
             left: 20px;
             z-index: 9999;
             text-decoration: none;
-            background: rgba(102, 126, 234, 0.9);
-            color: white;
+            background: rgba(0, 255, 65, 0.9);
+            color: #0a0a0a;
             padding: 10px 20px;
             border-radius: 25px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -39,7 +40,7 @@
         }
 
         .home-link:hover {
-            background: rgba(102, 126, 234, 1);
+            background: rgba(0, 255, 65, 1);
             transform: translateX(-5px);
         }
 
@@ -51,7 +52,7 @@
 
         .header {
             text-align: center;
-            color: white;
+            color: #00ff41;
             margin-bottom: 40px;
             animation: slideDown 0.6s ease;
         }
@@ -75,25 +76,27 @@
         }
 
         .timeline-section {
-            background: white;
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 15px;
             padding: 30px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
             animation: slideUp 0.6s ease;
+            border: 2px solid #7ec8e3;
         }
 
         .tasks-section {
-            background: white;
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 15px;
             padding: 30px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
             animation: slideUp 0.6s ease 0.1s both;
+            border: 2px solid #7ec8e3;
         }
 
         .section-title {
             font-size: 1.5em;
             margin-bottom: 25px;
-            color: #667eea;
+            color: #00ff41;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -115,7 +118,7 @@
             top: 0;
             bottom: 0;
             width: 3px;
-            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(180deg, #00ff41 0%, #00ffff 100%);
             border-radius: 2px;
         }
 
@@ -123,7 +126,7 @@
             position: relative;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #7ec8e3;
             transition: all 0.3s ease;
         }
 
@@ -139,33 +142,33 @@
             top: 5px;
             width: 12px;
             height: 12px;
-            background: #667eea;
-            border: 3px solid white;
+            background: #00ff41;
+            border: 3px solid #0a0a0a;
             border-radius: 50%;
-            box-shadow: 0 0 0 3px #667eea;
+            box-shadow: 0 0 0 3px #00ff41;
         }
 
         .timeline-item.active::before {
-            background: #764ba2;
-            box-shadow: 0 0 0 3px #764ba2, 0 0 15px rgba(118, 75, 162, 0.5);
+            background: #00ffff;
+            box-shadow: 0 0 0 3px #00ffff, 0 0 15px rgba(0, 255, 255, 0.5);
             animation: pulse 2s infinite;
         }
 
         .timeline-time {
             font-weight: 700;
-            color: #667eea;
+            color: #ff0000;
             font-size: 1.1em;
             margin-bottom: 5px;
         }
 
         .timeline-content {
-            color: #666;
+            color: #7ec8e3;
             font-size: 0.95em;
         }
 
         .task-item {
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
+            background: rgba(0, 255, 65, 0.1);
+            border-left: 4px solid #00ff41;
             padding: 15px;
             margin-bottom: 15px;
             border-radius: 8px;
@@ -177,19 +180,19 @@
         }
 
         .task-item:hover {
-            background: #eef1ff;
+            background: rgba(0, 255, 65, 0.2);
             transform: translateX(5px);
         }
 
         .task-item.completed {
-            border-left-color: #10b981;
-            background: #f0fdf4;
+            border-left-color: #00ff41;
+            background: rgba(0, 255, 65, 0.15);
         }
 
         .task-checkbox {
             width: 24px;
             height: 24px;
-            border: 2px solid #667eea;
+            border: 2px solid #00ff41;
             border-radius: 6px;
             cursor: pointer;
             display: flex;
@@ -201,9 +204,9 @@
         }
 
         .task-item.completed .task-checkbox {
-            background: #10b981;
-            border-color: #10b981;
-            color: white;
+            background: #00ff41;
+            border-color: #00ff41;
+            color: #0a0a0a;
         }
 
         .task-content {
@@ -212,19 +215,19 @@
 
         .task-title {
             font-weight: 600;
-            color: #333;
+            color: #00ff41;
             margin-bottom: 5px;
             font-size: 0.95em;
         }
 
         .task-item.completed .task-title {
             text-decoration: line-through;
-            color: #999;
+            color: #7ec8e3;
         }
 
         .task-description {
             font-size: 0.85em;
-            color: #666;
+            color: #7ec8e3;
             margin-bottom: 8px;
         }
 
@@ -232,7 +235,7 @@
             display: flex;
             gap: 15px;
             font-size: 0.8em;
-            color: #999;
+            color: #7ec8e3;
         }
 
         .task-duration {
@@ -259,11 +262,12 @@
         }
 
         .progress-section {
-            background: white;
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 15px;
             padding: 30px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
             animation: slideUp 0.6s ease 0.2s both;
+            border: 2px solid #00ff41;
         }
 
         .progress-stats {
@@ -274,12 +278,13 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
             padding: 20px;
             border-radius: 12px;
             text-align: center;
             transition: transform 0.3s ease;
+            border: 1px solid #00ff41;
         }
 
         .stat-card:hover {
@@ -306,13 +311,13 @@
             justify-content: space-between;
             margin-bottom: 10px;
             font-weight: 600;
-            color: #333;
+            color: #00ff41;
         }
 
         .progress-bar {
             width: 100%;
             height: 12px;
-            background: #e5e7eb;
+            background: rgba(0, 255, 65, 0.2);
             border-radius: 10px;
             overflow: hidden;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -320,14 +325,14 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(90deg, #00ff41 0%, #00ffff 100%);
             border-radius: 10px;
             transition: width 0.5s ease;
-            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
         }
 
         .time-breakdown {
-            background: #f8f9fa;
+            background: rgba(0, 255, 65, 0.1);
             border-radius: 12px;
             padding: 20px;
             margin-top: 20px;
@@ -337,7 +342,7 @@
             display: flex;
             justify-content: space-between;
             padding: 10px 0;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #7ec8e3;
             font-size: 0.95em;
         }
 
@@ -346,22 +351,23 @@
         }
 
         .breakdown-label {
-            color: #666;
+            color: #7ec8e3;
         }
 
         .breakdown-value {
             font-weight: 600;
-            color: #667eea;
+            color: #00ff41;
         }
 
         .current-task {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
             padding: 20px;
             border-radius: 12px;
             margin-top: 20px;
             text-align: center;
             animation: glow 2s infinite;
+            border: 2px solid #00ff41;
         }
 
         .current-task-label {
@@ -399,19 +405,19 @@
 
         @keyframes pulse {
             0%, 100% {
-                box-shadow: 0 0 0 3px #764ba2, 0 0 15px rgba(118, 75, 162, 0.5);
+                box-shadow: 0 0 0 3px #00ffff, 0 0 15px rgba(0, 255, 255, 0.5);
             }
             50% {
-                box-shadow: 0 0 0 3px #764ba2, 0 0 25px rgba(118, 75, 162, 0.8);
+                box-shadow: 0 0 0 3px #00ffff, 0 0 25px rgba(0, 255, 255, 0.8);
             }
         }
 
         @keyframes glow {
             0%, 100% {
-                box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+                box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
             }
             50% {
-                box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+                box-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
             }
         }
 
@@ -437,7 +443,7 @@
 
 </head>
 <body>
-    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(0,255,65,0.9);color:#0a0a0a;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← HOME</a>
 
     <div class="container">
         <div class="header">

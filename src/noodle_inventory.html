@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noodle Inventory - Retro Arcade</title>
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
     <style>
         * {
             margin: 0;
@@ -13,8 +14,8 @@
         }
 
         body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            font-family: 'Orbitron', sans-serif;
+            background: #0a0a0a;
+            font-family: 'Courier Prime', monospace;
             color: #7ec8e3;
             min-height: 100vh;
             overflow-x: auto;
@@ -31,8 +32,8 @@
             background: 
                 repeating-linear-gradient(
                     0deg,
-                    rgba(0, 255, 136, 0.03),
-                    rgba(0, 255, 136, 0.03) 1px,
+                    rgba(126, 200, 227, 0.03),
+                    rgba(126, 200, 227, 0.03) 1px,
                     transparent 1px,
                     transparent 2px
                 );
@@ -57,11 +58,11 @@
             padding: 10px 20px;
             border-radius: 25px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Courier Prime', monospace;
             font-size: 12px;
             font-weight: 700;
             transition: all 0.3s ease;
-            border: 2px solid rgba(0, 255, 136, 0.5);
+            border: 2px solid rgba(126, 200, 227, 0.5);
             min-height: 44px;
             display: flex;
             align-items: center;
@@ -85,13 +86,13 @@
         .header {
             text-align: center;
             margin-bottom: 50px;
-            text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+            text-shadow: 0 0 20px rgba(126, 200, 227, 0.8);
             animation: glow 2s ease-in-out infinite;
         }
 
         @keyframes glow {
-            0%, 100% { text-shadow: 0 0 20px rgba(0, 255, 136, 0.8); }
-            50% { text-shadow: 0 0 40px rgba(0, 255, 136, 1), 0 0 60px rgba(255, 0, 136, 0.5); }
+            0%, 100% { text-shadow: 0 0 20px rgba(126, 200, 227, 0.8); }
+            50% { text-shadow: 0 0 40px rgba(126, 200, 227, 1), 0 0 60px rgba(255, 0, 136, 0.5); }
         }
 
         .header h1 {
@@ -120,7 +121,7 @@
             border: 3px solid #7ec8e3;
             border-radius: 10px;
             padding: 30px;
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3), inset 0 0 20px rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 30px rgba(126, 200, 227, 0.3), inset 0 0 20px rgba(126, 200, 227, 0.1);
             position: relative;
             overflow: hidden;
         }
@@ -132,7 +133,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(45deg, transparent 30%, rgba(0, 255, 136, 0.1) 50%, transparent 70%);
+            background: linear-gradient(45deg, transparent 30%, rgba(126, 200, 227, 0.1) 50%, transparent 70%);
             animation: shine 3s infinite;
             pointer-events: none;
         }
@@ -173,11 +174,11 @@
         .form-group select {
             width: 100%;
             padding: 12px;
-            background: rgba(0, 255, 136, 0.1);
+            background: rgba(126, 200, 227, 0.1);
             border: 2px solid #7ec8e3;
             color: #7ec8e3;
             border-radius: 5px;
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Courier Prime', monospace;
             font-size: 12px;
             transition: all 0.3s ease;
             min-height: 44px;
@@ -186,13 +187,13 @@
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            background: rgba(0, 255, 136, 0.2);
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+            background: rgba(126, 200, 227, 0.2);
+            box-shadow: 0 0 15px rgba(126, 200, 227, 0.6);
             border-color: #00ffff;
         }
 
         .form-group input::placeholder {
-            color: rgba(0, 255, 136, 0.5);
+            color: rgba(126, 200, 227, 0.5);
         }
 
         .button-group {
@@ -208,7 +209,7 @@
             color: #1a1a2e;
             border: 2px solid #7ec8e3;
             border-radius: 5px;
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Courier Prime', monospace;
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
@@ -234,13 +235,13 @@
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+            box-shadow: 0 0 20px rgba(126, 200, 227, 0.8);
             border-color: #00ffff;
         }
 
         button:active {
             transform: translateY(0);
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+            box-shadow: 0 0 10px rgba(126, 200, 227, 0.4);
         }
 
         .button-danger {
@@ -268,7 +269,7 @@
         }
 
         .noodle-item {
-            background: rgba(0, 255, 136, 0.05);
+            background: rgba(126, 200, 227, 0.05);
             border-left: 4px solid #7ec8e3;
             padding: 15px;
             margin-bottom: 15px;
@@ -285,7 +286,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
+            background: linear-gradient(90deg, transparent, rgba(126, 200, 227, 0.1), transparent);
             animation: shimmer 2s infinite;
         }
 
@@ -295,8 +296,8 @@
         }
 
         .noodle-item:hover {
-            background: rgba(0, 255, 136, 0.1);
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+            background: rgba(126, 200, 227, 0.1);
+            box-shadow: 0 0 15px rgba(126, 200, 227, 0.3);
             transform: translateX(5px);
         }
 
@@ -329,7 +330,7 @@
         }
 
         .noodle-quantity {
-            background: rgba(0, 255, 136, 0.2);
+            background: rgba(126, 200, 227, 0.2);
             padding: 5px 10px;
             border-radius: 3px;
             font-size: 12px;
@@ -352,7 +353,7 @@
             background: rgba(0, 0, 0, 0.3);
             padding: 8px;
             border-radius: 3px;
-            border: 1px solid rgba(0, 255, 136, 0.3);
+            border: 1px solid rgba(126, 200, 227, 0.3);
         }
 
         .detail-label {
@@ -396,7 +397,7 @@
         }
 
         .status-fresh {
-            background: rgba(0, 255, 136, 0.3);
+            background: rgba(126, 200, 227, 0.3);
             color: #7ec8e3;
             border: 1px solid #7ec8e3;
         }
@@ -447,7 +448,7 @@
             font-family: 'Courier Prime', monospace;
             font-size: 32px;
             color: #7ec8e3;
-            text-shadow: 0 0 15px rgba(0, 255, 136, 0.8);
+            text-shadow: 0 0 15px rgba(126, 200, 227, 0.8);
             margin-bottom: 10px;
             position: relative;
             z-index: 1;
@@ -465,7 +466,7 @@
         .empty-state {
             text-align: center;
             padding: 40px 20px;
-            color: rgba(0, 255, 136, 0.5);
+            color: rgba(126, 200, 227, 0.5);
             position: relative;
             z-index: 1;
         }
@@ -489,7 +490,7 @@
             color: #1a1a2e;
             padding: 15px 25px;
             border-radius: 5px;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+            box-shadow: 0 0 20px rgba(126, 200, 227, 0.8);
             font-weight: 700;
             z-index: 10000;
             animation: slideIn 0.3s ease, slideOut 0.3s ease 2.7s;
@@ -541,12 +542,12 @@
 
         .filter-btn {
             padding: 8px 15px;
-            background: rgba(0, 255, 136, 0.1);
+            background: rgba(126, 200, 227, 0.1);
             border: 2px solid #7ec8e3;
             color: #7ec8e3;
             border-radius: 5px;
             cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Courier Prime', monospace;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
@@ -559,7 +560,7 @@
         .filter-btn.active {
             background: linear-gradient(135deg, #7ec8e3 0%, #5ba8c7 100%);
             color: #1a1a2e;
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+            box-shadow: 0 0 15px rgba(126, 200, 227, 0.6);
         }
 
         .arcade-corner {
@@ -568,8 +569,8 @@
             right: 20px;
             font-family: 'Courier Prime', monospace;
             font-size: 12px;
-            color: rgba(0, 255, 136, 0.3);
-            text-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+            color: rgba(126, 200, 227, 0.3);
+            text-shadow: 0 0 10px rgba(126, 200, 227, 0.2);
             z-index: 100;
             pointer-events: none;
         }
@@ -954,7 +955,7 @@
 
 </head>
 <body>
-    <a href="../index.html" class="home-link">← Home</a>
+    <a href="../index.html" class="home-link">← HOME</a>
 
     <div class="container">
         <div class="header">
@@ -1021,10 +1022,10 @@
             <div class="panel">
                 <div class="panel-title">🎮 QUICK STATS 🎮</div>
                 <div style="position: relative; z-index: 1;">
-                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(0, 255, 136, 0.05); border-radius: 5px; border: 1px solid rgba(0, 255, 136, 0.3);">
+                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(126, 200, 227, 0.05); border-radius: 5px; border: 1px solid rgba(126, 200, 227, 0.3);">
                         <div style="color: #7ec8e3; font-size: 12px; margin-bottom: 8px; font-weight: 700; text-transform: uppercase;">INVENTORY STATUS</div>
                         <div id="inventoryStatus" style="font-size: 13px; line-height: 1.8;">
-                            <div style="color: rgba(0, 255, 136, 0.7);">Loading inventory...</div>
+                            <div style="color: rgba(126, 200, 227, 0.7);">Loading inventory...</div>
                         </div>
                     </div>
                     <div style="margin-bottom: 20px; padding: 15px; background: rgba(255, 170, 0, 0.05); border-radius: 5px; border: 1px solid rgba(255, 170, 0, 0.3);">

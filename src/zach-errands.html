@@ -6,6 +6,7 @@
     <title>Zach's Errands - Itinerary Tracker</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../page-theme.css">
     <style>
         * {
             margin: 0;
@@ -14,11 +15,11 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Courier Prime', monospace;
+            background: #0a0a0a;
             min-height: 100vh;
             padding: 20px;
-            color: #333;
+            color: #7ec8e3;
         }
 
         .container {
@@ -30,7 +31,7 @@
         .header {
             text-align: center;
             margin-bottom: 40px;
-            color: white;
+            color: #00ff41;
         }
 
         .header h1 {
@@ -55,7 +56,7 @@
         .stat-card {
             flex: 1;
             min-width: 150px;
-            background: white;
+            background: rgba(126, 200, 227, 0.1);
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -65,23 +66,24 @@
         .stat-card .number {
             font-size: 2rem;
             font-weight: 700;
-            color: #667eea;
+            color: #00ff41;
             margin-bottom: 5px;
         }
 
         .stat-card .label {
             font-size: 0.9rem;
-            color: #666;
+            color: #7ec8e3;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .add-errand-section {
-            background: white;
+            background: rgba(0, 0, 0, 0.7);
             padding: 25px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             margin-bottom: 30px;
+            border: 2px solid #00ff41;
         }
 
         .add-errand-form {
@@ -103,7 +105,7 @@
         .form-group label {
             font-weight: 600;
             margin-bottom: 8px;
-            color: #333;
+            color: #00ff41;
             font-size: 0.9rem;
         }
 
@@ -111,18 +113,20 @@
         .form-group select,
         .form-group textarea {
             padding: 12px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid #00ff41;
             border-radius: 8px;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Courier Prime', monospace;
             font-size: 1rem;
             transition: border-color 0.3s;
+            background: rgba(0, 0, 0, 0.5);
+            color: #7ec8e3;
         }
 
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #00ffff;
         }
 
         .form-group textarea {
@@ -131,8 +135,8 @@
         }
 
         .btn-add {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #00ff41;
+            color: #0a0a0a;
             border: none;
             padding: 14px 30px;
             border-radius: 8px;
@@ -148,7 +152,7 @@
 
         .btn-add:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 255, 65, 0.4);
         }
 
         .btn-add:active {
@@ -156,7 +160,7 @@
         }
 
         .filter-section {
-            background: white;
+            background: rgba(0, 0, 0, 0.7);
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -165,26 +169,28 @@
             gap: 15px;
             align-items: center;
             flex-wrap: wrap;
+            border: 2px solid #00ff41;
         }
 
         .filter-btn {
             padding: 10px 20px;
-            border: 2px solid #e0e0e0;
-            background: white;
+            border: 2px solid #00ff41;
+            background: rgba(0, 0, 0, 0.5);
             border-radius: 25px;
             cursor: pointer;
             font-weight: 500;
             transition: all 0.3s;
+            color: #7ec8e3;
         }
 
         .filter-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: #667eea;
+            background: #00ff41;
+            color: #0a0a0a;
+            border-color: #00ff41;
         }
 
         .filter-btn:hover {
-            border-color: #667eea;
+            border-color: #00ffff;
         }
 
         .errands-list {
@@ -194,13 +200,14 @@
         }
 
         .errand-item {
-            background: white;
+            background: rgba(0, 0, 0, 0.7);
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
+            border: 2px solid #7ec8e3;
         }
 
         .errand-item.completed {
@@ -214,7 +221,7 @@
             top: 0;
             width: 5px;
             height: 100%;
-            background: #4caf50;
+            background: #00ff41;
         }
 
         .errand-header {
@@ -233,7 +240,7 @@
             width: 24px;
             height: 24px;
             cursor: pointer;
-            accent-color: #667eea;
+            accent-color: #00ff41;
         }
 
         .errand-content {
@@ -243,13 +250,13 @@
         .errand-title {
             font-size: 1.2rem;
             font-weight: 600;
-            color: #333;
+            color: #00ff41;
             margin-bottom: 5px;
         }
 
         .errand-item.completed .errand-title {
             text-decoration: line-through;
-            color: #999;
+            color: #7ec8e3;
         }
 
         .errand-meta {
@@ -258,7 +265,7 @@
             flex-wrap: wrap;
             margin-top: 10px;
             font-size: 0.9rem;
-            color: #666;
+            color: #7ec8e3;
         }
 
         .meta-item {
@@ -268,17 +275,17 @@
         }
 
         .meta-item i {
-            color: #667eea;
+            color: #00ff41;
         }
 
         .errand-notes {
-            background: #f8f9fa;
+            background: rgba(0, 255, 65, 0.1);
             padding: 12px;
             border-radius: 8px;
             margin-top: 12px;
             font-size: 0.95rem;
-            color: #555;
-            border-left: 3px solid #667eea;
+            color: #7ec8e3;
+            border-left: 3px solid #00ff41;
         }
 
         .errand-actions {
@@ -301,7 +308,7 @@
         }
 
         .btn-delete {
-            background: #ff5252;
+            background: #ff0000;
             color: white;
         }
 
@@ -347,25 +354,26 @@
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            background: white;
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid #7ec8e3;
         }
 
         .empty-state i {
             font-size: 4rem;
-            color: #e0e0e0;
+            color: #7ec8e3;
             margin-bottom: 20px;
         }
 
         .empty-state h3 {
             font-size: 1.5rem;
-            color: #666;
+            color: #00ff41;
             margin-bottom: 10px;
         }
 
         .empty-state p {
-            color: #999;
+            color: #7ec8e3;
         }
 
         @media (max-width: 768px) {
@@ -404,13 +412,14 @@
         }
 
         .modal-content {
-            background: white;
+            background: rgba(0, 0, 0, 0.9);
             padding: 30px;
             border-radius: 15px;
             max-width: 500px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
+            border: 2px solid #00ff41;
         }
 
         .modal-header {
@@ -421,7 +430,7 @@
         }
 
         .modal-header h2 {
-            color: #333;
+            color: #00ff41;
         }
 
         .btn-close {
@@ -429,18 +438,18 @@
             border: none;
             font-size: 1.5rem;
             cursor: pointer;
-            color: #999;
+            color: #7ec8e3;
             transition: color 0.3s;
         }
 
         .btn-close:hover {
-            color: #333;
+            color: #00ff41;
         }
     </style>
 
 </head>
 <body>
-    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(0,255,65,0.9);color:#0a0a0a;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← HOME</a>
 
     <div class="container">
         <div class="header">

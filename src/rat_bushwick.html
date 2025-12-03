@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🐀 RAT_BUSHWICK: A Rodent's Guide to Dining 🐀</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Courier Prime&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
     <style>
         * {
             margin: 0;
@@ -13,12 +14,12 @@
         }
 
         body {
-            font-family: 'VT323', monospace;
+            font-family: 'Courier Prime', monospace;
             background: #0a0a0a;
-            color: #00ff9f;
+            color: #7ec8e3;
             overflow-x: hidden;
             min-height: 100vh;
-            text-shadow: 0 0 8px rgba(0, 255, 159, 0.3);
+            text-shadow: 0 0 8px rgba(126, 200, 227, 0.3);
         }
 
         .scanlines {
@@ -41,14 +42,14 @@
         header {
             text-align: center;
             padding: 40px 20px;
-            border-bottom: 3px solid #00ff9f;
-            box-shadow: 0 0 20px rgba(0, 255, 159, 0.4);
+            border-bottom: 3px solid #7ec8e3;
+            box-shadow: 0 0 20px rgba(126, 200, 227, 0.4);
             animation: glitch 3s infinite;
         }
 
         @keyframes glitch {
-            0%, 100% { text-shadow: 0 0 10px rgba(0, 255, 159, 0.5); }
-            50% { text-shadow: 0 0 20px rgba(255, 85, 255, 0.5), 0 0 10px rgba(0, 255, 159, 0.3); }
+            0%, 100% { text-shadow: 0 0 10px rgba(126, 200, 227, 0.5); }
+            50% { text-shadow: 0 0 20px rgba(255, 85, 255, 0.5), 0 0 10px rgba(126, 200, 227, 0.3); }
         }
 
         h1 {
@@ -97,18 +98,18 @@
 
         .menu-item {
             background: #1a1a1a;
-            border: 2px solid #00ff9f;
+            border: 2px solid #7ec8e3;
             padding: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+            box-shadow: 0 0 10px rgba(126, 200, 227, 0.3);
         }
 
         .menu-item:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(0, 255, 159, 0.7);
+            box-shadow: 0 0 30px rgba(126, 200, 227, 0.7);
             border-color: #ff55ff;
         }
 
@@ -159,7 +160,7 @@
 
         .difficulty {
             display: inline-block;
-            background: #ff006e;
+            background: #ff0000;
             color: #000;
             padding: 5px 10px;
             font-weight: bold;
@@ -169,7 +170,7 @@
         }
 
         .btn {
-            background: #ff006e;
+            background: #ff0000;
             color: #000;
             border: 2px solid #7ec8e3;
             padding: 10px 20px;
@@ -221,7 +222,7 @@
         }
 
         .close {
-            color: #ff006e;
+            color: #ff0000;
             float: right;
             font-size: 2em;
             font-weight: bold;
@@ -236,7 +237,7 @@
 
         .modal h2 {
             font-family: 'Courier Prime', monospace;
-            color: #ff006e;
+            color: #ff0000;
             margin-bottom: 20px;
             font-size: 1.5em;
         }
@@ -254,7 +255,7 @@
         }
 
         .achievement {
-            background: linear-gradient(135deg, #ff006e, #ffbe0b);
+            background: linear-gradient(135deg, #ff0000, #ffbe0b);
             color: #000;
             padding: 15px;
             margin: 15px 0;
@@ -284,7 +285,7 @@
         }
 
         .stat-box .label {
-            color: #ff006e;
+            color: #ff0000;
             font-size: 0.8em;
             margin-bottom: 10px;
         }
@@ -298,7 +299,7 @@
             display: inline-block;
             width: 20px;
             height: 20px;
-            background: #ff006e;
+            background: #ff0000;
             margin: 0 2px;
             animation: hop 0.5s ease-in-out infinite;
         }
@@ -345,7 +346,7 @@
             position: absolute;
             width: 20px;
             height: 20px;
-            background: #ff006e;
+            background: #ff0000;
             border-radius: 50%;
         }
 
@@ -354,7 +355,7 @@
             position: absolute;
             width: 10px;
             height: 5px;
-            background: #ff006e;
+            background: #ff0000;
             right: -8px;
             top: 5px;
             border-radius: 50%;
@@ -379,7 +380,7 @@
         }
 
         .leaderboard h3 {
-            color: #ff006e;
+            color: #ff0000;
             font-family: 'Courier Prime', monospace;
             margin-bottom: 15px;
         }
@@ -397,7 +398,7 @@
         }
 
         .rank {
-            color: #ff006e;
+            color: #ff0000;
             font-weight: bold;
             min-width: 40px;
         }
@@ -446,9 +447,9 @@
             min-width: 64px;
             min-height: 64px;
             font-size: 28px;
-            background: rgba(0, 255, 159, 0.3);
-            color: #00ff9f;
-            border: 3px solid #00ff9f;
+            background: rgba(126, 200, 227, 0.3);
+            color: #7ec8e3;
+            border: 3px solid #7ec8e3;
             border-radius: 8px;
             cursor: pointer;
             user-select: none;
@@ -459,7 +460,7 @@
         }
 
         .game-control-btn:active {
-            background: #00ff9f;
+            background: #7ec8e3;
             color: #000;
             transform: scale(0.95);
         }
@@ -507,7 +508,7 @@
 
 </head>
 <body>
-    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(255,0,0,0.9);color:#7ec8e3;padding:12px 24px;border:2px solid #7ec8e3;box-shadow:0 0 20px rgba(0,255,65,0.5);font-family:'VT323',monospace;font-size:1.2em;">HOME</a>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(255,0,0,0.9);color:#7ec8e3;padding:12px 24px;border:2px solid #7ec8e3;box-shadow:0 0 20px rgba(0,255,65,0.5);font-family:'Courier Prime',monospace;font-size:1.2em;">← HOME</a>
     
     <div class="scanlines"></div>
 
@@ -562,7 +563,7 @@
 
         <!-- Mini Game Section - FEATURED -->
         <div class="mini-game" style="margin: 15px 0 40px 0;">
-            <h2 style="font-family: 'Courier Prime', monospace; color: #ff006e; margin-bottom: 20px; font-size: 2em;">🎮 PIZZA COLLECTOR 🎮</h2>
+            <h2 style="font-family: 'Courier Prime', monospace; color: #ff0000; margin-bottom: 20px; font-size: 2em;">🎮 PIZZA COLLECTOR 🎮</h2>
             <div class="game-canvas" id="gameCanvas" style="max-width: 500px; height: 400px;"></div>
 
             <!-- Mobile Controls -->
@@ -579,16 +580,16 @@
 
             <div class="game-stats" style="display: flex; gap: 20px; justify-content: center; margin: 15px 0; font-size: 1.2em;">
                 <span style="color: #ffbe0b;">Score: <span id="gameScore">0</span></span>
-                <span style="color: #ff006e;">Lives: <span id="gameLives">3</span></span>
+                <span style="color: #ff0000;">Lives: <span id="gameLives">3</span></span>
                 <span style="color: #7ec8e3;">Level: <span id="gameLevel">1</span></span>
             </div>
 
             <button class="btn" onclick="startGame()" style="font-size: 0.9em; padding: 10px 20px;">START GAME</button>
 
-            <p style="margin-top: 15px; font-size: 1.1em; color: #00ff9f;">Collect 🍕 pizza! Avoid 🐱 cats! Grab 🧀 cheese for speed! Press SPACE to hide!</p>
+            <p style="margin-top: 15px; font-size: 1.1em; color: #7ec8e3;">Collect 🍕 pizza! Avoid 🐱 cats! Grab 🧀 cheese for speed! Press SPACE to hide!</p>
         </div>
 
-        <h2 style="font-family: 'Courier Prime', monospace; color: #ff006e; text-align: center; margin: 40px 0 30px; font-size: 1.8em; border-top: 2px solid #7ec8e3; padding-top: 30px;">🧩 RAT BRAIN TEASERS 🧩</h2>
+        <h2 style="font-family: 'Courier Prime', monospace; color: #ff0000; text-align: center; margin: 40px 0 30px; font-size: 1.8em; border-top: 2px solid #7ec8e3; padding-top: 30px;">🧩 RAT BRAIN TEASERS 🧩</h2>
 
         <div class="menu-grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px;">
             <!-- Rat Trivia -->
@@ -899,7 +900,7 @@
                     <div style="color: #ffbe0b; margin-bottom: 15px; text-align: center;">
                         QUESTION ${currentQuestion + 1}/${questions.length}
                     </div>
-                    <div style="color: #00ff9f; font-size: 1.2em; margin-bottom: 20px;">
+                    <div style="color: #7ec8e3; font-size: 1.2em; margin-bottom: 20px;">
                         ${q.question}
                     </div>
                     <div id="quizOptions" style="display: grid; gap: 10px;">
@@ -974,7 +975,7 @@
                 if (currentQuestion < questions.length - 1) {
                     feedback.innerHTML += `
                         <button onclick="nextQuestion()" 
-                                style="background: #ff006e; 
+                                style="background: #ff0000; 
                                        color: #000; 
                                        border: 2px solid #7ec8e3; 
                                        padding: 10px 20px; 
@@ -1029,7 +1030,7 @@
             document.getElementById('modalBody').innerHTML = `
                 <div style="background: #000; border: 2px solid #7ec8e3; padding: 30px; text-align: center;">
                     <div style="color: #ffbe0b; font-size: 2em; margin-bottom: 20px;">QUIZ COMPLETE!</div>
-                    <div style="color: #00ff9f; font-size: 1.4em; margin-bottom: 15px;">
+                    <div style="color: #7ec8e3; font-size: 1.4em; margin-bottom: 15px;">
                         Final Score: ${quizScore}/${questions.length}
                     </div>
                     <div style="color: #ff55ff; font-size: 1.1em; margin-bottom: 20px;">
@@ -1077,7 +1078,7 @@
                                     <span style="color: #ff55ff; font-size: 1.2em; font-weight: bold;">${word.scrambled}</span>
                                     <span style="color: #ffbe0b;">→</span>
                                     <input type="text" id="answer${index}" 
-                                           style="background: #0a0a0a; border: 2px solid #00ff9f; color: #00ff9f; padding: 8px; font-family: 'Courier Prime', monospace; text-transform: uppercase;"
+                                           style="background: #0a0a0a; border: 2px solid #7ec8e3; color: #7ec8e3; padding: 8px; font-family: 'Courier Prime', monospace; text-transform: uppercase;"
                                            placeholder="ANSWER"
                                            ${scrambleCompleted[index] ? 'disabled' : ''}
                                            onkeyup="checkScrambleAnswer(${index}, this.value)"
@@ -1157,7 +1158,7 @@
             document.getElementById('modalBody').innerHTML = `
                 <div style="background: #000; border: 2px solid #7ec8e3; padding: 30px; text-align: center;">
                     <div style="color: #ffbe0b; font-size: 2em; margin-bottom: 20px;">🎉 ALL WORDS UNSCRAMBLED! 🎉</div>
-                    <div style="color: #00ff9f; font-size: 1.4em; margin-bottom: 15px;">
+                    <div style="color: #7ec8e3; font-size: 1.4em; margin-bottom: 15px;">
                         You solved all ${activities.scramble.words.length} word puzzles!
                     </div>
                     <div style="color: #ff55ff; font-size: 1.1em; margin-bottom: 20px;">
@@ -1604,7 +1605,7 @@
             }
 
             // Draw player (rat) with speed boost and hiding effects
-            const ratColor = speedBoostTimer > 0 ? '#7ec8e3' : '#ff006e';
+            const ratColor = speedBoostTimer > 0 ? '#7ec8e3' : '#ff0000';
 
             // Hiding indicator - draw box around rat
             if (isHiding) {
@@ -1638,7 +1639,7 @@
             gameCtx.fill();
 
             // Nose
-            gameCtx.fillStyle = '#ff006e';
+            gameCtx.fillStyle = '#ff0000';
             gameCtx.beginPath();
             gameCtx.arc(playerX + 18, playerY + 12, 2, 0, Math.PI * 2);
             gameCtx.fill();
@@ -1654,7 +1655,7 @@
             gameCtx.globalAlpha = 1.0; // Reset opacity
 
             // Display hide status
-            gameCtx.font = '14px VT323';
+            gameCtx.font = '14px Courier Prime';
             gameCtx.textAlign = 'center';
             if (isHiding) {
                 gameCtx.fillStyle = '#ff55ff';
@@ -1663,7 +1664,7 @@
                 gameCtx.fillStyle = '#ffbe0b';
                 gameCtx.fillText(`Hide Cooldown: ${Math.ceil(hideCooldown / 60)}s`, canvasWidth / 2, 30);
             } else {
-                gameCtx.fillStyle = '#00ff9f';
+                gameCtx.fillStyle = '#7ec8e3';
                 gameCtx.fillText('HIDE READY!', canvasWidth / 2, 30);
             }
             gameCtx.textAlign = 'left';
@@ -1680,12 +1681,12 @@
             gameCtx.fillRect(0, 0, canvasWidth, canvasHeight);
 
             gameCtx.fillStyle = '#ff0000';
-            gameCtx.font = 'bold 24px VT323';
+            gameCtx.font = 'bold 24px Courier Prime';
             gameCtx.textAlign = 'center';
             gameCtx.fillText('GAME OVER', canvasWidth / 2, canvasHeight / 2 - 30);
 
             gameCtx.fillStyle = '#7ec8e3';
-            gameCtx.font = '18px VT323';
+            gameCtx.font = '18px Courier Prime';
             gameCtx.fillText(`Final Score: ${gameScore}`, canvasWidth / 2, canvasHeight / 2);
             gameCtx.fillText(`Level Reached: ${gameLevel}`, canvasWidth / 2, canvasHeight / 2 + 25);
             gameCtx.fillText('Click START to play again', canvasWidth / 2, canvasHeight / 2 + 60);

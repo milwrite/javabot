@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Sisyphus - The Endless Scroll</title>
+    <link rel="stylesheet" href="../page-theme.css">
     <style>
         * {
             margin: 0;
@@ -12,14 +13,14 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Courier Prime', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            color: #333;
         }
 
         .container {
@@ -37,15 +38,16 @@
             position: relative;
             width: 600px;
             height: 500px;
-            background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 100%);
+            background: linear-gradient(to bottom, #0a1a1a 0%, #000a0a 100%);
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 255, 65, 0.1);
             overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-end;
             padding: 40px 20px;
+            border: 2px solid #00ff41;
         }
 
         .mountain {
@@ -53,28 +55,30 @@
             bottom: 0;
             width: 100%;
             height: 150px;
-            background: linear-gradient(135deg, #8B7355 0%, #654321 100%);
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
             clip-path: polygon(0 60%, 50% 0%, 100% 60%, 100% 100%, 0 100%);
             z-index: 1;
+            border-top: 2px solid #00ff41;
         }
 
         .boulder {
             width: 80px;
             height: 80px;
-            background: radial-gradient(circle at 30% 30%, #555, #222);
+            background: radial-gradient(circle at 30% 30%, #333, #111);
             border-radius: 50%;
             position: absolute;
             z-index: 10;
             cursor: pointer;
-            box-shadow: inset -3px -3px 10px rgba(0, 0, 0, 0.5), 0 10px 30px rgba(0, 0, 0, 0.4);
+            box-shadow: inset -3px -3px 10px rgba(0, 0, 0, 0.5), 0 10px 30px rgba(0, 255, 65, 0.2);
             transition: transform 0.1s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 40px;
             font-weight: bold;
-            color: #fff;
+            color: #00ff41;
             user-select: none;
+            border: 2px solid #00ffff;
         }
 
         .boulder:hover {
@@ -98,7 +102,7 @@
         .sisyphus-head {
             width: 20px;
             height: 20px;
-            background: #f4a460;
+            background: #ff0000;
             border-radius: 50%;
             margin-bottom: 5px;
         }
@@ -106,7 +110,7 @@
         .sisyphus-body {
             width: 30px;
             height: 25px;
-            background: #ff6b6b;
+            background: #00ffff;
             border-radius: 5px;
         }
 
@@ -121,16 +125,17 @@
         .loading-bar {
             width: 100%;
             height: 8px;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(0, 255, 65, 0.2);
             border-radius: 10px;
             overflow: hidden;
             margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 5px rgba(0, 255, 65, 0.2);
+            border: 1px solid #00ff41;
         }
 
         .loading-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, #00ff41, #00ffff);
             border-radius: 10px;
             animation: loading 3s ease-in-out infinite;
             width: 30%;
@@ -144,7 +149,7 @@
 
         .loading-text {
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.7);
+            color: #00ff41;
             text-align: center;
             margin-bottom: 10px;
             font-weight: 500;
@@ -161,7 +166,7 @@
         .buffer-dot {
             width: 8px;
             height: 8px;
-            background: rgba(255, 255, 255, 0.6);
+            background: #00ffff;
             border-radius: 50%;
             animation: buffer 1.4s infinite;
         }
@@ -183,7 +188,7 @@
             position: absolute;
             top: 120px;
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.8);
+            color: #7ec8e3;
             font-weight: bold;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
@@ -191,26 +196,27 @@
         .info-panel {
             position: absolute;
             bottom: 180px;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(10, 10, 10, 0.95);
             padding: 20px;
             border-radius: 10px;
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 255, 65, 0.1);
             z-index: 8;
             text-align: center;
+            border: 2px solid #00ffff;
         }
 
         .info-title {
             font-size: 16px;
             font-weight: bold;
-            color: #667eea;
+            color: #00ff41;
             margin-bottom: 8px;
         }
 
         .info-text {
             font-size: 13px;
-            color: #666;
+            color: #7ec8e3;
             line-height: 1.5;
         }
 
@@ -218,32 +224,33 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(10, 10, 10, 0.9);
             padding: 15px 20px;
             border-radius: 10px;
             font-size: 12px;
-            color: #333;
+            color: #00ff41;
             z-index: 20;
             min-width: 150px;
+            border: 1px solid #00ff41;
         }
 
         .stat-row {
             display: flex;
             justify-content: space-between;
             margin: 5px 0;
-            font-family: 'Courier New', monospace;
+            font-family: 'Courier Prime', monospace;
         }
 
         .stat-label {
             font-weight: bold;
-            color: #667eea;
+            color: #00ffff;
             margin-right: 10px;
         }
 
         .instruction {
             position: absolute;
             top: 200px;
-            color: rgba(255, 255, 255, 0.9);
+            color: #7ec8e3;
             font-size: 14px;
             text-align: center;
             animation: pulse 2s ease-in-out infinite;
@@ -261,7 +268,7 @@
             left: 20px;
             right: 20px;
             background: rgba(0, 0, 0, 0.7);
-            color: #fff;
+            color: #00ff41;
             padding: 15px;
             border-radius: 8px;
             font-size: 12px;
@@ -269,32 +276,12 @@
             z-index: 20;
             max-width: 500px;
             line-height: 1.6;
+            border: 1px solid #00ff41;
         }
 
         .particle {
             position: absolute;
             pointer-events: none;
-        }
-
-        .home-link {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 9999;
-            text-decoration: none;
-            background: rgba(102, 126, 234, 0.9);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-
-        .home-link:hover {
-            background: rgba(102, 126, 234, 1);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
         }
 
         .reset-button {
@@ -303,26 +290,27 @@
             right: 20px;
             z-index: 9999;
             padding: 12px 24px;
-            background: rgba(255, 107, 107, 0.9);
-            color: white;
-            border: none;
+            background: #ff0000;
+            color: #0a0a0a;
+            border: 2px solid #ff0000;
             border-radius: 25px;
             cursor: pointer;
             font-weight: 500;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            font-family: 'Courier Prime', monospace;
+            box-shadow: 0 4px 10px rgba(255, 0, 0, 0.2);
             transition: all 0.3s ease;
         }
 
         .reset-button:hover {
-            background: rgba(255, 107, 107, 1);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            background: #00ffff;
+            border-color: #00ffff;
+            color: #0a0a0a;
         }
     </style>
 
 </head>
 <body>
-    <a href="../index.html" class="home-link">← Home</a>
+    <a href="../index.html" class="home-link">← HOME</a>
     
     <div class="container">
         <div class="scene" id="scene">

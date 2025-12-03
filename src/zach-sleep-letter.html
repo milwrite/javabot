@@ -13,9 +13,9 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
+            font-family: 'Courier Prime', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
             overflow-x: hidden;
         }
 
@@ -50,13 +50,14 @@
         }
 
         .letter {
-            background: white;
+            background: rgba(0, 0, 0, 0.8);
             border-radius: 20px;
             padding: 50px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             margin-bottom: 30px;
             position: relative;
             overflow: hidden;
+            border: 2px solid #00ff41;
         }
 
         .letter::before {
@@ -66,11 +67,11 @@
             left: 0;
             right: 0;
             height: 10px;
-            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            background: linear-gradient(90deg, #00ff41, #ff0000, #00ffff);
         }
 
         h1 {
-            color: #667eea;
+            color: #00ff41;
             font-size: 2.5em;
             margin-bottom: 20px;
             text-align: center;
@@ -90,7 +91,7 @@
 
         .date {
             text-align: right;
-            color: #666;
+            color: #7ec8e3;
             margin-bottom: 30px;
             font-style: italic;
         }
@@ -98,23 +99,23 @@
         .greeting {
             font-size: 1.2em;
             margin-bottom: 20px;
-            color: #555;
+            color: #7ec8e3;
         }
 
         .paragraph {
             line-height: 1.8;
             margin-bottom: 20px;
-            color: #444;
+            color: #7ec8e3;
             font-size: 1.05em;
         }
 
         .emphasis {
-            color: #667eea;
+            color: #ff0000;
             font-weight: bold;
         }
 
         .chart-container {
-            background: #f8f9fa;
+            background: rgba(126, 200, 227, 0.1);
             border-radius: 15px;
             padding: 30px;
             margin: 30px 0;
@@ -122,7 +123,7 @@
         }
 
         .chart-title {
-            color: #667eea;
+            color: #00ff41;
             font-size: 1.4em;
             margin-bottom: 20px;
             text-align: center;
@@ -130,8 +131,8 @@
         }
 
         .interactive-section {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
             padding: 30px;
             border-radius: 15px;
             margin: 30px 0;
@@ -145,7 +146,7 @@
             border-radius: 5px;
             outline: none;
             -webkit-appearance: none;
-            background: rgba(255,255,255,0.3);
+            background: rgba(0, 255, 65, 0.3);
         }
 
         .sleep-slider::-webkit-slider-thumb {
@@ -154,7 +155,7 @@
             width: 25px;
             height: 25px;
             border-radius: 50%;
-            background: white;
+            background: #00ff41;
             cursor: pointer;
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
@@ -163,7 +164,7 @@
             width: 25px;
             height: 25px;
             border-radius: 50%;
-            background: white;
+            background: #00ff41;
             cursor: pointer;
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             border: none;
@@ -178,8 +179,8 @@
         .health-indicator {
             display: inline-block;
             padding: 15px 30px;
-            background: white;
-            color: #667eea;
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
             border-radius: 25px;
             font-weight: bold;
             margin-top: 10px;
@@ -194,7 +195,7 @@
         }
 
         .stat-card {
-            background: white;
+            background: rgba(126, 200, 227, 0.1);
             padding: 25px;
             border-radius: 15px;
             text-align: center;
@@ -209,12 +210,12 @@
         .stat-number {
             font-size: 2.5em;
             font-weight: bold;
-            color: #667eea;
+            color: #00ff41;
             margin-bottom: 10px;
         }
 
         .stat-label {
-            color: #666;
+            color: #7ec8e3;
             font-size: 0.9em;
         }
 
@@ -222,19 +223,19 @@
             margin-top: 40px;
             text-align: right;
             font-style: italic;
-            color: #666;
+            color: #7ec8e3;
         }
 
         .sleep-tips {
-            background: #e3f2fd;
+            background: rgba(0, 255, 65, 0.1);
             padding: 25px;
             border-radius: 15px;
             margin: 30px 0;
-            border-left: 5px solid #667eea;
+            border-left: 5px solid #00ff41;
         }
 
         .sleep-tips h3 {
-            color: #667eea;
+            color: #00ff41;
             margin-bottom: 15px;
         }
 
@@ -275,13 +276,13 @@
         }
 
         .tired-zach {
-            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
-            color: white;
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
         }
 
         .rested-zach {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
         }
 
         .emoji {
@@ -312,7 +313,7 @@
     <link rel="stylesheet" href="../page-theme.css">
 </head>
 <body>
-    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(0,255,65,0.9);color:#0a0a0a;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← HOME</a>
 
     <div class="stars" id="stars"></div>
 

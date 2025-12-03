@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cen's Veggie Haul - Farmer's Market</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
     <style>
         * {
             margin: 0;
@@ -13,8 +14,8 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Courier Prime', monospace;
+            background: #0a0a0a;
             min-height: 100vh;
             padding: 40px 20px;
             overflow-x: hidden;
@@ -27,7 +28,7 @@
 
         .header {
             text-align: center;
-            color: white;
+            color: #00ff41;
             margin-bottom: 50px;
             animation: slideDown 0.6s ease-out;
         }
@@ -47,11 +48,12 @@
             font-size: 2.5em;
             font-weight: bold;
             margin-top: 20px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(0, 255, 65, 0.2);
             padding: 20px 30px;
             border-radius: 15px;
             display: inline-block;
             backdrop-filter: blur(10px);
+            color: #00ff41;
         }
 
         .veggie-grid {
@@ -62,7 +64,7 @@
         }
 
         .veggie-card {
-            background: white;
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 20px;
             padding: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
@@ -70,6 +72,7 @@
             cursor: pointer;
             position: relative;
             overflow: hidden;
+            border: 2px solid #7ec8e3;
         }
 
         .veggie-card::before {
@@ -102,39 +105,40 @@
         .veggie-name {
             font-size: 1.5em;
             font-weight: bold;
-            color: #333;
+            color: #00ff41;
             margin-bottom: 10px;
         }
 
         .veggie-quantity {
-            color: #666;
+            color: #7ec8e3;
             font-size: 0.95em;
             margin-bottom: 15px;
         }
 
         .veggie-price {
             font-size: 1.3em;
-            color: #667eea;
+            color: #ff0000;
             font-weight: bold;
             margin-bottom: 10px;
         }
 
         .price-per-unit {
-            color: #999;
+            color: #7ec8e3;
             font-size: 0.85em;
         }
 
         .breakdown-section {
-            background: white;
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 20px;
             padding: 40px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             animation: slideUp 0.6s ease-out;
+            border: 2px solid #00ff41;
         }
 
         .breakdown-title {
             font-size: 2em;
-            color: #333;
+            color: #00ff41;
             margin-bottom: 30px;
             text-align: center;
         }
@@ -145,8 +149,8 @@
         }
 
         .breakdown-table thead {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
         }
 
         .breakdown-table th {
@@ -157,11 +161,12 @@
 
         .breakdown-table td {
             padding: 15px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #7ec8e3;
+            color: #7ec8e3;
         }
 
         .breakdown-table tbody tr:hover {
-            background: #f9f9f9;
+            background: rgba(0, 255, 65, 0.1);
         }
 
         .breakdown-table tbody tr:last-child td {
@@ -169,13 +174,13 @@
         }
 
         .total-row {
-            background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
+            background: rgba(0, 255, 65, 0.1);
             font-weight: bold;
             font-size: 1.1em;
         }
 
         .total-row td:last-child {
-            color: #667eea;
+            color: #00ff41;
             font-size: 1.3em;
         }
 
@@ -190,8 +195,8 @@
         }
 
         .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #00ff41;
+            color: #0a0a0a;
             border: none;
             padding: 12px 30px;
             border-radius: 25px;
@@ -199,12 +204,12 @@
             cursor: pointer;
             margin: 10px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+            box-shadow: 0 4px 15px rgba(0, 255, 65, 0.4);
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102,126,234,0.6);
+            box-shadow: 0 6px 20px rgba(0, 255, 65, 0.6);
         }
 
         .btn:active {
@@ -217,9 +222,9 @@
         }
 
         .filter-btn {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 2px solid white;
+            background: rgba(0, 255, 65, 0.1);
+            color: #7ec8e3;
+            border: 2px solid #00ff41;
             padding: 10px 20px;
             border-radius: 20px;
             margin: 5px;
@@ -230,8 +235,8 @@
 
         .filter-btn:hover,
         .filter-btn.active {
-            background: white;
-            color: #667eea;
+            background: #00ff41;
+            color: #0a0a0a;
         }
 
         .stats {
@@ -242,13 +247,13 @@
         }
 
         .stat-card {
-            background: rgba(255,255,255,0.2);
+            background: rgba(0, 255, 65, 0.1);
             backdrop-filter: blur(10px);
-            color: white;
+            color: #00ff41;
             padding: 25px;
             border-radius: 15px;
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: 1px solid #00ff41;
         }
 
         .stat-number {
@@ -315,7 +320,7 @@
 
 </head>
 <body>
-    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(0,255,65,0.9);color:#0a0a0a;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← HOME</a>
 
     <div class="container">
         <div class="header">
