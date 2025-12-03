@@ -299,14 +299,8 @@
       "title": "Coffee in Snow",
       "icon": "☕",
       "description": "cozy particle coffee ritual",
-      "collection": "utilities-apps",
+      "collection": "stories-content",
       "hidden": false
-    },
-    "winter-brew": {
-      "title": "Winter Brew",
-      "description": "Winter Brew noir project",
-      "icon": "🌐",
-      "collection": "unsorted"
     }
   }
 }
