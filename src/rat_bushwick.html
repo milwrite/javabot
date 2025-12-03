@@ -537,10 +537,17 @@
         </div>
 
         <!-- Breaking News Bulletin -->
-        <div class="breaking-news" style="background: linear-gradient(45deg, #ff0000, #ff006e); color: #000; padding: 20px; margin: 20px 0; border: 3px solid #ffbe0b; animation: pulse 1s infinite; font-weight: bold;">
-            <div style="text-align: center; font-size: 1.4em; margin-bottom: 10px;">🚨 BREAKING NEWS 🚨</div>
-            <div style="font-size: 1.1em;">STARR STREET INFESTATION CRISIS: Residents report friendly rats "running right up to you" as Hunter Boone contracts giardia from rat exposure. City conducts multiple inspections but residents demand more frequent extermination. Some throwing poison on sidewalks.</div>
-            <div style="margin-top: 10px; font-size: 0.9em; text-align: center;">Last City Inspection: September 20th | Health Alert Level: MAXIMUM</div>
+        <div class="breaking-news" style="background: #1a1a2e; color: #00ff9f; padding: 25px; margin: 20px 0; border: 2px solid #ff006e; border-radius: 8px; box-shadow: 0 0 15px rgba(255, 0, 110, 0.3);">
+            <div style="text-align: center; font-size: 1.3em; margin-bottom: 15px; color: #ff006e; text-shadow: 0 0 8px rgba(255, 0, 110, 0.5);">🚨 BREAKING NEWS 🚨</div>
+            <div style="font-size: 1em; line-height: 1.4; margin-bottom: 12px;">
+                <strong>STARR STREET INFESTATION CRISIS:</strong> Residents report friendly rats "running right up to you" as Hunter Boone contracts giardia from rat exposure.
+            </div>
+            <div style="font-size: 0.95em; line-height: 1.3; margin-bottom: 12px;">
+                City conducts multiple inspections but residents demand more frequent extermination. Some throwing poison on sidewalks.
+            </div>
+            <div style="font-size: 0.85em; text-align: center; color: #7ec8e3; border-top: 1px solid rgba(126, 200, 227, 0.3); padding-top: 10px;">
+                Last City Inspection: September 20th | Health Alert Level: <span style="color: #ff006e;">MAXIMUM</span>
+            </div>
         </div>
 
         <div class="warning">
@@ -549,7 +556,7 @@
         </div>
 
         <!-- Mini Game Section - FEATURED -->
-        <div class="mini-game" style="margin-bottom: 40px;">
+        <div class="mini-game" style="margin: 15px 0 40px 0;">
             <h2 style="font-family: 'Courier Prime', monospace; color: #ff006e; margin-bottom: 20px; font-size: 2em;">🎮 PIZZA COLLECTOR 🎮</h2>
             <div class="game-canvas" id="gameCanvas" style="max-width: 500px; height: 400px;"></div>
 
@@ -578,126 +585,33 @@
 
         <h2 style="font-family: 'Courier Prime', monospace; color: #ff006e; text-align: center; margin: 40px 0 30px; font-size: 1.8em; border-top: 2px solid #7ec8e3; padding-top: 30px;">🧩 RAT BRAIN TEASERS 🧩</h2>
 
-        <div class="menu-grid">
-            <!-- Cheese Maze Puzzle -->
-            <div class="menu-item">
-                <h3>🧀 CHEESE MAZE</h3>
-                <p>Navigate the ASCII maze to reach the legendary cheese wheel!</p>
-                <div class="ascii-art">
-█████████
-█ 🐀    █
-█ ███ █ █
-█   █ █ █
-█ █   █ █
-█ █████ █
-█     🧀█
-█████████</div>
-                <div class="difficulty">DIFFICULTY: EASY</div>
-                <button class="btn" onclick="openActivity('maze')">SOLVE PUZZLE</button>
-            </div>
-
+        <div class="menu-grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px;">
             <!-- Rat Trivia -->
             <div class="menu-item">
-                <h3>🧠 RAT TRIVIA</h3>
-                <p>Test your knowledge of Bushwick rat culture and survival tactics!</p>
-                <div class="ascii-art">
-  /\_/\
- ( ?.? )
-  > ^ <
- /|   |\
-(_|   |_)
- Q: WHAT?</div>
+                <h3>🧠 RAT TRIVIA CHALLENGE</h3>
+                <p>Test your knowledge of Bushwick rat culture, survival tactics, and current infestation news! Interactive 5-question quiz with real-time scoring and explanations.</p>
+                <div style="background: #000; border: 1px solid #7ec8e3; padding: 15px; margin: 15px 0; font-size: 0.9em; color: #7ec8e3;">
+                    ✅ Multiple choice questions<br>
+                    ✅ Current Bushwick rat news<br>
+                    ✅ Instant feedback & explanations<br>
+                    ✅ Performance-based rewards
+                </div>
                 <div class="difficulty">DIFFICULTY: MEDIUM</div>
-                <button class="btn" onclick="openActivity('trivia')">START QUIZ</button>
-            </div>
-
-            <!-- Pizza Math -->
-            <div class="menu-item">
-                <h3>🍕 PIZZA MATH</h3>
-                <p>Calculate optimal pizza slice ratios for the rat colony!</p>
-                <div class="ascii-art">
-   8 rats
-   3 slices
-   = ???
-
-  SOLVE TO
-  SURVIVE</div>
-                <div class="difficulty">DIFFICULTY: HARD</div>
-                <button class="btn" onclick="openActivity('math')">CALCULATE</button>
+                <button class="btn" onclick="openActivity('trivia')">START INTERACTIVE QUIZ</button>
             </div>
 
             <!-- Word Scramble -->
             <div class="menu-item">
-                <h3>📝 RAT SCRAMBLE</h3>
-                <p>Unscramble rat-related words to unlock secret knowledge!</p>
-                <div class="ascii-art">
-   ~~~
-  (o o)
-   \ - /
-    | |
-
-ZZEIP = ?
-EHSECE = ?</div>
+                <h3>📝 RAT WORD SCRAMBLE</h3>
+                <p>Unscramble rat-related words including current Starr Street locations! Interactive puzzle with hints and real-time validation.</p>
+                <div style="background: #000; border: 1px solid #7ec8e3; padding: 15px; margin: 15px 0; font-size: 0.9em; color: #7ec8e3;">
+                    ✅ 5 challenging words to unscramble<br>
+                    ✅ Hint system for each word<br>
+                    ✅ Real-time answer checking<br>
+                    ✅ Progress tracking
+                </div>
                 <div class="difficulty">DIFFICULTY: EASY</div>
-                <button class="btn" onclick="openActivity('scramble')">UNSCRAMBLE</button>
-            </div>
-
-            <!-- Logic Puzzle -->
-            <div class="menu-item">
-                <h3>🔍 RAT LOGIC</h3>
-                <p>Deduce which rat stole the pizza using clues and deduction!</p>
-                <div class="ascii-art">
-  ╭─ ─╮
-  │ 🐀 │ Suspect A
-  │ 🐀 │ Suspect B
-  │ 🐀 │ Suspect C
-  ╰─ ─╯
-  WHO DID IT?</div>
-                <div class="difficulty">DIFFICULTY: HARD</div>
-                <button class="btn" onclick="openActivity('logic')">INVESTIGATE</button>
-            </div>
-
-            <!-- Pattern Recognition -->
-            <div class="menu-item">
-                <h3>🎯 PATTERN RAT</h3>
-                <p>Identify the pattern in rat movements to predict the next location!</p>
-                <div class="ascii-art">
-🐀 → 🧀 → 🐀
-🧀 → 🐀 → 🧀
-🐀 → 🧀 → ?</div>
-                <div class="difficulty">DIFFICULTY: MEDIUM</div>
-                <button class="btn" onclick="openActivity('pattern')">FIND PATTERN</button>
-            </div>
-
-            <!-- Memory Challenge -->
-            <div class="menu-item">
-                <h3>💭 MEMORY TEST</h3>
-                <p>Memorize the locations of hidden cheese stashes!</p>
-                <div class="ascii-art">
-   ○_○
-  /   \
- | ◉ ◉ |
-  \ ▼ /
-   |_|
-  REMEMBER!</div>
-                <div class="difficulty">DIFFICULTY: MEDIUM</div>
-                <button class="btn" onclick="openActivity('memory')">TEST MEMORY</button>
-            </div>
-
-            <!-- Riddles -->
-            <div class="menu-item">
-                <h3>❓ RAT RIDDLES</h3>
-                <p>Solve ancient rat riddles passed down through generations!</p>
-                <div class="ascii-art">
-    ~~~
-   (o_o)
-    \_/
-    /|\
-
-"I run but
-never walk..."</div>
-                <div class="difficulty">DIFFICULTY: EXTREME</div>
-                <button class="btn" onclick="openActivity('riddles')">SOLVE RIDDLES</button>
+                <button class="btn" onclick="openActivity('scramble')">START WORD PUZZLE</button>
             </div>
         </div>
 
@@ -1444,8 +1358,14 @@ never walk..."</div>
 
 
         function toggleHide() {
-            if (!gameRunning || hideCooldown > 0 || isHiding) return;
+            console.log('toggleHide called. Current state:', { gameRunning, hideCooldown, isHiding });
+            
+            if (!gameRunning || hideCooldown > 0 || isHiding) {
+                console.log('toggleHide blocked:', { gameRunning, hideCooldown, isHiding });
+                return;
+            }
 
+            console.log('Starting hide!');
             isHiding = true;
             hideTimer = 120; // 2 seconds at 60fps
             hideCooldown = 300; // 5 second cooldown
@@ -1473,6 +1393,9 @@ never walk..."</div>
 
         function handleGameInput(e) {
             if (!gameRunning) return;
+            
+            // Don't handle input if modal is open
+            if (document.getElementById('activityModal').style.display === 'block') return;
 
             const dirMap = {
                 'ArrowUp': 'up', 'w': 'up', 'W': 'up',
@@ -1484,8 +1407,9 @@ never walk..."</div>
             if (dirMap[e.key]) {
                 e.preventDefault();
                 movePlayer(dirMap[e.key]);
-            } else if (e.key === ' ') {
+            } else if (e.key === ' ' || e.key === 'Spacebar') {
                 e.preventDefault();
+                console.log('Space pressed, toggling hide. Current state:', { isHiding, hideCooldown, gameRunning });
                 toggleHide();
             }
         }
