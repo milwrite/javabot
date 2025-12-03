@@ -563,7 +563,6 @@
                     <button class="game-control-btn" data-dir="down">↓</button>
                     <button class="game-control-btn" data-dir="right">→</button>
                 </div>
-                <button class="game-control-btn" id="hideBtn" style="grid-column: 1 / -1; margin-top: 8px; background: rgba(255, 85, 255, 0.3); border-color: #ff55ff; color: #ff55ff; min-height: 48px;">🫣 HIDE</button>
             </div>
 
             <div class="game-stats" style="display: flex; gap: 20px; justify-content: center; margin: 15px 0; font-size: 1.2em;">
@@ -574,7 +573,7 @@
 
             <button class="btn" onclick="startGame()" style="font-size: 0.9em; padding: 10px 20px;">START GAME</button>
 
-            <p style="margin-top: 15px; font-size: 1.1em; color: #00ff9f;">Collect 🍕 pizza! Avoid 🐱 cats! Grab 🧀 cheese for speed! Press SPACE or tap HIDE to escape!</p>
+            <p style="margin-top: 15px; font-size: 1.1em; color: #00ff9f;">Collect 🍕 pizza! Avoid 🐱 cats! Grab 🧀 cheese for speed! Press SPACE to hide!</p>
         </div>
 
         <h2 style="font-family: 'Courier Prime', monospace; color: #ff006e; text-align: center; margin: 40px 0 30px; font-size: 1.8em; border-top: 2px solid #7ec8e3; padding-top: 30px;">🧩 RAT BRAIN TEASERS 🧩</h2>
@@ -1372,7 +1371,6 @@ never walk..."</div>
             }
 
             updateGameUI();
-            updateHideButtonState();
             gameLoop();
         }
 
@@ -1442,38 +1440,8 @@ never walk..."</div>
                 btn.addEventListener('click', () => movePlayer(dir));
             });
 
-            // Hide button
-            const hideBtn = document.getElementById('hideBtn');
-            hideBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                updateHideButtonState();
-                toggleHide();
-            });
-            hideBtn.addEventListener('click', () => {
-                updateHideButtonState();
-                toggleHide();
-            });
         }
 
-        function updateHideButtonState() {
-            const hideBtn = document.getElementById('hideBtn');
-            if (!gameRunning) {
-                hideBtn.style.opacity = '0.5';
-                hideBtn.textContent = '🫣 HIDE';
-                return;
-            }
-            
-            if (hideCooldown > 0) {
-                hideBtn.style.opacity = '0.5';
-                hideBtn.textContent = `🫣 HIDE (${Math.ceil(hideCooldown / 60)}s)`;
-            } else if (isHiding) {
-                hideBtn.style.opacity = '0.7';
-                hideBtn.textContent = `🫣 HIDING (${Math.ceil(hideTimer / 60)}s)`;
-            } else {
-                hideBtn.style.opacity = '1.0';
-                hideBtn.textContent = '🫣 HIDE';
-            }
-        }
 
         function toggleHide() {
             if (!gameRunning || hideCooldown > 0 || isHiding) return;
@@ -1770,9 +1738,6 @@ never walk..."</div>
                 gameCtx.fillText('HIDE READY!', canvasWidth / 2, 30);
             }
             gameCtx.textAlign = 'left';
-
-            // Update hide button state every frame
-            updateHideButtonState();
 
             requestAnimationFrame(gameLoop);
         }
