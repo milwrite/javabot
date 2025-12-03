@@ -536,6 +536,13 @@
             </div>
         </div>
 
+        <!-- Breaking News Bulletin -->
+        <div class="breaking-news" style="background: linear-gradient(45deg, #ff0000, #ff006e); color: #000; padding: 20px; margin: 20px 0; border: 3px solid #ffbe0b; animation: pulse 1s infinite; font-weight: bold;">
+            <div style="text-align: center; font-size: 1.4em; margin-bottom: 10px;">🚨 BREAKING NEWS 🚨</div>
+            <div style="font-size: 1.1em;">STARR STREET INFESTATION CRISIS: Residents report friendly rats "running right up to you" as Hunter Boone contracts giardia from rat exposure. City conducts multiple inspections but residents demand more frequent extermination. Some throwing poison on sidewalks.</div>
+            <div style="margin-top: 10px; font-size: 0.9em; text-align: center;">Last City Inspection: September 20th | Health Alert Level: MAXIMUM</div>
+        </div>
+
         <div class="warning">
             ⚠️ WARNING: HUMAN DETECTION IMMINENT ⚠️<br>
             STAY ALERT. STAY HUNGRY. STAY RAT.
@@ -556,7 +563,7 @@
                     <button class="game-control-btn" data-dir="down">↓</button>
                     <button class="game-control-btn" data-dir="right">→</button>
                 </div>
-                <button class="game-control-btn" id="hideBtn" style="grid-column: 1 / -1; margin-top: 8px; background: rgba(255, 85, 255, 0.3); border-color: #ff55ff; color: #ff55ff;">🫣 HIDE</button>
+                <button class="game-control-btn" id="hideBtn" style="grid-column: 1 / -1; margin-top: 8px; background: rgba(255, 85, 255, 0.3); border-color: #ff55ff; color: #ff55ff; min-height: 48px;">🫣 HIDE</button>
             </div>
 
             <div class="game-stats" style="display: flex; gap: 20px; justify-content: center; margin: 15px 0; font-size: 1.2em;">
@@ -772,6 +779,16 @@ never walk..."</div>
         let canvasHeight = 300;
         let mobileControlsSetup = false;
 
+        // Quiz state
+        let currentQuestion = 0;
+        let quizScore = 0;
+        let quizAnswered = false;
+        
+        // Scramble state
+        let currentWord = 0;
+        let scrambleScore = 0;
+        let scrambleCompleted = [];
+
         const activities = {
             maze: {
                 title: "🧀 CHEESE MAZE PUZZLE",
@@ -795,23 +812,39 @@ never walk..."</div>
             },
             trivia: {
                 title: "🧠 RAT TRIVIA CHALLENGE",
-                ascii: `
-    ╔═══════════════╗
-    ║ QUESTION 1/5  ║
-    ╚═══════════════╝
-
-    What year did the
-    famous NYC Pizza Rat
-    video go viral?
-
-    A) 2014
-    B) 2015 ✓
-    C) 2016
-    D) 2017
-
-    CORRECT! +10 POINTS
-                `,
-                reward: 'Perfect score! +15 cheese, +1 achievement'
+                questions: [
+                    {
+                        question: "What year did the famous NYC Pizza Rat video go viral?",
+                        options: ["2014", "2015", "2016", "2017"],
+                        correct: 1,
+                        explanation: "Pizza Rat became an internet sensation in September 2015!"
+                    },
+                    {
+                        question: "According to recent news, which Bushwick street is overrun with rats?",
+                        options: ["Graham Avenue", "Starr Street", "Morgan Avenue", "Grand Street"],
+                        correct: 1,
+                        explanation: "Starr Street residents are dealing with a major rat infestation crisis."
+                    },
+                    {
+                        question: "What disease did Hunter Boone contract from rat exposure?",
+                        options: ["Salmonella", "Giardia", "Hantavirus", "Leptospirosis"],
+                        correct: 1,
+                        explanation: "Giardia is a parasite that can be transmitted through contaminated feces."
+                    },
+                    {
+                        question: "How many chambers does a rat's heart have?",
+                        options: ["2", "3", "4", "5"],
+                        correct: 2,
+                        explanation: "Rats have 4-chambered hearts, just like humans!"
+                    },
+                    {
+                        question: "What are rats doing in Bushwick according to residents?",
+                        options: ["Hiding from humans", "Running right up to you", "Only coming out at night", "Staying in sewers"],
+                        correct: 1,
+                        explanation: "One resident quipped: 'Oh no, they're friendly. They'll run right up to you.'"
+                    }
+                ],
+                reward: 'Quiz master! +15 cheese, +1 achievement'
             },
             math: {
                 title: "🍕 PIZZA MATH PROBLEM",
@@ -833,20 +866,14 @@ never walk..."</div>
             },
             scramble: {
                 title: "📝 RAT WORD SCRAMBLE",
-                ascii: `
-    ╔═══════════════╗
-    ║ UNSCRAMBLE!   ║
-    ╚═══════════════╝
-
-    ZZEIP → PIZZA ✓
-    EHSECE → CHEESE ✓
-    ARUBGES → GARBAGE ✓
-    KBWHSCUI → BUSHWICK ✓
-
-    ALL CORRECT!
-    WORD MASTER!
-                `,
-                reward: 'All words correct! +12 cheese, +1 achievement'
+                words: [
+                    { scrambled: "ZZEIP", answer: "PIZZA", hint: "Rat's favorite round food" },
+                    { scrambled: "EHSECE", answer: "CHEESE", hint: "Yellow treasure from the deli" },
+                    { scrambled: "ARUBGES", answer: "GARBAGE", hint: "Rat's buffet location" },
+                    { scrambled: "KBWHSCUI", answer: "BUSHWICK", hint: "Brooklyn neighborhood with friendly rats" },
+                    { scrambled: "RAST TEERTS", answer: "STARR STREET", hint: "Recent rat infestation hotspot" }
+                ],
+                reward: 'Word master! +12 cheese, +1 achievement'
             },
             logic: {
                 title: "🔍 RAT DETECTIVE LOGIC",
@@ -922,16 +949,327 @@ never walk..."</div>
         function openActivity(activity) {
             const data = activities[activity];
             document.getElementById('modalTitle').textContent = data.title;
-            document.getElementById('modalBody').innerHTML = `
-                <div class="modal-ascii">${data.ascii}</div>
-                <p style="margin: 20px 0;">${data.reward}</p>
-            `;
+            
+            if (activity === 'trivia') {
+                startTrivia();
+            } else if (activity === 'scramble') {
+                startScramble();
+            } else {
+                document.getElementById('modalBody').innerHTML = `
+                    <div class="modal-ascii">${data.ascii}</div>
+                    <p style="margin: 20px 0;">${data.reward}</p>
+                `;
+            }
+            
             document.getElementById('activityModal').style.display = 'block';
             document.getElementById('activityModal').dataset.activity = activity;
         }
 
+        function startTrivia() {
+            currentQuestion = 0;
+            quizScore = 0;
+            quizAnswered = false;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const questions = activities.trivia.questions;
+            const q = questions[currentQuestion];
+            
+            document.getElementById('modalBody').innerHTML = `
+                <div style="background: #000; border: 2px solid #7ec8e3; padding: 20px; margin: 20px 0;">
+                    <div style="color: #ffbe0b; margin-bottom: 15px; text-align: center;">
+                        QUESTION ${currentQuestion + 1}/${questions.length}
+                    </div>
+                    <div style="color: #00ff9f; font-size: 1.2em; margin-bottom: 20px;">
+                        ${q.question}
+                    </div>
+                    <div id="quizOptions" style="display: grid; gap: 10px;">
+                        ${q.options.map((option, index) => `
+                            <button onclick="answerQuestion(${index})" 
+                                    style="background: rgba(126, 200, 227, 0.2); 
+                                           border: 2px solid #7ec8e3; 
+                                           color: #7ec8e3; 
+                                           padding: 12px; 
+                                           cursor: pointer; 
+                                           font-family: 'Courier Prime', monospace;
+                                           font-size: 1em;
+                                           transition: all 0.3s ease;"
+                                    onmouseover="this.style.background='rgba(126, 200, 227, 0.4)'"
+                                    onmouseout="this.style.background='rgba(126, 200, 227, 0.2)'">
+                                ${String.fromCharCode(65 + index)}) ${option}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="quizFeedback" style="margin-top: 20px; min-height: 50px; color: #ff55ff;"></div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        Score: <span style="color: #ffbe0b;">${quizScore}/${questions.length}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Hide the complete button initially
+            document.querySelector('.modal .btn').style.display = 'none';
+        }
+
+        function answerQuestion(selectedIndex) {
+            if (quizAnswered) return;
+            
+            quizAnswered = true;
+            const questions = activities.trivia.questions;
+            const q = questions[currentQuestion];
+            const isCorrect = selectedIndex === q.correct;
+            
+            if (isCorrect) {
+                quizScore++;
+            }
+            
+            // Update button colors
+            const options = document.querySelectorAll('#quizOptions button');
+            options.forEach((btn, index) => {
+                if (index === q.correct) {
+                    btn.style.background = '#00ff41';
+                    btn.style.color = '#000';
+                    btn.style.borderColor = '#00ff41';
+                } else if (index === selectedIndex && !isCorrect) {
+                    btn.style.background = '#ff0000';
+                    btn.style.color = '#fff';
+                    btn.style.borderColor = '#ff0000';
+                }
+                btn.style.cursor = 'default';
+                btn.onclick = null;
+            });
+            
+            // Show feedback
+            const feedback = document.getElementById('quizFeedback');
+            feedback.innerHTML = `
+                <div style="color: ${isCorrect ? '#00ff41' : '#ff0000'}; font-weight: bold; margin-bottom: 10px;">
+                    ${isCorrect ? '✓ CORRECT!' : '✗ INCORRECT!'}
+                </div>
+                <div style="color: #7ec8e3; font-size: 0.9em;">
+                    ${q.explanation}
+                </div>
+            `;
+            
+            // Show next button or complete quiz
+            setTimeout(() => {
+                if (currentQuestion < questions.length - 1) {
+                    feedback.innerHTML += `
+                        <button onclick="nextQuestion()" 
+                                style="background: #ff006e; 
+                                       color: #000; 
+                                       border: 2px solid #7ec8e3; 
+                                       padding: 10px 20px; 
+                                       margin-top: 15px; 
+                                       cursor: pointer; 
+                                       font-family: 'Courier Prime', monospace;">
+                            NEXT QUESTION →
+                        </button>
+                    `;
+                } else {
+                    feedback.innerHTML += `
+                        <button onclick="completeTrivia()" 
+                                style="background: #ffbe0b; 
+                                       color: #000; 
+                                       border: 2px solid #7ec8e3; 
+                                       padding: 10px 20px; 
+                                       margin-top: 15px; 
+                                       cursor: pointer; 
+                                       font-family: 'Courier Prime', monospace;">
+                            COMPLETE QUIZ 🏆
+                        </button>
+                    `;
+                }
+            }, 1500);
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            quizAnswered = false;
+            showQuestion();
+        }
+
+        function completeTrivia() {
+            const questions = activities.trivia.questions;
+            let message = '';
+            let reward = 0;
+            
+            if (quizScore === questions.length) {
+                message = '🏆 PERFECT SCORE! You are a true rat scholar!';
+                reward = 25;
+            } else if (quizScore >= questions.length * 0.8) {
+                message = '🎯 EXCELLENT! You know your rat facts!';
+                reward = 20;
+            } else if (quizScore >= questions.length * 0.6) {
+                message = '👍 GOOD JOB! Keep learning about rat life!';
+                reward = 15;
+            } else {
+                message = '📚 STUDY MORE! But you tried your best!';
+                reward = 10;
+            }
+            
+            document.getElementById('modalBody').innerHTML = `
+                <div style="background: #000; border: 2px solid #7ec8e3; padding: 30px; text-align: center;">
+                    <div style="color: #ffbe0b; font-size: 2em; margin-bottom: 20px;">QUIZ COMPLETE!</div>
+                    <div style="color: #00ff9f; font-size: 1.4em; margin-bottom: 15px;">
+                        Final Score: ${quizScore}/${questions.length}
+                    </div>
+                    <div style="color: #ff55ff; font-size: 1.1em; margin-bottom: 20px;">
+                        ${message}
+                    </div>
+                    <div style="color: #7ec8e3;">
+                        Reward: +${reward} cheese!
+                    </div>
+                </div>
+            `;
+            
+            // Add reward to game state
+            gameState.cheese += reward;
+            gameState.totalScore += reward * 10;
+            updateStats();
+            
+            // Show the close button
+            document.querySelector('.modal .btn').style.display = 'block';
+            document.querySelector('.modal .btn').textContent = 'CLOSE';
+        }
+
+        function startScramble() {
+            currentWord = 0;
+            scrambleScore = 0;
+            scrambleCompleted = new Array(activities.scramble.words.length).fill(false);
+            showScrambleGrid();
+        }
+
+        function showScrambleGrid() {
+            const words = activities.scramble.words;
+            
+            document.getElementById('modalBody').innerHTML = `
+                <div style="background: #000; border: 2px solid #7ec8e3; padding: 20px; margin: 20px 0;">
+                    <div style="color: #ffbe0b; margin-bottom: 15px; text-align: center; font-size: 1.3em;">
+                        🔤 UNSCRAMBLE THE RAT WORDS 🔤
+                    </div>
+                    <div style="color: #7ec8e3; margin-bottom: 20px; text-align: center;">
+                        Complete all words to win! Click hints for help.
+                    </div>
+                    
+                    <div style="display: grid; gap: 15px;">
+                        ${words.map((word, index) => `
+                            <div style="background: rgba(126, 200, 227, 0.1); border: 2px solid #7ec8e3; padding: 15px; border-radius: 5px;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                    <span style="color: #ff55ff; font-size: 1.2em; font-weight: bold;">${word.scrambled}</span>
+                                    <span style="color: #ffbe0b;">→</span>
+                                    <input type="text" id="answer${index}" 
+                                           style="background: #0a0a0a; border: 2px solid #00ff9f; color: #00ff9f; padding: 8px; font-family: 'Courier Prime', monospace; text-transform: uppercase;"
+                                           placeholder="ANSWER"
+                                           ${scrambleCompleted[index] ? 'disabled' : ''}
+                                           onkeyup="checkScrambleAnswer(${index}, this.value)"
+                                           autocomplete="off">
+                                    ${scrambleCompleted[index] ? '<span style="color: #00ff41; font-size: 1.5em;">✓</span>' : ''}
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <button onclick="showHint(${index})" 
+                                            style="background: rgba(255, 85, 255, 0.3); border: 1px solid #ff55ff; color: #ff55ff; padding: 5px 10px; font-size: 0.8em; cursor: pointer; font-family: 'Courier Prime', monospace;">
+                                        💡 HINT
+                                    </button>
+                                    <div id="hint${index}" style="color: #ff55ff; font-size: 0.9em; font-style: italic; opacity: 0; transition: opacity 0.3s;"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 20px; color: #ffbe0b; font-size: 1.1em;">
+                        Progress: <span id="scrambleProgress">${scrambleScore}/${words.length}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Hide the complete button initially
+            document.querySelector('.modal .btn').style.display = 'none';
+            
+            // Pre-fill completed answers
+            words.forEach((word, index) => {
+                if (scrambleCompleted[index]) {
+                    document.getElementById(`answer${index}`).value = word.answer;
+                }
+            });
+        }
+
+        function showHint(index) {
+            const word = activities.scramble.words[index];
+            const hintElement = document.getElementById(`hint${index}`);
+            hintElement.textContent = word.hint;
+            hintElement.style.opacity = '1';
+        }
+
+        function checkScrambleAnswer(index, userAnswer) {
+            const word = activities.scramble.words[index];
+            const cleanAnswer = userAnswer.trim().toUpperCase();
+            
+            if (cleanAnswer === word.answer && !scrambleCompleted[index]) {
+                scrambleCompleted[index] = true;
+                scrambleScore++;
+                
+                // Mark as correct
+                const input = document.getElementById(`answer${index}`);
+                input.style.borderColor = '#00ff41';
+                input.style.color = '#00ff41';
+                input.disabled = true;
+                
+                // Add checkmark
+                const parent = input.parentElement;
+                if (!parent.querySelector('.checkmark')) {
+                    const checkmark = document.createElement('span');
+                    checkmark.className = 'checkmark';
+                    checkmark.style.cssText = 'color: #00ff41; font-size: 1.5em; margin-left: 10px;';
+                    checkmark.textContent = '✓';
+                    parent.appendChild(checkmark);
+                }
+                
+                // Update progress
+                document.getElementById('scrambleProgress').textContent = `${scrambleScore}/${activities.scramble.words.length}`;
+                
+                // Check if all completed
+                if (scrambleScore === activities.scramble.words.length) {
+                    setTimeout(completeScramble, 500);
+                }
+            }
+        }
+
+        function completeScramble() {
+            document.getElementById('modalBody').innerHTML = `
+                <div style="background: #000; border: 2px solid #7ec8e3; padding: 30px; text-align: center;">
+                    <div style="color: #ffbe0b; font-size: 2em; margin-bottom: 20px;">🎉 ALL WORDS UNSCRAMBLED! 🎉</div>
+                    <div style="color: #00ff9f; font-size: 1.4em; margin-bottom: 15px;">
+                        You solved all ${activities.scramble.words.length} word puzzles!
+                    </div>
+                    <div style="color: #ff55ff; font-size: 1.1em; margin-bottom: 20px;">
+                        🏆 WORD MASTER ACHIEVED! 🏆
+                    </div>
+                    <div style="color: #7ec8e3;">
+                        Reward: +12 cheese!
+                    </div>
+                </div>
+            `;
+            
+            // Add reward to game state
+            gameState.cheese += 12;
+            gameState.totalScore += 120;
+            updateStats();
+            
+            // Show achievement
+            showAchievement('WORD_MASTER', 'You unscrambled all the rat words!');
+            
+            // Show the close button
+            document.querySelector('.modal .btn').style.display = 'block';
+            document.querySelector('.modal .btn').textContent = 'CLOSE';
+        }
+
         function closeActivity() {
             document.getElementById('activityModal').style.display = 'none';
+            
+            // Reset complete button
+            document.querySelector('.modal .btn').textContent = 'COMPLETE MISSION';
+            document.querySelector('.modal .btn').onclick = completeActivity;
         }
 
         function completeActivity() {
@@ -1034,6 +1372,7 @@ never walk..."</div>
             }
 
             updateGameUI();
+            updateHideButtonState();
             gameLoop();
         }
 
@@ -1107,19 +1446,41 @@ never walk..."</div>
             const hideBtn = document.getElementById('hideBtn');
             hideBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                updateHideButtonState();
                 toggleHide();
             });
-            hideBtn.addEventListener('click', toggleHide);
+            hideBtn.addEventListener('click', () => {
+                updateHideButtonState();
+                toggleHide();
+            });
+        }
+
+        function updateHideButtonState() {
+            const hideBtn = document.getElementById('hideBtn');
+            if (!gameRunning) {
+                hideBtn.style.opacity = '0.5';
+                hideBtn.textContent = '🫣 HIDE';
+                return;
+            }
+            
+            if (hideCooldown > 0) {
+                hideBtn.style.opacity = '0.5';
+                hideBtn.textContent = `🫣 HIDE (${Math.ceil(hideCooldown / 60)}s)`;
+            } else if (isHiding) {
+                hideBtn.style.opacity = '0.7';
+                hideBtn.textContent = `🫣 HIDING (${Math.ceil(hideTimer / 60)}s)`;
+            } else {
+                hideBtn.style.opacity = '1.0';
+                hideBtn.textContent = '🫣 HIDE';
+            }
         }
 
         function toggleHide() {
-            if (!gameRunning || hideCooldown > 0) return;
+            if (!gameRunning || hideCooldown > 0 || isHiding) return;
 
-            if (!isHiding) {
-                isHiding = true;
-                hideTimer = 120; // 2 seconds at 60fps
-                hideCooldown = 300; // 5 second cooldown
-            }
+            isHiding = true;
+            hideTimer = 120; // 2 seconds at 60fps
+            hideCooldown = 300; // 5 second cooldown
         }
 
         function movePlayer(dir) {
@@ -1395,19 +1756,23 @@ never walk..."</div>
 
             gameCtx.globalAlpha = 1.0; // Reset opacity
 
-            // Display hide cooldown/timer
-            if (isHiding || hideCooldown > 0) {
-                gameCtx.font = '14px VT323';
-                gameCtx.textAlign = 'center';
-                if (isHiding) {
-                    gameCtx.fillStyle = '#ff55ff';
-                    gameCtx.fillText(`HIDING: ${Math.ceil(hideTimer / 60)}s`, canvasWidth / 2, 30);
-                } else if (hideCooldown > 0) {
-                    gameCtx.fillStyle = '#00ff9f';
-                    gameCtx.fillText(`Hide Ready: ${Math.ceil(hideCooldown / 60)}s`, canvasWidth / 2, 30);
-                }
-                gameCtx.textAlign = 'left';
+            // Display hide status
+            gameCtx.font = '14px VT323';
+            gameCtx.textAlign = 'center';
+            if (isHiding) {
+                gameCtx.fillStyle = '#ff55ff';
+                gameCtx.fillText(`HIDING: ${Math.ceil(hideTimer / 60)}s`, canvasWidth / 2, 30);
+            } else if (hideCooldown > 0) {
+                gameCtx.fillStyle = '#ffbe0b';
+                gameCtx.fillText(`Hide Cooldown: ${Math.ceil(hideCooldown / 60)}s`, canvasWidth / 2, 30);
+            } else {
+                gameCtx.fillStyle = '#00ff9f';
+                gameCtx.fillText('HIDE READY!', canvasWidth / 2, 30);
             }
+            gameCtx.textAlign = 'left';
+
+            // Update hide button state every frame
+            updateHideButtonState();
 
             requestAnimationFrame(gameLoop);
         }
