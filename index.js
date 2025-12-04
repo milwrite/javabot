@@ -1742,6 +1742,28 @@ const commands = [
         .setDescription('Sync index.html with all HTML files in /src directory'),
 
     new SlashCommandBuilder()
+        .setName('build-puzzle')
+        .setDescription('Generate interactive story riddle puzzle with p5.js visualization')
+        .addStringOption(option =>
+            option.setName('theme')
+                .setDescription('Puzzle theme')
+                .setRequired(true)
+                .addChoices(
+                    { name: 'Noir Detective', value: 'noir-detective' },
+                    { name: 'Fantasy Quest', value: 'fantasy-quest' },
+                    { name: 'Sci-Fi Mystery', value: 'sci-fi-mystery' }
+                ))
+        .addStringOption(option =>
+            option.setName('difficulty')
+                .setDescription('Difficulty level')
+                .setRequired(false)
+                .addChoices(
+                    { name: 'Easy', value: 'easy' },
+                    { name: 'Medium (default)', value: 'medium' },
+                    { name: 'Hard', value: 'hard' }
+                )),
+
+    new SlashCommandBuilder()
         .setName('set-prompt')
         .setDescription('Modify Bot Sportello\'s system prompt/personality')
         .addStringOption(option =>
@@ -1838,6 +1860,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'build-game':
                 await handleBuildGame(interaction);
+                break;
+            case 'build-puzzle':
+                await handleBuildPuzzle(interaction);
                 break;
             case 'status':
                 await handleStatus(interaction);
@@ -2539,6 +2564,886 @@ async function handleBuildGame(interaction) {
         const errorMsg = getBotResponse('errors') + ` Build pipeline error: ${error.message}`;
         await interaction.editReply(errorMsg);
     }
+}
+
+// ===== PUZZLE SYSTEM =====
+// Generate story riddle puzzles with p5.js visualization
+
+async function handleBuildPuzzle(interaction) {
+    const theme = interaction.options.getString('theme');
+    const difficulty = interaction.options.getString('difficulty') || 'medium';
+
+    await interaction.deferReply();
+
+    try {
+        await interaction.editReply(`${getBotResponse('thinking')} generating ${theme} puzzle...`);
+
+        // Generate puzzle data
+        const puzzleData = await generatePuzzleData(theme, difficulty);
+
+        // Validate structure
+        if (!validatePuzzleData(puzzleData)) {
+            throw new Error('Generated puzzle failed validation');
+        }
+
+        // Create HTML file
+        const fileName = `${theme.toLowerCase().replace(/\s+/g, '-')}-puzzle-${Date.now()}`;
+        const htmlContent = generatePuzzleHTML(puzzleData, theme);
+
+        // Write to src/
+        const filePath = path.join(__dirname, 'src', `${fileName}.html`);
+        await fs.writeFile(filePath, htmlContent);
+
+        // Update metadata
+        await updateIndexWithPage(fileName, `🧩 Story riddle puzzle: ${puzzleData.title}`);
+
+        // Git commit
+        await interaction.editReply(`${getBotResponse('thinking')} committing...`);
+        await gitWithTimeout(() => git.add('.'));
+        await gitWithTimeout(() => git.commit(`add ${theme} story riddle puzzle`));
+        await gitWithTimeout(() => git.push('origin', 'main'), CONFIG.PUSH_TIMEOUT);
+
+        // Success embed
+        const liveUrl = `https://milwrite.github.io/javabot/src/${fileName}.html`;
+        const embed = new EmbedBuilder()
+            .setColor('#7ec8e3')
+            .setTitle(`🧩 ${puzzleData.title}`)
+            .setDescription(`**Theme:** ${theme}\n**Difficulty:** ${difficulty}\n**Nodes:** ${Object.keys(puzzleData.nodes).length}`)
+            .setURL(liveUrl)
+            .addFields({ name: '🎮 Play Now', value: `[Launch Puzzle](${liveUrl})` })
+            .setFooter({ text: 'May take a minute to deploy to GitHub Pages' })
+            .setTimestamp();
+
+        await interaction.editReply({ content: null, embeds: [embed] });
+
+    } catch (error) {
+        console.error('Build puzzle error:', error);
+        await interaction.editReply(`${getBotResponse('errors')} ${error.message}`);
+    }
+}
+
+async function generatePuzzleData(theme, difficulty, maxRetries = 3) {
+    // Theme guidelines for LLM
+    const themeGuidelines = {
+        'noir-detective': 'Film noir setting - shadowy, urban, mysterious. Riddles: light/shadow/sound/time/memory. Story: missing person mystery, jazz clubs, fedoras.',
+        'fantasy-quest': 'High fantasy setting - medieval, magical. Riddles: nature/magic/ancient lore/artifacts. Story: dragon quest, magical artifacts, wizards.',
+        'sci-fi-mystery': 'Hard sci-fi setting - space stations, AI, tech. Riddles: paradoxes/physics/code/AI consciousness. Story: AI crisis, anomalies, missions.'
+    };
+
+    const prompt = `Generate a branching narrative puzzle in JSON format.
+
+THEME: ${theme}
+DIFFICULTY: ${difficulty}
+${themeGuidelines[theme]}
+
+REQUIREMENTS:
+- Generate 8-12 story nodes, 3-4 levels deep
+- Each node must have: id, text (2-4 sentences), riddle object, children array (1-2 ids)
+- Riddle object: question, answers (array of valid strings), hint
+- Include 2-3 ending nodes (set children to empty array)
+- All riddles must be solvable without external knowledge
+- Story must be completable in 10-15 minutes
+- Use this exact JSON structure - no additional fields:
+
+{
+  "title": "...",
+  "theme": "${theme}",
+  "difficulty": "${difficulty}",
+  "startNode": "start",
+  "nodes": {
+    "node_id": {
+      "id": "node_id",
+      "text": "...",
+      "riddle": {
+        "question": "...",
+        "answers": ["answer1", "answer2"],
+        "hint": "..."
+      },
+      "children": ["child_id1"]
+    }
+  },
+  "endings": {
+    "good": {
+      "text": "...",
+      "isGoodEnding": true
+    }
+  }
+}
+
+Return ONLY valid JSON, no markdown or explanation.`;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            const response = await axios.post(OPENROUTER_URL, {
+                model: MODEL_PRESETS['sonnet'],
+                messages: [{ role: 'user', content: prompt }],
+                max_tokens: 6000,
+                temperature: 0.8
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: CONFIG.API_TIMEOUT
+            });
+
+            let content = response.data.choices[0].message.content.trim();
+            // Clean markdown code blocks
+            content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+            const puzzleData = JSON.parse(content);
+
+            // Calculate node positions
+            puzzleData.nodes = calculateNodePositions(puzzleData.nodes, puzzleData.startNode);
+
+            if (validatePuzzleData(puzzleData)) {
+                console.log(`✅ Puzzle generation successful on attempt ${attempt + 1}`);
+                return puzzleData;
+            }
+
+            console.log(`⚠️ Attempt ${attempt + 1} failed validation, retrying...`);
+        } catch (error) {
+            console.error(`❌ Generation attempt ${attempt + 1} failed:`, error.message);
+        }
+    }
+
+    throw new Error('Failed to generate valid puzzle after 3 attempts');
+}
+
+function calculateNodePositions(nodes, startId) {
+    const positioned = {};
+    const levels = {};
+
+    // BFS to assign levels
+    const queue = [[startId, 0]];
+    const visited = new Set();
+
+    while (queue.length > 0) {
+        const [nodeId, level] = queue.shift();
+        if (visited.has(nodeId)) continue;
+        visited.add(nodeId);
+
+        if (!levels[level]) levels[level] = [];
+        levels[level].push(nodeId);
+
+        const node = nodes[nodeId];
+        if (node.children && node.children.length > 0) {
+            node.children.forEach(childId => {
+                if (!visited.has(childId) && nodes[childId]) {
+                    queue.push([childId, level + 1]);
+                }
+            });
+        }
+    }
+
+    // Calculate positions (200px vertical spacing, 250px horizontal spacing)
+    Object.keys(levels).forEach(level => {
+        const nodesInLevel = levels[level];
+        const levelNum = parseInt(level);
+        const yPos = levelNum * 200;
+
+        nodesInLevel.forEach((nodeId, index) => {
+            const totalWidth = (nodesInLevel.length - 1) * 250;
+            const xPos = nodesInLevel.length === 1 ? 0 : -totalWidth / 2 + index * 250;
+
+            positioned[nodeId] = {
+                ...nodes[nodeId],
+                position: { x: xPos, y: yPos }
+            };
+        });
+    });
+
+    return positioned;
+}
+
+function validatePuzzleData(data) {
+    // Check required fields
+    if (!data.title || !data.nodes || !data.startNode) {
+        console.error('Missing required top-level fields');
+        return false;
+    }
+
+    // Check start node exists
+    if (!data.nodes[data.startNode]) {
+        console.error('Start node does not exist');
+        return false;
+    }
+
+    // Check all nodes are valid
+    for (const nodeId in data.nodes) {
+        const node = data.nodes[nodeId];
+
+        // Check required node fields
+        if (!node.id || !node.text || !node.riddle) {
+            console.error(`Node ${nodeId} missing required fields`);
+            return false;
+        }
+
+        // Check riddle structure
+        if (!node.riddle.question || !Array.isArray(node.riddle.answers) || node.riddle.answers.length === 0) {
+            console.error(`Node ${nodeId} has invalid riddle`);
+            return false;
+        }
+
+        // Validate children exist
+        if (node.children && node.children.length > 0) {
+            for (const childId of node.children) {
+                if (!data.nodes[childId]) {
+                    console.error(`Node ${nodeId} references non-existent child ${childId}`);
+                    return false;
+                }
+            }
+        }
+    }
+
+    // Check node count (8-12 nodes)
+    const nodeCount = Object.keys(data.nodes).length;
+    if (nodeCount < 8 || nodeCount > 12) {
+        console.error(`Node count ${nodeCount} outside required range 8-12`);
+        return false;
+    }
+
+    return true;
+}
+
+function generatePuzzleHTML(puzzleData, theme) {
+    // Escape JSON for safe embedding in HTML
+    const puzzleDataJson = JSON.stringify(puzzleData).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${puzzleData.title} - Story Riddle Puzzle</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <style>
+        body {
+            padding: 20px 10px;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+
+        .puzzle-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #7ec8e3;
+            padding-bottom: 15px;
+        }
+
+        .puzzle-header h1 {
+            margin: 0 0 5px 0;
+            color: #7ec8e3;
+            font-size: 1.8em;
+        }
+
+        .puzzle-subtitle {
+            color: #00ffff;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: rgba(0, 255, 65, 0.1);
+            border: 2px solid #00ff41;
+            color: #7ec8e3;
+            padding: 10px 15px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        #p5-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(3px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #0a0a0a;
+            border: 3px solid #7ec8e3;
+            border-radius: 3px;
+            padding: 30px;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 0 30px rgba(126, 200, 227, 0.3);
+        }
+
+        .modal-content h2 {
+            color: #7ec8e3;
+            margin: 0 0 15px 0;
+            text-transform: uppercase;
+            font-size: 1.3em;
+        }
+
+        .story-text {
+            color: #7ec8e3;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-style: italic;
+            opacity: 0.9;
+        }
+
+        .riddle-section {
+            background: rgba(0, 255, 65, 0.05);
+            border: 2px dashed #00ff41;
+            padding: 15px;
+            border-radius: 3px;
+            margin-bottom: 20px;
+        }
+
+        .riddle-section h3 {
+            color: #00ffff;
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+        }
+
+        .riddle-section p {
+            color: #7ec8e3;
+            margin: 0 0 15px 0;
+            line-height: 1.5;
+        }
+
+        #answer {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #1a1a1a;
+            border: 2px solid #00ff41;
+            color: #00ffff;
+            border-radius: 3px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.9em;
+            box-sizing: border-box;
+            min-height: 44px;
+        }
+
+        #answer:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        #hint {
+            background: rgba(255, 200, 87, 0.1);
+            border-left: 3px solid #ffc857;
+            color: #ffc857;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 3px;
+            font-size: 0.85em;
+        }
+
+        #feedback {
+            min-height: 20px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        #feedback.success {
+            color: #00ff41;
+        }
+
+        #feedback.error {
+            color: #ff0000;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: rgba(0, 255, 65, 0.2);
+            border: 2px solid #00ff41;
+            color: #00ff41;
+            cursor: pointer;
+            border-radius: 3px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            min-height: 44px;
+            touch-action: manipulation;
+        }
+
+        button:hover {
+            background: rgba(0, 255, 65, 0.4);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .home-link {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 999;
+        }
+
+        .info-panel {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid #00ff41;
+            padding: 15px;
+            border-radius: 3px;
+            margin-top: 20px;
+            color: #7ec8e3;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .puzzle-header h1 {
+                font-size: 1.5em;
+            }
+
+            .stats {
+                gap: 10px;
+                margin-bottom: 15px;
+            }
+
+            .modal-content {
+                max-width: 90vw;
+                padding: 20px;
+                border-width: 2px;
+            }
+
+            #answer {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            button {
+                padding: 8px 16px;
+                font-size: 0.85em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px 5px;
+            }
+
+            .puzzle-header h1 {
+                font-size: 1.3em;
+            }
+
+            .stat-box {
+                padding: 8px 12px;
+                font-size: 0.75em;
+                min-width: 100px;
+            }
+
+            .modal-content {
+                max-width: 95vw;
+                padding: 15px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../index.html">← HOME</a>
+
+    <div class="container">
+        <div class="puzzle-header">
+            <h1>🧩 ${puzzleData.title}</h1>
+            <div class="puzzle-subtitle">Solve riddles to uncover the story...</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">Theme: <strong>${theme}</strong></div>
+            <div class="stat-box">Difficulty: <strong>${puzzleData.difficulty}</strong></div>
+            <div class="stat-box">Progress: <span id="progress">0</span>/<span id="total">${Object.keys(puzzleData.nodes).length}</span></div>
+        </div>
+
+        <div id="p5-container"></div>
+
+        <div class="info-panel">
+            <strong>How to Play:</strong><br>
+            • Click on any unlocked node (with a book 📖 icon) to read the story and face a riddle<br>
+            • Answer the riddle correctly to unlock new paths and continue exploring<br>
+            • Hints are available after 2 wrong answers<br>
+            • Find the ending to complete your journey
+        </div>
+    </div>
+
+    <!-- Modal for riddles -->
+    <div class="modal" id="riddleModal">
+        <div class="modal-content">
+            <h2>📖 Story Point</h2>
+            <div class="story-text" id="storyText"></div>
+            <div class="riddle-section">
+                <h3>🔮 Riddle:</h3>
+                <p id="riddleQuestion"></p>
+                <input type="text" id="answer" placeholder="Type your answer..." autocomplete="off">
+                <div id="hint" style="display: none"><strong>💡 Hint:</strong> <span id="hintText"></span></div>
+                <div id="feedback"></div>
+                <div class="button-group">
+                    <button onclick="showHint()">Hint</button>
+                    <button onclick="submitAnswer()">Submit Answer</button>
+                    <button onclick="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Embed puzzle data
+        const PUZZLE_DATA = JSON.parse(\`${puzzleDataJson}\`);
+
+        // Game state
+        let gameState = {
+            unlockedNodes: [PUZZLE_DATA.startNode],
+            currentNodeId: null,
+            attempts: {},
+            completedAt: null
+        };
+
+        // Load progress from localStorage
+        function loadProgress() {
+            const saved = localStorage.getItem('puzzle_progress');
+            if (saved) {
+                try {
+                    gameState = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Failed to load progress:', e);
+                }
+            }
+        }
+
+        // Save progress to localStorage
+        function saveProgress() {
+            localStorage.setItem('puzzle_progress', JSON.stringify(gameState));
+            updateStats();
+        }
+
+        // Update stats display
+        function updateStats() {
+            document.getElementById('progress').textContent = gameState.unlockedNodes.length - 1;
+        }
+
+        // Show riddle modal
+        function showRiddle(nodeId) {
+            const node = PUZZLE_DATA.nodes[nodeId];
+            if (!node) return;
+
+            gameState.currentNodeId = nodeId;
+            gameState.attempts[nodeId] = (gameState.attempts[nodeId] || 0);
+
+            document.getElementById('storyText').textContent = node.text;
+            document.getElementById('riddleQuestion').textContent = node.riddle.question;
+            document.getElementById('answer').value = '';
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('hint').style.display = 'none';
+            document.getElementById('answer').focus();
+
+            document.getElementById('riddleModal').classList.add('show');
+        }
+
+        // Show hint
+        function showHint() {
+            const node = PUZZLE_DATA.nodes[gameState.currentNodeId];
+            document.getElementById('hintText').textContent = node.riddle.hint;
+            document.getElementById('hint').style.display = 'block';
+        }
+
+        // Submit answer
+        function submitAnswer() {
+            const node = PUZZLE_DATA.nodes[gameState.currentNodeId];
+            const userAnswer = document.getElementById('answer').value.trim().toLowerCase();
+            const feedback = document.getElementById('feedback');
+
+            gameState.attempts[gameState.currentNodeId]++;
+
+            // Check if answer is correct (case-insensitive, trim whitespace)
+            const isCorrect = node.riddle.answers.some(ans => ans.toLowerCase().trim() === userAnswer);
+
+            if (isCorrect) {
+                feedback.textContent = '✓ Correct! Unlocking new paths...';
+                feedback.className = 'success';
+
+                // Unlock children
+                if (node.children && node.children.length > 0) {
+                    node.children.forEach(childId => {
+                        if (!gameState.unlockedNodes.includes(childId)) {
+                            gameState.unlockedNodes.push(childId);
+                        }
+                    });
+                }
+
+                saveProgress();
+                setTimeout(() => closeModal(), 1500);
+            } else {
+                feedback.textContent = '✗ Incorrect. Try again.';
+                feedback.className = 'error';
+
+                // Show hint after 2 attempts
+                if (gameState.attempts[gameState.currentNodeId] >= 2) {
+                    setTimeout(() => {
+                        const hintBtn = document.querySelector('.button-group button:first-child');
+                        hintBtn.textContent = 'Show Hint';
+                    }, 500);
+                }
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('riddleModal').classList.remove('show');
+            gameState.currentNodeId = null;
+        }
+
+        // Close modal on background click
+        document.getElementById('riddleModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // p5.js sketch
+        const sketchFunction = (p) => {
+            let nodes = [];
+            let edges = [];
+            let offsetX = 0;
+            let offsetY = 0;
+            let zoom = 1;
+
+            p.setup = function() {
+                loadProgress();
+
+                const containerWidth = Math.min(window.innerWidth - 40, 800);
+                const containerHeight = Math.min(window.innerHeight - 300, 600);
+                p.createCanvas(containerWidth, containerHeight);
+
+                // Initialize nodes and edges from puzzle data
+                Object.values(PUZZLE_DATA.nodes).forEach(node => {
+                    nodes.push({
+                        id: node.id,
+                        x: node.position.x,
+                        y: node.position.y,
+                        radius: 40,
+                        unlocked: gameState.unlockedNodes.includes(node.id),
+                        isStart: node.id === PUZZLE_DATA.startNode
+                    });
+                });
+
+                // Create edges
+                Object.values(PUZZLE_DATA.nodes).forEach(node => {
+                    if (node.children && node.children.length > 0) {
+                        node.children.forEach(childId => {
+                            edges.push({
+                                from: node.id,
+                                to: childId,
+                                unlocked: gameState.unlockedNodes.includes(childId)
+                            });
+                        });
+                    }
+                });
+
+                // Center view
+                fitToCanvas();
+            };
+
+            p.draw = function() {
+                p.background(10);
+
+                p.push();
+                p.translate(offsetX, offsetY);
+                p.scale(zoom);
+
+                // Draw edges first (so they appear behind nodes)
+                edges.forEach(edge => {
+                    drawEdge(edge);
+                });
+
+                // Draw nodes
+                nodes.forEach(node => {
+                    drawNode(node);
+                });
+
+                p.pop();
+            };
+
+            function drawEdge(edge) {
+                const fromNode = nodes.find(n => n.id === edge.from);
+                const toNode = nodes.find(n => n.id === edge.to);
+
+                if (!fromNode || !toNode) return;
+
+                if (edge.unlocked) {
+                    p.stroke('#00ffff');
+                    p.strokeWeight(3);
+                } else {
+                    p.stroke('#7ec8e3');
+                    p.strokeWeight(1);
+                    p.setLineDash([5, 5]);
+                }
+
+                // Bezier curve for organic feel
+                p.noFill();
+                const cp1x = (fromNode.x + toNode.x) / 2;
+                const cp1y = fromNode.y + 50;
+                const cp2x = (fromNode.x + toNode.x) / 2;
+                const cp2y = toNode.y - 50;
+
+                p.bezier(
+                    fromNode.x, fromNode.y,
+                    cp1x, cp1y,
+                    cp2x, cp2y,
+                    toNode.x, toNode.y
+                );
+
+                if (edge.unlocked) {
+                    // Draw arrow at end
+                    const angle = Math.atan2(toNode.y - cp2y, toNode.x - cp2x);
+                    const arrowSize = 10;
+                    p.fill('#00ffff');
+                    p.noStroke();
+                    p.push();
+                    p.translate(toNode.x - Math.cos(angle) * fromNode.radius, toNode.y - Math.sin(angle) * fromNode.radius);
+                    p.rotate(angle);
+                    p.triangle(0, -arrowSize / 2, -arrowSize, arrowSize / 2, 0, 0);
+                    p.pop();
+                }
+
+                p.setLineDash([]);
+            }
+
+            function drawNode(node) {
+                const isHovered = p.dist(p.mouseX - offsetX, p.mouseY - offsetY, node.x * zoom, node.y * zoom) < node.radius * zoom;
+
+                if (node.unlocked) {
+                    p.stroke('#00ffff');
+                    p.strokeWeight(3);
+                    p.fill(0, 255, 255, isHovered ? 30 : 15);
+                } else {
+                    p.stroke('#7ec8e3');
+                    p.strokeWeight(2);
+                    p.setLineDash([3, 3]);
+                    p.fill(126, 200, 227, 10);
+                }
+
+                p.circle(node.x, node.y, node.radius * 2);
+                p.setLineDash([]);
+
+                // Draw icon
+                p.fill(node.unlocked ? '#00ffff' : '#7ec8e3');
+                p.noStroke();
+                p.textAlign(p.CENTER, p.CENTER);
+                p.textSize(20);
+                if (node.isStart) {
+                    p.text('⭐', node.x, node.y);
+                } else if (node.unlocked) {
+                    p.text('📖', node.x, node.y);
+                } else {
+                    p.text('🔒', node.x, node.y);
+                }
+
+                // Click detection
+                if (isHovered && p.mouseIsPressed) {
+                    if (node.unlocked && !gameState.currentNodeId) {
+                        showRiddle(node.id);
+                    }
+                }
+            }
+
+            function fitToCanvas() {
+                let minX = Infinity, maxX = -Infinity;
+                let minY = Infinity, maxY = -Infinity;
+
+                nodes.forEach(node => {
+                    minX = Math.min(minX, node.x);
+                    maxX = Math.max(maxX, node.x);
+                    minY = Math.min(minY, node.y);
+                    maxY = Math.max(maxY, node.y);
+                });
+
+                const padding = 60;
+                const width = maxX - minX + padding * 2;
+                const height = maxY - minY + padding * 2;
+
+                zoom = Math.min(
+                    (p.width - 40) / width,
+                    (p.height - 40) / height,
+                    1.2
+                );
+
+                offsetX = p.width / 2 - (minX + maxX) / 2 * zoom;
+                offsetY = p.height / 2 - (minY + maxY) / 2 * zoom;
+            }
+
+            p.windowResized = function() {
+                if (document.querySelector('#p5-container')) {
+                    const containerWidth = Math.min(window.innerWidth - 40, 800);
+                    const containerHeight = Math.min(window.innerHeight - 300, 600);
+                    p.resizeCanvas(containerWidth, containerHeight);
+                    fitToCanvas();
+                }
+            };
+
+            // Prevent default link dash behavior
+            p.setLineDash = function(pattern) {
+                // p5.js doesn't have built-in setLineDash, so we skip it
+                // This is a no-op for now
+            };
+        };
+
+        // Create p5 instance in instance mode
+        const container = document.getElementById('p5-container');
+        new p5(sketchFunction, container);
+
+        // Update stats on load
+        updateStats();
+    </script>
+</body>
+</html>`;
 }
 
 async function handleSearch(interaction) {
