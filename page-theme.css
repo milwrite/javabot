@@ -8,6 +8,63 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital@0;1&display=swap');
 
+/* ========================================
+   DESIGN TOKENS (CSS Custom Properties)
+   ======================================== */
+:root {
+    /* Color Palette */
+    --color-bg: #0a0a0a;
+    --color-bg-elevated: rgba(26, 0, 0, 0.4);
+    --color-bg-input: rgba(0, 0, 0, 0.6);
+
+    --color-primary: #ff0000;
+    --color-primary-dim: rgba(255, 0, 0, 0.7);
+    --color-secondary: #00ffff;
+    --color-text: #7ec8e3;
+    --color-text-dim: rgba(126, 200, 227, 0.7);
+
+    /* Typography Scale (Major Third - 1.25) */
+    --font-family: 'Courier Prime', monospace;
+    --font-size-xs: 0.8rem;
+    --font-size-sm: 0.9rem;
+    --font-size-base: 1rem;
+    --font-size-md: 1.125rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.5rem;
+    --font-size-2xl: 1.875rem;
+    --font-size-3xl: 2.25rem;
+
+    /* Line Heights for Readability */
+    --line-height-tight: 1.3;
+    --line-height-base: 1.6;
+    --line-height-relaxed: 1.75;
+
+    /* Spacing Scale (8px base) */
+    --space-1: 0.25rem;  /* 4px */
+    --space-2: 0.5rem;   /* 8px */
+    --space-3: 0.75rem;  /* 12px */
+    --space-4: 1rem;     /* 16px */
+    --space-5: 1.25rem;  /* 20px */
+    --space-6: 1.5rem;   /* 24px */
+    --space-8: 2rem;     /* 32px */
+    --space-10: 2.5rem;  /* 40px */
+    --space-12: 3rem;    /* 48px */
+
+    /* Borders & Shadows */
+    --border-width: 2px;
+    --border-radius: 0;
+    --shadow-glow-primary: 0 0 20px rgba(255, 0, 0, 0.5);
+    --shadow-glow-secondary: 0 0 15px rgba(0, 255, 255, 0.4);
+    --shadow-glow-text: 0 0 10px rgba(126, 200, 227, 0.5);
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 300ms ease;
+
+    /* Touch Targets (WCAG AAA) */
+    --touch-target-min: 44px;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -15,15 +72,16 @@
 }
 
 body {
-    font-family: 'Courier Prime', monospace;
-    background: linear-gradient(135deg, #1a0a1a 0%, #0a0a0a 50%, #0a1a1a 100%);
+    font-family: var(--font-family);
+    background: linear-gradient(135deg, #1a0a1a 0%, var(--color-bg) 50%, #0a1a1a 100%);
     background-attachment: fixed;
-    color: #7ec8e3;
+    color: var(--color-text);
     overflow-x: hidden;
     overflow-y: auto;
-    line-height: 1.8;
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
     min-height: 100vh;
-    padding: 40px 20px;
+    padding: var(--space-10) var(--space-5);
     position: relative;
 }
 
@@ -174,15 +232,16 @@ body::before {
 
 /* Headers */
 h1, h2, h3 {
-    color: #ff0000;
-    text-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
-    line-height: 1.4;
-    letter-spacing: 2px;
+    color: var(--color-primary);
+    text-shadow: var(--shadow-glow-primary);
+    line-height: var(--line-height-tight);
+    letter-spacing: 0.1em;
+    font-weight: 700;
 }
 
 h1 {
-    font-size: 2.5em;
-    margin-bottom: 20px;
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--space-5);
     text-align: center;
 }
 
@@ -196,58 +255,62 @@ h1 {
 }
 
 h2 {
-    font-size: 1.8em;
-    margin-bottom: 15px;
-    color: #ff0000;
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--space-4);
 }
 
 h3 {
-    font-size: 1.3em;
-    margin-bottom: 10px;
-    color: #00ffff;
-    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-3);
+    color: var(--color-secondary);
+    text-shadow: var(--shadow-glow-secondary);
 }
 
 /* Text and paragraphs */
 p {
-    color: #7ec8e3;
-    line-height: 1.8;
-    font-size: 0.95em;
-    opacity: 0.9;
+    color: var(--color-text);
+    line-height: var(--line-height-relaxed);
+    font-size: var(--font-size-base);
+    max-width: 70ch; /* Optimal reading width */
 }
 
 /* Links */
 a {
-    color: #00ffff;
+    color: var(--color-secondary);
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: var(--transition-base);
     text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
 }
 
 a:hover {
-    color: #7ec8e3;
-    text-shadow: 0 0 15px rgba(126, 200, 227, 0.6);
+    color: var(--color-text);
+    text-shadow: var(--shadow-glow-text);
+}
+
+a:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
 }
 
 /* Buttons */
 button, .btn {
-    background: rgba(255, 0, 0, 0.7);
-    color: #7ec8e3;
-    border: 2px solid #7ec8e3;
-    padding: 12px 24px;
+    background: var(--color-primary-dim);
+    color: var(--color-text);
+    border: var(--border-width) solid var(--color-text);
+    padding: var(--space-3) var(--space-6);
     cursor: pointer;
-    font-size: 0.9em;
-    font-family: 'Courier Prime', monospace;
-    transition: all 0.3s ease;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family);
+    transition: var(--transition-base);
     box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
-    font-weight: bold;
-    letter-spacing: 1px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    min-height: 44px;
+    min-height: var(--touch-target-min);
 }
 
 button:hover, .btn:hover {
-    background: rgba(255, 0, 0, 1);
+    background: var(--color-primary);
     transform: skew(-3deg);
     box-shadow: 0 0 25px rgba(255, 0, 0, 0.7);
 }
@@ -256,25 +319,36 @@ button:active, .btn:active {
     transform: skew(-3deg) scale(0.98);
 }
 
+button:focus-visible, .btn:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+}
+
 /* Input fields */
 input, textarea, select {
-    background: rgba(0, 0, 0, 0.6);
-    color: #7ec8e3;
-    border: 2px solid #7ec8e3;
-    padding: 12px;
-    font-size: 0.9em;
-    font-family: 'Courier Prime', monospace;
-    transition: all 0.3s ease;
+    background: var(--color-bg-input);
+    color: var(--color-text);
+    border: var(--border-width) solid var(--color-text);
+    padding: var(--space-3);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family);
+    transition: var(--transition-base);
+    min-height: var(--touch-target-min);
 }
 
 input:focus, textarea:focus, select:focus {
     outline: none;
-    border-color: #00ffff;
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+    border-color: var(--color-secondary);
+    box-shadow: var(--shadow-glow-secondary);
+}
+
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
 }
 
 input::placeholder, textarea::placeholder {
-    color: rgba(126, 200, 227, 0.5);
+    color: var(--color-text-dim);
 }
 
 /* Cards and panels */
