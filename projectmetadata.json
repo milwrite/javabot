@@ -301,6 +301,13 @@
       "description": "cozy particle coffee ritual",
       "collection": "stories-content",
       "hidden": false
+    },
+    "friday-wheel": {
+      "title": "Friday Night Wheel",
+      "icon": "🎡",
+      "description": "spinning activity decision maker",
+      "collection": "utilities-apps",
+      "hidden": false
     }
   }
 }

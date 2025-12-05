@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friday Night Wheel</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        .wheel-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #ff0000;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            margin: 0;
+            font-size: 2em;
+        }
+
+        .wheel-wrapper {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 100, 0.3));
+        }
+
+        .spin-btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            background: rgba(255, 0, 0, 0.2);
+            border: 3px solid #ff0000;
+            color: #ff0000;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Courier Prime', monospace;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+        }
+
+        .spin-btn:hover {
+            background: rgba(255, 0, 0, 0.4);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+        }
+
+        .spin-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 0, 0, 0.6);
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            font-size: 1.5em;
+            color: #00ffff;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 20px solid #ff0000;
+            z-index: 10;
+            filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.8));
+        }
+
+        @media (max-width: 768px) {
+            .wheel-wrapper {
+                width: 240px;
+                height: 240px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .spin-btn {
+                padding: 12px 30px;
+                font-size: 1em;
+            }
+
+            .result {
+                font-size: 1.2em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .wheel-wrapper {
+                width: 200px;
+                height: 200px;
+            }
+
+            h1 {
+                font-size: 1.3em;
+                margin-bottom: 10px;
+            }
+
+            .spin-btn {
+                padding: 10px 25px;
+                font-size: 0.9em;
+                min-height: 44px;
+            }
+
+            .result {
+                font-size: 1em;
+                min-height: 50px;
+            }
+
+            .wheel-container {
+                gap: 15px;
+                padding: 10px;
+            }
+        }
+
+        .home-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ffff;
+            text-decoration: none;
+            font-size: 1.1em;
+            transition: all 0.3s;
+        }
+
+        .home-link:hover {
+            color: #ff0000;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../index.html">← HOME</a>
+
+    <div class="wheel-container">
+        <h1>FRIDAY NIGHT</h1>
+
+        <div class="wheel-wrapper">
+            <div class="pointer"></div>
+            <canvas id="wheelCanvas"></canvas>
+        </div>
+
+        <button class="spin-btn" id="spinBtn">SPIN THE WHEEL</button>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const activities = [
+            'Movie Night 🎬',
+            'Drinks with Friends 🍻',
+            'Gaming Session 🎮',
+            'Late Night Snacks 🍕',
+            'Karaoke 🎤',
+            'Road Trip 🚗',
+            'Concert/Live Music 🎵',
+            'House Party 🎉',
+            'Chill at Home 🛋️',
+            'Explore New Restaurant 🍽️',
+            'Go Dancing 💃',
+            'Bonfire & S\'mores 🔥'
+        ];
+
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        const resultDiv = document.getElementById('result');
+
+        let rotation = 0;
+        let isSpinning = false;
+
+        // Set canvas size
+        canvas.width = 280;
+        canvas.height = 280;
+
+        function drawWheel() {
+            const radius = 140;
+            const sliceAngle = (Math.PI * 2) / activities.length;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(140, 140);
+            ctx.rotate(rotation);
+
+            activities.forEach((activity, index) => {
+                // Draw slice
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, index * sliceAngle, (index + 1) * sliceAngle);
+                ctx.lineTo(0, 0);
+
+                // Alternate colors
+                ctx.fillStyle = index % 2 === 0
+                    ? 'rgba(0, 255, 100, 0.2)'
+                    : 'rgba(0, 255, 255, 0.2)';
+                ctx.fill();
+
+                // Draw border
+                ctx.strokeStyle = index % 2 === 0 ? '#00ff41' : '#00ffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw text
+                ctx.save();
+                ctx.rotate(index * sliceAngle + sliceAngle / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#7ec8e3';
+                ctx.font = 'bold 12px "Courier Prime"';
+                ctx.fillText(activity, radius - 30, 5);
+                ctx.restore();
+            });
+
+            ctx.restore();
+        }
+
+        function spin() {
+            if (isSpinning) return;
+
+            isSpinning = true;
+            spinBtn.disabled = true;
+            resultDiv.textContent = '';
+
+            // Random spins between 5-8 full rotations
+            const randomSpins = Math.random() * 3 + 5;
+            const targetRotation = randomSpins * Math.PI * 2 + Math.random() * Math.PI * 2;
+
+            // Ease-out animation
+            let current = rotation;
+            const duration = 3000; // 3 seconds
+            const startTime = Date.now();
+
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Ease-out cubic
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                rotation = current + targetRotation * easeProgress;
+
+                drawWheel();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    rotation = current + targetRotation;
+                    rotation = rotation % (Math.PI * 2);
+                    drawWheel();
+
+                    // Get result
+                    const sliceAngle = (Math.PI * 2) / activities.length;
+                    let resultIndex = Math.floor(((Math.PI * 2 - rotation) / sliceAngle + 0.5) % activities.length);
+                    if (resultIndex < 0) resultIndex += activities.length;
+
+                    resultDiv.textContent = `Tonight: ${activities[resultIndex]}`;
+                    resultDiv.style.animation = 'none';
+                    setTimeout(() => {
+                        resultDiv.style.animation = 'pulse 0.6s';
+                    }, 10);
+
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                }
+            }
+
+            animate();
+        }
+
+        spinBtn.addEventListener('click', spin);
+        spinBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            spin();
+        }, { passive: false });
+
+        // Draw initial wheel
+        drawWheel();
+
+        // Add pulse animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
