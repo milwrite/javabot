@@ -1793,6 +1793,17 @@ commands.forEach((cmd, idx) => {
     }
 });
 
+// Helper to get guild ID from channel ID
+async function getGuildIdFromChannel(channelId) {
+    try {
+        const channel = await client.channels.fetch(channelId);
+        return channel.guildId;
+    } catch (error) {
+        console.warn(`Could not fetch guild for channel ${channelId}:`, error.message);
+        return null;
+    }
+}
+
 client.once('clientReady', async () => {
     console.log(`Bot is ready as ${client.user.tag}`);
     console.log(`Monitoring channels: ${CHANNEL_IDS.length > 0 ? CHANNEL_IDS.join(', ') : 'ALL CHANNELS'}`);
@@ -1804,19 +1815,48 @@ client.once('clientReady', async () => {
         console.log(`Registering ${commandsJSON.length} commands`);
         console.log('First command sample:', JSON.stringify(commandsJSON[0], null, 2));
 
+        // Filter out any commands with invalid data
+        const validCommands = commandsJSON.filter(cmd => {
+            if (!cmd.name || !cmd.description) {
+                console.warn(`⚠️ Skipping invalid command:`, cmd.name || '(unnamed)');
+                return false;
+            }
+            return true;
+        });
+
+        console.log(`Sending ${validCommands.length} valid commands to Discord`);
+
+        // Try guild-specific registration first (more reliable)
+        if (CHANNEL_IDS.length > 0) {
+            const guildId = await getGuildIdFromChannel(CHANNEL_IDS[0]);
+            if (guildId) {
+                console.log(`Registering commands to guild: ${guildId}`);
+                await rest.put(
+                    Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, guildId),
+                    { body: validCommands }
+                );
+                console.log('✅ Slash commands registered to guild successfully.');
+                return;
+            }
+        }
+
+        // Fall back to global registration
+        console.log('Attempting global command registration...');
         await rest.put(
             Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-            { body: commandsJSON }
+            { body: validCommands }
         );
-        console.log('Slash commands registered successfully.');
+        console.log('✅ Slash commands registered globally successfully.');
     } catch (error) {
-        console.error('Error registering slash commands:', error.message);
+        console.error('❌ Error registering slash commands:', error.message);
         if (error.rawError) {
             console.error('Full error details:', JSON.stringify(error.rawError, null, 2));
         }
-        if (error.requestBody) {
-            console.error('Request body was:', JSON.stringify(error.requestBody.json, null, 2));
+        if (error.statusCode === 401 || error.statusCode === 403) {
+            console.error('⚠️ Authentication error - check DISCORD_CLIENT_ID and DISCORD_TOKEN in .env');
         }
+        // Don't exit - commands might still work despite registration error
+        console.log('⚠️ Continuing without registered commands (will attempt to use cached commands)');
     }
 
     // Sync index.html with all HTML files in /src
