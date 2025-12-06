@@ -177,17 +177,17 @@
     <script>
         const activities = [
             'Movie Night 🎬',
-            'Drinks with Friends 🍻',
-            'Gaming Session 🎮',
-            'Late Night Snacks 🍕',
+            'Drinks 🍻',
+            'Gaming 🎮',
+            'Late Snacks 🍕',
             'Karaoke 🎤',
             'Road Trip 🚗',
-            'Concert/Live Music 🎵',
-            'House Party 🎉',
-            'Chill at Home 🛋️',
-            'Explore New Restaurant 🍽️',
-            'Go Dancing 💃',
-            'Bonfire & S\'mores 🔥'
+            'Live Music 🎵',
+            'Party 🎉',
+            'Chill 🛋️',
+            'Restaurant 🍽️',
+            'Dancing 💃',
+            'S\'mores 🔥'
         ];
 
         const canvas = document.getElementById('wheelCanvas');
@@ -233,12 +233,12 @@
                 ctx.rotate(index * sliceAngle + sliceAngle / 2);
                 ctx.textAlign = 'right';
                 ctx.fillStyle = '#000000';
-                ctx.font = 'bold 14px "Courier Prime"';
+                ctx.font = 'bold 13px "Courier Prime"';
                 ctx.shadowColor = index % 2 === 0 ? '#00ff41' : '#00ffff';
                 ctx.shadowBlur = 3;
                 ctx.shadowOffsetX = 0;
                 ctx.shadowOffsetY = 0;
-                ctx.fillText(activity, radius - 20, 6);
+                ctx.fillText(activity, radius - 22, 5);
                 ctx.restore();
             });
 
