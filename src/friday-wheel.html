@@ -36,6 +36,15 @@
             width: 100%;
             height: 100%;
             filter: drop-shadow(0 0 20px rgba(0, 255, 100, 0.3));
+            transition: filter 0.3s;
+        }
+
+        .wheel-wrapper:hover canvas {
+            filter: drop-shadow(0 0 30px rgba(0, 255, 100, 0.6)) drop-shadow(0 0 15px rgba(0, 255, 255, 0.4));
+        }
+
+        .wheel-wrapper.spinning canvas {
+            filter: drop-shadow(0 0 40px rgba(255, 0, 0, 0.8)) drop-shadow(0 0 20px rgba(0, 255, 100, 0.6));
         }
 
         .spin-btn {
@@ -92,6 +101,11 @@
             border-top: 20px solid #ff0000;
             z-index: 10;
             filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.8));
+            animation: pointerPulse 2s infinite;
+        }
+
+        .wheel-wrapper.spinning .pointer {
+            animation: pointerPulse 0.3s infinite;
         }
 
         @media (max-width: 768px) {
@@ -267,6 +281,9 @@
             spinBtn.disabled = true;
             resultDiv.textContent = '';
 
+            const wheelWrapper = document.querySelector('.wheel-wrapper');
+            wheelWrapper.classList.add('spinning');
+
             // Random spins between 5-8 full rotations
             const randomSpins = Math.random() * 3 + 5;
             const targetRotation = randomSpins * Math.PI * 2 + Math.random() * Math.PI * 2;
@@ -293,6 +310,8 @@
                     rotation = rotation % (Math.PI * 2);
                     drawWheel();
 
+                    wheelWrapper.classList.remove('spinning');
+
                     // Get result
                     const sliceAngle = (Math.PI * 2) / activities.length;
                     let resultIndex = Math.floor(((Math.PI * 2 - rotation) / sliceAngle + 0.5) % activities.length);
@@ -302,6 +321,7 @@
                     resultDiv.style.animation = 'none';
                     setTimeout(() => {
                         resultDiv.style.animation = 'pulse 0.6s';
+                        createSparkles();
                     }, 10);
 
                     isSpinning = false;
@@ -321,7 +341,7 @@
         // Draw initial wheel
         drawWheel();
 
-        // Add pulse animation
+        // Add animations
         const style = document.createElement('style');
         style.textContent = `
             @keyframes pulse {
@@ -329,8 +349,66 @@
                 50% { transform: scale(1.1); }
                 100% { transform: scale(1); }
             }
+
+            @keyframes pointerPulse {
+                0%, 100% {
+                    filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.8));
+                    transform: translateX(-50%);
+                }
+                50% {
+                    filter: drop-shadow(0 0 15px rgba(255, 0, 0, 1));
+                    transform: translateX(-50%) scale(1.1);
+                }
+            }
+
+            @keyframes sparkle {
+                0% {
+                    opacity: 1;
+                    transform: translate(0, 0) scale(1);
+                }
+                100% {
+                    opacity: 0;
+                    transform: translate(var(--tx), var(--ty)) scale(0);
+                }
+            }
+
+            .sparkle {
+                position: fixed;
+                pointer-events: none;
+                font-size: 1.5em;
+                animation: sparkle 0.8s ease-out forwards;
+            }
         `;
         document.head.appendChild(style);
+
+        // Create sparkles on result
+        function createSparkles() {
+            const resultRect = resultDiv.getBoundingClientRect();
+            const centerX = resultRect.left + resultRect.width / 2;
+            const centerY = resultRect.top + resultRect.height / 2;
+
+            const sparkles = ['✨', '⭐', '💫', '🌟'];
+
+            for (let i = 0; i < 8; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('sparkle');
+                sparkle.textContent = sparkles[i % sparkles.length];
+
+                const angle = (i / 8) * Math.PI * 2;
+                const distance = 60;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+
+                sparkle.style.left = centerX + 'px';
+                sparkle.style.top = centerY + 'px';
+                sparkle.style.setProperty('--tx', tx + 'px');
+                sparkle.style.setProperty('--ty', ty + 'px');
+
+                document.body.appendChild(sparkle);
+
+                setTimeout(() => sparkle.remove(), 800);
+            }
+        }
     </script>
 </body>
 </html>
