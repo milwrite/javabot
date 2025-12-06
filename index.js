@@ -1983,9 +1983,10 @@ client.on('messageCreate', async message => {
 
     // Handle @ mentions with full AI capabilities
     if (message.mentions.has(client.user)) {
+        console.log(`🔔 [MENTION DETECTED] ${message.author.username} mentioned the bot in #${message.channel.name || message.channel.id}`);
         // Don't block - handle async
         handleMentionAsync(message).catch(error => {
-            console.error('Async mention handler error:', error);
+            console.error('❌ Async mention handler error:', error);
         });
     }
 });
@@ -1995,6 +1996,7 @@ const processedMentions = new Set();
 
 // Async mention handler to prevent blocking
 async function handleMentionAsync(message) {
+    let thinkingMsg = null;
     try {
         // Prevent duplicate processing of the same message
         if (processedMentions.has(message.id)) {
@@ -2002,6 +2004,7 @@ async function handleMentionAsync(message) {
             return;
         }
         processedMentions.add(message.id);
+        console.log(`✅ [MENTION] Accepted message ${message.id} from ${message.author.username}`);
 
         // Clean up old message IDs (keep last 100)
         if (processedMentions.size > 100) {
@@ -2015,7 +2018,9 @@ async function handleMentionAsync(message) {
         logEvent('MENTION', `${username}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`);
 
         // Send thinking message
-        let thinkingMsg = await message.reply(getBotResponse('thinking'));
+        console.log(`[MENTION] Sending thinking response to ${username}...`);
+        thinkingMsg = await message.reply(getBotResponse('thinking'));
+        console.log(`[MENTION] Thinking message sent successfully`);
 
         // Check if this is a game request - route to game pipeline
         if (isGameRequest(content)) {
@@ -2123,7 +2128,7 @@ async function handleMentionAsync(message) {
         }
 
     } catch (error) {
-        console.error('Mention handler error:', error);
+        console.error('❌ Mention handler error:', error);
         const errorDetails = error.response?.data || error.message || 'Unknown error';
         console.error('Error details:', errorDetails);
 
@@ -2131,18 +2136,26 @@ async function handleMentionAsync(message) {
             // Try to edit thinking message with error, or send new error message
             const errorMsg = `${getBotResponse('errors')}\n\n*Error: ${error.message?.substring(0, 100)}*`;
 
-            if (thinkingMsg) {
-                await thinkingMsg.edit(errorMsg);
+            if (thinkingMsg && !thinkingMsg.deleted) {
+                try {
+                    await thinkingMsg.edit(errorMsg);
+                    console.log(`[MENTION] Error message edited into thinking message`);
+                } catch (editErr) {
+                    console.warn(`[MENTION] Could not edit thinking message:`, editErr.message);
+                    await message.reply(errorMsg);
+                }
             } else {
+                console.log(`[MENTION] Sending error as new reply (no thinking message)`);
                 await message.reply(errorMsg);
             }
         } catch (replyError) {
-            console.error('Failed to send error reply:', replyError);
+            console.error('❌ Failed to send error reply:', replyError.message);
             // Last resort - try one more time with a simple message
             try {
+                console.log(`[MENTION] Attempting final error fallback...`);
                 await message.reply(getBotResponse('errors'));
             } catch (finalError) {
-                console.error('All error reply attempts failed:', finalError);
+                console.error('❌ All error reply attempts failed:', finalError.message);
             }
         }
     }
