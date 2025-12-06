@@ -314,8 +314,12 @@
 
                     // Get result
                     const sliceAngle = (Math.PI * 2) / activities.length;
-                    let resultIndex = Math.floor(((Math.PI * 2 - rotation) / sliceAngle + 0.5) % activities.length);
-                    if (resultIndex < 0) resultIndex += activities.length;
+                    const pointerAngle = 3 * Math.PI / 2; // Top of wheel (12 o'clock)
+                    let sliceStartAngle = pointerAngle - rotation;
+                    // Normalize angle to [0, 2π)
+                    while (sliceStartAngle < 0) sliceStartAngle += Math.PI * 2;
+                    while (sliceStartAngle >= Math.PI * 2) sliceStartAngle -= Math.PI * 2;
+                    let resultIndex = Math.floor(sliceStartAngle / sliceAngle);
 
                     resultDiv.textContent = `Tonight: ${activities[resultIndex]}`;
                     resultDiv.style.animation = 'none';
