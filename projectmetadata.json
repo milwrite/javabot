@@ -308,6 +308,13 @@
       "description": "spinning activity decision maker",
       "collection": "utilities-apps",
       "hidden": false
+    },
+    "hangman": {
+      "title": "Hangman",
+      "icon": "✏️",
+      "description": "two-player word guessing duel",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }

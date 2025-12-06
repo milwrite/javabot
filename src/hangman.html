@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #7ec8e3;
+            font-family: 'Courier Prime', monospace;
+            margin: 0;
+            padding: 60px 5px 20px 5px;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 80px 20px 20px 20px;
+            }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #00ffff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .subtitle {
+            color: #7ec8e3;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        .game-area {
+            background: #f5f5dc;
+            border: 3px solid #8b7355;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            box-shadow: 0 4px 15px rgba(126, 200, 227, 0.3);
+        }
+
+        @media (max-width: 480px) {
+            .game-area {
+                padding: 15px 10px;
+            }
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto 20px auto;
+            background: #fff;
+            border: 2px solid #333;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .word-display {
+            font-size: 2.5em;
+            letter-spacing: 10px;
+            margin: 20px 0;
+            color: #333;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 480px) {
+            .word-display {
+                font-size: 1.8em;
+                letter-spacing: 5px;
+                min-height: 50px;
+            }
+        }
+
+        .keyboard {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin: 20px auto;
+            max-width: 500px;
+        }
+
+        @media (max-width: 480px) {
+            .keyboard {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 3px;
+            }
+        }
+
+        .key-btn {
+            background: #333;
+            color: #7ec8e3;
+            border: 2px solid #7ec8e3;
+            padding: 12px 8px;
+            font-size: 1.2em;
+            font-family: 'Courier Prime', monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .key-btn {
+                padding: 10px 5px;
+                font-size: 1em;
+            }
+        }
+
+        .key-btn:hover:not(:disabled) {
+            background: #7ec8e3;
+            color: #0a0a0a;
+            transform: translateY(-2px);
+        }
+
+        .key-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .key-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: #666;
+            border-color: #666;
+        }
+
+        .key-btn.correct {
+            background: #00ff00;
+            color: #0a0a0a;
+            border-color: #00ff00;
+        }
+
+        .key-btn.wrong {
+            background: #ff0000;
+            color: #fff;
+            border-color: #ff0000;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 1.1em;
+            color: #333;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .info-item {
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: 2px solid #333;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .info-item {
+                padding: 8px 15px;
+                font-size: 0.95em;
+            }
+        }
+
+        .wrong-count {
+            color: #ff0000;
+        }
+
+        .setup-screen, .game-screen, .result-screen {
+            display: none;
+        }
+
+        .setup-screen.active, .game-screen.active, .result-screen.active {
+            display: block;
+        }
+
+        .input-group {
+            margin: 30px auto;
+            max-width: 400px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            font-family: 'Courier Prime', monospace;
+            background: #fff;
+            border: 3px solid #333;
+            border-radius: 5px;
+            box-sizing: border-box;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 480px) {
+            .input-group input {
+                padding: 12px;
+                font-size: 1em;
+            }
+        }
+
+        .btn {
+            background: #ff0000;
+            color: #fff;
+            border: 3px solid #ff0000;
+            padding: 15px 40px;
+            font-size: 1.3em;
+            font-family: 'Courier Prime', monospace;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 50px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+
+        @media (max-width: 480px) {
+            .btn {
+                padding: 12px 30px;
+                font-size: 1.1em;
+                margin: 5px;
+            }
+        }
+
+        .btn:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255, 0, 0, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.secondary {
+            background: #333;
+            border-color: #7ec8e3;
+            color: #7ec8e3;
+        }
+
+        .btn.secondary:hover {
+            background: #7ec8e3;
+            color: #0a0a0a;
+        }
+
+        .result-message {
+            font-size: 2em;
+            margin: 20px 0;
+            color: #333;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .result-message {
+                font-size: 1.5em;
+            }
+        }
+
+        .result-message.win {
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .result-message.lose {
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: #fff;
+            padding: 15px 25px;
+            border-radius: 5px;
+            border: 2px solid #333;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .instructions {
+            background: rgba(126, 200, 227, 0.1);
+            border: 2px solid #7ec8e3;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 600px;
+            color: #7ec8e3;
+            text-align: left;
+        }
+
+        @media (max-width: 480px) {
+            .instructions {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+        }
+
+        .instructions h3 {
+            color: #00ffff;
+            margin-top: 0;
+        }
+
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">← BACK TO TERMINAL</a>
+
+    <div class="container">
+        <h1>HANGMAN</h1>
+        <p class="subtitle">Two-Player Word Guessing Game</p>
+
+        <div class="setup-screen active">
+            <div class="game-area">
+                <div class="instructions">
+                    <h3>How to Play:</h3>
+                    <ul>
+                        <li><strong>Player 1:</strong> Enter a secret word (letters only)</li>
+                        <li><strong>Player 2:</strong> Guess letters to reveal the word</li>
+                        <li>You have 6 wrong guesses before the game ends</li>
+                        <li>Guess all letters correctly to win!</li>
+                    </ul>
+                </div>
+
+                <div class="input-group">
+                    <label for="secretWord">Player 1: Enter Secret Word</label>
+                    <input type="password" id="secretWord" placeholder="Enter word..." maxlength="20" autocomplete="off">
+                </div>
+
+                <button class="btn" id="startBtn">START GAME</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-label">WINS</div>
+                    <div class="stat-value" id="winsCount">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">LOSSES</div>
+                    <div class="stat-value" id="lossesCount">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-screen">
+            <div class="game-area">
+                <canvas id="hangmanCanvas" width="300" height="300"></canvas>
+
+                <div class="game-info">
+                    <div class="info-item">
+                        Wrong Guesses: <span class="wrong-count" id="wrongCount">0</span> / 6
+                    </div>
+                    <div class="info-item">
+                        Letters Left: <span id="lettersLeft">26</span>
+                    </div>
+                </div>
+
+                <div class="word-display" id="wordDisplay"></div>
+
+                <div class="keyboard" id="keyboard"></div>
+
+                <button class="btn secondary" id="giveUpBtn">GIVE UP</button>
+            </div>
+        </div>
+
+        <div class="result-screen">
+            <div class="game-area">
+                <canvas id="resultCanvas" width="300" height="300"></canvas>
+
+                <div class="result-message" id="resultMessage"></div>
+
+                <div class="word-display" id="resultWord"></div>
+
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">WINS</div>
+                        <div class="stat-value" id="resultWins">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">LOSSES</div>
+                        <div class="stat-value" id="resultLosses">0</div>
+                    </div>
+                </div>
+
+                <button class="btn" id="playAgainBtn">PLAY AGAIN</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const setupScreen = document.querySelector('.setup-screen');
+        const gameScreen = document.querySelector('.game-screen');
+        const resultScreen = document.querySelector('.result-screen');
+        const secretWordInput = document.getElementById('secretWord');
+        const startBtn = document.getElementById('startBtn');
+        const keyboard = document.getElementById('keyboard');
+        const wordDisplay = document.getElementById('wordDisplay');
+        const wrongCountEl = document.getElementById('wrongCount');
+        const lettersLeftEl = document.getElementById('lettersLeft');
+        const giveUpBtn = document.getElementById('giveUpBtn');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const resultMessage = document.getElementById('resultMessage');
+        const resultWord = document.getElementById('resultWord');
+        const canvas = document.getElementById('hangmanCanvas');
+        const resultCanvas = document.getElementById('resultCanvas');
+        const ctx = canvas.getContext('2d');
+        const resultCtx = resultCanvas.getContext('2d');
+
+        let secretWord = '';
+        let guessedLetters = new Set();
+        let wrongGuesses = 0;
+        let wins = parseInt(localStorage.getItem('hangmanWins') || '0');
+        let losses = parseInt(localStorage.getItem('hangmanLosses') || '0');
+
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+        function updateStats() {
+            document.getElementById('winsCount').textContent = wins;
+            document.getElementById('lossesCount').textContent = losses;
+            document.getElementById('resultWins').textContent = wins;
+            document.getElementById('resultLosses').textContent = losses;
+        }
+
+        function createKeyboard() {
+            keyboard.innerHTML = '';
+            alphabet.forEach(letter => {
+                const btn = document.createElement('button');
+                btn.className = 'key-btn';
+                btn.textContent = letter;
+                btn.dataset.letter = letter;
+                
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleGuess(letter, btn);
+                }, { passive: false });
+                
+                btn.addEventListener('click', () => handleGuess(letter, btn));
+                
+                keyboard.appendChild(btn);
+            });
+        }
+
+        function handleGuess(letter, btn) {
+            if (guessedLetters.has(letter)) return;
+            
+            guessedLetters.add(letter);
+            btn.disabled = true;
+            
+            if (secretWord.includes(letter)) {
+                btn.classList.add('correct');
+                updateWordDisplay();
+                checkWin();
+            } else {
+                btn.classList.add('wrong');
+                wrongGuesses++;
+                wrongCountEl.textContent = wrongGuesses;
+                drawHangman(wrongGuesses);
+                checkLoss();
+            }
+            
+            lettersLeftEl.textContent = 26 - guessedLetters.size;
+        }
+
+        function updateWordDisplay() {
+            const display = secretWord.split('').map(letter => {
+                return guessedLetters.has(letter) ? letter : '_';
+            }).join(' ');
+            wordDisplay.textContent = display;
+        }
+
+        function drawHangman(stage) {
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+
+            switch(stage) {
+                case 1:
+                    ctx.beginPath();
+                    ctx.moveTo(50, 280);
+                    ctx.lineTo(150, 280);
+                    ctx.stroke();
+                    break;
+                case 2:
+                    ctx.beginPath();
+                    ctx.moveTo(100, 280);
+                    ctx.lineTo(100, 50);
+                    ctx.stroke();
+                    break;
+                case 3:
+                    ctx.beginPath();
+                    ctx.moveTo(100, 50);
+                    ctx.lineTo(200, 50);
+                    ctx.stroke();
+                    break;
+                case 4:
+                    ctx.beginPath();
+                    ctx.moveTo(200, 50);
+                    ctx.lineTo(200, 80);
+                    ctx.stroke();
+                    break;
+                case 5:
+                    ctx.beginPath();
+                    ctx.arc(200, 100, 20, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                case 6:
+                    ctx.beginPath();
+                    ctx.moveTo(200, 120);
+                    ctx.lineTo(200, 200);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(200, 140);
+                    ctx.lineTo(170, 170);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(200, 140);
+                    ctx.lineTo(230, 170);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(200, 200);
+                    ctx.lineTo(170, 250);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(200, 200);
+                    ctx.lineTo(230, 250);
+                    ctx.stroke();
+                    break;
+            }
+        }
+
+        function checkWin() {
+            const allGuessed = secretWord.split('').every(letter => guessedLetters.has(letter));
+            if (allGuessed) {
+                wins++;
+                localStorage.setItem('hangmanWins', wins);
+                endGame(true);
+            }
+        }
+
+        function checkLoss() {
+            if (wrongGuesses >= 6) {
+                losses++;
+                localStorage.setItem('hangmanLosses', losses);
+                endGame(false);
+            }
+        }
+
+        function endGame(won) {
+            setTimeout(() => {
+                gameScreen.classList.remove('active');
+                resultScreen.classList.add('active');
+                
+                resultCtx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
+                for (let i = 1; i <= wrongGuesses; i++) {
+                    drawHangmanOnCanvas(resultCtx, i);
+                }
+                
+                if (won) {
+                    resultMessage.textContent = '🎉 YOU WIN! 🎉';
+                    resultMessage.className = 'result-message win';
+                } else {
+                    resultMessage.textContent = '💀 GAME OVER 💀';
+                    resultMessage.className = 'result-message lose';
+                }
+                
+                resultWord.textContent = secretWord.split('').join(' ');
+                updateStats();
+            }, 500);
+        }
+
+        function drawHangmanOnCanvas(context, stage) {
+            context.strokeStyle = '#333';
+            context.lineWidth = 3;
+            context.lineCap = 'round';
+
+            switch(stage) {
+                case 1:
+                    context.beginPath();
+                    context.moveTo(50, 280);
+                    context.lineTo(150, 280);
+                    context.stroke();
+                    break;
+                case 2:
+                    context.beginPath();
+                    context.moveTo(100, 280);
+                    context.lineTo(100, 50);
+                    context.stroke();
+                    break;
+                case 3:
+                    context.beginPath();
+                    context.moveTo(100, 50);
+                    context.lineTo(200, 50);
+                    context.stroke();
+                    break;
+                case 4:
+                    context.beginPath();
+                    context.moveTo(200, 50);
+                    context.lineTo(200, 80);
+                    context.stroke();
+                    break;
+                case 5:
+                    context.beginPath();
+                    context.arc(200, 100, 20, 0, Math.PI * 2);
+                    context.stroke();
+                    break;
+                case 6:
+                    context.beginPath();
+                    context.moveTo(200, 120);
+                    context.lineTo(200, 200);
+                    context.stroke();
+                    
+                    context.beginPath();
+                    context.moveTo(200, 140);
+                    context.lineTo(170, 170);
+                    context.stroke();
+                    
+                    context.beginPath();
+                    context.moveTo(200, 140);
+                    context.lineTo(230, 170);
+                    context.stroke();
+                    
+                    context.beginPath();
+                    context.moveTo(200, 200);
+                    context.lineTo(170, 250);
+                    context.stroke();
+                    
+                    context.beginPath();
+                    context.moveTo(200, 200);
+                    context.lineTo(230, 250);
+                    context.stroke();
+                    break;
+            }
+        }
+
+        function resetGame() {
+            secretWord = '';
+            guessedLetters.clear();
+            wrongGuesses = 0;
+            secretWordInput.value = '';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            wrongCountEl.textContent = '0';
+            lettersLeftEl.textContent = '26';
+            wordDisplay.textContent = '';
+        }
+
+        startBtn.addEventListener('click', () => {
+            const word = secretWordInput.value.trim().toUpperCase();
+            if (!word || !/^[A-Z]+$/.test(word)) {
+                alert('Please enter a valid word (letters only)');
+                return;
+            }
+            
+            secretWord = word;
+            resetGame();
+            secretWord = word;
+            createKeyboard();
+            updateWordDisplay();
+            
+            setupScreen.classList.remove('active');
+            gameScreen.classList.add('active');
+        });
+
+        startBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startBtn.click();
+        }, { passive: false });
+
+        giveUpBtn.addEventListener('click', () => {
+            losses++;
+            localStorage.setItem('hangmanLosses', losses);
+            endGame(false);
+        });
+
+        giveUpBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            giveUpBtn.click();
+        }, { passive: false });
+
+        playAgainBtn.addEventListener('click', () => {
+            resetGame();
+            resultScreen.classList.remove('active');
+            setupScreen.classList.add('active');
+            updateStats();
+        });
+
+        playAgainBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            playAgainBtn.click();
+        }, { passive: false });
+
+        secretWordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                startBtn.click();
+            }
+        });
+
+        updateStats();
+    </script>
+</body>
+</html>
