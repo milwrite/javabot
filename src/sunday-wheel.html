@@ -342,15 +342,19 @@
             const sliceAngle = (2 * Math.PI) / activities.length;
             const normalizedRotation = (currentRotation % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
             
-            // The pointer points to the top (angle 0 in standard coordinates, which is Math.PI/2 in canvas)
-            // We need to find which segment is at the top of the wheel
-            const pointerAngle = Math.PI / 2;
+            // The pointer is at the top (12 o'clock position)
+            // In canvas coordinates, the wheel is rotated by currentRotation
+            // We need to find which segment is under the pointer at the top
+            // The top of the wheel corresponds to angle Math.PI / 2 in canvas coordinates
+            // But since we rotate the entire wheel, we need to reverse the rotation
+            // to find which segment index is at the pointer position
             
-            // Calculate the angle offset from the wheel's current rotation
-            const angleOffset = (pointerAngle - normalizedRotation + Math.PI * 2) % (Math.PI * 2);
+            // Calculate which segment is at the pointer by subtracting the rotation
+            const pointerAngle = -normalizedRotation + Math.PI / 2;
+            const normalizedPointerAngle = (pointerAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
             
             // Determine which segment this angle falls into
-            const selectedIndex = Math.floor(angleOffset / sliceAngle) % activities.length;
+            const selectedIndex = Math.floor(normalizedPointerAngle / sliceAngle) % activities.length;
             
             resultText.textContent = activities[selectedIndex];
         }
