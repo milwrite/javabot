@@ -315,6 +315,13 @@
       "description": "two-player word guessing duel",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "sunday-wheel": {
+      "title": "Sunday Spin",
+      "icon": "🎡",
+      "description": "weekend activity spinner wheel",
+      "collection": "utilities-apps",
+      "hidden": false
     }
   }
 }
