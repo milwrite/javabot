@@ -322,6 +322,13 @@
       "description": "weekend activity spinner wheel",
       "collection": "utilities-apps",
       "hidden": false
+    },
+    "foot-scratch-game": {
+      "title": "Foot Scratch Simulator",
+      "icon": "🦶",
+      "description": "absurd itch relief arcade",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }
