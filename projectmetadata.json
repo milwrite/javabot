@@ -329,6 +329,13 @@
       "description": "absurd itch relief arcade",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "cen-schedule": {
+      "title": "Cen's Day Planner",
+      "icon": "🗓️",
+      "description": "branching daily schedule explorer",
+      "collection": "utilities-apps",
+      "hidden": false
     }
   }
 }
