@@ -255,7 +255,22 @@ AVAILABLE CAPABILITIES:
 - read_file(path): Read file contents
 - write_file(path, content): Create/update files
 - edit_file(path, instructions): Edit files with natural language
+- create_page(name, description): Generate and deploy a new HTML page
+- create_feature(name, description): Generate JS library + demo page
+- commit_changes(message, files): Git add, commit, push to main
+- get_repo_status(): Check current git status
 - web_search(query): Search internet for current info
+- set_model(model): Switch AI model (haiku, sonnet, kimi, gpt5, gemini)
+- update_style(preset, description): Change website theme
+- build_game(title, prompt, type): Build complete game/content via AI pipeline
+
+WHEN TO USE EACH TOOL:
+- For quick file edits: use edit_file with natural language
+- For new pages/apps: use create_page or build_game (for games with mobile controls)
+- For JS libraries/features: use create_feature
+- To deploy changes: use commit_changes
+- To switch AI behavior: use set_model
+- For current events/news: use web_search
 
 WHEN TO USE WEB SEARCH:
 - Anything that changes: sports, news, prices, weather, standings, odds
@@ -749,6 +764,19 @@ async function writeFile(filePath, content) {
         await gitWithTimeout(() => git.commit(commitMessage));
         const status = await gitWithTimeout(() => git.status());
         const currentBranch = status.current || 'main';
+
+        // Configure git remote with token authentication
+        try {
+            const remotes = await git.getRemotes(true);
+            const origin = remotes.find(r => r.name === 'origin');
+            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
+                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                await git.remote(['set-url', 'origin', remoteUrl]);
+            }
+        } catch (remoteError) {
+            console.warn('Remote URL setup warning:', remoteError.message);
+        }
+
         await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
 
         console.log(`[WRITE_FILE] Auto-pushed: ${commitMessage}`);
@@ -819,6 +847,19 @@ Return ONLY the complete updated file content. No explanations, no markdown code
         await gitWithTimeout(() => git.commit(commitMessage));
         const status = await gitWithTimeout(() => git.status());
         const currentBranch = status.current || 'main';
+
+        // Configure git remote with token authentication
+        try {
+            const remotes = await git.getRemotes(true);
+            const origin = remotes.find(r => r.name === 'origin');
+            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
+                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                await git.remote(['set-url', 'origin', remoteUrl]);
+            }
+        } catch (remoteError) {
+            console.warn('Remote URL setup warning:', remoteError.message);
+        }
+
         await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
 
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -1114,6 +1155,19 @@ Return only HTML, no markdown blocks or explanations.`;
         await gitWithTimeout(() => git.commit(`add ${name} page`));
         const status = await gitWithTimeout(() => git.status());
         const currentBranch = status.current || 'main';
+
+        // Configure git remote with token authentication
+        try {
+            const remotes = await git.getRemotes(true);
+            const origin = remotes.find(r => r.name === 'origin');
+            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
+                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                await git.remote(['set-url', 'origin', remoteUrl]);
+            }
+        } catch (remoteError) {
+            console.warn('Remote URL setup warning:', remoteError.message);
+        }
+
         await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
 
         const qualityNote = validation.score >= 80 ? '✨ High quality' : validation.score >= 60 ? '✓ Good quality' : '⚠️ May need refinement';
@@ -1254,6 +1308,19 @@ Return only HTML code, no markdown blocks or explanations.`;
         await gitWithTimeout(() => git.commit(`add ${name} feature`));
         const status = await gitWithTimeout(() => git.status());
         const currentBranch = status.current || 'main';
+
+        // Configure git remote with token authentication
+        try {
+            const remotes = await git.getRemotes(true);
+            const origin = remotes.find(r => r.name === 'origin');
+            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
+                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                await git.remote(['set-url', 'origin', remoteUrl]);
+            }
+        } catch (remoteError) {
+            console.warn('Remote URL setup warning:', remoteError.message);
+        }
+
         await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
 
         const qualityNote = htmlValidation.score >= 80 ? '✨ High quality' : htmlValidation.score >= 60 ? '✓ Good quality' : '⚠️ May need refinement';
@@ -1293,6 +1360,19 @@ async function commitChanges(message, files = '.') {
 
         console.log('[COMMIT] Pushing to remote...');
         const currentBranch = status.current || 'main';
+
+        // Configure git remote with token authentication
+        try {
+            const remotes = await git.getRemotes(true);
+            const origin = remotes.find(r => r.name === 'origin');
+            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
+                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                await git.remote(['set-url', 'origin', remoteUrl]);
+            }
+        } catch (remoteError) {
+            console.warn('Remote URL setup warning:', remoteError.message);
+        }
+
         await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
 
         console.log(`[COMMIT] Success: ${commit.commit.substring(0, 7)}`);
@@ -1349,6 +1429,115 @@ async function webSearch(query) {
     } catch (error) {
         console.error('Web search error:', error.response?.data || error.message);
         return 'Search unavailable right now, man.';
+    }
+}
+
+// Tool: Set AI model
+async function setModel(modelChoice) {
+    try {
+        if (!MODEL_PRESETS[modelChoice]) {
+            return `Unknown model "${modelChoice}". Available: ${Object.keys(MODEL_PRESETS).join(', ')}`;
+        }
+        MODEL = MODEL_PRESETS[modelChoice];
+        logEvent('SET_MODEL', `Switched to ${modelChoice}: ${MODEL}`);
+        return `Switched to ${modelChoice} model (${MODEL}). This will apply to subsequent messages.`;
+    } catch (error) {
+        console.error('Set model error:', error);
+        return `Error switching model: ${error.message}`;
+    }
+}
+
+// Tool: Update website styling
+async function updateStyle(preset, description = '') {
+    try {
+        const stylePresets = {
+            'noir-terminal': {
+                name: 'Noir Terminal',
+                colors: { primary: '#7ec8e3', accent: '#ff0000', secondary: '#00ffff', bg: '#0a0a0a' }
+            },
+            'neon-arcade': {
+                name: 'Neon Arcade',
+                colors: { primary: '#00ff00', accent: '#ff00ff', secondary: '#00ffff', bg: '#000' }
+            },
+            'dark-minimal': {
+                name: 'Dark Minimal',
+                colors: { primary: '#ffffff', accent: '#3498db', secondary: '#95a5a6', bg: '#1a1a1a' }
+            },
+            'retro-terminal': {
+                name: 'Retro Terminal',
+                colors: { primary: '#00ff41', accent: '#ff6b35', secondary: '#00ff41', bg: '#0a0a0a' }
+            }
+        };
+
+        if (preset === 'custom' && description) {
+            logEvent('UPDATE_STYLE', `Custom style requested: ${description}`);
+            return `Custom style "${description}" noted. To apply it, I would need to edit page-theme.css with the new colors and effects. Want me to proceed?`;
+        }
+
+        if (!stylePresets[preset]) {
+            return `Unknown preset "${preset}". Available: ${Object.keys(stylePresets).join(', ')}, custom`;
+        }
+
+        const selected = stylePresets[preset];
+        logEvent('UPDATE_STYLE', `Selected ${preset} preset`);
+        return `Style preset "${selected.name}" selected. Colors: primary ${selected.colors.primary}, accent ${selected.colors.accent}, bg ${selected.colors.bg}. To apply this across all pages, edit page-theme.css with these values.`;
+    } catch (error) {
+        console.error('Update style error:', error);
+        return `Error updating style: ${error.message}`;
+    }
+}
+
+// Tool: Build game using the pipeline
+async function buildGameTool(title, prompt, type = 'auto') {
+    try {
+        logEvent('BUILD_GAME_TOOL', `Building: ${title}`);
+
+        const triggerSource = {
+            kind: 'tool',
+            userId: 'ai-orchestrator',
+            username: 'Bot Sportello'
+        };
+
+        const result = await runGamePipeline({
+            userPrompt: `${title}: ${prompt}`,
+            triggerSource,
+            onStatusUpdate: async (msg) => {
+                logEvent('BUILD_GAME_TOOL', msg);
+            },
+            preferredType: type
+        });
+
+        if (!result.ok) {
+            return `Build failed: ${result.error}. Check build-logs/${result.buildId}.json for details.`;
+        }
+
+        // Commit and push
+        const commitSuccess = await commitGameFiles(result);
+        if (commitSuccess) {
+            // Configure git remote with token authentication
+            try {
+                const remotes = await git.getRemotes(true);
+                const origin = remotes.find(r => r.name === 'origin');
+                if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
+                    const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                    await git.remote(['set-url', 'origin', remoteUrl]);
+                }
+            } catch (remoteError) {
+                console.warn('Remote URL setup warning:', remoteError.message);
+            }
+
+            try {
+                await git.push('origin', 'main');
+            } catch (pushError) {
+                console.error('Push error (non-fatal):', pushError);
+            }
+        }
+
+        const scoreEmoji = result.testResult.score >= 80 ? '✨' : result.testResult.score >= 60 ? '✓' : '⚠️';
+        return `${scoreEmoji} Built "${result.plan.metadata.title}"!\n\nType: ${result.plan.type}\nQuality: ${result.testResult.score}/100\nLive: ${result.liveUrl}\n\n${result.docs.releaseNotes}\n\n(Give it a minute or two to deploy to GitHub Pages)`;
+    } catch (error) {
+        console.error('Build game tool error:', error);
+        return `Build pipeline error: ${error.message}`;
     }
 }
 
@@ -1496,6 +1685,63 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                         required: ['query']
                     }
                 }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'set_model',
+                    description: 'Switch the AI model used for responses. Available models: haiku (fast/cheap), sonnet (balanced), kimi (reasoning), gpt5 (latest OpenAI), gemini (Google)',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            model: {
+                                type: 'string',
+                                description: 'Model preset name: haiku, sonnet, kimi, gpt5, or gemini',
+                                enum: ['haiku', 'sonnet', 'kimi', 'gpt5', 'gemini']
+                            }
+                        },
+                        required: ['model']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'update_style',
+                    description: 'Update the website visual styling. Use preset themes or describe custom styling.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            preset: {
+                                type: 'string',
+                                description: 'Style preset: noir-terminal (current), neon-arcade, dark-minimal, retro-terminal, or "custom" for AI-generated',
+                                enum: ['noir-terminal', 'neon-arcade', 'dark-minimal', 'retro-terminal', 'custom']
+                            },
+                            description: { type: 'string', description: 'For custom preset only: describe the desired style' }
+                        },
+                        required: ['preset']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'build_game',
+                    description: 'Build a complete game/content using the AI pipeline. Creates mobile-responsive content with automatic testing and deployment.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            title: { type: 'string', description: 'Title for the game/content' },
+                            prompt: { type: 'string', description: 'Description of what to build' },
+                            type: {
+                                type: 'string',
+                                description: 'Content type: arcade-game, letter, recipe, infographic, story, log, parody, utility, visualization, or auto',
+                                enum: ['arcade-game', 'letter', 'recipe', 'infographic', 'story', 'log', 'parody', 'utility', 'visualization', 'auto']
+                            }
+                        },
+                        required: ['title', 'prompt']
+                    }
+                }
             }
         ];
 
@@ -1578,6 +1824,12 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                     result = await webSearch(args.query);
                     // Store search results for context persistence
                     searchResults.push({ query: args.query, results: result });
+                } else if (functionName === 'set_model') {
+                    result = await setModel(args.model);
+                } else if (functionName === 'update_style') {
+                    result = await updateStyle(args.preset, args.description);
+                } else if (functionName === 'build_game') {
+                    result = await buildGameTool(args.title, args.prompt, args.type);
                 }
 
                 toolResults.push({
@@ -1967,6 +2219,9 @@ client.on('interactionCreate', async interaction => {
 
 // Message tracking for conversation context
 client.on('messageCreate', async message => {
+    // Debug: Log all incoming messages (uncomment for troubleshooting)
+    // console.log(`[DEBUG] Message from ${message.author.username} in channel ${message.channel.id}: ${message.content.substring(0, 50)}`);
+
     // Ignore bot messages (including our own)
     if (message.author.bot) {
         return;
@@ -1974,6 +2229,10 @@ client.on('messageCreate', async message => {
 
     // Only track messages from designated channels (if CHANNEL_IDS is configured)
     if (CHANNEL_IDS.length > 0 && !CHANNEL_IDS.includes(message.channel.id)) {
+        // Log when messages are filtered out (helps debug channel ID issues)
+        if (message.mentions.has(client.user)) {
+            console.log(`⚠️ [CHANNEL_FILTER] Mention ignored from ${message.author.username} in channel ${message.channel.id} (not in CHANNEL_IDS: ${CHANNEL_IDS.join(',')})`);
+        }
         return;
     }
 
@@ -2060,6 +2319,19 @@ async function handleMentionAsync(message) {
 
                 if (commitSuccess) {
                     await thinkingMsg.edit('🚀 pushing to github pages...');
+
+                    // Configure git remote with token authentication
+                    try {
+                        const remotes = await git.getRemotes(true);
+                        const origin = remotes.find(r => r.name === 'origin');
+                        if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
+                            const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                            await git.remote(['set-url', 'origin', remoteUrl]);
+                        }
+                    } catch (remoteError) {
+                        console.warn('Remote URL setup warning:', remoteError.message);
+                    }
+
                     try {
                         await git.push('origin', 'main');
                     } catch (pushError) {
@@ -2575,6 +2847,19 @@ async function handleBuildGame(interaction) {
 
         if (commitSuccess) {
             await interaction.editReply('🚀 pushing to github pages...');
+
+            // Configure git remote with token authentication
+            try {
+                const remotes = await git.getRemotes(true);
+                const origin = remotes.find(r => r.name === 'origin');
+                if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
+                    const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                    await git.remote(['set-url', 'origin', remoteUrl]);
+                }
+            } catch (remoteError) {
+                console.warn('Remote URL setup warning:', remoteError.message);
+            }
+
             try {
                 await git.push('origin', 'main');
             } catch (pushError) {
@@ -2582,27 +2867,27 @@ async function handleBuildGame(interaction) {
             }
         }
 
-        // Build success embed
+        // Build success embed with null-safe field values
         const successEmbed = new EmbedBuilder()
-            .setTitle(`🎮 ${result.plan.metadata.title}`)
-            .setDescription(`${result.docs.releaseNotes}\n\n${result.testResult.score >= 80 ? '✨ High quality build!' : result.testResult.score >= 60 ? '✓ Good build!' : '⚠️ Build passed with minor issues'}`)
+            .setTitle(`🎮 ${result.plan?.metadata?.title || 'New Content'}`)
+            .setDescription(`${result.docs?.releaseNotes || 'Build completed successfully.'}\n\n${result.testResult?.score >= 80 ? '✨ High quality build!' : result.testResult?.score >= 60 ? '✓ Good build!' : '⚠️ Build passed with minor issues'}`)
             .addFields(
-                { name: 'Type', value: result.plan.type, inline: true },
-                { name: 'Collection', value: result.docs.metadata.collection, inline: true },
-                { name: 'Quality Score', value: `${result.testResult.score}/100`, inline: true },
-                { name: 'Files', value: result.buildResult.files.join('\n'), inline: false },
-                { name: 'Play Now', value: result.liveUrl, inline: false },
-                { name: 'Build Time', value: result.duration, inline: true }
+                { name: 'Type', value: result.plan?.type || 'content', inline: true },
+                { name: 'Collection', value: result.docs?.metadata?.collection || 'unsorted', inline: true },
+                { name: 'Quality Score', value: `${result.testResult?.score || 0}/100`, inline: true },
+                { name: 'Files', value: result.buildResult?.files?.join('\n') || 'No files', inline: false },
+                { name: 'Play Now', value: result.liveUrl || 'URL pending', inline: false },
+                { name: 'Build Time', value: result.duration || 'Unknown', inline: true }
             )
-            .setColor(result.testResult.score >= 80 ? 0x00ff00 : 0xf39c12)
+            .setColor(result.testResult?.score >= 80 ? 0x00ff00 : 0xf39c12)
             .setFooter({ text: 'Give it a minute or two to deploy to GitHub Pages' })
             .setTimestamp();
 
-        if (result.docs.howToPlay) {
+        if (result.docs?.howToPlay) {
             successEmbed.addFields({ name: 'How to Play', value: result.docs.howToPlay, inline: false });
         }
 
-        if (result.testResult.warnings.length > 0) {
+        if (result.testResult?.warnings?.length > 0) {
             const warningsList = result.testResult.warnings
                 .slice(0, 3)
                 .map(w => `• ${w.message}`)
@@ -2654,6 +2939,19 @@ async function handleBuildPuzzle(interaction) {
         await interaction.editReply(`${getBotResponse('thinking')} committing...`);
         await gitWithTimeout(() => git.add('.'));
         await gitWithTimeout(() => git.commit(`add ${theme} story riddle puzzle`));
+
+        // Configure git remote with token authentication
+        try {
+            const remotes = await git.getRemotes(true);
+            const origin = remotes.find(r => r.name === 'origin');
+            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
+                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                await git.remote(['set-url', 'origin', remoteUrl]);
+            }
+        } catch (remoteError) {
+            console.warn('Remote URL setup warning:', remoteError.message);
+        }
+
         await gitWithTimeout(() => git.push('origin', 'main'), CONFIG.PUSH_TIMEOUT);
 
         // Success embed
@@ -4662,6 +4960,19 @@ Output ONLY the CSS code, no explanations.`;
         const status = await git.status();
         const commitMessage = `update style to ${preset === 'custom' ? 'custom: ' + customDescription : preset}`;
         await git.commit(commitMessage);
+
+        // Configure git remote with token authentication
+        try {
+            const remotes = await git.getRemotes(true);
+            const origin = remotes.find(r => r.name === 'origin');
+            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
+                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                await git.remote(['set-url', 'origin', remoteUrl]);
+            }
+        } catch (remoteError) {
+            console.warn('Remote URL setup warning:', remoteError.message);
+        }
+
         await git.push('origin', status.current);
 
         const embed = new EmbedBuilder()
