@@ -1,0 +1,79 @@
+[
+  {
+    "timestamp": "2025-12-13T22:26:09.908Z",
+    "stage": "plan",
+    "plan": {
+      "contentType": "arcade-game",
+      "slug": "pleasantville-crossword",
+      "files": [
+        "src/pleasantville-crossword.html"
+      ],
+      "metadata": {
+        "title": "Pleasantville Crossword",
+        "icon": "🏡",
+        "description": "Westchester noir word puzzle",
+        "collection": "arcade-games"
+      },
+      "features": [
+        "Interactive crossword grid with touch/click input",
+        "Clues themed after Pleasantville/Westchester locations and lore",
+        "Mobile-first design with tap-to-select cells",
+        "Automatic direction switching (across/down)",
+        "Real-time answer validation",
+        "Score tracking and completion detection"
+      ],
+      "interactionPattern": "tap",
+      "mobileControls": {
+        "type": "tap-based",
+        "implementation": "Touch-friendly grid cells (min 40px), on-screen keyboard for letter input, clear visual feedback for selected cell/word",
+        "positioning": "Grid takes full width on mobile, clues below in scrollable container"
+      },
+      "gameplayMechanics": {
+        "grid": "Small 7x7 grid optimized for mobile viewing",
+        "input": "Tap cell to select, type letter or use on-screen buttons A-Z",
+        "validation": "Check button validates all answers, shows correct/incorrect",
+        "hints": "Optional reveal letter/word buttons for accessibility",
+        "theme": "Clues reference Pleasantville streets, Westchester landmarks, local noir atmosphere"
+      },
+      "technicalDetails": {
+        "viewport": "Required meta tag with width=device-width",
+        "css": "page-theme.css + inline styles for grid layout, touch-action: manipulation on cells",
+        "javascript": "Grid state management, touch/click handlers with preventDefault, answer validation logic",
+        "persistence": "Optional: localStorage to save progress"
+      },
+      "pleasantvilleTheme": {
+        "acrossClues": [
+          "Main street through downtown (BEDFORD)",
+          "Historic train station area (MANVILLE)",
+          "Local diner landmark (ROMA)",
+          "Village green gathering spot (PARK)"
+        ],
+        "downClues": [
+          "County seat nearby (WHITE PLAINS)",
+          "River running through (BRONX)",
+          "Metro-North line (HARLEM)",
+          "Neighboring village (VALHALLA)"
+        ],
+        "atmosphere": "Noir terminal aesthetic with local geography Easter eggs"
+      },
+      "notes": [
+        "CRITICAL: Include touchstart listeners with preventDefault on all interactive cells",
+        "Grid cells must be min 40px tap targets for mobile accessibility",
+        "Provide on-screen A-Z letter buttons as fallback to keyboard input",
+        "Use CSS Grid for crossword layout with responsive breakpoints",
+        "Selected cell gets cyan border (#00ffff), correct answers turn green, incorrect turn red",
+        "Clues container scrolls independently from grid on mobile",
+        "Add 'Check Answers' button (red #ff0000) below grid",
+        "Complete implementation - no truncated HTML or incomplete JavaScript",
+        "Test touch interactions work without physical keyboard"
+      ]
+    },
+    "triggerSource": {
+      "kind": "mention",
+      "userId": "718195745160822836",
+      "username": "aneventperhaps",
+      "messageId": "1449527767723933889"
+    },
+    "userPrompt": "Can you make the clues themed after pleasantville / westchester ? edit"
+  }
+]

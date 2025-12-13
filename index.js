@@ -787,21 +787,51 @@ async function writeFile(filePath, content) {
     }
 }
 
-async function editFile(filePath, instructions) {
+async function editFile(filePath, oldString = null, newString = null, instructions = null) {
     const startTime = Date.now();
     console.log(`[EDIT_FILE] Starting edit for: ${filePath}`);
+
     try {
         // Read the current file content
         const currentContent = await fs.readFile(filePath, 'utf-8');
         const fileSize = (currentContent.length / 1024).toFixed(1);
         console.log(`[EDIT_FILE] File size: ${fileSize}KB`);
 
-        // Use Haiku for edits - much faster than other models
-        const editModel = MODEL_PRESETS['haiku'];
-        console.log(`[EDIT_FILE] Using ${editModel} for fast editing`);
+        let updatedContent;
+        let changeDescription;
 
-        // Use AI to make the edit based on instructions
-        const editPrompt = `You are editing a file: ${filePath}
+        // Mode 1: Exact string replacement (FAST - preferred method)
+        if (oldString !== null && newString !== null) {
+            console.log(`[EDIT_FILE] Using exact string replacement mode`);
+
+            // Count occurrences of old_string
+            const occurrences = currentContent.split(oldString).length - 1;
+
+            if (occurrences === 0) {
+                throw new Error(`String not found in file. The exact string to replace was not found. Make sure to use the EXACT string from the file, including all whitespace and indentation.`);
+            }
+
+            if (occurrences > 1) {
+                throw new Error(`String appears ${occurrences} times in file. The old_string must be unique. Provide more context (surrounding lines) to make it unique, or use replace_all mode.`);
+            }
+
+            // Perform the replacement
+            updatedContent = currentContent.replace(oldString, newString);
+            changeDescription = `Replaced exact string (${oldString.length} → ${newString.length} chars)`;
+
+            const replacementTime = ((Date.now() - startTime) / 1000).toFixed(2);
+            console.log(`[EDIT_FILE] Exact replacement completed in ${replacementTime}s`);
+
+        // Mode 2: AI-based editing (SLOW - fallback for complex changes)
+        } else if (instructions !== null) {
+            console.log(`[EDIT_FILE] Using AI-based editing mode (slow fallback)`);
+
+            // Use Haiku for edits - much faster than other models
+            const editModel = MODEL_PRESETS['haiku'];
+            console.log(`[EDIT_FILE] Using ${editModel} for AI processing`);
+
+            // Use AI to make the edit based on instructions
+            const editPrompt = `You are editing a file: ${filePath}
 
 Current file content:
 \`\`\`
@@ -812,28 +842,33 @@ User instructions: ${instructions}
 
 Return ONLY the complete updated file content. No explanations, no markdown code blocks, just the raw file content.`;
 
-        console.log(`[EDIT_FILE] Sending to AI for processing...`);
-        const response = await axios.post(OPENROUTER_URL, {
-            model: editModel,
-            messages: [{ role: 'user', content: editPrompt }],
-            max_tokens: 16000, // Increased for large files
-            temperature: CONFIG.AI_TEMPERATURE
-        }, {
-            headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: 90000 // 90 seconds for large file edits
-        });
+            console.log(`[EDIT_FILE] Sending to AI for processing...`);
+            const response = await axios.post(OPENROUTER_URL, {
+                model: editModel,
+                messages: [{ role: 'user', content: editPrompt }],
+                max_tokens: 16000,
+                temperature: CONFIG.AI_TEMPERATURE
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 90000
+            });
 
-        const aiTime = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`[EDIT_FILE] AI processing completed in ${aiTime}s`);
+            const aiTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            console.log(`[EDIT_FILE] AI processing completed in ${aiTime}s`);
 
-        let updatedContent = response.data.choices[0].message.content;
+            updatedContent = response.data.choices[0].message.content;
 
-        // Clean markdown code blocks if present
-        const extension = path.extname(filePath).substring(1);
-        updatedContent = cleanMarkdownCodeBlocks(updatedContent, extension);
+            // Clean markdown code blocks if present
+            const extension = path.extname(filePath).substring(1);
+            updatedContent = cleanMarkdownCodeBlocks(updatedContent, extension);
+
+            changeDescription = `AI edit: ${instructions}`;
+        } else {
+            throw new Error('Must provide either (old_string + new_string) OR instructions');
+        }
 
         // Write the updated content
         await fs.writeFile(filePath, updatedContent, 'utf8');
@@ -864,7 +899,7 @@ Return ONLY the complete updated file content. No explanations, no markdown code
 
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
         console.log(`[EDIT_FILE] Success + pushed: ${filePath} (${totalTime}s total)`);
-        return `File edited and pushed: ${filePath}. Changes applied: ${instructions} - now live`;
+        return `File edited and pushed: ${filePath}. ${changeDescription} - now live`;
     } catch (error) {
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
         console.error(`[EDIT_FILE] Error after ${totalTime}s:`, error.message);
@@ -1605,14 +1640,16 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                 type: 'function',
                 function: {
                     name: 'edit_file',
-                    description: 'Edit an existing file based on natural language instructions. Use this when you need to modify part of a file rather than rewriting it completely. The AI will read the file, apply your changes intelligently, and save it. Perfect for: changing colors, fixing bugs, adding features, updating text, modifying functions.',
+                    description: 'Edit an existing file using EXACT string replacement (preferred) or natural language instructions (fallback). ALWAYS prefer exact replacement for speed and accuracy. Use exact mode when you know the exact text to replace. Use instructions mode only for complex multi-location edits.',
                     parameters: {
                         type: 'object',
                         properties: {
                             path: { type: 'string', description: 'File path to edit (e.g., "src/example.html", "index.html", "style.css")' },
-                            instructions: { type: 'string', description: 'Natural language instructions for what to change (e.g., "change the background color to blue", "add a new function called calculateTotal that adds two numbers", "fix the syntax error", "make the buttons bigger")' }
+                            old_string: { type: 'string', description: 'EXACT string to replace (including all whitespace, indentation, newlines). Must be unique in the file. If not unique, provide more surrounding context to make it unique. PREFERRED METHOD - use this whenever possible for fast, deterministic edits.' },
+                            new_string: { type: 'string', description: 'New string to replace old_string with. Use with old_string parameter.' },
+                            instructions: { type: 'string', description: 'FALLBACK: Natural language instructions for complex edits (e.g., "change all background colors to blue"). Only use when exact replacement is not feasible. This mode is SLOW (requires AI processing).' }
                         },
-                        required: ['path', 'instructions']
+                        required: ['path']
                     }
                 }
             },
@@ -1809,7 +1846,8 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                         result = `File ${args.path} was already edited in this conversation. Skipping redundant edit to save time.`;
                         logEvent('LLM', `Skipped redundant edit of ${args.path}`);
                     } else {
-                        result = await editFile(args.path, args.instructions);
+                        // Support both exact replacement (preferred) and AI-based instructions (fallback)
+                        result = await editFile(args.path, args.old_string, args.new_string, args.instructions);
                         editedFiles.add(args.path);
                     }
                 } else if (functionName === 'create_page') {

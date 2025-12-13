@@ -44,23 +44,24 @@ npm start
 ## Architecture Overview
 
 ### Single-File Architecture
-The entire bot is contained in `index.js` (~2000+ lines) with these key sections in order:
+The entire bot is contained in `index.js` (~3700+ lines) with these key sections in order:
 1. Environment configuration and imports (lines 1-27)
 2. Configuration constants in `CONFIG` object (lines 29-41)
 3. Error tracking system (prevents infinite error loops, lines 43-70)
-4. Message history tracking setup (lines 72-76)
-5. Channel ID parsing for multi-channel support (lines 77-80)
-6. Discord client and GitHub (Octokit + simple-git) setup (lines 82-95)
+4. Message history tracking setup (lines 72-87)
+5. Channel ID parsing for multi-channel support (lines 89-92)
+6. Discord client and GitHub (Octokit + simple-git) setup (lines 94-108)
 7. Git timeout wrapper and logging utilities
-8. OpenRouter configuration with model presets
-9. Bot personality system (`botResponses`, `SYSTEM_PROMPT`)
+8. OpenRouter configuration with model presets (~line 139)
+9. Bot personality system (`botResponses`, `SYSTEM_PROMPT`) (~line 150-290)
 10. Conversation history management (`agents.md` file operations)
-11. Filesystem tools (list/read/write/edit files)
-12. Web search functionality
-13. Enhanced LLM with function calling (agentic loop, max 10 iterations)
-14. Slash command definitions array
-15. Command handlers (one `handle*` function per command)
-16. Message tracking, @ mention responses, and bot ready event
+11. Filesystem tools (list/read/write/edit files) (~line 715-870)
+12. Content creation tools (create_page, create_feature) (~line 870-1320)
+13. Web search and configuration tools (set_model, update_style, build_game) (~line 1322-1450)
+14. Enhanced LLM with function calling (agentic loop, max 10 iterations) (~line 1452-1700)
+15. Slash command definitions array (~line 1770)
+16. Command handlers (one `handle*` function per command) (~line 2260+)
+17. Message tracking, @ mention responses, and bot ready event (~line 2143+)
 
 **File Organization**:
 - `/src/` - All generated HTML pages, JS features, and demos
@@ -233,18 +234,34 @@ See `SYSTEM_V1.md` for complete architecture documentation.
 
 ### AI Function Calling System
 
-The bot uses OpenRouter's function calling with an **agentic loop** to give the AI autonomous multi-step capabilities:
+The bot uses OpenRouter's function calling with an **agentic loop** to give the AI autonomous multi-step capabilities. All tools are available via both slash commands AND @mentions:
 
 **Filesystem Tools**:
-- `list_files(path)` - Recursively list all files with paths, types, sizes organized by category (HTML, CSS, JS, JSON). Automatically discovers subdirectories.
+- `list_files(path)` - Recursively list all files with paths, types, sizes organized by category
 - `read_file(path)` - Read file contents (5000 char limit)
 - `write_file(path, content)` - Create/update files completely
-- `edit_file(path, instructions)` - Edit existing files using AI with natural language instructions (e.g., "change background to blue", "fix syntax error", "add new function")
+- `edit_file(path, old_string, new_string, instructions)` - Edit existing files via exact string replacement (FAST, preferred) or AI instructions (SLOW, fallback)
+  * **Exact mode** (preferred): Provide `old_string` and `new_string` for deterministic replacement (~0.1s)
+  * **AI mode** (fallback): Provide `instructions` for complex multi-location edits (~3-5s)
+  * Must use EXACT string from file including all whitespace/indentation
+  * String must be unique in file (or provide more context to make it unique)
+
+**Content Creation Tools**:
+- `create_page(name, description)` - Generate and deploy a new HTML page (equivalent to `/add-page`)
+- `create_feature(name, description)` - Generate JS library + demo page (equivalent to `/add-feature`)
+- `build_game(title, prompt, type)` - Full game pipeline with testing (equivalent to `/build-game`)
+
+**Repository Tools**:
+- `commit_changes(message, files)` - Git add, commit, push to main (equivalent to `/commit`)
+- `get_repo_status()` - Check current git status (equivalent to `/status`)
+
+**Configuration Tools**:
+- `set_model(model)` - Switch AI model: haiku, sonnet, kimi, gpt5, gemini (equivalent to `/set-model`)
+- `update_style(preset, description)` - Change website theme (equivalent to `/update-style`)
 
 **Web Search**:
-- `web_search(query)` - Search internet for current information
+- `web_search(query)` - Search internet for current information (via Perplexity Sonar)
 - Automatically triggered for questions about "latest", "recent", "current"
-- Used for documentation, library versions, news
 
 **Agentic Loop (Multi-Step Execution)**:
 - AI can chain multiple tool calls across iterations (max 10 rounds)
@@ -377,12 +394,13 @@ errorTracker.set(`${userId}-${commandName}`, {
 **@ Mention Handling**:
 - Async handler prevents blocking: `handleMentionAsync(message)`
 - **Message deduplication**: Tracks processed message IDs to prevent duplicate responses (common Discord API issue)
-- Full AI tool access: can create pages, edit files, search web, commit changes
+- **Full slash command parity**: All tools available via @mentions (create pages, edit files, commit, set model, build games)
 - Uses conversation history from `agents.md` for context
 - Debounced file writes (5 second delay) to prevent excessive I/O
 - Responses automatically saved to `responses/` directory if >2000 chars
 - **Commit filtering**: Only prompts for commits if AI changes actual code files (filters out `agents.md` and `projectmetadata.json` updates)
 - **Git timeout protection**: Git status checks have 5-second timeout to prevent hanging
+- **Channel filter debugging**: Console logs `⚠️ [CHANNEL_FILTER]` when mentions are ignored due to channel ID mismatch
 
 ## Adding New Commands
 
@@ -392,6 +410,16 @@ errorTracker.set(`${userId}-${commandName}`, {
 4. Use `getBotResponse()` for personality-consistent messages
 5. Include live site URL in embeds: `https://milwrite.github.io/javabot/`
 6. Commands auto-register on bot restart (no manual deployment)
+
+## Adding New AI Tools (for @mention parity)
+
+To make functionality available via @mentions as well as slash commands:
+
+1. Add tool definition to `tools` array in `getLLMResponse()` (~line 1500)
+2. Add handler in the tool execution switch statement (~line 1640)
+3. Create helper function (e.g., `async function myTool(args)`)
+4. Update SYSTEM_PROMPT's "AVAILABLE CAPABILITIES" section
+5. Tools automatically become available to AI during @mention conversations
 
 ## Recent Updates & Style Consistency (Dec 2025)
 
