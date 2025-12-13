@@ -12,7 +12,7 @@
         body {
             font-family: 'Courier Prime', monospace;
             background: #0a0a0a;
-            color: #7ec8e3;
+            color: #a0d8f0;
             margin: 0;
             padding: 60px 5px 20px 5px;
             overflow-x: auto;
@@ -41,7 +41,7 @@
 
         .subtitle {
             text-align: center;
-            color: #7ec8e3;
+            color: #a0d8f0;
             font-size: 14px;
             margin-bottom: 20px;
         }
@@ -52,19 +52,20 @@
             align-items: center;
             margin-bottom: 20px;
             padding: 10px;
-            background: rgba(126, 200, 227, 0.1);
-            border: 1px solid #7ec8e3;
+            background: rgba(160, 216, 240, 0.15);
+            border: 1px solid #a0d8f0;
             border-radius: 4px;
         }
 
         .timer {
             font-size: 18px;
             color: #00ffff;
+            font-weight: bold;
         }
 
         .progress {
             font-size: 14px;
-            color: #7ec8e3;
+            color: #a0d8f0;
         }
 
         .crossword-grid {
@@ -87,14 +88,14 @@
         .cell {
             aspect-ratio: 1;
             background: #0a0a0a;
-            border: 1px solid #333;
+            border: 1px solid #444;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
             font-weight: bold;
-            color: #7ec8e3;
+            color: #a0d8f0;
             cursor: pointer;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
@@ -114,19 +115,24 @@
         }
 
         .cell.selected {
-            background: rgba(255, 0, 0, 0.3);
-            border-color: #ff0000;
-            box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.5);
+            background: rgba(255, 0, 0, 0.35);
+            border-color: #ff3333;
+            box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.6);
+        }
+
+        .cell:focus {
+            outline: 2px solid #00ffff;
+            outline-offset: 2px;
         }
 
         .cell.correct {
-            background: rgba(0, 255, 255, 0.2);
+            background: rgba(0, 255, 255, 0.25);
             color: #00ffff;
         }
 
         .cell.incorrect {
-            background: rgba(255, 0, 0, 0.2);
-            color: #ff0000;
+            background: rgba(255, 80, 80, 0.3);
+            color: #ff6666;
         }
 
         .cell-number {
@@ -134,7 +140,8 @@
             top: 2px;
             left: 3px;
             font-size: 10px;
-            color: #7ec8e3;
+            color: #a0d8f0;
+            font-weight: normal;
         }
 
         .clues-section {
@@ -163,27 +170,29 @@
         .clue {
             padding: 8px;
             margin-bottom: 8px;
-            background: rgba(126, 200, 227, 0.05);
+            background: rgba(160, 216, 240, 0.08);
             border-left: 3px solid transparent;
             cursor: pointer;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
             transition: all 0.2s;
             font-size: 14px;
+            color: #a0d8f0;
         }
 
         .clue:hover, .clue:active {
-            background: rgba(126, 200, 227, 0.15);
-            border-left-color: #7ec8e3;
+            background: rgba(160, 216, 240, 0.18);
+            border-left-color: #a0d8f0;
         }
 
         .clue.active {
-            background: rgba(255, 0, 0, 0.2);
-            border-left-color: #ff0000;
+            background: rgba(255, 80, 80, 0.25);
+            border-left-color: #ff3333;
+            color: #fff;
         }
 
         .clue-number {
-            color: #ff0000;
+            color: #ff6666;
             font-weight: bold;
             margin-right: 5px;
         }
@@ -238,9 +247,9 @@
         }
 
         .key {
-            background: rgba(126, 200, 227, 0.2);
-            color: #7ec8e3;
-            border: 1px solid #7ec8e3;
+            background: rgba(160, 216, 240, 0.15);
+            color: #a0d8f0;
+            border: 1px solid #a0d8f0;
             padding: 10px;
             font-family: 'Courier Prime', monospace;
             font-size: 14px;
@@ -350,10 +359,10 @@
         <div class="keyboard" id="keyboard"></div>
 
         <div class="controls">
-            <button id="checkBtn">Check Puzzle</button>
-            <button id="revealBtn">Reveal Solution</button>
-            <button id="clearBtn">Clear Grid</button>
-            <button id="newGameBtn">New Puzzle</button>
+            <button id="hintBtn" aria-label="Get a hint - reveals one letter">💡 Hint</button>
+            <button id="checkBtn" aria-label="Check your answers">Check Puzzle</button>
+            <button id="clearBtn" aria-label="Clear all entries">Clear Grid</button>
+            <button id="revealBtn" aria-label="Show complete solution">Reveal Solution</button>
         </div>
 
         <div class="instructions">
@@ -390,14 +399,14 @@
         // Crossword puzzle data - Pleasantville/Westchester themed
         const puzzleData = {
             grid: [
-                ['N', 'O', 'I', 'R', 'E'],
-                ['A', 'X', 'E', 'X', 'M'],
-                ['P', 'L', 'E', 'A', 'S'],
-                ['S', 'X', 'R', 'X', 'T'],
-                ['YIELD', 'E', 'D', 'G', 'E']
+                ['D', 'O', 'C', 'X', 'B'],
+                ['O', 'X', 'A', 'X', 'O'],
+                ['C', 'A', 'S', 'E', 'T'],
+                ['K', 'X', 'E', 'X', 'S'],
+                ['S', 'U', 'R', 'F', 'S']
             ],
             blocked: [
-                [false, false, false, false, false],
+                [false, false, false, true, false],
                 [false, true, false, true, false],
                 [false, false, false, false, false],
                 [false, true, false, true, false],
@@ -405,17 +414,17 @@
             ],
             clues: {
                 across: [
-                    { number: 1, answer: 'NOIRE', clue: 'Film ___ (Sportello\'s genre)', row: 0, col: 0, direction: 'across' },
-                    { number: 6, answer: 'PLEAS', clue: 'Bargaining requests', row: 2, col: 0, direction: 'across' },
-                    { number: 7, answer: 'YIELD', clue: 'Traffic sign word', row: 4, col: 0, direction: 'across' },
-                    { number: 8, answer: 'EDGE', clue: 'Competitive advantage', row: 4, col: 2, direction: 'across' }
+                    { number: 1, answer: 'DOC', clue: 'Sportello\'s first name', row: 0, col: 0, direction: 'across' },
+                    { number: 4, answer: 'BOT', clue: 'Sportello\'s digital assistant', row: 0, col: 4, direction: 'down' },
+                    { number: 5, answer: 'CASE', clue: 'What Doc solves in Pleasantville', row: 2, col: 1, direction: 'across' },
+                    { number: 6, answer: 'CASES', clue: 'Multiple Westchester mysteries', row: 2, col: 0, direction: 'across' },
+                    { number: 7, answer: 'SURFS', clue: 'What Doc does at the beach', row: 4, col: 0, direction: 'across' }
                 ],
                 down: [
-                    { number: 1, answer: 'NAPS', clue: 'Short sleeps', row: 0, col: 0, direction: 'down' },
-                    { number: 2, answer: 'AXE', clue: 'Chopping tool', row: 0, col: 1, direction: 'down' },
-                    { number: 3, answer: 'ILLER', clue: 'More sick', row: 0, col: 2, direction: 'down' },
-                    { number: 4, answer: 'RAGE', clue: 'Intense anger', row: 0, col: 3, direction: 'down' },
-                    { number: 5, answer: 'EMTS', clue: 'Ambulance crew (abbr.)', row: 0, col: 4, direction: 'down' }
+                    { number: 1, answer: 'DOCKS', clue: 'Westchester waterfront features', row: 0, col: 0, direction: 'down' },
+                    { number: 2, answer: 'OUSE', clue: 'Westchester County ___house', row: 0, col: 1, direction: 'down' },
+                    { number: 3, answer: 'CASES', clue: 'Doc\'s solved mysteries', row: 0, col: 2, direction: 'down' },
+                    { number: 4, answer: 'BOTS', clue: 'Helpful AI programs', row: 0, col: 4, direction: 'down' }
                 ]
             }
         };
@@ -452,6 +461,7 @@
 
                     if (puzzleData.blocked[row][col]) {
                         cell.classList.add('blocked');
+                        cell.setAttribute('aria-hidden', 'true');
                     } else {
                         // Add cell number if it starts a word
                         const clueNumber = getClueNumber(row, col);
@@ -462,11 +472,22 @@
                             cell.appendChild(numberSpan);
                         }
 
+                        // Accessibility
+                        cell.setAttribute('role', 'button');
+                        cell.setAttribute('tabindex', '0');
+                        cell.setAttribute('aria-label', `Cell ${row + 1}, ${col + 1}`);
+
                         cell.addEventListener('click', () => selectCell(row, col));
                         cell.addEventListener('touchstart', (e) => {
                             e.preventDefault();
                             selectCell(row, col);
                         }, { passive: false });
+                        cell.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                selectCell(row, col);
+                            }
+                        });
                     }
 
                     gridEl.appendChild(cell);
@@ -524,11 +545,20 @@
                 clueDiv.dataset.number = clue.number;
                 clueDiv.dataset.direction = 'across';
                 clueDiv.innerHTML = `<span class="clue-number">${clue.number}.</span>${clue.clue}`;
+                clueDiv.setAttribute('role', 'button');
+                clueDiv.setAttribute('tabindex', '0');
+                clueDiv.setAttribute('aria-label', `${clue.number} across: ${clue.clue}`);
                 clueDiv.addEventListener('click', () => selectClue(clue));
                 clueDiv.addEventListener('touchstart', (e) => {
                     e.preventDefault();
                     selectClue(clue);
                 }, { passive: false });
+                clueDiv.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        selectClue(clue);
+                    }
+                });
                 acrossEl.appendChild(clueDiv);
             });
 
@@ -538,11 +568,20 @@
                 clueDiv.dataset.number = clue.number;
                 clueDiv.dataset.direction = 'down';
                 clueDiv.innerHTML = `<span class="clue-number">${clue.number}.</span>${clue.clue}`;
+                clueDiv.setAttribute('role', 'button');
+                clueDiv.setAttribute('tabindex', '0');
+                clueDiv.setAttribute('aria-label', `${clue.number} down: ${clue.clue}`);
                 clueDiv.addEventListener('click', () => selectClue(clue));
                 clueDiv.addEventListener('touchstart', (e) => {
                     e.preventDefault();
                     selectClue(clue);
                 }, { passive: false });
+                clueDiv.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        selectClue(clue);
+                    }
+                });
                 downEl.appendChild(clueDiv);
             });
         }
@@ -768,8 +807,46 @@
             }
         }
 
+        // Get a hint - reveals one empty or incorrect letter
+        function getHint() {
+            if (gameComplete) return;
+
+            // Find all empty or incorrect cells
+            const needsHelp = [];
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    if (!puzzleData.blocked[row][col]) {
+                        if (!userGrid[row][col] || userGrid[row][col] !== puzzleData.grid[row][col]) {
+                            needsHelp.push({ row, col });
+                        }
+                    }
+                }
+            }
+
+            if (needsHelp.length === 0) {
+                alert('No hints needed - puzzle is complete!');
+                return;
+            }
+
+            // Randomly select one cell to reveal
+            const hint = needsHelp[Math.floor(Math.random() * needsHelp.length)];
+            userGrid[hint.row][hint.col] = puzzleData.grid[hint.row][hint.col];
+            updateCell(hint.row, hint.col);
+            updateProgress();
+
+            // Briefly highlight the hint
+            const cells = document.querySelectorAll('.cell');
+            const index = hint.row * 5 + hint.col;
+            cells[index].style.background = 'rgba(0, 255, 255, 0.5)';
+            setTimeout(() => {
+                cells[index].style.background = '';
+            }, 1000);
+        }
+
         // Reveal solution
         function revealSolution() {
+            if (!confirm('Reveal the complete solution? This will end the game.')) return;
+
             for (let row = 0; row < 5; row++) {
                 for (let col = 0; col < 5; col++) {
                     if (!puzzleData.blocked[row][col]) {
@@ -788,11 +865,11 @@
 
             userGrid = Array(5).fill(null).map(() => Array(5).fill(''));
             const cells = document.querySelectorAll('.cell');
-            
+
             cells.forEach((cell, index) => {
                 const row = Math.floor(index / 5);
                 const col = index % 5;
-                
+
                 if (!puzzleData.blocked[row][col]) {
                     cell.classList.remove('correct', 'incorrect');
                     const number = cell.querySelector('.cell-number');
@@ -851,10 +928,28 @@
             });
 
             // Button controls
+            document.getElementById('hintBtn').addEventListener('click', getHint);
             document.getElementById('checkBtn').addEventListener('click', checkPuzzle);
-            document.getElementById('revealBtn').addEventListener('click', revealSolution);
             document.getElementById('clearBtn').addEventListener('click', clearGrid);
-            document.getElementById('newGameBtn').addEventListener('click', () => location.reload());
+            document.getElementById('revealBtn').addEventListener('click', revealSolution);
+
+            // Add touch event listeners for buttons
+            document.getElementById('hintBtn').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                getHint();
+            }, { passive: false });
+            document.getElementById('checkBtn').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                checkPuzzle();
+            }, { passive: false });
+            document.getElementById('clearBtn').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                clearGrid();
+            }, { passive: false });
+            document.getElementById('revealBtn').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                revealSolution();
+            }, { passive: false });
         }
 
         // Start game on load
