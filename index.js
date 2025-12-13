@@ -8,7 +8,7 @@ const axios = require('axios');
 const axiosRetry = require('axios-retry').default;
 
 // Game pipeline modules (system-v1)
-const { runGamePipeline, commitGameFiles, isGameRequest } = require('./services/gamePipeline');
+const { runGamePipeline, commitGameFiles, isGameRequest, isEditRequest } = require('./services/gamePipeline');
 const { getRecentPatternsSummary } = require('./services/buildLogs');
 
 // Validate required environment variables

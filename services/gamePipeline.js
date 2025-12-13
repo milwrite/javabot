@@ -210,11 +210,56 @@ async function commitGameFiles(result, customMessage = null) {
 }
 
 /**
+ * Check if prompt is requesting an edit to existing content
+ * @param {string} prompt - User's message
+ * @returns {boolean} True if requesting edits/updates
+ */
+function isEditRequest(prompt) {
+    const editKeywords = [
+        // Explicit edit indicators
+        'edit', 'update', 'change', 'modify', 'fix', 'revise',
+        'adjust', 'tweak', 'alter', 'correct', 'refactor',
+
+        // Modification phrases
+        'make it', 'make the', 'can you change', 'can you make',
+        'can you update', 'can you fix', 'can you edit',
+        'could you change', 'could you make', 'could you update',
+
+        // Specific edit actions
+        'rename', 'recolor', 'resize', 'reposition',
+        'add to', 'remove from', 'replace the', 'swap the',
+
+        // Contextual edits
+        'instead of', 'rather than', 'different', 'differently',
+        'themed after', 'based on', 'following', 'similar to'
+    ];
+
+    const lowerPrompt = prompt.toLowerCase();
+
+    // Strong indicators of edit intent
+    const hasEditKeyword = editKeywords.some(keyword => lowerPrompt.includes(keyword));
+
+    // Check for explicit "edit" or "update" command
+    const hasExplicitEdit = /\b(edit|update|change|modify|fix)\b/i.test(prompt);
+
+    // Check if referencing existing file (e.g., "the crossword", "that game")
+    const referencesExisting = /\b(the|that|this|existing)\s+(game|page|crossword|file|code|html)\b/i.test(prompt);
+
+    return hasEditKeyword || hasExplicitEdit || referencesExisting;
+}
+
+/**
  * Classify if a user prompt is asking for interactive content
  * @param {string} prompt - User's message
  * @returns {boolean} True if content-related (games, letters, recipes, infographics, etc.)
  */
 function isContentRequest(prompt) {
+    // First check: if it's an edit request, NOT a new content request
+    if (isEditRequest(prompt)) {
+        console.log('[CONTENT_DETECTION] Edit request detected - skipping game pipeline');
+        return false;
+    }
+
     const contentKeywords = [
         // Games
         'game', 'arcade', 'play', 'platformer', 'puzzle', 'snake',
@@ -252,13 +297,23 @@ function isContentRequest(prompt) {
         'planner', 'tracker', 'calculator', 'tool', 'utility',
         'schedule', 'calendar', 'todo', 'checklist', 'organizer',
 
-        // General content creation
-        'create', 'build', 'make', 'design', 'generate',
+        // General content creation (NEW CONTENT ONLY - not modifications)
+        'create a new', 'build a new', 'make a new',
+        'create another', 'build another', 'make another',
+        'new game', 'new page', 'new interactive',
         'interactive', 'page', 'website'
     ];
 
     const lowerPrompt = prompt.toLowerCase();
-    return contentKeywords.some(keyword => lowerPrompt.includes(keyword));
+
+    // Check for new content creation indicators
+    const hasNewIndicator = /\b(new|another|create|build|generate)\s+(game|page|interactive|tool|utility)/i.test(prompt);
+
+    // Check for content keywords
+    const hasContentKeyword = contentKeywords.some(keyword => lowerPrompt.includes(keyword));
+
+    // Require either explicit "new/create" indicator OR strong content keyword match
+    return hasNewIndicator || hasContentKeyword;
 }
 
 // Keep old name for backwards compatibility
@@ -270,5 +325,6 @@ module.exports = {
     runGamePipeline,
     commitGameFiles,
     isGameRequest,
-    isContentRequest
+    isContentRequest,
+    isEditRequest
 };
