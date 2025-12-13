@@ -336,6 +336,13 @@
       "description": "branching daily schedule explorer",
       "collection": "utilities-apps",
       "hidden": false
+    },
+    "pleasantville-crossword": {
+      "title": "Pleasantville Mini Crossword",
+      "icon": "🧩",
+      "description": "neighborhood themed crossword puzzle",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }
