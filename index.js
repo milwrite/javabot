@@ -1783,11 +1783,12 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
         ];
 
         // Agentic loop - allow multiple rounds of tool calling
-        const MAX_ITERATIONS = 10;
+        const MAX_ITERATIONS = 6; // Reasonable limit to prevent infinite loops
         let iteration = 0;
         let lastResponse;
         const editedFiles = new Set(); // Track files already edited to prevent redundant edits
         const searchResults = []; // Track web search results for context persistence
+        let completedActions = 0; // Count primary actions (edits, creates, commits)
 
         while (iteration < MAX_ITERATIONS) {
             iteration++;
@@ -1818,6 +1819,8 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
 
             // Execute all tool calls
             const toolResults = [];
+            let actionCompletedThisIteration = false;
+
             for (const toolCall of lastResponse.tool_calls) {
                 const functionName = toolCall.function.name;
                 let args;
@@ -1840,6 +1843,11 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                     result = await readFile(args.path);
                 } else if (functionName === 'write_file') {
                     result = await writeFile(args.path, args.content);
+                    if (!result.startsWith('Error')) {
+                        completedActions++;
+                        actionCompletedThisIteration = true;
+                        logEvent('LLM', `Primary action: write_file (${completedActions} total)`);
+                    }
                 } else if (functionName === 'edit_file') {
                     // Prevent editing the same file multiple times
                     if (editedFiles.has(args.path)) {
@@ -1849,13 +1857,33 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                         // Support both exact replacement (preferred) and AI-based instructions (fallback)
                         result = await editFile(args.path, args.old_string, args.new_string, args.instructions);
                         editedFiles.add(args.path);
+                        if (!result.startsWith('Error')) {
+                            completedActions++;
+                            actionCompletedThisIteration = true;
+                            logEvent('LLM', `Primary action: edit_file pushed (${completedActions} total)`);
+                        }
                     }
                 } else if (functionName === 'create_page') {
                     result = await createPage(args.name, args.description);
+                    if (!result.startsWith('Error')) {
+                        completedActions++;
+                        actionCompletedThisIteration = true;
+                        logEvent('LLM', `Primary action: create_page (${completedActions} total)`);
+                    }
                 } else if (functionName === 'create_feature') {
                     result = await createFeature(args.name, args.description);
+                    if (!result.startsWith('Error')) {
+                        completedActions++;
+                        actionCompletedThisIteration = true;
+                        logEvent('LLM', `Primary action: create_feature (${completedActions} total)`);
+                    }
                 } else if (functionName === 'commit_changes') {
                     result = await commitChanges(args.message, args.files);
+                    if (!result.startsWith('Error')) {
+                        completedActions++;
+                        actionCompletedThisIteration = true;
+                        logEvent('LLM', `Primary action: commit_changes (${completedActions} total)`);
+                    }
                 } else if (functionName === 'get_repo_status') {
                     result = await getRepoStatus();
                 } else if (functionName === 'web_search') {
@@ -1868,6 +1896,11 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                     result = await updateStyle(args.preset, args.description);
                 } else if (functionName === 'build_game') {
                     result = await buildGameTool(args.title, args.prompt, args.type);
+                    if (!result.includes('error') && !result.includes('Error')) {
+                        completedActions++;
+                        actionCompletedThisIteration = true;
+                        logEvent('LLM', `Primary action: build_game (${completedActions} total)`);
+                    }
                 }
 
                 toolResults.push({
@@ -1880,6 +1913,37 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
             // Add assistant message and tool results to conversation
             messages.push(lastResponse);
             messages.push(...toolResults);
+
+            // After completing a primary action, give AI one more iteration to naturally respond
+            // If it tries to call more tools, stop and force a text response
+            if (actionCompletedThisIteration && iteration < MAX_ITERATIONS) {
+                logEvent('LLM', 'Primary action completed - allowing one final natural response');
+
+                try {
+                    const finalResponse = await axios.post(OPENROUTER_URL, {
+                        model: MODEL,
+                        messages: messages,
+                        max_tokens: 10000,
+                        temperature: 0.7,
+                        tools: tools,
+                        tool_choice: 'none' // Force text response without more tool calls
+                    }, {
+                        headers: {
+                            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        timeout: 45000
+                    });
+
+                    lastResponse = finalResponse.data.choices[0].message;
+                } catch (finalError) {
+                    logEvent('LLM', `Final response error: ${finalError.message}`);
+                    // If final response fails, use last successful tool response
+                    // lastResponse is already set from the tool calls
+                }
+
+                break; // Exit loop after primary action + final response
+            }
         }
 
         if (iteration >= MAX_ITERATIONS) {
