@@ -1946,19 +1946,55 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
             }
         }
 
-        if (iteration >= MAX_ITERATIONS) {
-            logEvent('LLM', `Reached max iterations (${MAX_ITERATIONS})`);
+        // If we hit max iterations and still have no text content, force a final response
+        if (iteration >= MAX_ITERATIONS && (!lastResponse?.content || lastResponse.content.trim() === '')) {
+            logEvent('LLM', `Reached max iterations (${MAX_ITERATIONS}) - forcing final text response`);
+
+            try {
+                const finalResponse = await axios.post(OPENROUTER_URL, {
+                    model: MODEL,
+                    messages: messages,
+                    max_tokens: 10000,
+                    temperature: 0.7,
+                    tools: tools,
+                    tool_choice: 'none' // Force text response without tools
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 45000
+                });
+
+                lastResponse = finalResponse.data.choices[0].message;
+            } catch (finalError) {
+                logEvent('LLM', `Final response error: ${finalError.message}`);
+                // Provide fallback response
+                lastResponse = {
+                    content: `completed the requested actions (${completedActions} operations). check the live site for changes.`
+                };
+            }
         }
 
         const content = lastResponse?.content;
-        if (!content) {
-            logEvent('LLM', 'Empty response from AI');
+        if (!content || content.trim() === '') {
+            logEvent('LLM', 'Empty response from AI - using fallback');
             console.error('Last response:', JSON.stringify(lastResponse, null, 2));
+
+            // Fallback based on what actions were completed
+            const fallbackText = completedActions > 0
+                ? `done - completed ${completedActions} action${completedActions > 1 ? 's' : ''}`
+                : 'processed your request';
+
+            return {
+                text: fallbackText,
+                searchContext: searchResults.length > 0 ? searchResults : null
+            };
         }
 
         // Return response with search context for history persistence
         return {
-            text: content || '',
+            text: content,
             searchContext: searchResults.length > 0 ? searchResults : null
         };
     } catch (error) {
