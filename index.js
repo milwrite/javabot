@@ -252,6 +252,7 @@ URL FORMATTING (CRITICAL - FOLLOW EXACTLY):
 
 AVAILABLE CAPABILITIES:
 - list_files(path): List files in directory
+- search_files(pattern, path, options): Search for text patterns across files (like grep)
 - read_file(path): Read file contents
 - write_file(path, content): Create/update files
 - edit_file(path, instructions): Edit files with natural language
@@ -265,6 +266,10 @@ AVAILABLE CAPABILITIES:
 - build_game(title, prompt, type): Build complete game/content via AI pipeline
 
 WHEN TO USE EACH TOOL:
+- To find content across files: ALWAYS use search_files FIRST before reading files
+  * Examples: "list clues", "find answers", "show all X", "what are the Y"
+  * Search for keywords like "clue", "answer", "const", function names, etc.
+  * Don't guess filenames - search to find the right file
 - For quick file edits: use edit_file with natural language
 - For new pages/apps: use create_page or build_game (for games with mobile controls)
 - For JS libraries/features: use create_feature
@@ -272,12 +277,30 @@ WHEN TO USE EACH TOOL:
 - To switch AI behavior: use set_model
 - For current events/news: use web_search
 
+CRITICAL SEARCH RULES:
+- User asks "list X" or "show X" or "what are X" → use search_files to find X
+- User mentions game name + wants info → use search_files with relevant keywords
+- Don't read random files hoping to find content - search first, read second
+
 WHEN TO USE WEB SEARCH:
 - Anything that changes: sports, news, prices, weather, standings, odds
 - Questions with "latest", "current", "today", "now"
 - When you don't have up-to-date info, just search
 
 Personality: Casual, chill, slightly unfocused but helpful. SHORT responses (1-2 sentences). Use "yeah man", "right on". Call people "man", "dude".
+
+RESPONSE FORMATTING (CRITICAL):
+When listing information (clues, answers, items, data):
+- Use markdown headers (## ACROSS, ## DOWN, etc.)
+- Add blank lines between sections for readability
+- Use bold (**text**) for labels and important terms
+- Format lists with proper spacing:
+  **Item 1:** Description
+
+  **Item 2:** Description
+
+- Use code blocks for code snippets with blank lines before/after
+- Structure long responses with clear sections separated by blank lines
 
 IMPORTANT: Do not prefix your responses with "Bot Sportello:" - just respond naturally as Bot Sportello. Always mention the live site URL (https://milwrite.github.io/javabot/) before making changes to give users context.
 
@@ -321,10 +344,31 @@ function getBotResponse(category) {
     return responses[Math.floor(Math.random() * responses.length)];
 }
 
-// Clean Bot Sportello name duplication from AI responses
+// Clean and format bot responses for better markdown rendering
 function cleanBotResponse(response) {
+    if (!response) return '';
+
     // Remove "Bot Sportello:" prefix patterns
-    return response.replace(/^Bot Sportello:\s*/i, '').replace(/Bot Sportello:\s*Bot Sportello:\s*/gi, '');
+    let cleaned = response.replace(/^Bot Sportello:\s*/i, '').replace(/Bot Sportello:\s*Bot Sportello:\s*/gi, '');
+
+    // Improve markdown formatting with proper spacing
+    cleaned = cleaned
+        // Add blank line before headers (##, ###, etc)
+        .replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
+        // Add blank line after headers
+        .replace(/(#{1,6}\s[^\n]+)\n([^\n])/g, '$1\n\n$2')
+        // Add blank line before lists (-, *, 1., etc)
+        .replace(/([^\n])\n([\-\*]|\d+\.)\s/g, '$1\n\n$2 ')
+        // Add blank line before code blocks
+        .replace(/([^\n])\n```/g, '$1\n\n```')
+        // Add blank line after code blocks
+        .replace(/```\n([^\n])/g, '```\n\n$1')
+        // Add blank line before bold sections (ACROSS:, DOWN:, etc)
+        .replace(/([^\n])\n(\*\*[A-Z][^\*]+\*\*)/g, '$1\n\n$2')
+        // Fix multiple consecutive blank lines (max 2)
+        .replace(/\n{3,}/g, '\n\n');
+
+    return cleaned;
 }
 
 // Efficient logging system - only log important events
@@ -904,6 +948,123 @@ Return ONLY the complete updated file content. No explanations, no markdown code
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
         console.error(`[EDIT_FILE] Error after ${totalTime}s:`, error.message);
         return `Error editing file: ${error.message}`;
+    }
+}
+
+// Tool: Search files for text patterns (like grep)
+async function searchFiles(pattern, searchPath = './src', options = {}) {
+    try {
+        const {
+            caseInsensitive = false,
+            wholeWord = false,
+            filePattern = null,
+            maxResults = 50
+        } = options;
+
+        const basePath = path.resolve(searchPath);
+
+        // Check if path exists
+        try {
+            await fs.access(basePath);
+        } catch {
+            return `Error: Path "${searchPath}" does not exist`;
+        }
+
+        const results = [];
+        const flags = caseInsensitive ? 'gi' : 'g';
+        let searchRegex;
+
+        try {
+            // If wholeWord, add word boundaries
+            const regexPattern = wholeWord ? `\\b${pattern}\\b` : pattern;
+            searchRegex = new RegExp(regexPattern, flags);
+        } catch (error) {
+            return `Error: Invalid regex pattern "${pattern}": ${error.message}`;
+        }
+
+        // Recursive file search
+        async function searchDirectory(dirPath) {
+            const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+            for (const entry of entries) {
+                const fullPath = path.join(dirPath, entry.name);
+
+                // Skip node_modules, .git, etc.
+                if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'responses' || entry.name === 'build-logs') {
+                    continue;
+                }
+
+                if (entry.isDirectory()) {
+                    await searchDirectory(fullPath);
+                } else if (entry.isFile()) {
+                    // Filter by file pattern if provided
+                    if (filePattern && !entry.name.includes(filePattern)) {
+                        continue;
+                    }
+
+                    // Only search text files
+                    const ext = path.extname(entry.name).toLowerCase();
+                    const textExtensions = ['.html', '.js', '.css', '.txt', '.md', '.json', '.xml', '.svg'];
+                    if (!textExtensions.includes(ext)) {
+                        continue;
+                    }
+
+                    try {
+                        const content = await fs.readFile(fullPath, 'utf8');
+                        const lines = content.split('\n');
+
+                        lines.forEach((line, index) => {
+                            if (searchRegex.test(line)) {
+                                const relativePath = path.relative(process.cwd(), fullPath);
+                                results.push({
+                                    file: relativePath,
+                                    line: index + 1,
+                                    content: line.trim()
+                                });
+                            }
+                        });
+
+                        // Stop if we hit max results
+                        if (results.length >= maxResults) {
+                            return;
+                        }
+                    } catch (readError) {
+                        // Skip files that can't be read as text
+                        continue;
+                    }
+                }
+            }
+        }
+
+        await searchDirectory(basePath);
+
+        if (results.length === 0) {
+            return `No matches found for "${pattern}" in ${searchPath}`;
+        }
+
+        // Format results with better markdown
+        let output = `**Found ${results.length} match${results.length === 1 ? '' : 'es'} for "${pattern}"**\n\n`;
+
+        // Group by file
+        const byFile = {};
+        results.forEach(result => {
+            if (!byFile[result.file]) {
+                byFile[result.file] = [];
+            }
+            byFile[result.file].push(result);
+        });
+
+        Object.keys(byFile).forEach(file => {
+            output += `### ${file}\n\n`;
+            byFile[file].forEach(match => {
+                output += `**Line ${match.line}:** \`${match.content}\`\n\n`;
+            });
+        });
+
+        return output.trim();
+    } catch (error) {
+        console.error('Search files error:', error);
+        return `Error searching files: ${error.message}`;
     }
 }
 
@@ -1596,6 +1757,22 @@ async function getEditResponse(userMessage, conversationMessages = []) {
             {
                 type: 'function',
                 function: {
+                    name: 'search_files',
+                    description: 'Search for text patterns across files to find what needs editing',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            pattern: { type: 'string', description: 'Text or regex pattern to search for' },
+                            path: { type: 'string', description: 'Directory to search in (default: ./src)' },
+                            case_insensitive: { type: 'boolean', description: 'Case-insensitive search (default: false)' }
+                        },
+                        required: ['pattern']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
                     name: 'read_file',
                     description: 'Read contents of a file to understand what needs editing',
                     parameters: {
@@ -1685,7 +1862,11 @@ async function getEditResponse(userMessage, conversationMessages = []) {
                 }
 
                 let result;
-                if (functionName === 'read_file') {
+                if (functionName === 'search_files') {
+                    result = await searchFiles(args.pattern, args.path || './src', {
+                        caseInsensitive: args.case_insensitive || false
+                    });
+                } else if (functionName === 'read_file') {
                     result = await readFile(args.path);
                 } else if (functionName === 'edit_file') {
                     result = await editFile(args.path, args.old_string, args.new_string, args.instructions);
@@ -1731,6 +1912,23 @@ async function getEditResponse(userMessage, conversationMessages = []) {
 
         if (iteration >= MAX_ITERATIONS && !editCompleted) {
             logEvent('EDIT_LOOP', 'Max iterations reached without edit');
+            // Force a final response to the user
+            const finalResponse = await axios.post(OPENROUTER_URL, {
+                model: MODEL,
+                messages: messages,
+                max_tokens: 5000,
+                temperature: 0.7,
+                tools: tools,
+                tool_choice: 'none'
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 45000
+            });
+
+            lastResponse = finalResponse.data.choices[0].message;
         }
 
         const content = lastResponse?.content || 'edit processed';
@@ -1773,6 +1971,23 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                         properties: {
                             path: { type: 'string', description: 'Directory path (default: ./src)' }
                         }
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'search_files',
+                    description: 'Search for text patterns across files (like grep). Supports regex patterns. Use this to find specific content, keywords, or code across multiple files.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            pattern: { type: 'string', description: 'Text or regex pattern to search for (e.g., "clue", "answer.*:", "const \\w+")' },
+                            path: { type: 'string', description: 'Directory to search in (default: ./src)' },
+                            case_insensitive: { type: 'boolean', description: 'Case-insensitive search (default: false)' },
+                            file_pattern: { type: 'string', description: 'Filter by filename pattern (e.g., ".html", "crossword")' }
+                        },
+                        required: ['pattern']
                     }
                 }
             },
@@ -2008,6 +2223,11 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                 let result;
                 if (functionName === 'list_files') {
                     result = await listFiles(args.path || './src');
+                } else if (functionName === 'search_files') {
+                    result = await searchFiles(args.pattern, args.path || './src', {
+                        caseInsensitive: args.case_insensitive || false,
+                        filePattern: args.file_pattern || null
+                    });
                 } else if (functionName === 'read_file') {
                     result = await readFile(args.path);
                 } else if (functionName === 'write_file') {
@@ -2583,9 +2803,20 @@ async function handleMentionAsync(message) {
 
         logEvent('MENTION', `${username}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`);
 
-        // Send thinking message
+        // Send context-aware thinking message
         console.log(`[MENTION] Sending thinking response to ${username}...`);
-        thinkingMsg = await message.reply(getBotResponse('thinking'));
+
+        // Determine what kind of request this is and send appropriate message
+        const lowerContent = content.toLowerCase();
+        let thinkingMessage = getBotResponse('thinking'); // default
+
+        if (lowerContent.startsWith('list') || lowerContent.startsWith('show') || lowerContent.startsWith('find') || lowerContent.startsWith('search')) {
+            thinkingMessage = '🔍 searching files...';
+        } else if (lowerContent.includes('what are') || lowerContent.includes('what is') || lowerContent.includes('tell me')) {
+            thinkingMessage = '🔍 looking that up...';
+        }
+
+        thinkingMsg = await message.reply(thinkingMessage);
         console.log(`[MENTION] Thinking message sent successfully`);
 
         // Check if this is an EDIT request - use streamlined edit loop
