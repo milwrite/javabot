@@ -338,9 +338,9 @@
       "hidden": false
     },
     "pleasantville-crossword": {
-      "title": "Pleasantville Mini Crossword",
+      "title": "Pleasantville Crossword",
       "icon": "🧩",
-      "description": "neighborhood themed crossword puzzle",
+      "description": "noir terminal crossword puzzle",
       "collection": "arcade-games",
       "hidden": false
     }
