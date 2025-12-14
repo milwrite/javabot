@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pleasantville Clues & Answers - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        body {
+            padding: 80px 20px 20px 20px;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 60px 5px 20px 5px;
+            }
+        }
+
+        .utility-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(126, 200, 227, 0.03);
+            border: 1px solid #7ec8e3;
+            padding: 20px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 480px) {
+            .utility-container {
+                padding: 15px 10px;
+                border-radius: 0;
+            }
+        }
+
+        h1 {
+            color: #00ffff;
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+
+        .subtitle {
+            color: #7ec8e3;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .search-container {
+            margin-bottom: 25px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 15px;
+            background: #0a0a0a;
+            border: 2px solid #7ec8e3;
+            color: #7ec8e3;
+            font-family: 'Courier Prime', monospace;
+            font-size: 16px;
+            border-radius: 4px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .search-box::placeholder {
+            color: rgba(126, 200, 227, 0.5);
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 25px;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: #0a0a0a;
+            border: 1px solid #7ec8e3;
+            color: #7ec8e3;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #ff0000;
+            border-color: #ff0000;
+            color: #0a0a0a;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .filter-btn {
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+        }
+
+        .stats {
+            text-align: center;
+            color: #7ec8e3;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .clue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .clue-item {
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid #7ec8e3;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .clue-item.hidden {
+            display: none;
+        }
+
+        .clue-header {
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 44px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.2s ease;
+        }
+
+        .clue-header:active {
+            background: rgba(126, 200, 227, 0.1);
+        }
+
+        @media (max-width: 480px) {
+            .clue-header {
+                padding: 12px 10px;
+            }
+        }
+
+        .clue-text {
+            color: #7ec8e3;
+            flex: 1;
+            font-size: 1em;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 480px) {
+            .clue-text {
+                font-size: 0.9em;
+            }
+        }
+
+        .clue-category {
+            display: inline-block;
+            padding: 4px 8px;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+            color: #ff0000;
+            font-size: 0.75em;
+            border-radius: 3px;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 480px) {
+            .clue-category {
+                margin-left: 5px;
+                font-size: 0.7em;
+                padding: 3px 6px;
+            }
+        }
+
+        .expand-icon {
+            color: #00ffff;
+            font-size: 1.2em;
+            margin-left: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .clue-item.revealed .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .answer-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .clue-item.revealed .answer-container {
+            max-height: 500px;
+        }
+
+        .answer-content {
+            padding: 15px;
+            background: rgba(0, 255, 255, 0.05);
+            border-top: 1px solid rgba(126, 200, 227, 0.3);
+        }
+
+        @media (max-width: 480px) {
+            .answer-content {
+                padding: 12px 10px;
+            }
+        }
+
+        .answer-label {
+            color: #00ffff;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .answer-text {
+            color: #7ec8e3;
+            line-height: 1.6;
+            font-size: 1em;
+        }
+
+        @media (max-width: 480px) {
+            .answer-text {
+                font-size: 0.9em;
+            }
+        }
+
+        .no-results {
+            text-align: center;
+            color: #ff0000;
+            padding: 40px 20px;
+            font-size: 1.1em;
+        }
+
+        .no-results.hidden {
+            display: none;
+        }
+
+        .reset-btn {
+            display: block;
+            margin: 20px auto 0;
+            padding: 12px 24px;
+            background: #ff0000;
+            border: none;
+            color: #0a0a0a;
+            font-family: 'Courier Prime', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .reset-btn:hover {
+            background: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        .reset-btn:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <nav class="home-link">
+        <a href="../index.html">← BACK TO TERMINAL</a>
+    </nav>
+
+    <div class="utility-container">
+        <h1>PLEASANTVILLE CLUES & ANSWERS</h1>
+        <div class="subtitle">Tap any clue to reveal its answer • Search or filter by category</div>
+
+        <div class="search-container">
+            <input 
+                type="text" 
+                class="search-box" 
+                id="searchBox" 
+                placeholder="Search clues or answers..."
+                autocomplete="off"
+            >
+        </div>
+
+        <div class="filter-buttons" id="filterButtons">
+            <button class="filter-btn active" data-category="all">ALL</button>
+            <button class="filter-btn" data-category="locations">LOCATIONS</button>
+            <button class="filter-btn" data-category="characters">CHARACTERS</button>
+            <button class="filter-btn" data-category="objects">OBJECTS</button>
+            <button class="filter-btn" data-category="events">EVENTS</button>
+            <button class="filter-btn" data-category="secrets">SECRETS</button>
+        </div>
+
+        <div class="stats" id="stats">
+            Showing <span id="visibleCount">0</span> of <span id="totalCount">0</span> clues
+        </div>
+
+        <div class="clue-list" id="clueList"></div>
+
+        <div class="no-results hidden" id="noResults">
+            No clues found matching your search.
+            <button class="reset-btn" id="resetBtn">CLEAR SEARCH</button>
+        </div>
+    </div>
+
+    <script>
+        const cluesData = [
+            {
+                category: 'locations',
+                clue: 'The old cinema on Main Street, where the projector still runs at midnight',
+                answer: 'The Noir Palace - Site of the original Bot Sportello incident. The projector plays a loop of the last film shown before the town changed.'
+            },
+            {
+                category: 'locations',
+                clue: 'A diner that serves breakfast all day, but closes at 3:33 PM sharp',
+                answer: 'Mabel\'s All-Day - The owner vanished at exactly 3:33 PM on the day of the incident. The clock stopped at that moment.'
+            },
+            {
+                category: 'locations',
+                clue: 'The library basement where certain books check themselves out',
+                answer: 'Pleasantville Public Library Sub-Level - Contains records of every resident who never existed. Access requires a library card from 1952.'
+            },
+            {
+                category: 'characters',
+                clue: 'A mailman who delivers letters addressed to people who moved away years ago',
+                answer: 'Chester Mills - He\'s been dead for 30 years but continues his route. The letters contain messages from the "other" Pleasantville.'
+            },
+            {
+                category: 'characters',
+                clue: 'The mayor who won every election since 1955 with exactly 100% of the vote',
+                answer: 'Mayor Harold Finch - Not actually human. A construct maintaining the town\'s pleasant facade. His office is always locked from the inside.'
+            },
+            {
+                category: 'characters',
+                clue: 'A child who appears in every class photo but no one remembers attending school',
+                answer: 'Little Timmy - The Observer. Appears in photographs as a witness to every significant event, but exists outside normal memory.'
+            },
+            {
+                category: 'objects',
+                clue: 'A payphone that rings at 2 AM with calls from the future',
+                answer: 'The Red Booth on Elm - Connected to a temporal anomaly. Answering reveals tomorrow\'s newspaper headlines, but you can\'t change what happens.'
+            },
+            {
+                category: 'objects',
+                clue: 'A jukebox that only plays songs that were never written',
+                answer: 'The Wurlitzer at Sal\'s Bar - Plays music from alternate timelines. Selection B-7 is "The Song That Ends the World."'
+            },
+            {
+                category: 'objects',
+                clue: 'A mirror in the barbershop that shows you as you were yesterday',
+                answer: 'Tony\'s Time Mirror - Shows your reflection 24 hours in the past. Some regulars use it to avoid making the same mistakes twice.'
+            },
+            {
+                category: 'events',
+                clue: 'Every Tuesday at noon, everyone in town stops and looks up at the sky for exactly one minute',
+                answer: 'The Tuesday Pause - Collective unconscious response to something that happened in 1952. No one knows why they do it, but they must.'
+            },
+            {
+                category: 'events',
+                clue: 'The annual parade that celebrates a holiday that doesn\'t exist on any calendar',
+                answer: 'Founder\'s Day - Commemorates the founding of Pleasantville, which according to records never actually occurred. The town simply appeared one day.'
+            },
+            {
+                category: 'events',
+                clue: 'A storm that happens every year on the same date, but the weather report never predicts it',
+                answer: 'The September Storm - Anniversary of the incident. Meteorological impossibility. Lightning strikes the same seven locations in the same order.'
+            },
+            {
+                category: 'secrets',
+                clue: 'The real reason Bot Sportello came to Pleasantville in the first place',
+                answer: 'He was searching for his creator, who disappeared here in 1952. Found evidence that Pleasantville exists in multiple timelines simultaneously.'
+            },
+            {
+                category: 'secrets',
+                clue: 'What\'s buried beneath the town square fountain',
+                answer: 'The original Pleasantville - an entire town, perfectly preserved, existing one layer down. The fountain marks the dimensional overlap point.'
+            },
+            {
+                category: 'secrets',
+                clue: 'Why no one can ever truly leave Pleasantville',
+                answer: 'The town exists in a closed temporal loop. Everyone who leaves eventually returns, having never left. The loop resets every 70 years.'
+            },
+            {
+                category: 'locations',
+                clue: 'A gas station where the price per gallon hasn\'t changed since 1952',
+                answer: 'Hank\'s Fill-Up - Frozen in time like everything else. The attendant still wears the same uniform. The cash register only accepts silver dollars.'
+            },
+            {
+                category: 'characters',
+                clue: 'The woman who waters her garden at midnight, growing flowers that bloom in darkness',
+                answer: 'Mrs. Evelyn Cross - Tends the Night Garden. Her flowers only exist in moonlight and vanish at dawn. She knows the truth about the town.'
+            },
+            {
+                category: 'objects',
+                clue: 'A typewriter in the newspaper office that writes tomorrow\'s news by itself',
+                answer: 'The Oracle Underwood - Types out events before they happen. The editor learned to stop trying to prevent them - the stories always come true.'
+            },
+            {
+                category: 'events',
+                clue: 'The night when all the street lights flicker in perfect synchronization',
+                answer: 'The Synchronization - Happens when the barriers between timelines thin. For 3.33 minutes, you can see all versions of Pleasantville at once.'
+            },
+            {
+                category: 'secrets',
+                clue: 'The password that opens the locked door in the town hall basement',
+                answer: 'There is no password. The door opens only for those who don\'t want to know what\'s behind it. Inside: records of everyone who never was.'
+            },
+            {
+                category: 'locations',
+                clue: 'The motel where every room is always occupied but no guests are ever seen',
+                answer: 'The Pleasant Rest Motor Lodge - Rooms occupied by temporal echoes of people who stayed there in other timelines. Check-in is permanent.'
+            },
+            {
+                category: 'characters',
+                clue: 'A detective who arrived to investigate Bot Sportello but never filed a report',
+                answer: 'Detective Sarah Chen - Discovered the truth and chose to stay. Now runs the antique shop, selling objects from timelines that no longer exist.'
+            },
+            {
+                category: 'objects',
+                clue: 'A camera that develops photos showing what happened in that spot exactly one year ago',
+                answer: 'The Temporal Polaroid - Found in the pawn shop. Each photo reveals the past, but taking too many causes you to fade into yesterday.'
+            },
+            {
+                category: 'events',
+                clue: 'The hour when all clocks in town run backwards',
+                answer: 'The Reversal Hour - 3:00 AM to 4:00 AM. Time literally reverses. Anything done during this hour undoes itself by dawn.'
+            },
+            {
+                category: 'secrets',
+                clue: 'What Bot Sportello found in the cinema\'s projection booth',
+                answer: 'Film reels containing footage of Pleasantville from every possible timeline. He\'s still watching them, trying to find the original.'
+            }
+        ];
+
+        let currentFilter = 'all';
+        let currentSearch = '';
+
+        function initializeClues() {
+            const clueList = document.getElementById('clueList');
+            const totalCount = document.getElementById('totalCount');
+            
+            totalCount.textContent = cluesData.length;
+            
+            cluesData.forEach((clue, index) => {
+                const clueItem = document.createElement('div');
+                clueItem.className = 'clue-item';
+                clueItem.dataset.category = clue.category;
+                clueItem.dataset.index = index;
+                
+                clueItem.innerHTML = `
+                    <div class="clue-header">
+                        <div style="display: flex; align-items: center; flex: 1; flex-wrap: wrap;">
+                            <span class="clue-text">${clue.clue}</span>
+                            <span class="clue-category">${clue.category.toUpperCase()}</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="answer-container">
+                        <div class="answer-content">
+                            <div class="answer-label">ANSWER:</div>
+                            <div class="answer-text">${clue.answer}</div>
+                        </div>
+                    </div>
+                `;
+                
+                clueList.appendChild(clueItem);
+            });
+            
+            updateStats();
+        }
+
+        function toggleClue(clueItem) {
+            clueItem.classList.toggle('revealed');
+        }
+
+        function filterClues() {
+            const clueItems = document.querySelectorAll('.clue-item');
+            const noResults = document.getElementById('noResults');
+            let visibleCount = 0;
+            
+            clueItems.forEach(item => {
+                const category = item.dataset.category;
+                const clueText = item.querySelector('.clue-text').textContent.toLowerCase();
+                const answerText = item.querySelector('.answer-text').textContent.toLowerCase();
+                
+                const matchesCategory = currentFilter === 'all' || category === currentFilter;
+                const matchesSearch = currentSearch === '' || 
+                    clueText.includes(currentSearch) || 
+                    answerText.includes(currentSearch);
+                
+                if (matchesCategory && matchesSearch) {
+                    item.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    item.classList.add('hidden');
+                    item.classList.remove('revealed');
+                }
+            });
+            
+            if (visibleCount === 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+            }
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            const visibleCount = document.getElementById('visibleCount');
+            const visible = document.querySelectorAll('.clue-item:not(.hidden)').length;
+            visibleCount.textContent = visible;
+        }
+
+        document.getElementById('clueList').addEventListener('click', (e) => {
+            const clueHeader = e.target.closest('.clue-header');
+            if (clueHeader) {
+                const clueItem = clueHeader.closest('.clue-item');
+                toggleClue(clueItem);
+            }
+        });
+
+        document.getElementById('filterButtons').addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                e.target.classList.add('active');
+                currentFilter = e.target.dataset.category;
+                filterClues();
+            }
+        });
+
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            currentSearch = e.target.value.toLowerCase();
+            filterClues();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            document.getElementById('searchBox').value = '';
+            currentSearch = '';
+            currentFilter = 'all';
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('.filter-btn[data-category="all"]').classList.add('active');
+            filterClues();
+        });
+
+        initializeClues();
+    </script>
+</body>
+</html>

@@ -343,6 +343,13 @@
       "description": "noir terminal crossword puzzle",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "pleasantville-clues": {
+      "title": "Pleasantville Clues & Answers",
+      "icon": "🔍",
+      "description": "searchable noir trivia database",
+      "collection": "utilities-apps",
+      "hidden": false
     }
   }
 }
