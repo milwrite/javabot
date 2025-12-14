@@ -1576,6 +1576,175 @@ async function buildGameTool(title, prompt, type = 'auto') {
     }
 }
 
+// Lightweight edit-only LLM response (streamlined for file edits)
+async function getEditResponse(userMessage, conversationMessages = []) {
+    try {
+        const messages = [
+            {
+                role: 'system',
+                content: `${SYSTEM_PROMPT}\n\nYou are in EDIT MODE. Focus on making the requested edits quickly and efficiently. Read the file, make the edit, and respond. Do not use web search or create new content.`
+            },
+            ...conversationMessages,
+            {
+                role: 'user',
+                content: userMessage
+            }
+        ];
+
+        // Limited toolset for edits only
+        const tools = [
+            {
+                type: 'function',
+                function: {
+                    name: 'read_file',
+                    description: 'Read contents of a file to understand what needs editing',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string', description: 'File path to read' }
+                        },
+                        required: ['path']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'edit_file',
+                    description: 'Edit an existing file using EXACT string replacement. Always use exact mode for speed.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string', description: 'File path to edit' },
+                            old_string: { type: 'string', description: 'EXACT string to replace (must be unique in file)' },
+                            new_string: { type: 'string', description: 'New string to replace old_string with' }
+                        },
+                        required: ['path']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'list_files',
+                    description: 'List files to find the right file to edit',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string', description: 'Directory path (default: ./src)' }
+                        }
+                    }
+                }
+            }
+        ];
+
+        const MAX_ITERATIONS = 3; // Streamlined for edits
+        let iteration = 0;
+        let lastResponse;
+        let editCompleted = false;
+
+        while (iteration < MAX_ITERATIONS && !editCompleted) {
+            iteration++;
+
+            const response = await axios.post(OPENROUTER_URL, {
+                model: MODEL,
+                messages: messages,
+                max_tokens: 10000,
+                temperature: 0.7,
+                tools: tools,
+                tool_choice: 'auto'
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 45000
+            });
+
+            lastResponse = response.data.choices[0].message;
+
+            if (!lastResponse.tool_calls || lastResponse.tool_calls.length === 0) {
+                break;
+            }
+
+            logEvent('EDIT_LOOP', `Iteration ${iteration}: ${lastResponse.tool_calls.length} tools`);
+
+            const toolResults = [];
+            for (const toolCall of lastResponse.tool_calls) {
+                const functionName = toolCall.function.name;
+                let args;
+                try {
+                    args = JSON.parse(toolCall.function.arguments || '{}');
+                } catch (parseError) {
+                    toolResults.push({
+                        role: 'tool',
+                        tool_call_id: toolCall.id,
+                        content: `Error: Invalid JSON in tool arguments`
+                    });
+                    continue;
+                }
+
+                let result;
+                if (functionName === 'read_file') {
+                    result = await readFile(args.path);
+                } else if (functionName === 'edit_file') {
+                    result = await editFile(args.path, args.old_string, args.new_string, args.instructions);
+                    if (!result.startsWith('Error')) {
+                        editCompleted = true;
+                        logEvent('EDIT_LOOP', 'Edit completed successfully');
+                    }
+                } else if (functionName === 'list_files') {
+                    result = await listFiles(args.path || './src');
+                }
+
+                toolResults.push({
+                    role: 'tool',
+                    tool_call_id: toolCall.id,
+                    content: result
+                });
+            }
+
+            messages.push(lastResponse);
+            messages.push(...toolResults);
+
+            // After edit completes, get final response
+            if (editCompleted) {
+                const finalResponse = await axios.post(OPENROUTER_URL, {
+                    model: MODEL,
+                    messages: messages,
+                    max_tokens: 5000,
+                    temperature: 0.7,
+                    tools: tools,
+                    tool_choice: 'none'
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 45000
+                });
+
+                lastResponse = finalResponse.data.choices[0].message;
+                break;
+            }
+        }
+
+        if (iteration >= MAX_ITERATIONS && !editCompleted) {
+            logEvent('EDIT_LOOP', 'Max iterations reached without edit');
+        }
+
+        const content = lastResponse?.content || 'edit processed';
+        return {
+            text: content,
+            searchContext: null
+        };
+
+    } catch (error) {
+        console.error('Edit LLM Error:', error.response?.data || error.message);
+        return { text: getBotResponse('errors'), searchContext: null };
+    }
+}
+
 // Enhanced LLM response with tool calling
 async function getLLMResponse(userMessage, conversationMessages = []) {
     try {
@@ -2418,6 +2587,26 @@ async function handleMentionAsync(message) {
         console.log(`[MENTION] Sending thinking response to ${username}...`);
         thinkingMsg = await message.reply(getBotResponse('thinking'));
         console.log(`[MENTION] Thinking message sent successfully`);
+
+        // Check if this is an EDIT request - use streamlined edit loop
+        if (isEditRequest(content)) {
+            logEvent('MENTION', 'Detected edit request - using streamlined edit loop');
+
+            const conversationMessages = buildMessagesFromHistory(50);
+            let llmResult = await getEditResponse(content, conversationMessages);
+            let response = cleanBotResponse(llmResult.text);
+
+            if (!response || response.trim().length === 0) {
+                response = getBotResponse('errors') + ' Got an empty response from the AI.';
+                console.error('[MENTION] Empty AI response received');
+            }
+
+            await thinkingMsg.edit(response);
+            addToHistory(username, content, false);
+            addToHistory('Bot Sportello', response, true);
+
+            return; // Exit early - edit handled
+        }
 
         // Check if this is a game request - route to game pipeline
         if (isGameRequest(content)) {

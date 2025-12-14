@@ -220,6 +220,10 @@ function isEditRequest(prompt) {
         'edit', 'update', 'change', 'modify', 'fix', 'revise',
         'adjust', 'tweak', 'alter', 'correct', 'refactor',
 
+        // Improvement words (CRITICAL - often used for edits)
+        'improve', 'better', 'enhance', 'optimize', 'polish',
+        'suck', 'bad', 'worse', 'broken', 'wrong',
+
         // Modification phrases
         'make it', 'make the', 'can you change', 'can you make',
         'can you update', 'can you fix', 'can you edit',
@@ -228,10 +232,16 @@ function isEditRequest(prompt) {
         // Specific edit actions
         'rename', 'recolor', 'resize', 'reposition',
         'add to', 'remove from', 'replace the', 'swap the',
+        'remove the', 'delete the', 'take out', 'get rid of',
 
         // Contextual edits
         'instead of', 'rather than', 'different', 'differently',
-        'themed after', 'based on', 'following', 'similar to'
+        'themed after', 'based on', 'following', 'similar to',
+
+        // Partial edits (CRITICAL - "only the X" means editing specific part)
+        'only the', 'just the', 'only make', 'just make',
+        'only change', 'just change', 'only fix', 'just fix',
+        'only improve', 'just improve', 'only update'
     ];
 
     const lowerPrompt = prompt.toLowerCase();
@@ -239,13 +249,22 @@ function isEditRequest(prompt) {
     // Strong indicators of edit intent
     const hasEditKeyword = editKeywords.some(keyword => lowerPrompt.includes(keyword));
 
-    // Check for explicit "edit" or "update" command
-    const hasExplicitEdit = /\b(edit|update|change|modify|fix)\b/i.test(prompt);
+    // Check for explicit edit/update/modify verbs
+    const hasExplicitEdit = /\b(edit|update|change|modify|fix|improve|enhance|remove|delete|redo)\b/i.test(prompt);
 
-    // Check if referencing existing file (e.g., "the crossword", "that game")
-    const referencesExisting = /\b(the|that|this|existing)\s+(game|page|crossword|file|code|html)\b/i.test(prompt);
+    // Check if referencing existing file (e.g., "the crossword", "that game", "snake game")
+    const referencesExisting = /\b(the|that|this|existing)\s+(game|page|crossword|file|code|html|snake|frogger|tetris|maze|puzzle|clue|instruction|scroll|control|button)\b/i.test(prompt);
 
-    return hasEditKeyword || hasExplicitEdit || referencesExisting;
+    // Check for common game names (often mentioned without "the")
+    const mentionsSpecificGame = /\b(pleasantville|crossword|frogger|snake|tetris|maze|sudoku|pong|breakout)\b/i.test(prompt);
+
+    // Check for "ONLY X" pattern which strongly suggests editing existing content
+    const hasOnlyPattern = /\b(only|just)\s+(the|make|change|fix|improve|update|remove|add)\b/i.test(prompt);
+
+    // Check for negative sentiment about existing content
+    const hasNegativeSentiment = /\b(suck|bad|worse|broken|wrong|terrible|awful|poor|confusing)\b/i.test(prompt);
+
+    return hasEditKeyword || hasExplicitEdit || referencesExisting || mentionsSpecificGame || hasOnlyPattern || hasNegativeSentiment;
 }
 
 /**
