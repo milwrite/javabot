@@ -11,6 +11,7 @@ const axiosRetry = require('axios-retry').default;
 // Game pipeline modules (system-v1)
 const { runGamePipeline, commitGameFiles, isGameRequest, isEditRequest } = require('./services/gamePipeline');
 const { getRecentPatternsSummary } = require('./services/buildLogs');
+const { classifyRequest } = require('./services/requestClassifier');
 
 // Site inventory system
 const { generateSiteInventory } = require('./generateSiteInventory.js');
@@ -3091,11 +3092,24 @@ async function handleMentionAsync(message) {
         
         while (processingAttempt <= maxProcessingAttempts) {
             try {
-                // Loop 2: Game/Content pipeline (attempts 1-3)
-                if (processingAttempt <= 3 && isGameRequest(content)) {
-                    logEvent('MENTION', `Attempt ${processingAttempt}: Detected game request - routing to game pipeline`);
-
-                    await thinkingMsg.edit('📝 detected game request - firing up the game builder...');
+                // Use LLM classifier to determine request type (replaces keyword-based detection)
+                if (processingAttempt <= 3) {
+                    const classification = await classifyRequest(content);
+                    logEvent('MENTION', `Attempt ${processingAttempt}: LLM classified as ${classification}`);
+                    
+                    // Handle READ_ONLY requests immediately (like "print the site inventory")
+                    if (classification === 'READ_only' || classification === 'READ_ONLY') {
+                        logEvent('MENTION', `READ_ONLY request - routing to normal LLM response`);
+                        await thinkingMsg.edit('📖 processing your information request...');
+                        // Skip to Loop 4: Normal LLM response
+                        processingAttempt = 4;
+                        continue;
+                    }
+                    
+                    // Handle content creation requests with game pipeline
+                    if (classification === 'CREATE_NEW') {
+                        logEvent('MENTION', `CREATE_NEW request - routing to game pipeline`);
+                        await thinkingMsg.edit('📝 detected content creation request - firing up the content builder...');
 
                     const triggerSource = {
                         kind: 'mention',
