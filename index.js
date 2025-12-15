@@ -114,7 +114,7 @@ const git = simpleGit();
 // Helper function to get properly encoded remote URL
 function getEncodedRemoteUrl() {
     const encodedToken = encodeURIComponent(process.env.GITHUB_TOKEN);
-    return `https://${encodedToken}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+    return `https://${process.env.GITHUB_REPO_OWNER}:${encodedToken}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
 }
 
 // Initialize Git remote URL with current token
@@ -1934,7 +1934,21 @@ async function getEditResponse(userMessage, conversationMessages = []) {
         const messages = [
             {
                 role: 'system',
-                content: `${SYSTEM_PROMPT}\n\nYou are in EDIT MODE. Focus on making the requested edits quickly and efficiently. Read the file, make the edit, and respond. Do not use web search or create new content.`
+                content: `${SYSTEM_PROMPT}\n\nYou are in EDIT MODE. Focus on making the requested edits quickly and efficiently. 
+
+IMPORTANT URL-TO-FILE MAPPING:
+- URLs like "https://milwrite.github.io/javabot/src/filename.html" map to file path "src/filename.html"
+- Remove the base URL and use the path directly: src/tarot-reading.html, src/frogger.html, etc.
+
+EDIT WORKFLOW:
+1. If user mentions a URL, extract the filename and look in src/ directory
+2. ALWAYS use read_file to examine the current content first
+3. ALWAYS use edit_file to make the specific changes requested
+4. Respond with confirmation of what was changed
+
+CRITICAL: You MUST use the available tools (read_file, edit_file, search_files). Do not just provide explanations - take action by calling the appropriate tools.
+
+Do not use web search or create new content - only edit existing files.`
             },
             ...conversationMessages,
             {
@@ -3066,8 +3080,8 @@ async function handleMentionAsync(message) {
             logEvent('MENTION', `Processing attempt ${processingAttempt}/${maxProcessingAttempts}${lastFailureReason ? ` (prev: ${lastFailureReason})` : ''}`);
             
             try {
-                // Loop 1: Edit request detection (strictest first)
-                if (processingAttempt <= 2 && isEditRequest(content, conversationMessages)) {
+                // Loop 1: Edit request detection (DISABLED - now using LLM classifier)
+                if (false && processingAttempt <= 2 && isEditRequest(content, conversationMessages)) {
                     logEvent('MENTION', `Attempt ${processingAttempt}: Detected edit request - using streamlined edit loop`);
 
                     let llmResult = await getEditResponse(content, conversationMessages);
@@ -3115,10 +3129,10 @@ async function handleMentionAsync(message) {
                 // Use LLM classifier to determine request type (replaces keyword-based detection)
                 if (processingAttempt <= 3) {
                     const classification = await classifyRequest(content);
-                    logEvent('MENTION', `Attempt ${processingAttempt}: LLM classified as ${classification}`);
+                    logEvent('MENTION', `Attempt ${processingAttempt}: LLM classified as ${classification.type}`);
                     
                     // Handle READ_ONLY requests immediately (like "print the site inventory")
-                    if (classification === 'READ_only' || classification === 'READ_ONLY') {
+                    if (classification.isReadOnly) {
                         logEvent('MENTION', `READ_ONLY request - routing to normal LLM response`);
                         await thinkingMsg.edit('📖 processing your information request...');
                         // Skip to Loop 4: Normal LLM response
@@ -3127,7 +3141,7 @@ async function handleMentionAsync(message) {
                     }
                     
                     // Handle content creation requests with game pipeline
-                    if (classification === 'CREATE_NEW') {
+                    if (classification.isCreate) {
                         logEvent('MENTION', `CREATE_NEW request - routing to game pipeline`);
                         await thinkingMsg.edit('📝 detected content creation request - firing up the content builder...');
 
@@ -3199,6 +3213,54 @@ async function handleMentionAsync(message) {
                     addToHistory('Bot Sportello', successMsg, true);
 
                     return; // Success - exit
+                    }
+                    
+                    // Handle edit requests with streamlined edit loop
+                    if (classification.isEdit) {
+                        logEvent('MENTION', `EDIT_EXISTING request - using streamlined edit loop`);
+                        await thinkingMsg.edit('🔧 detected edit request - using streamlined editor...');
+                        
+                        let llmResult = await getEditResponse(content, conversationMessages);
+                        let response = cleanBotResponse(llmResult.text);
+                        
+                        if (llmResult.toolCalls && llmResult.toolCalls.length > 0) {
+                            logEvent('EDIT_LOOP', `Iteration 1: ${llmResult.toolCalls.length} tools`);
+                            
+                            // Process tool calls and iterate up to 3 times
+                            for (let iteration = 1; iteration <= 3 && llmResult.toolCalls && llmResult.toolCalls.length > 0; iteration++) {
+                                const results = [];
+                                
+                                for (const toolCall of llmResult.toolCalls) {
+                                    const result = await executeToolCall(toolCall);
+                                    results.push(result);
+                                }
+                                
+                                if (iteration < 3) {
+                                    llmResult = await getEditResponse(content, conversationMessages, results);
+                                    response = cleanBotResponse(llmResult.text);
+                                    if (llmResult.toolCalls && llmResult.toolCalls.length > 0) {
+                                        logEvent('EDIT_LOOP', `Iteration ${iteration + 1}: ${llmResult.toolCalls.length} tools`);
+                                    }
+                                }
+                            }
+                            
+                            if (response) {
+                                await thinkingMsg.edit(response);
+                                addToHistory(username, content, false);
+                                addToHistory('Bot Sportello', response, true);
+                                return; // Success - exit
+                            }
+                        } else {
+                            logEvent('EDIT_LOOP', 'Max iterations reached without edit - this may not be an edit request');
+                        }
+                        
+                        // If edit loop didn't work, continue to fallback loops below
+                        processingAttempt++;
+                        if (processingAttempt <= maxProcessingAttempts) {
+                            await thinkingMsg.edit('hmm that didn\'t quite work... lemme try a different approach...');
+                            continue;
+                        }
+                        break;
                     }
 
                     // Break out to continue with remaining loops below
