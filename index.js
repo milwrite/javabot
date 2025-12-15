@@ -913,10 +913,9 @@ async function writeFile(filePath, content) {
         try {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
-            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = getEncodedRemoteUrl();
-                await git.remote(['set-url', 'origin', remoteUrl]);
-            }
+            // Always set the remote URL with token for reliability (avoid checking encoded token)
+            const remoteUrl = getEncodedRemoteUrl();
+            await git.remote(['set-url', 'origin', remoteUrl]);
         } catch (remoteError) {
             console.warn('Remote URL setup warning:', remoteError.message);
         }
@@ -1031,10 +1030,9 @@ Return ONLY the complete updated file content. No explanations, no markdown code
         try {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
-            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = getEncodedRemoteUrl();
-                await git.remote(['set-url', 'origin', remoteUrl]);
-            }
+            // Always set the remote URL with token for reliability (avoid checking encoded token)
+            const remoteUrl = getEncodedRemoteUrl();
+            await git.remote(['set-url', 'origin', remoteUrl]);
         } catch (remoteError) {
             console.warn('Remote URL setup warning:', remoteError.message);
         }
@@ -1547,10 +1545,9 @@ Return only HTML, no markdown blocks or explanations.`;
         try {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
-            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = getEncodedRemoteUrl();
-                await git.remote(['set-url', 'origin', remoteUrl]);
-            }
+            // Always set the remote URL with token for reliability (avoid checking encoded token)
+            const remoteUrl = getEncodedRemoteUrl();
+            await git.remote(['set-url', 'origin', remoteUrl]);
         } catch (remoteError) {
             console.warn('Remote URL setup warning:', remoteError.message);
         }
@@ -1700,10 +1697,9 @@ Return only HTML code, no markdown blocks or explanations.`;
         try {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
-            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = getEncodedRemoteUrl();
-                await git.remote(['set-url', 'origin', remoteUrl]);
-            }
+            // Always set the remote URL with token for reliability (avoid checking encoded token)
+            const remoteUrl = getEncodedRemoteUrl();
+            await git.remote(['set-url', 'origin', remoteUrl]);
         } catch (remoteError) {
             console.warn('Remote URL setup warning:', remoteError.message);
         }
@@ -1752,10 +1748,9 @@ async function commitChanges(message, files = '.') {
         try {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
-            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = getEncodedRemoteUrl();
-                await git.remote(['set-url', 'origin', remoteUrl]);
-            }
+            // Always set the remote URL with token for reliability (avoid checking encoded token)
+            const remoteUrl = getEncodedRemoteUrl();
+            await git.remote(['set-url', 'origin', remoteUrl]);
         } catch (remoteError) {
             console.warn('Remote URL setup warning:', remoteError.message);
         }
@@ -3504,10 +3499,9 @@ async function executeCommit(interaction, commitData) {
         try {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
-            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = getEncodedRemoteUrl();
-                await git.remote(['set-url', 'origin', remoteUrl]);
-            }
+            // Always set the remote URL with token for reliability (avoid checking encoded token)
+            const remoteUrl = getEncodedRemoteUrl();
+            await git.remote(['set-url', 'origin', remoteUrl]);
         } catch (remoteError) {
             console.warn('Remote URL setup warning:', remoteError.message);
         }
@@ -3924,10 +3918,9 @@ async function handleBuildPuzzle(interaction) {
         try {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
-            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = getEncodedRemoteUrl();
-                await git.remote(['set-url', 'origin', remoteUrl]);
-            }
+            // Always set the remote URL with token for reliability (avoid checking encoded token)
+            const remoteUrl = getEncodedRemoteUrl();
+            await git.remote(['set-url', 'origin', remoteUrl]);
         } catch (remoteError) {
             console.warn('Remote URL setup warning:', remoteError.message);
         }
@@ -5198,10 +5191,9 @@ async function executeMentionCommit(interaction, commitData) {
         try {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
-            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = getEncodedRemoteUrl();
-                await git.remote(['set-url', 'origin', remoteUrl]);
-            }
+            // Always set the remote URL with token for reliability (avoid checking encoded token)
+            const remoteUrl = getEncodedRemoteUrl();
+            await git.remote(['set-url', 'origin', remoteUrl]);
         } catch (remoteError) {
             console.warn('Remote URL setup warning:', remoteError.message);
         }
@@ -5945,10 +5937,9 @@ Output ONLY the CSS code, no explanations.`;
         try {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
-            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = getEncodedRemoteUrl();
-                await git.remote(['set-url', 'origin', remoteUrl]);
-            }
+            // Always set the remote URL with token for reliability (avoid checking encoded token)
+            const remoteUrl = getEncodedRemoteUrl();
+            await git.remote(['set-url', 'origin', remoteUrl]);
         } catch (remoteError) {
             console.warn('Remote URL setup warning:', remoteError.message);
         }
