@@ -3226,8 +3226,8 @@ async function handleMentionAsync(message) {
                         if (llmResult.toolCalls && llmResult.toolCalls.length > 0) {
                             logEvent('EDIT_LOOP', `Iteration 1: ${llmResult.toolCalls.length} tools`);
                             
-                            // Process tool calls and iterate up to 3 times
-                            for (let iteration = 1; iteration <= 3 && llmResult.toolCalls && llmResult.toolCalls.length > 0; iteration++) {
+                            // Process tool calls and iterate up to 10 times
+                            for (let iteration = 1; iteration <= 10 && llmResult.toolCalls && llmResult.toolCalls.length > 0; iteration++) {
                                 const results = [];
                                 
                                 for (const toolCall of llmResult.toolCalls) {
@@ -3235,7 +3235,7 @@ async function handleMentionAsync(message) {
                                     results.push(result);
                                 }
                                 
-                                if (iteration < 3) {
+                                if (iteration < 10) {
                                     llmResult = await getEditResponse(content, conversationMessages, results);
                                     response = cleanBotResponse(llmResult.text);
                                     if (llmResult.toolCalls && llmResult.toolCalls.length > 0) {
