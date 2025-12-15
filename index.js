@@ -3111,7 +3111,7 @@ async function handleMentionAsync(message) {
                         logEvent('MENTION', `CREATE_NEW request - routing to game pipeline`);
                         await thinkingMsg.edit('📝 detected content creation request - firing up the content builder...');
 
-                    const triggerSource = {
+                        const triggerSource = {
                         kind: 'mention',
                         userId: message.author.id,
                         username: message.author.username,
@@ -3179,10 +3179,11 @@ async function handleMentionAsync(message) {
                     addToHistory('Bot Sportello', successMsg, true);
 
                     return; // Success - exit
-                }
+                    }
 
-                // Break out to continue with remaining loops below
-                break;
+                    // Break out to continue with remaining loops below
+                    break;
+                }
 
             } catch (gameError) {
                 lastFailureReason = `game-error-${gameError.message.slice(0, 20)}`;
