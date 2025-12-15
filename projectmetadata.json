@@ -357,6 +357,13 @@
       "description": "mystical three-card tarot spread",
       "collection": "utilities-apps",
       "hidden": false
+    },
+    "site-inventory": {
+      "title": "Site Inventory",
+      "icon": "🗂️",
+      "description": "repository scanner utility",
+      "collection": "utilities-apps",
+      "hidden": false
     }
   }
 }
