@@ -350,6 +350,13 @@
       "description": "searchable noir trivia database",
       "collection": "utilities-apps",
       "hidden": false
+    },
+    "tarot-reading": {
+      "title": "Tarot Reading",
+      "icon": "🔮",
+      "description": "mystical three-card tarot spread",
+      "collection": "utilities-apps",
+      "hidden": false
     }
   }
 }
