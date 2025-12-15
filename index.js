@@ -111,6 +111,23 @@ const octokit = new Octokit({
 
 const git = simpleGit();
 
+// Helper function to get properly encoded remote URL
+function getEncodedRemoteUrl() {
+    const encodedToken = encodeURIComponent(process.env.GITHUB_TOKEN);
+    return `https://${encodedToken}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+}
+
+// Initialize Git remote URL with current token
+async function initializeGitRemote() {
+    try {
+        const remoteUrl = getEncodedRemoteUrl();
+        await git.remote(['set-url', 'origin', remoteUrl]);
+        console.log('✅ Git remote URL initialized with current token');
+    } catch (error) {
+        console.warn('⚠️ Git remote URL initialization warning:', error.message);
+    }
+}
+
 // Git operation wrapper with timeout
 async function gitWithTimeout(operation, timeoutMs = CONFIG.GIT_TIMEOUT) {
     return Promise.race([
@@ -897,7 +914,7 @@ async function writeFile(filePath, content) {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
             if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                const remoteUrl = getEncodedRemoteUrl();
                 await git.remote(['set-url', 'origin', remoteUrl]);
             }
         } catch (remoteError) {
@@ -1015,7 +1032,7 @@ Return ONLY the complete updated file content. No explanations, no markdown code
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
             if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                const remoteUrl = getEncodedRemoteUrl();
                 await git.remote(['set-url', 'origin', remoteUrl]);
             }
         } catch (remoteError) {
@@ -1531,7 +1548,7 @@ Return only HTML, no markdown blocks or explanations.`;
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
             if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                const remoteUrl = getEncodedRemoteUrl();
                 await git.remote(['set-url', 'origin', remoteUrl]);
             }
         } catch (remoteError) {
@@ -1684,7 +1701,7 @@ Return only HTML code, no markdown blocks or explanations.`;
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
             if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                const remoteUrl = getEncodedRemoteUrl();
                 await git.remote(['set-url', 'origin', remoteUrl]);
             }
         } catch (remoteError) {
@@ -1736,7 +1753,7 @@ async function commitChanges(message, files = '.') {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
             if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                const remoteUrl = getEncodedRemoteUrl();
                 await git.remote(['set-url', 'origin', remoteUrl]);
             }
         } catch (remoteError) {
@@ -1889,7 +1906,7 @@ async function buildGameTool(title, prompt, type = 'auto') {
                 const remotes = await git.getRemotes(true);
                 const origin = remotes.find(r => r.name === 'origin');
                 if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                    const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                    const remoteUrl = getEncodedRemoteUrl();
                     await git.remote(['set-url', 'origin', remoteUrl]);
                 }
             } catch (remoteError) {
@@ -2854,6 +2871,9 @@ client.once('clientReady', async () => {
         console.log('⚠️ Continuing without registered commands (will attempt to use cached commands)');
     }
 
+    // Initialize Git remote URL with current token
+    await initializeGitRemote();
+
     // Sync index.html with all HTML files in /src
     try {
         await syncIndexWithSrcFiles();
@@ -3154,7 +3174,7 @@ async function handleMentionAsync(message) {
                             const remotes = await git.getRemotes(true);
                             const origin = remotes.find(r => r.name === 'origin');
                             if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                                const remoteUrl = getEncodedRemoteUrl();
                                 await git.remote(['set-url', 'origin', remoteUrl]);
                             }
                         } catch (remoteError) {
@@ -3423,7 +3443,7 @@ async function executeCommit(interaction, commitData) {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
             if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                const remoteUrl = getEncodedRemoteUrl();
                 await git.remote(['set-url', 'origin', remoteUrl]);
             }
         } catch (remoteError) {
@@ -3751,7 +3771,7 @@ async function handleBuildGame(interaction) {
                 const remotes = await git.getRemotes(true);
                 const origin = remotes.find(r => r.name === 'origin');
                 if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                    const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                    const remoteUrl = getEncodedRemoteUrl();
                     await git.remote(['set-url', 'origin', remoteUrl]);
                 }
             } catch (remoteError) {
@@ -3843,7 +3863,7 @@ async function handleBuildPuzzle(interaction) {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
             if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                const remoteUrl = getEncodedRemoteUrl();
                 await git.remote(['set-url', 'origin', remoteUrl]);
             }
         } catch (remoteError) {
@@ -5117,7 +5137,7 @@ async function executeMentionCommit(interaction, commitData) {
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
             if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                const remoteUrl = getEncodedRemoteUrl();
                 await git.remote(['set-url', 'origin', remoteUrl]);
             }
         } catch (remoteError) {
@@ -5864,7 +5884,7 @@ Output ONLY the CSS code, no explanations.`;
             const remotes = await git.getRemotes(true);
             const origin = remotes.find(r => r.name === 'origin');
             if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                const remoteUrl = getEncodedRemoteUrl();
                 await git.remote(['set-url', 'origin', remoteUrl]);
             }
         } catch (remoteError) {
