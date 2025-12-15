@@ -184,6 +184,7 @@
             text-align: center;
         }
 
+        /* Centered Text Utilities */
         .centered-text {
             text-align: center;
             margin-left: auto;
@@ -202,281 +203,177 @@
             background: #ff0000;
             color: #0a0a0a;
             border: 2px solid #ff0000;
-            padding: 15px 40px;
-            font-family: 'Courier Prime', monospace;
+            padding: 12px 30px;
             font-size: 1.1em;
-            font-weight: bold;
+            border-radius: 5px;
             cursor: pointer;
-            border-radius: 4px;
+            font-weight: bold;
             transition: all 0.3s;
-            margin: 30px auto;
-            display: block;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 20px auto;
+            display: block;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
 
         .shuffle-btn:hover {
-            background: #0a0a0a;
-            color: #ff0000;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            background: #cc0000;
+            border-color: #cc0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
         }
 
-        .shuffle-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .status-message {
-            color: #00ffff;
-            font-size: 1em;
-            margin: 20px 0;
-            min-height: 24px;
-            text-shadow: 0 0 5px #00ffff;
-            text-align: center;
+        .shuffle-btn:active {
+            transform: scale(0.98);
         }
 
         @media (max-width: 768px) {
-            .tarot-title {
-                font-size: 1.5em;
-            }
-
             .cards-container {
                 gap: 10px;
+                margin: 20px 0;
             }
 
             .card-wrapper {
-                min-width: 100px;
-                max-width: 120px;
+                min-width: 120px;
+                max-width: 150px;
             }
 
-            .card-name {
-                font-size: 0.9em;
-            }
-
-            .card-symbol {
+            .tarot-title {
                 font-size: 1.5em;
-            }
-
-            .interpretation {
-                padding: 15px;
             }
 
             .shuffle-btn {
-                padding: 12px 30px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .tarot-title {
-                font-size: 1.3em;
-            }
-
-            .cards-container {
-                gap: 8px;
-            }
-
-            .card-wrapper {
-                min-width: 90px;
-                max-width: 100px;
-            }
-
-            .card-name {
-                font-size: 0.8em;
-            }
-
-            .card-symbol {
-                font-size: 1.2em;
+                padding: 10px 20px;
+                font-size: 1em;
             }
         }
     </style>
 </head>
 <body>
-<a href="../index.html" class="home-link">← BACK TO TERMINAL</a>
-
-<div class="tarot-container">
-    <h1 class="tarot-title">⟡ TAROT READING ⟡</h1>
-    <p class="tarot-subtitle" style="text-align: center; margin: 0 auto; width: 100%;">Three-Card Spread: Past • Present • Future</p>
-
-    <div class="status-message" id="statusMessage"></div>
-
-    <div class="cards-container" id="cardsContainer">
-        <div class="card-wrapper">
-            <div class="card-position">Past</div>
-            <div class="tarot-card" data-position="0">
-                <div class="card-face card-back">◈</div>
-                <div class="card-face card-front">
-                    <div class="card-name" id="cardName0"></div>
-                    <div class="card-symbol" id="cardSymbol0"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card-wrapper">
-            <div class="card-position">Present</div>
-            <div class="tarot-card" data-position="1">
-                <div class="card-face card-back">◈</div>
-                <div class="card-face card-front">
-                    <div class="card-name" id="cardName1"></div>
-                    <div class="card-symbol" id="cardSymbol1"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card-wrapper">
-            <div class="card-position">Future</div>
-            <div class="tarot-card" data-position="2">
-                <div class="card-face card-back">◈</div>
-                <div class="card-face card-front">
-                    <div class="card-name" id="cardName2"></div>
-                    <div class="card-symbol" id="cardSymbol2"></div>
-                </div>
-            </div>
-        </div>
+    <div class="home-link">
+        <a href="../index.html">← Home</a>
     </div>
 
-    <div id="interpretationsContainer"></div>
+    <div class="tarot-container">
+        <h1 class="tarot-title">✨ Tarot Reading ✨</h1>
+        <p class="tarot-subtitle centered-text">Seek guidance from the cards</p>
+        <p class="instruction-text">Click on cards to reveal their meaning</p>
 
-    <button class="shuffle-btn" id="shuffleBtn">Draw New Reading</button>
-</div>
+        <div id="spread-container"></div>
 
-<script>
-const tarotDeck = [
-    { name: "The Fool", symbol: "0", meaning: "New beginnings, spontaneity, innocence. A journey is about to begin. Trust in the unknown and embrace fresh starts with an open heart." },
-    { name: "The Magician", symbol: "I", meaning: "Manifestation, resourcefulness, power. You have all the tools you need. Channel your will and focus to bring your desires into reality." },
-    { name: "The High Priestess", symbol: "II", meaning: "Intuition, sacred knowledge, the subconscious. Listen to your inner voice. Secrets are being revealed through dreams and quiet reflection." },
-    { name: "The Empress", symbol: "III", meaning: "Abundance, nurturing, fertility. Creative energy flows through you. Embrace growth, beauty, and the natural cycles of life." },
-    { name: "The Emperor", symbol: "IV", meaning: "Authority, structure, control. Establish order and take command. Leadership and discipline create stability in chaos." },
-    { name: "The Hierophant", symbol: "V", meaning: "Tradition, conformity, spiritual wisdom. Seek guidance from established systems. Honor the wisdom passed down through generations." },
-    { name: "The Lovers", symbol: "VI", meaning: "Union, choices, alignment. A significant relationship or decision emerges. Follow your heart while honoring your values." },
-    { name: "The Chariot", symbol: "VII", meaning: "Willpower, determination, victory. Harness opposing forces and drive forward. Success comes through focused action and self-discipline." },
-    { name: "Strength", symbol: "VIII", meaning: "Courage, compassion, inner power. True strength is gentle. Face challenges with patience and trust in your resilient spirit." },
-    { name: "The Hermit", symbol: "IX", meaning: "Introspection, solitude, inner guidance. Withdraw to find answers within. The light you seek comes from your own wisdom." },
-    { name: "Wheel of Fortune", symbol: "X", meaning: "Cycles, destiny, turning point. Change is inevitable and necessary. Trust that the wheel turns in your favor." },
-    { name: "Justice", symbol: "XI", meaning: "Fairness, truth, cause and effect. Balance is being restored. Actions have consequences; truth will prevail." },
-    { name: "The Hanged Man", symbol: "XII", meaning: "Surrender, new perspective, letting go. Sometimes pause brings clarity. Release control to gain deeper understanding." },
-    { name: "Death", symbol: "XIII", meaning: "Transformation, endings, rebirth. Something must end for new life to begin. Embrace change as a natural cycle of renewal." },
-    { name: "Temperance", symbol: "XIV", meaning: "Balance, moderation, patience. Find the middle path. Blend opposing elements to create harmony and healing." },
-    { name: "The Devil", symbol: "XV", meaning: "Bondage, materialism, shadow self. Examine what binds you. Awareness of your chains is the first step to freedom." },
-    { name: "The Tower", symbol: "XVI", meaning: "Upheaval, revelation, liberation. Sudden change breaks false structures. From destruction comes opportunity to rebuild stronger." },
-    { name: "The Star", symbol: "XVII", meaning: "Hope, inspiration, serenity. Healing energy flows to you. Trust that you are guided and your wishes are heard." },
-    { name: "The Moon", symbol: "XVIII", meaning: "Illusion, intuition, the unconscious. Not all is as it seems. Navigate uncertainty by trusting your deeper knowing." },
-    { name: "The Sun", symbol: "XIX", meaning: "Joy, success, vitality. Clarity and warmth illuminate your path. Celebrate life and share your radiant energy." },
-    { name: "Judgement", symbol: "XX", meaning: "Reflection, reckoning, absolution. A moment of awakening arrives. Review the past to step into your higher calling." },
-    { name: "The World", symbol: "XXI", meaning: "Completion, accomplishment, integration. A cycle reaches fulfillment. Celebrate your journey and prepare for the next adventure." }
-];
+        <button class="shuffle-btn" onclick="initializeSpread()">New Reading</button>
 
-let currentReading = [];
-let revealedCards = new Set();
+        <div id="interpretation-container"></div>
+    </div>
 
-function shuffleArray(array) {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-}
+    <script>
+        const tarotDeck = [
+            { name: 'The Fool', symbol: '🃏', meaning: 'New beginnings, taking risks, stepping into the unknown' },
+            { name: 'The Magician', symbol: '✨', meaning: 'Manifestation, resourcefulness, power, inspired action' },
+            { name: 'The High Priestess', symbol: '🌙', meaning: 'Intuition, sacred knowledge, the divine feminine' },
+            { name: 'The Empress', symbol: '👑', meaning: 'Femininity, beauty, abundance, nature' },
+            { name: 'The Emperor', symbol: '⚔️', meaning: 'Authority, establishment, structure, father figure' },
+            { name: 'The Hierophant', symbol: '📖', meaning: 'Tradition, conformity, morality, ethics' },
+            { name: 'The Lovers', symbol: '💕', meaning: 'Love, harmony, relationships, values alignment' },
+            { name: 'The Chariot', symbol: '🏇', meaning: 'Control, willpower, determination, self-discipline' },
+            { name: 'Strength', symbol: '🦁', meaning: 'Inner strength, courage, patience, control' },
+            { name: 'The Hermit', symbol: '🕯️', meaning: 'Soul searching, introspection, inner guidance' },
+            { name: 'Wheel of Fortune', symbol: '🎡', meaning: 'Good luck, karma, life cycles, destiny' },
+            { name: 'Justice', symbol: '⚖️', meaning: 'Justice, fairness, truth, cause and effect' },
+            { name: 'The Hanged Man', symbol: '🔄', meaning: 'Pause, suspension, restriction, letting go' },
+            { name: 'Death', symbol: '💀', meaning: 'Transformation, endings, beginnings, change' },
+            { name: 'Temperance', symbol: '🍷', meaning: 'Balance, moderation, patience, finding meaning' },
+            { name: 'The Devil', symbol: '😈', meaning: 'Bondage, materialism, playfulness, detachment' },
+            { name: 'The Tower', symbol: '🏚️', meaning: 'Sudden change, upheaval, revelation, breakthrough' },
+            { name: 'The Star', symbol: '⭐', meaning: 'Hope, faith, renewal, spirituality' },
+            { name: 'The Moon', symbol: '🌙', meaning: 'Illusion, fear, anxiety, subconscious' },
+            { name: 'The Sun', symbol: '☀️', meaning: 'Success, vitality, joy, positivity' },
+            { name: 'Judgement', symbol: '📯', meaning: 'Reckoning, awakening, renewal, purpose' },
+            { name: 'The World', symbol: '🌍', meaning: 'Completion, accomplishment, travel, unity' }
+        ];
 
-function drawReading() {
-    const shuffled = shuffleArray(tarotDeck);
-    currentReading = shuffled.slice(0, 3);
-    revealedCards.clear();
-
-    document.querySelectorAll('.tarot-card').forEach(card => {
-        card.classList.remove('flipped');
-    });
-
-    document.getElementById('interpretationsContainer').innerHTML = '';
-
-    currentReading.forEach((card, index) => {
-        document.getElementById(`cardName${index}`).textContent = card.name;
-        document.getElementById(`cardSymbol${index}`).textContent = card.symbol;
-    });
-}
-
-function revealCard(position) {
-    const card = document.querySelector(`[data-position="${position}"]`);
-    if (revealedCards.has(position)) return;
-
-    card.classList.add('flipped');
-    revealedCards.add(position);
-
-    setTimeout(() => {
-        showInterpretation(position);
-    }, 300);
-
-    if (revealedCards.size === 3) {
-        setTimeout(() => {
-            document.getElementById('statusMessage').textContent = 'Reading complete. Draw again when ready.';
-        }, 1000);
-    }
-}
-
-function showInterpretation(position) {
-    const positions = ['Past', 'Present', 'Future'];
-    const card = currentReading[position];
-    const container = document.getElementById('interpretationsContainer');
-
-    const interpretation = document.createElement('div');
-    interpretation.className = 'interpretation';
-    interpretation.innerHTML = `
-        <div class="interpretation-title">${positions[position]}: ${card.name}</div>
-        <div class="interpretation-text">${card.meaning}</div>
-    `;
-
-    container.appendChild(interpretation);
-
-    setTimeout(() => {
-        interpretation.classList.add('visible');
-    }, 10);
-}
-
-function setupEventListeners() {
-    document.querySelectorAll('.tarot-card').forEach(card => {
-        const handleReveal = () => {
-            const position = parseInt(card.dataset.position);
-            revealCard(position);
-        };
-
-        card.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            handleReveal();
-        }, { passive: false });
-
-        card.addEventListener('click', handleReveal);
-    });
-
-    const shuffleBtn = document.getElementById('shuffleBtn');
-
-    const handleShuffle = () => {
-        shuffleBtn.disabled = true;
-        document.getElementById('statusMessage').textContent = 'Shuffling the deck...';
-
-        setTimeout(() => {
-            drawReading();
-            shuffleBtn.disabled = false;
-            document.getElementById('statusMessage').textContent = 'New reading drawn. Tap cards to reveal.';
-        }, 800);
-    };
-
-    shuffleBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        if (!shuffleBtn.disabled) {
-            handleShuffle();
+        function getRandomCards(count) {
+            const shuffled = [...tarotDeck].sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, count);
         }
-    }, { passive: false });
 
-    shuffleBtn.addEventListener('click', () => {
-        if (!shuffleBtn.disabled) {
-            handleShuffle();
+        function initializeSpread() {
+            const container = document.getElementById('spread-container');
+            const interpretationContainer = document.getElementById('interpretation-container');
+            
+            container.innerHTML = '';
+            interpretationContainer.innerHTML = '';
+
+            const spreadType = Math.floor(Math.random() * 3);
+            let cards, positions;
+
+            if (spreadType === 0) {
+                cards = getRandomCards(1);
+                positions = ['Your Situation'];
+            } else if (spreadType === 1) {
+                cards = getRandomCards(3);
+                positions = ['Past', 'Present', 'Future'];
+            } else {
+                cards = getRandomCards(5);
+                positions = ['You', 'Challenge', 'Action', 'Outcome', 'Advice'];
+            }
+
+            const spreadTitle = document.createElement('h2');
+            spreadTitle.className = 'spread-title';
+            spreadTitle.textContent = `${positions.length}-Card Spread`;
+            container.appendChild(spreadTitle);
+
+            const cardsContainer = document.createElement('div');
+            cardsContainer.className = 'cards-container';
+
+            cards.forEach((card, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'card-wrapper';
+
+                const position = document.createElement('div');
+                position.className = 'card-position';
+                position.textContent = positions[index];
+
+                const cardElement = document.createElement('div');
+                cardElement.className = 'tarot-card';
+                cardElement.innerHTML = `
+                    <div class="card-face card-back">🃏</div>
+                    <div class="card-face card-front">
+                        <div class="card-symbol">${card.symbol}</div>
+                        <div class="card-name">${card.name}</div>
+                    </div>
+                `;
+
+                cardElement.addEventListener('click', function() {
+                    this.classList.toggle('flipped');
+                    showInterpretation(card, positions[index], interpretationContainer);
+                });
+
+                wrapper.appendChild(position);
+                wrapper.appendChild(cardElement);
+                cardsContainer.appendChild(wrapper);
+            });
+
+            container.appendChild(cardsContainer);
         }
-    });
-}
 
-drawReading();
-setupEventListeners();
-document.getElementById('statusMessage').textContent = 'Tap each card to reveal your reading.';
-</script>
+        function showInterpretation(card, position, container) {
+            const existing = container.querySelector('.interpretation');
+            if (existing) existing.remove();
+
+            const interpretation = document.createElement('div');
+            interpretation.className = 'interpretation';
+            interpretation.innerHTML = `
+                <div class="interpretation-title">${position}: ${card.name}</div>
+                <div class="interpretation-text">${card.meaning}</div>
+            `;
+
+            container.appendChild(interpretation);
+            setTimeout(() => interpretation.classList.add('visible'), 10);
+        }
+
+        // Initialize on load
+        window.addEventListener('load', initializeSpread);
+    </script>
 </body>
 </html>
