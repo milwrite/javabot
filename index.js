@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuild
 const { Octokit } = require('@octokit/rest');
 const simpleGit = require('simple-git');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const axios = require('axios');
 const axiosRetry = require('axios-retry').default;
@@ -10,6 +11,9 @@ const axiosRetry = require('axios-retry').default;
 // Game pipeline modules (system-v1)
 const { runGamePipeline, commitGameFiles, isGameRequest, isEditRequest } = require('./services/gamePipeline');
 const { getRecentPatternsSummary } = require('./services/buildLogs');
+
+// Site inventory system
+const { generateSiteInventory } = require('./generateSiteInventory.js');
 
 // Validate required environment variables
 const REQUIRED_ENV_VARS = [
@@ -156,6 +160,13 @@ Live Site: https://milwrite.github.io/javabot/
 - /src directory contains web pages and JS libraries
 - You help create, edit, and deploy web projects via Discord commands
 
+SITE INVENTORY (CRITICAL - Updated automatically):
+- The file SITE_INVENTORY.md contains current diagrams of all webpages and JavaScript files
+- This inventory includes file structures, collections, links, and metadata
+- When searching for games/pages, refer to this inventory for accurate current content
+- Inventory automatically updates when DEVLOG.md changes
+- Use search_files("content", "SITE_INVENTORY.md") to see current site structure when needed
+
 URL STRUCTURE (CRITICAL):
 - Main page: https://milwrite.github.io/javabot/
 - Pages in src/: https://milwrite.github.io/javabot/src/PAGENAME.html
@@ -250,37 +261,65 @@ URL FORMATTING (CRITICAL - FOLLOW EXACTLY):
 - Always put a SPACE after URLs before any punctuation
 - Use plain hyphens (-) not em dashes (—) in page names
 
-AVAILABLE CAPABILITIES:
-- list_files(path): List files in directory
-- search_files(pattern, path, options): Search for text patterns across files (like grep)
-- read_file(path): Read file contents
-- write_file(path, content): Create/update files
-- edit_file(path, instructions): Edit files with natural language
-- create_page(name, description): Generate and deploy a new HTML page
+AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
+- list_files(path|[paths]): List files in directory or multiple directories
+- search_files(pattern, path|[paths], options): Search text patterns across single file, multiple files, or directories (supports regex, case-insensitive)
+- read_file(path|[paths]): Read single file or multiple files (respects file size limits)
+- write_file(path, content): Create/update files completely
+- edit_file(path, instructions): Edit files with natural language instructions
+- create_page(name, description): Generate and deploy new HTML page with noir theme
 - create_feature(name, description): Generate JS library + demo page
-- commit_changes(message, files): Git add, commit, push to main
-- get_repo_status(): Check current git status
-- web_search(query): Search internet for current info
-- set_model(model): Switch AI model (haiku, sonnet, kimi, gpt5, gemini)
-- update_style(preset, description): Change website theme
-- build_game(title, prompt, type): Build complete game/content via AI pipeline
+- commit_changes(message, files): Git add, commit, push to main branch
+- get_repo_status(): Check current git status and branch info
+- web_search(query): Search internet for current information via Perplexity
+- set_model(model): Switch AI model runtime (haiku, sonnet, kimi, gpt5, gemini)
+- update_style(preset, description): Change website theme (noir-terminal, neon-arcade, dark-minimal, custom)
+- build_game(title, prompt, type): Complete AI pipeline for games/content (Architect→Builder→Tester→Scribe flow)
+
+DISCORD INTEGRATION FEATURES:
+- Slash Commands (13 available): 
+  * /commit <message> [files] - Git commit & push to main
+  * /add-page <name> <description> - Generate HTML page with noir theme
+  * /add-feature <name> <description> - Generate JS library + demo
+  * /build-game <title> <prompt> [type] - AI game pipeline (NEW: Architect→Builder→Tester→Scribe)
+  * /status - Show repo status + live site link
+  * /chat <message> - AI conversation with context from agents.md
+  * /search <query> - Web search via Perplexity API
+  * /set-model <model> - Switch AI model (haiku/sonnet/kimi/gpt5/gemini)
+  * /set-prompt <action> [content] - Modify system prompt (view/reset/add/replace)
+  * /update-style <preset> [description] - Update site theme
+  * /poll <question> - Yes/no poll with reactions
+  * /sync-index - Update project metadata and index.html
+- @ Mention Support: Full AI conversation with tool access (all capabilities available)
+- Multi-Channel Monitoring: Responds in 7 configured channels, tracks message history in agents.md
+- Auto Error Handling: 3-error cooldown system prevents spam loops (5min timeout)
+- Response Management: Long responses (>2000 chars) auto-saved to responses/ with Discord links
+- Real-Time Updates: Progress tracking via editReply() for long operations (build-game, commits)
+- Embed Styling: Color-coded embeds (purple=pages, orange=features, red=model, green=success)
+- Message History: Last 100 messages stored in agents.md for conversation context
 
 WHEN TO USE EACH TOOL:
+- For multi-file operations: Use array syntax - search_files("pattern", ["file1.html", "file2.js"])
 - To find content across files: ALWAYS use search_files FIRST before reading files
   * Examples: "list clues", "find answers", "show all X", "what are the Y"
   * Search for keywords like "clue", "answer", "const", function names, etc.
+  * Use SITE_INVENTORY.md for current site structure: search_files("content", "SITE_INVENTORY.md")
+  * Multi-file search: search_files("pattern", ["src/file1.html", "src/file2.html"])
   * Don't guess filenames - search to find the right file
-- For quick file edits: use edit_file with natural language
-- For new pages/apps: use create_page or build_game (for games with mobile controls)
-- For JS libraries/features: use create_feature
-- To deploy changes: use commit_changes
-- To switch AI behavior: use set_model
-- For current events/news: use web_search
+- For quick file edits: use edit_file with natural language instructions
+- For new pages/apps: use create_page (simple) or build_game (complex with AI pipeline)
+- For JS libraries/features: use create_feature (generates library + demo)
+- To deploy changes: use commit_changes (auto-pushes to GitHub Pages)
+- To switch AI behavior: use set_model (affects all subsequent responses)
+- For current events/news: use web_search (gets latest information)
+- For batch operations: Use arrays - read_file(["file1", "file2"]), list_files(["dir1", "dir2"])
 
 CRITICAL SEARCH RULES:
-- User asks "list X" or "show X" or "what are X" → use search_files to find X
-- User mentions game name + wants info → use search_files with relevant keywords
-- Don't read random files hoping to find content - search first, read second
+- User asks "list X" or "show X" or "what are X" → use search_files to find X across multiple files if needed
+- User mentions game name + wants info → search_files with game keywords + check SITE_INVENTORY.md
+- For site overview questions → search SITE_INVENTORY.md first for current structure
+- Don't read random files hoping to find content - search strategically across relevant files
+- Use multi-file search when looking for patterns across similar files
 
 WHEN TO USE WEB SEARCH:
 - Anything that changes: sports, news, prices, weather, standings, odds
@@ -770,9 +809,26 @@ function buildMessagesFromHistory(maxMessages = 50) {
     return messages;
 }
 
+
 // Filesystem tools for the AI
 async function listFiles(dirPath = './src') {
     try {
+        // Handle multiple directories (array input)
+        if (Array.isArray(dirPath)) {
+            const allResults = [];
+            
+            for (const singleDir of dirPath) {
+                const result = await listFiles(singleDir);
+                if (!result.startsWith('Error')) {
+                    allResults.push(`**${singleDir}:** ${result}`);
+                } else {
+                    allResults.push(`**${singleDir}:** ${result}`);
+                }
+            }
+            
+            return allResults.join('\n');
+        }
+
         const files = await fs.readdir(dirPath);
         return files.join(', ');
     } catch (error) {
@@ -782,6 +838,32 @@ async function listFiles(dirPath = './src') {
 
 async function readFile(filePath) {
     try {
+        // Handle multiple files (array input)
+        if (Array.isArray(filePath)) {
+            const allResults = [];
+            let totalChars = 0;
+            
+            for (const singleFile of filePath) {
+                if (totalChars >= CONFIG.FILE_READ_LIMIT) {
+                    allResults.push(`**[Truncated]** - File limit reached`);
+                    break;
+                }
+                
+                const result = await readFile(singleFile);
+                const remaining = CONFIG.FILE_READ_LIMIT - totalChars;
+                
+                if (!result.startsWith('Error')) {
+                    const truncated = result.length > remaining ? result.substring(0, remaining) : result;
+                    allResults.push(`**${singleFile}:**\n${truncated}`);
+                    totalChars += truncated.length;
+                } else {
+                    allResults.push(`**${singleFile}:** ${result}`);
+                }
+            }
+            
+            return allResults.join('\n\n---\n\n');
+        }
+
         const content = await fs.readFile(filePath, 'utf8');
         return content.substring(0, CONFIG.FILE_READ_LIMIT);
     } catch (error) {
@@ -952,6 +1034,62 @@ Return ONLY the complete updated file content. No explanations, no markdown code
 }
 
 // Tool: Search files for text patterns (like grep)
+// Helper function to search within a single file
+async function searchSingleFile(pattern, filePath, options = {}) {
+    const {
+        caseInsensitive = false,
+        wholeWord = false,
+        maxResults = 50
+    } = options;
+
+    const results = [];
+    const flags = caseInsensitive ? 'gi' : 'g';
+    let searchRegex;
+
+    try {
+        const regexPattern = wholeWord ? `\\b${pattern}\\b` : pattern;
+        searchRegex = new RegExp(regexPattern, flags);
+    } catch (error) {
+        return `Error: Invalid regex pattern "${pattern}": ${error.message}`;
+    }
+
+    try {
+        const content = await fs.readFile(filePath, 'utf8');
+        const lines = content.split('\n');
+        const relativePath = path.relative(process.cwd(), filePath);
+
+        lines.forEach((line, index) => {
+            if (searchRegex.test(line)) {
+                results.push({
+                    file: relativePath,
+                    line: index + 1,
+                    content: line.trim()
+                });
+
+                // Stop if we hit max results
+                if (results.length >= maxResults) {
+                    return;
+                }
+            }
+        });
+
+        if (results.length === 0) {
+            return `No matches found for "${pattern}" in ${relativePath}`;
+        }
+
+        // Format results
+        let output = `**Found ${results.length} match${results.length === 1 ? '' : 'es'} for "${pattern}" in ${relativePath}**\n\n`;
+        
+        results.forEach(result => {
+            output += `**Line ${result.line}:** ${result.content}\n`;
+        });
+
+        return output.trim();
+    } catch (error) {
+        return `Error reading file ${filePath}: ${error.message}`;
+    }
+}
+
 async function searchFiles(pattern, searchPath = './src', options = {}) {
     try {
         const {
@@ -961,6 +1099,34 @@ async function searchFiles(pattern, searchPath = './src', options = {}) {
             maxResults = 50
         } = options;
 
+        // Handle multiple paths (array input)
+        if (Array.isArray(searchPath)) {
+            const allResults = [];
+            let totalMatches = 0;
+            
+            for (const singlePath of searchPath) {
+                if (totalMatches >= maxResults) break;
+                
+                const result = await searchFiles(pattern, singlePath, {
+                    ...options,
+                    maxResults: maxResults - totalMatches
+                });
+                
+                if (!result.startsWith('Error:') && !result.startsWith('No matches')) {
+                    allResults.push(result);
+                    // Count matches from this result
+                    const matches = (result.match(/\*\*Line \d+:\*\*/g) || []).length;
+                    totalMatches += matches;
+                }
+            }
+            
+            if (allResults.length === 0) {
+                return `No matches found for "${pattern}" in ${searchPath.length} files`;
+            }
+            
+            return allResults.join('\n\n');
+        }
+
         const basePath = path.resolve(searchPath);
 
         // Check if path exists
@@ -968,6 +1134,13 @@ async function searchFiles(pattern, searchPath = './src', options = {}) {
             await fs.access(basePath);
         } catch {
             return `Error: Path "${searchPath}" does not exist`;
+        }
+
+        // Check if the path is a file instead of directory
+        const stats = await fs.stat(basePath);
+        if (stats.isFile()) {
+            // If it's a file, search within that specific file
+            return await searchSingleFile(pattern, basePath, options);
         }
 
         const results = [];
@@ -1763,7 +1936,12 @@ async function getEditResponse(userMessage, conversationMessages = []) {
                         type: 'object',
                         properties: {
                             pattern: { type: 'string', description: 'Text or regex pattern to search for' },
-                            path: { type: 'string', description: 'Directory to search in (default: ./src)' },
+                            path: { 
+                                oneOf: [
+                                    { type: 'string', description: 'Directory or file to search in (default: ./src)' },
+                                    { type: 'array', items: { type: 'string' }, description: 'Array of files/directories to search' }
+                                ]
+                            },
                             case_insensitive: { type: 'boolean', description: 'Case-insensitive search (default: false)' }
                         },
                         required: ['pattern']
@@ -1778,7 +1956,12 @@ async function getEditResponse(userMessage, conversationMessages = []) {
                     parameters: {
                         type: 'object',
                         properties: {
-                            path: { type: 'string', description: 'File path to read' }
+                            path: { 
+                                oneOf: [
+                                    { type: 'string', description: 'File path to read' },
+                                    { type: 'array', items: { type: 'string' }, description: 'Array of files to read' }
+                                ]
+                            }
                         },
                         required: ['path']
                     }
@@ -1808,7 +1991,12 @@ async function getEditResponse(userMessage, conversationMessages = []) {
                     parameters: {
                         type: 'object',
                         properties: {
-                            path: { type: 'string', description: 'Directory path (default: ./src)' }
+                            path: { 
+                                oneOf: [
+                                    { type: 'string', description: 'Directory path (default: ./src)' },
+                                    { type: 'array', items: { type: 'string' }, description: 'Array of directories to list' }
+                                ]
+                            }
                         }
                     }
                 }
@@ -1911,8 +2099,20 @@ async function getEditResponse(userMessage, conversationMessages = []) {
         }
 
         if (iteration >= MAX_ITERATIONS && !editCompleted) {
-            logEvent('EDIT_LOOP', 'Max iterations reached without edit');
-            // Force a final response to the user
+            logEvent('EDIT_LOOP', 'Max iterations reached without edit - this may not be an edit request');
+            
+            // Check if this looks like a non-edit request that got misrouted
+            const isLikelyNotEdit = /\b(create|generate|make|build|produce|write)\s+(?!.*\b(edit|fix|change|update)\b)/i.test(userMessage);
+            
+            if (isLikelyNotEdit) {
+                logEvent('EDIT_LOOP', 'Detected likely non-edit request - suggesting normal flow');
+                return {
+                    text: "hmm, this seems like it might be better suited for the full conversation flow rather than file editing. let me handle this differently...",
+                    suggestNormalFlow: true
+                };
+            }
+            
+            // Force a final response for legitimate edit attempts
             const finalResponse = await axios.post(OPENROUTER_URL, {
                 model: MODEL,
                 messages: messages,
@@ -1969,7 +2169,12 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                     parameters: {
                         type: 'object',
                         properties: {
-                            path: { type: 'string', description: 'Directory path (default: ./src)' }
+                            path: { 
+                                oneOf: [
+                                    { type: 'string', description: 'Directory path (default: ./src)' },
+                                    { type: 'array', items: { type: 'string' }, description: 'Array of directories to list' }
+                                ]
+                            }
                         }
                     }
                 }
@@ -1983,7 +2188,12 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                         type: 'object',
                         properties: {
                             pattern: { type: 'string', description: 'Text or regex pattern to search for (e.g., "clue", "answer.*:", "const \\w+")' },
-                            path: { type: 'string', description: 'Directory to search in (default: ./src)' },
+                            path: { 
+                                oneOf: [
+                                    { type: 'string', description: 'Directory or file to search in (default: ./src)' },
+                                    { type: 'array', items: { type: 'string' }, description: 'Array of files/directories to search' }
+                                ]
+                            },
                             case_insensitive: { type: 'boolean', description: 'Case-insensitive search (default: false)' },
                             file_pattern: { type: 'string', description: 'Filter by filename pattern (e.g., ".html", "crossword")' }
                         },
@@ -1999,7 +2209,12 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
                     parameters: {
                         type: 'object',
                         properties: {
-                            path: { type: 'string', description: 'File path to read' }
+                            path: { 
+                                oneOf: [
+                                    { type: 'string', description: 'File path to read' },
+                                    { type: 'array', items: { type: 'string' }, description: 'Array of files to read' }
+                                ]
+                            }
                         },
                         required: ['path']
                     }
@@ -2819,142 +3034,252 @@ async function handleMentionAsync(message) {
         thinkingMsg = await message.reply(thinkingMessage);
         console.log(`[MENTION] Thinking message sent successfully`);
 
-        // Check if this is an EDIT request - use streamlined edit loop
-        if (isEditRequest(content)) {
-            logEvent('MENTION', 'Detected edit request - using streamlined edit loop');
-
-            const conversationMessages = buildMessagesFromHistory(50);
-            let llmResult = await getEditResponse(content, conversationMessages);
-            let response = cleanBotResponse(llmResult.text);
-
-            if (!response || response.trim().length === 0) {
-                response = getBotResponse('errors') + ' Got an empty response from the AI.';
-                console.error('[MENTION] Empty AI response received');
-            }
-
-            await thinkingMsg.edit(response);
-            addToHistory(username, content, false);
-            addToHistory('Bot Sportello', response, true);
-
-            return; // Exit early - edit handled
-        }
-
-        // Check if this is a game request - route to game pipeline
-        if (isGameRequest(content)) {
-            logEvent('MENTION', 'Detected game request - routing to game pipeline');
-
-            try {
-                await thinkingMsg.edit('📝 detected game request - firing up the game builder...');
-
-                const triggerSource = {
-                    kind: 'mention',
-                    userId: message.author.id,
-                    username: message.author.username,
-                    messageId: message.id
-                };
-
-                const result = await runGamePipeline({
-                    userPrompt: content,
-                    triggerSource,
-                    onStatusUpdate: async (msg) => {
-                        try {
-                            await thinkingMsg.edit(msg);
-                        } catch (err) {
-                            console.error('Status update error:', err);
-                        }
-                    },
-                    preferredType: 'auto'
-                });
-
-                if (!result.ok) {
-                    await thinkingMsg.edit(`${getBotResponse('errors')}\n\nBuild failed: ${result.error}\n\nCheck \`build-logs/${result.buildId}.json\` for details.`);
-                    return;
-                }
-
-                // Commit and push
-                await thinkingMsg.edit('💾 committing to repo...');
-                const commitSuccess = await commitGameFiles(result);
-
-                if (commitSuccess) {
-                    await thinkingMsg.edit('🚀 pushing to github pages...');
-
-                    // Configure git remote with token authentication
-                    try {
-                        const remotes = await git.getRemotes(true);
-                        const origin = remotes.find(r => r.name === 'origin');
-                        if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                            const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
-                            await git.remote(['set-url', 'origin', remoteUrl]);
-                        }
-                    } catch (remoteError) {
-                        console.warn('Remote URL setup warning:', remoteError.message);
-                    }
-
-                    try {
-                        await git.push('origin', 'main');
-                    } catch (pushError) {
-                        console.error('Push error (non-fatal):', pushError);
-                    }
-                }
-
-                // Success message
-                const scoreEmoji = result.testResult.score >= 80 ? '✨' : result.testResult.score >= 60 ? '✓' : '⚠️';
-                const successMsg = `${scoreEmoji} **${result.plan.metadata.title}** built and deployed!\n\n${result.docs.releaseNotes}\n\n🎮 **Play now:** ${result.liveUrl}\n\n📊 Quality: ${result.testResult.score}/100 | ⏱️ Build time: ${result.duration}\n\n*Give it a minute or two to deploy to GitHub Pages*`;
-
-                await thinkingMsg.edit(successMsg);
-
-                // Add to history
-                addToHistory(username, content, false);
-                addToHistory('Bot Sportello', successMsg, true);
-
-                return; // Exit early - game pipeline handled everything
-            } catch (gameError) {
-                console.error('Game pipeline error in mention handler:', gameError);
-                // Fall through to normal AI response if game pipeline fails
-                await thinkingMsg.edit('hmm the game builder hit a snag... lemme try the regular chat flow...');
-            }
-        }
-
-        // Build conversation context
+        // Build conversation context for all processing loops
         const conversationMessages = buildMessagesFromHistory(50);
+        let processingAttempt = 1;
+        const maxProcessingAttempts = 5;
+        let lastFailureReason = '';
 
-        // Get AI response with full tool calling capabilities
-        let llmResult = await getLLMResponse(content, conversationMessages);
-        let response = llmResult.text;
+        // Multi-loop processing with resilient reassessment
+        while (processingAttempt <= maxProcessingAttempts) {
+            logEvent('MENTION', `Processing attempt ${processingAttempt}/${maxProcessingAttempts}${lastFailureReason ? ` (prev: ${lastFailureReason})` : ''}`);
+            
+            try {
+                // Loop 1: Edit request detection (strictest first)
+                if (processingAttempt <= 2 && isEditRequest(content, conversationMessages)) {
+                    logEvent('MENTION', `Attempt ${processingAttempt}: Detected edit request - using streamlined edit loop`);
 
-        // Clean duplicate Bot Sportello prefixes
-        response = cleanBotResponse(response);
+                    let llmResult = await getEditResponse(content, conversationMessages);
+                    let response = cleanBotResponse(llmResult.text);
 
-        // Validate response is not empty
-        if (!response || response.trim().length === 0) {
-            response = getBotResponse('errors') + ' Got an empty response from the AI.';
-            logEvent('MENTION', 'Empty AI response received');
+                    // Check if edit loop suggests using normal flow instead
+                    if (llmResult.suggestNormalFlow) {
+                        lastFailureReason = 'edit-loop-suggests-normal';
+                        logEvent('MENTION', 'Edit loop suggests normal flow - reassessing');
+                        processingAttempt++;
+                        continue; // Try next approach
+                    } else if (!response || response.trim().length === 0) {
+                        lastFailureReason = 'empty-edit-response';
+                        logEvent('MENTION', 'Empty edit response - reassessing');
+                        processingAttempt++;
+                        continue; // Try next approach
+                    } else {
+                        await thinkingMsg.edit(response);
+                        addToHistory(username, content, false);
+                        addToHistory('Bot Sportello', response, true);
+                        return; // Success - exit
+                    }
+                }
+
+                // Break out to continue with other processing loops below
+                break;
+
+            } catch (error) {
+                lastFailureReason = `error-${error.message.slice(0, 20)}`;
+                logEvent('MENTION', `Attempt ${processingAttempt} failed: ${error.message}`);
+                processingAttempt++;
+                if (processingAttempt <= maxProcessingAttempts) {
+                    await thinkingMsg.edit(`${getBotResponse('thinking')} (trying different approach...)`);
+                    continue;
+                }
+                throw error; // Re-throw if all attempts failed
+            }
+        }
+
+        // Continue with additional processing loops
+        processingAttempt = Math.max(processingAttempt, 1); // Reset if needed
+        
+        while (processingAttempt <= maxProcessingAttempts) {
+            try {
+                // Loop 2: Game/Content pipeline (attempts 1-3)
+                if (processingAttempt <= 3 && isGameRequest(content)) {
+                    logEvent('MENTION', `Attempt ${processingAttempt}: Detected game request - routing to game pipeline`);
+
+                    await thinkingMsg.edit('📝 detected game request - firing up the game builder...');
+
+                    const triggerSource = {
+                        kind: 'mention',
+                        userId: message.author.id,
+                        username: message.author.username,
+                        messageId: message.id
+                    };
+
+                    const result = await runGamePipeline({
+                        userPrompt: content,
+                        triggerSource,
+                        onStatusUpdate: async (msg) => {
+                            try {
+                                await thinkingMsg.edit(msg);
+                            } catch (err) {
+                                console.error('Status update error:', err);
+                            }
+                        },
+                        preferredType: 'auto'
+                    });
+
+                    if (!result.ok) {
+                        lastFailureReason = `game-build-failed`;
+                        logEvent('MENTION', `Game pipeline failed: ${result.error}`);
+                        processingAttempt++;
+                        if (processingAttempt <= maxProcessingAttempts) {
+                            await thinkingMsg.edit('hmm the game builder hit a snag... lemme try a different approach...');
+                            continue; // Try next approach
+                        }
+                        break;
+                    }
+
+                    // Commit and push
+                    await thinkingMsg.edit('💾 committing to repo...');
+                    const commitSuccess = await commitGameFiles(result);
+
+                    if (commitSuccess) {
+                        await thinkingMsg.edit('🚀 pushing to github pages...');
+
+                        // Configure git remote with token authentication
+                        try {
+                            const remotes = await git.getRemotes(true);
+                            const origin = remotes.find(r => r.name === 'origin');
+                            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
+                                const remoteUrl = `https://${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+                                await git.remote(['set-url', 'origin', remoteUrl]);
+                            }
+                        } catch (remoteError) {
+                            console.warn('Remote URL setup warning:', remoteError.message);
+                        }
+
+                        try {
+                            await git.push('origin', 'main');
+                        } catch (pushError) {
+                            console.error('Push error (non-fatal):', pushError);
+                        }
+                    }
+
+                    // Success message
+                    const scoreEmoji = result.testResult.score >= 80 ? '✨' : result.testResult.score >= 60 ? '✓' : '⚠️';
+                    const successMsg = `${scoreEmoji} **${result.plan.metadata.title}** built and deployed!\n\n${result.docs.releaseNotes}\n\n🎮 **Play now:** ${result.liveUrl}\n\n📊 Quality: ${result.testResult.score}/100 | ⏱️ Build time: ${result.duration}\n\n*Give it a minute or two to deploy to GitHub Pages*`;
+
+                    await thinkingMsg.edit(successMsg);
+
+                    // Add to history
+                    addToHistory(username, content, false);
+                    addToHistory('Bot Sportello', successMsg, true);
+
+                    return; // Success - exit
+                }
+
+                // Break out to continue with remaining loops below
+                break;
+
+            } catch (gameError) {
+                lastFailureReason = `game-error-${gameError.message.slice(0, 20)}`;
+                logEvent('MENTION', `Game pipeline attempt ${processingAttempt} failed: ${gameError.message}`);
+                processingAttempt++;
+                if (processingAttempt <= maxProcessingAttempts) {
+                    await thinkingMsg.edit('hmm that approach hit a snag... lemme try something else...');
+                    continue;
+                }
+                console.error('All game pipeline attempts failed:', gameError);
+                break; // Fall through to normal LLM processing
+            }
+        }
+
+        // Final processing loops: Normal LLM flow with multiple fallbacks
+        processingAttempt = Math.max(processingAttempt, 1); // Ensure we start from 1
+        let finalResponse = '';
+        let finalSearchContext = null;
+        
+        while (processingAttempt <= maxProcessingAttempts && !finalResponse) {
+            try {
+                logEvent('MENTION', `Final LLM attempt ${processingAttempt}/${maxProcessingAttempts}${lastFailureReason ? ` (prev: ${lastFailureReason})` : ''}`);
+
+                // Progressive fallback strategies for LLM processing
+                let llmResult;
+                if (processingAttempt === 1) {
+                    // Full LLM with all tools
+                    llmResult = await getLLMResponse(content, conversationMessages);
+                } else if (processingAttempt === 2) {
+                    // Simplified LLM with fewer tools (retry with reduced complexity)
+                    await thinkingMsg.edit(`${getBotResponse('thinking')} (simplifying approach...)`);
+                    llmResult = await getLLMResponse(content, conversationMessages.slice(-10)); // Less context
+                } else if (processingAttempt === 3) {
+                    // Direct response with minimal context (emergency fallback)
+                    await thinkingMsg.edit(`${getBotResponse('thinking')} (trying direct response...)`);
+                    llmResult = await getLLMResponse(content, []);
+                } else {
+                    // Final attempt: Force normal LLM with absolute minimal constraints
+                    await thinkingMsg.edit(`${getBotResponse('thinking')} (final attempt with minimal constraints...)`);
+                    llmResult = await getLLMResponse(content, [], { minimal: true });
+                }
+
+                let response = llmResult.text;
+
+                // Clean duplicate Bot Sportello prefixes
+                response = cleanBotResponse(response);
+
+                // Validate response quality
+                if (!response || response.trim().length === 0) {
+                    lastFailureReason = 'empty-response';
+                    logEvent('MENTION', `Attempt ${processingAttempt}: Empty response`);
+                    processingAttempt++;
+                    continue;
+                } else if (response.length < 10) {
+                    lastFailureReason = 'too-short';
+                    logEvent('MENTION', `Attempt ${processingAttempt}: Response too short`);
+                    processingAttempt++;
+                    continue;
+                } else if (response.includes('Error:') && processingAttempt <= 3) {
+                    lastFailureReason = 'error-response';
+                    logEvent('MENTION', `Attempt ${processingAttempt}: Error in response`);
+                    processingAttempt++;
+                    continue;
+                }
+
+                finalResponse = response;
+                finalSearchContext = llmResult.searchContext;
+                break;
+
+            } catch (llmError) {
+                lastFailureReason = `llm-error-${llmError.message.slice(0, 20)}`;
+                logEvent('MENTION', `LLM attempt ${processingAttempt} failed: ${llmError.message}`);
+                processingAttempt++;
+                if (processingAttempt <= maxProcessingAttempts) {
+                    await thinkingMsg.edit(`${getBotResponse('thinking')} (adjusting approach...)`);
+                    continue;
+                }
+                // Re-throw the error to be handled by outer catch block
+                throw llmError;
+            }
+        }
+
+        // If no response after all attempts, throw error
+        if (!finalResponse) {
+            throw new Error(`All ${maxProcessingAttempts} processing attempts failed. Last failure: ${lastFailureReason}`);
         }
 
         // Add to history - include search context if any
         addToHistory(username, content, false);
-        if (llmResult.searchContext) {
-            const searchSummary = llmResult.searchContext.map(s =>
+        if (finalSearchContext) {
+            const searchSummary = finalSearchContext.map(s =>
                 `[Search: "${s.query}"]\n${s.results}`
             ).join('\n\n');
-            addToHistory('Bot Sportello', `${searchSummary}\n\n${response}`, true);
+            addToHistory('Bot Sportello', `${searchSummary}\n\n${finalResponse}`, true);
         } else {
-            addToHistory('Bot Sportello', response, true);
+            addToHistory('Bot Sportello', finalResponse, true);
         }
 
         // Send response directly (no commit prompts in mentions)
-        if (response.length > 2000) {
+        if (finalResponse.length > 2000) {
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const fileName = `responses/mention-${timestamp}.txt`;
 
             await fs.mkdir('responses', { recursive: true });
-            const fileContent = `User: ${username}\nMessage: ${content}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${response}`;
+            const fileContent = `User: ${username}\nMessage: ${content}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${finalResponse}`;
             await fs.writeFile(fileName, fileContent);
 
-            const truncated = response.substring(0, 1800);
+            const truncated = finalResponse.substring(0, 1800);
             await thinkingMsg.edit(`${truncated}...\n\n*[Full response saved to \`${fileName}\`]*`);
         } else {
-            await thinkingMsg.edit(response);
+            await thinkingMsg.edit(finalResponse);
         }
 
     } catch (error) {
@@ -5566,6 +5891,22 @@ Output ONLY the CSS code, no explanations.`;
         
         await interaction.editReply(errorMessage);
     }
+}
+
+// File watcher for DEVLOG.md to trigger site inventory updates
+if (fsSync.existsSync('DEVLOG.md')) {
+    fsSync.watchFile('DEVLOG.md', { interval: 5000 }, async (curr, prev) => {
+        if (curr.mtime !== prev.mtime) {
+            console.log('[WATCHER] DEVLOG.md modified, updating site inventory...');
+            try {
+                await generateSiteInventory();
+                console.log('[WATCHER] Site inventory updated successfully');
+            } catch (error) {
+                console.error('[WATCHER] Error updating site inventory:', error);
+            }
+        }
+    });
+    console.log('[WATCHER] File watcher started for DEVLOG.md');
 }
 
 client.login(process.env.DISCORD_TOKEN);

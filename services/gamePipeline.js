@@ -257,60 +257,63 @@ async function commitGameFiles(result, customMessage = null) {
 
 /**
  * Check if prompt is requesting an edit to existing content
+ * Requires evidence of prior file identification in conversation history
  * @param {string} prompt - User's message
- * @returns {boolean} True if requesting edits/updates
+ * @param {Array} conversationHistory - Recent conversation messages
+ * @returns {boolean} True if requesting edits/updates to identified content
  */
-function isEditRequest(prompt) {
-    const editKeywords = [
-        // Explicit edit indicators
-        'edit', 'update', 'change', 'modify', 'fix', 'revise',
-        'adjust', 'tweak', 'alter', 'correct', 'refactor',
-
-        // Improvement words (CRITICAL - often used for edits)
-        'improve', 'better', 'enhance', 'optimize', 'polish',
-        'suck', 'bad', 'worse', 'broken', 'wrong',
-
-        // Modification phrases
-        'make it', 'make the', 'can you change', 'can you make',
-        'can you update', 'can you fix', 'can you edit',
-        'could you change', 'could you make', 'could you update',
-
-        // Specific edit actions
-        'rename', 'recolor', 'resize', 'reposition',
-        'add to', 'remove from', 'replace the', 'swap the',
-        'remove the', 'delete the', 'take out', 'get rid of',
-
-        // Contextual edits
-        'instead of', 'rather than', 'different', 'differently',
-        'themed after', 'based on', 'following', 'similar to',
-
-        // Partial edits (CRITICAL - "only the X" means editing specific part)
-        'only the', 'just the', 'only make', 'just make',
-        'only change', 'just change', 'only fix', 'just fix',
-        'only improve', 'just improve', 'only update'
-    ];
-
+function isEditRequest(prompt, conversationHistory = []) {
     const lowerPrompt = prompt.toLowerCase();
 
-    // Strong indicators of edit intent
-    const hasEditKeyword = editKeywords.some(keyword => lowerPrompt.includes(keyword));
+    // Check for explicit edit intent with specific file references
+    const hasExplicitEditIntent = /\b(edit|fix|change|update|modify|adjust|tweak|alter|correct)\s+(the|this|that)\s+\w+/i.test(prompt);
+    
+    // Check for direct file modification commands
+    const hasDirectFileCommand = /\b(edit|fix|change|update|modify)\s+.*?([\w-]+\.(html|js|css|md))/i.test(prompt);
 
-    // Check for explicit edit/update/modify verbs
-    const hasExplicitEdit = /\b(edit|update|change|modify|fix|improve|enhance|remove|delete|redo)\b/i.test(prompt);
+    // Direct file commands are immediate edit requests
+    if (hasDirectFileCommand) {
+        return true;
+    }
 
-    // Check if referencing existing file (e.g., "the crossword", "that game", "snake game")
-    const referencesExisting = /\b(the|that|this|existing)\s+(game|page|crossword|file|code|html|snake|frogger|tetris|maze|puzzle|clue|instruction|scroll|control|button)\b/i.test(prompt);
+    // Only proceed with other edit detection if there's clear edit intent
+    if (!hasExplicitEditIntent) {
+        return false;
+    }
 
-    // Check for common game names (often mentioned without "the")
-    const mentionsSpecificGame = /\b(pleasantville|crossword|frogger|snake|tetris|maze|sudoku|pong|breakout)\b/i.test(prompt);
+    // Check if conversation history shows evidence of file identification
+    const hasIdentifiedContent = conversationHistory.some(msg => {
+        const content = (msg.content || '').toLowerCase();
+        return (
+            // Evidence of file listing/searching
+            content.includes('found in file:') ||
+            content.includes('reading file:') ||
+            content.includes('listed files:') ||
+            content.includes('search results:') ||
+            // Tool call evidence
+            msg.role === 'tool' ||
+            // Previous file operations
+            content.includes('src/') ||
+            content.includes('.html') ||
+            content.includes('.js')
+        );
+    });
 
-    // Check for "ONLY X" pattern which strongly suggests editing existing content
-    const hasOnlyPattern = /\b(only|just)\s+(the|make|change|fix|improve|update|remove|add)\b/i.test(prompt);
+    // Check if prompt specifically references previously mentioned files
+    const referencesDiscussedFile = conversationHistory.some(msg => {
+        const content = (msg.content || '').toLowerCase();
+        const promptWords = lowerPrompt.split(/\s+/);
+        
+        // Look for file names or game names mentioned in history
+        return promptWords.some(word => 
+            word.length > 3 && 
+            content.includes(word) && 
+            (content.includes('file:') || content.includes('game') || content.includes('page'))
+        );
+    });
 
-    // Check for negative sentiment about existing content
-    const hasNegativeSentiment = /\b(suck|bad|worse|broken|wrong|terrible|awful|poor|confusing)\b/i.test(prompt);
-
-    return hasEditKeyword || hasExplicitEdit || referencesExisting || mentionsSpecificGame || hasOnlyPattern || hasNegativeSentiment;
+    // Only trigger edit mode if we have both edit intent AND identified content
+    return (hasExplicitEditIntent || hasDirectFileCommand) && (hasIdentifiedContent || referencesDiscussedFile);
 }
 
 /**
