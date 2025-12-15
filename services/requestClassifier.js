@@ -21,22 +21,24 @@ async function classifyRequest(prompt, options = {}) {
     try {
         const classificationPrompt = `Classify the following user request into ONE of these categories:
 
-1. **EDIT_EXISTING** - User wants to modify, update, fix, or change something that already exists (a file, page, game, etc.)
-2. **CREATE_NEW** - User wants to create something new from scratch (new page, game, feature, content, etc.)
-3. **READ_ONLY** - User wants information, wants to see/list/find something, or is asking a question without requesting changes
-4. **CONVERSATION** - General chat, greeting, or discussion not requiring file operations
+1. **SIMPLE_EDIT** - Simple text replacement or small content changes (e.g., "change the title to X", "replace this text with that")
+2. **FUNCTIONALITY_FIX** - Fixing bugs, CSS issues, JavaScript problems, or improving functionality (e.g., "fix the button", "make mobile responsive", "add CSS styling")
+3. **CREATE_NEW** - User wants to create something new from scratch (new page, game, feature, content, etc.)
+4. **READ_ONLY** - User wants information, wants to see/list/find something, or is asking a question without requesting changes
+5. **CONVERSATION** - General chat, greeting, or discussion not requiring file operations
 
 User request: "${prompt}"
 
-Analyze the intent carefully. Look for:
-- References to existing items (e.g., "the game", "that page", specific file names) → likely EDIT_EXISTING
-- Requests for new content (e.g., "create", "make a new", "build", "produce a webpage") → likely CREATE_NEW
-- Questions or information requests (e.g., "what is", "show me", "list", "find") → likely READ_ONLY
-- General conversation (e.g., "hello", "thanks", "how are you") → likely CONVERSATION
+Analyze the intent carefully:
+- Simple content changes → SIMPLE_EDIT
+- Bug fixes, styling issues, functionality problems → FUNCTIONALITY_FIX  
+- New content creation → CREATE_NEW
+- Information requests → READ_ONLY
+- General chat → CONVERSATION
 
-IMPORTANT: Phrases like "make it a webpage" or "make it interactive" when referring to NEW content should be CREATE_NEW, not EDIT_EXISTING.
+CRITICAL: Requests involving "fix", "CSS", "JS", "styling", "responsive", "mobile", "button issues" are FUNCTIONALITY_FIX, not SIMPLE_EDIT.
 
-Respond with ONLY one of these exact words: EDIT_EXISTING, CREATE_NEW, READ_ONLY, or CONVERSATION`;
+Respond with ONLY one of these exact words: SIMPLE_EDIT, FUNCTIONALITY_FIX, CREATE_NEW, READ_ONLY, or CONVERSATION`;
 
         const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
             model,
@@ -63,7 +65,7 @@ Respond with ONLY one of these exact words: EDIT_EXISTING, CREATE_NEW, READ_ONLY
         const classification = response.data.choices[0].message.content.trim().toUpperCase();
         
         // Validate the classification
-        const validTypes = ['EDIT_EXISTING', 'CREATE_NEW', 'READ_ONLY', 'CONVERSATION'];
+        const validTypes = ['SIMPLE_EDIT', 'FUNCTIONALITY_FIX', 'CREATE_NEW', 'READ_ONLY', 'CONVERSATION'];
         if (!validTypes.includes(classification)) {
             console.error(`Invalid classification received: ${classification}`);
             // Fallback to keyword-based detection as backup
@@ -74,7 +76,8 @@ Respond with ONLY one of these exact words: EDIT_EXISTING, CREATE_NEW, READ_ONLY
         
         return {
             type: classification,
-            isEdit: classification === 'EDIT_EXISTING',
+            isEdit: classification === 'SIMPLE_EDIT',
+            isFunctionalityFix: classification === 'FUNCTIONALITY_FIX',
             isCreate: classification === 'CREATE_NEW',
             isReadOnly: classification === 'READ_ONLY',
             isConversation: classification === 'CONVERSATION',
@@ -95,21 +98,8 @@ Respond with ONLY one of these exact words: EDIT_EXISTING, CREATE_NEW, READ_ONLY
 function fallbackClassification(prompt) {
     const lowerPrompt = prompt.toLowerCase();
     
-    // Clear edit indicators (must be very specific)
-    if (lowerPrompt.includes('edit the') || 
-        lowerPrompt.includes('update the') || 
-        lowerPrompt.includes('fix the') ||
-        lowerPrompt.includes('change the') ||
-        lowerPrompt.includes('modify the')) {
-        return {
-            type: 'EDIT_EXISTING',
-            isEdit: true,
-            isCreate: false,
-            isReadOnly: false,
-            isConversation: false,
-            method: 'fallback'
-        };
-    }
+    // Conservative fallback - when LLM fails, default to normal chat flow
+    // This ensures functionality fixes get proper tool access
     
     // Clear create indicators
     if (lowerPrompt.includes('create') || 

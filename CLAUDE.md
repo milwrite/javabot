@@ -41,6 +41,69 @@ npm start
 - All required environment variables must be present or bot will exit with error message
 - Bot validates all `REQUIRED_ENV_VARS` on startup (see index.js:11-26)
 
+## 🚀 COMMIT PROCEDURES
+
+**CRITICAL**: When working on this codebase, follow these exact commit steps to avoid authentication issues:
+
+### Quick Commit Guide
+
+1. **Stage your changes**:
+   ```bash
+   git add <files>
+   # or for all changes:
+   git add .
+   ```
+
+2. **Commit with message**:
+   ```bash
+   git commit -m "your commit message here"
+   ```
+
+3. **Push using token authentication**:
+   ```bash
+   git push origin main
+   ```
+   
+   **If push fails with authentication error**, use this format:
+   ```bash
+   git remote set-url origin https://milwrite:GITHUB_TOKEN@github.com/milwrite/javabot.git
+   git push
+   git remote set-url origin https://github.com/milwrite/javabot.git  # clean up afterward
+   ```
+
+### Bot Auto-Commit Behavior
+
+The bot automatically commits and pushes changes when:
+- Creating new pages (`/add-page`, `create_page()`)
+- Adding features (`/add-feature`, `create_feature()`) 
+- Editing files (`edit_file()` function)
+- Building games (`/build-game`, `build_game()`)
+- Manual commits (`/commit`, `commit_changes()`)
+
+**Authentication**: The bot uses `getEncodedRemoteUrl()` which formats URLs as:
+```
+https://milwrite:TOKEN@github.com/milwrite/javabot.git
+```
+
+**Commit Message Format**: Following global user instructions:
+- Lowercase only
+- Detailed but max 100 characters
+- No Claude Code attribution
+
+### Troubleshooting Authentication
+
+**Problem**: "fatal: could not read Password" or "Authentication failed"
+**Solution**: The GitHub token may be expired or incorrectly formatted
+1. Check token is valid in GitHub settings
+2. Ensure token has `repo` permissions
+3. Use the manual push format above with current token
+
+**Problem**: Remote URL contains embedded token causing issues
+**Solution**: 
+```bash
+git remote set-url origin https://github.com/milwrite/javabot.git
+```
+
 ## Architecture Overview
 
 ### Single-File Architecture

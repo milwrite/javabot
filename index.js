@@ -2030,7 +2030,7 @@ Do not use web search or create new content - only edit existing files.`
             }
         ];
 
-        const MAX_ITERATIONS = 10; // Streamlined for edits
+        const MAX_ITERATIONS = 3; // Prevent infinite loops
         let iteration = 0;
         let lastResponse;
         let editCompleted = false;
@@ -3210,10 +3210,19 @@ async function handleMentionAsync(message) {
                     return; // Success - exit
                     }
                     
-                    // Handle edit requests with streamlined edit loop
+                    // Handle functionality fixes with full tool access (skip limited edit loop)
+                    if (classification.isFunctionalityFix) {
+                        logEvent('MENTION', `FUNCTIONALITY_FIX request - using normal chat flow for full tool access`);
+                        await thinkingMsg.edit('🔧 analyzing functionality issue...');
+                        // Skip to normal LLM response with full tools
+                        processingAttempt = 4;
+                        continue;
+                    }
+                    
+                    // Handle simple edits with streamlined edit loop
                     if (classification.isEdit) {
-                        logEvent('MENTION', `EDIT_EXISTING request - using streamlined edit loop`);
-                        await thinkingMsg.edit('🔧 detected edit request - using streamlined editor...');
+                        logEvent('MENTION', `SIMPLE_EDIT request - using streamlined edit loop`);
+                        await thinkingMsg.edit('✏️ making simple edit...');
                         
                         let llmResult = await getEditResponse(content, conversationMessages);
                         let response = cleanBotResponse(llmResult.text);
