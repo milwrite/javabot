@@ -2035,7 +2035,7 @@ Do not use web search or create new content - only edit existing files.`
             }
         ];
 
-        const MAX_ITERATIONS = 3; // Streamlined for edits
+        const MAX_ITERATIONS = 10; // Streamlined for edits
         let iteration = 0;
         let lastResponse;
         let editCompleted = false;
