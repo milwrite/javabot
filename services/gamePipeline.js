@@ -32,7 +32,7 @@ async function runGamePipeline({
 
     try {
         // Stage 1: Planning
-        await onStatusUpdate('📝 sketching game plan...');
+        await onStatusUpdate('📝 Planning architecture...');
 
         const recentPatterns = await getRecentPatternsSummary();
         const plan = await planGame({
@@ -40,6 +40,8 @@ async function runGamePipeline({
             recentPatternsSummary: recentPatterns,
             preferredType
         });
+
+        await onStatusUpdate(`✅ Architecture complete\n   Type: "${plan.type}"\n   Theme: "${plan.theme}"`);
 
         await writeBuildLog(buildId, {
             stage: 'plan',
@@ -54,7 +56,7 @@ async function runGamePipeline({
         let testResult;
 
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-            await onStatusUpdate(`🎮 building game (attempt ${attempt}/${maxAttempts})...`);
+            await onStatusUpdate(`🎮 Building content (attempt ${attempt}/${maxAttempts})...`);
 
             buildResult = await buildGame({
                 plan,
@@ -62,6 +64,8 @@ async function runGamePipeline({
                 lastIssues,
                 buildId
             });
+
+            await onStatusUpdate(`✅ Build complete\n   Files: ${buildResult.files.join(', ')}\n   HTML: ${Math.round(buildResult.htmlContent.length / 1024)}KB, JS: ${Math.round((buildResult.jsContent?.length || 0) / 1024)}KB`);
 
             await writeBuildLog(buildId, {
                 stage: 'build',
@@ -73,7 +77,7 @@ async function runGamePipeline({
                 }
             });
 
-            await onStatusUpdate(`🧪 testing game (attempt ${attempt}/${maxAttempts})...`);
+            await onStatusUpdate(`🧪 Running quality tests (attempt ${attempt}/${maxAttempts})...`);
 
             testResult = await testGame({
                 plan,
@@ -89,15 +93,16 @@ async function runGamePipeline({
 
             // Success! Break out of loop
             if (testResult.ok) {
-                console.log(`✅ Build passed on attempt ${attempt}`);
+                await onStatusUpdate(`✅ Quality tests passed\n   Issues: ${testResult.issues.length}\n   Warnings: ${testResult.warnings.length}`);
                 break;
             }
 
             // Failed - prepare for next attempt
             lastIssues = testResult.issues;
+            await onStatusUpdate(`⚠️  Tests failed: ${testResult.issues.length} issues found`);
 
             if (attempt === maxAttempts) {
-                console.log(`❌ Build failed after ${maxAttempts} attempts`);
+                await onStatusUpdate(`❌ Build failed after ${maxAttempts} attempts`);
                 await writeBuildLog(buildId, {
                     stage: 'failure',
                     finalIssues: testResult.issues,
@@ -114,11 +119,11 @@ async function runGamePipeline({
                 };
             }
 
-            console.log(`⚠️  Attempt ${attempt} failed, retrying with fixes...`);
+            await onStatusUpdate(`🔄 Retrying with fixes (attempt ${attempt + 1}/${maxAttempts})...`);
         }
 
         // Stage 3: Documentation & Metadata
-        await onStatusUpdate('📖 writing docs & metadata...');
+        await onStatusUpdate('📖 Writing documentation...');
 
         const docs = await documentGame({
             plan,
@@ -126,6 +131,8 @@ async function runGamePipeline({
             testResult,
             buildId
         });
+
+        await onStatusUpdate(`✅ Documentation complete\n   Caption: "${docs.metadata.caption}"`);
 
         await writeBuildLog(buildId, {
             stage: 'scribe',
@@ -135,12 +142,13 @@ async function runGamePipeline({
         // Update projectmetadata.json
         const slug = plan.slug;
         await updateProjectMetadata(slug, docs.metadata);
+        await onStatusUpdate(`✅ Updated projectmetadata.json: ${slug} → ${docs.metadata.type}-content`);
 
         // Stage 4: Git operations (optional - can be done by caller)
         // We'll return the files so the caller can decide whether to commit
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`🎉 Pipeline complete in ${duration}s`);
+        await onStatusUpdate(`🎉 Pipeline complete in ${duration}s`);
 
         await writeBuildLog(buildId, {
             stage: 'complete',
@@ -184,7 +192,7 @@ async function runGamePipeline({
  */
 async function commitGameFiles(result, customMessage = null) {
     if (!result.ok) {
-        console.log('Cannot commit - build failed');
+        console.log('❌ Cannot commit - build failed');
         return false;
     }
 
@@ -194,17 +202,55 @@ async function commitGameFiles(result, customMessage = null) {
             'projectmetadata.json'
         ];
 
-        // Add files
+        console.log('📦 staging files for git commit...');
         await git.add(files);
 
-        // Commit
-        const message = customMessage || `add ${result.plan.metadata.title.toLowerCase()}`;
-        await git.commit(message);
+        // Create safe commit message (max 100 chars per user requirements)
+        let message = customMessage || `add ${result.plan.metadata.title.toLowerCase()}`;
+        if (message.length > 100) {
+            message = message.substring(0, 97) + '...';
+        }
+        console.log('💾 creating git commit...');
+        
+        // Check git status before committing
+        const status = await git.status();
+        if (status.files.length === 0) {
+            console.log('⚠️  No changes to commit');
+            return true; // Not an error - just nothing to commit
+        }
 
+        await git.commit(message);
         console.log(`✅ Committed: ${message}`);
         return true;
+        
     } catch (error) {
-        console.error('Git commit failed:', error);
+        console.error('❌ Git commit failed:', error.message);
+        
+        // Check if this is a HEAD parsing issue
+        if (error.message.includes('could not parse HEAD') || error.message.includes('bad object HEAD')) {
+            console.log('🔧 Attempting to fix corrupted git HEAD...');
+            try {
+                // Try to reset to remote
+                await git.fetch('origin');
+                await git.reset(['--hard', 'origin/main']);
+                console.log('✅ Git HEAD fixed, retrying commit...');
+                
+                // Retry the commit
+                await git.add(files);
+                let retryMessage = customMessage || `add ${result.plan.metadata.title.toLowerCase()}`;
+                if (retryMessage.length > 100) {
+                    retryMessage = retryMessage.substring(0, 97) + '...';
+                }
+                await git.commit(retryMessage);
+                console.log(`✅ Committed after HEAD fix: ${retryMessage}`);
+                return true;
+                
+            } catch (retryError) {
+                console.error('❌ Failed to fix git HEAD:', retryError.message);
+                return false;
+            }
+        }
+        
         return false;
     }
 }
