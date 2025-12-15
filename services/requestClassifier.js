@@ -14,7 +14,7 @@ async function classifyRequest(prompt, options = {}) {
     const globalModel = typeof MODEL !== 'undefined' ? MODEL : null;
     
     const { 
-        model = globalModel || process.env.MODEL || 'anthropic/claude-3-haiku-20240307',
+        model = globalModel || process.env.MODEL || 'anthropic/claude-haiku-4.5',
         apiKey = process.env.OPENROUTER_API_KEY 
     } = options;
 
