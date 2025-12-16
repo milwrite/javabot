@@ -35,11 +35,24 @@ async function runGamePipeline({
         await onStatusUpdate('📝 Planning architecture...');
 
         const recentPatterns = await getRecentPatternsSummary();
+        // Log to GUI
+        if (global.logToGUI) {
+            global.logToGUI('info', '🏗️ Architect analyzing request...', { userPrompt, preferredType });
+        }
+        
         const plan = await planGame({
             userPrompt,
             recentPatternsSummary: recentPatterns,
             preferredType
         });
+
+        // Log plan completion to GUI
+        if (global.logToGUI) {
+            global.logToGUI('info', `📋 Plan created: ${plan.metadata.title} (${plan.contentType})`, {
+                files: plan.files,
+                collection: plan.metadata.collection
+            });
+        }
 
         await onStatusUpdate(`✅ Architecture complete\n   Type: "${plan.type}"\n   Theme: "${plan.theme}"`);
 
@@ -58,12 +71,29 @@ async function runGamePipeline({
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             await onStatusUpdate(`🎮 Building content (attempt ${attempt}/${maxAttempts})...`);
 
+            // Log to GUI
+            if (global.logToGUI) {
+                global.logToGUI('info', `🔨 Builder working (attempt ${attempt}/3)...`, { 
+                    plan: plan.metadata.title,
+                    attempt 
+                });
+            }
+
             buildResult = await buildGame({
                 plan,
                 attempt,
                 lastIssues,
                 buildId
             });
+
+            // Log build completion to GUI
+            if (global.logToGUI) {
+                global.logToGUI('info', `✅ Generated ${buildResult.files.join(', ')} (${buildResult.htmlContent.length} chars)`, {
+                    files: buildResult.files,
+                    htmlSize: buildResult.htmlContent.length,
+                    jsSize: buildResult.jsContent?.length || 0
+                });
+            }
 
             await onStatusUpdate(`✅ Build complete\n   Files: ${buildResult.files.join(', ')}\n   HTML: ${Math.round(buildResult.htmlContent.length / 1024)}KB, JS: ${Math.round((buildResult.jsContent?.length || 0) / 1024)}KB`);
 
@@ -79,11 +109,29 @@ async function runGamePipeline({
 
             await onStatusUpdate(`🧪 Running quality tests (attempt ${attempt}/${maxAttempts})...`);
 
+            // Log to GUI
+            if (global.logToGUI) {
+                global.logToGUI('info', '🧪 Tester validating code...', { 
+                    plan: plan.metadata.title,
+                    attempt 
+                });
+            }
+
             testResult = await testGame({
                 plan,
                 buildResult,
                 buildId
             });
+
+            // Log test results to GUI
+            if (global.logToGUI) {
+                global.logToGUI('info', `✅ Tests ${testResult.ok ? 'passed' : 'failed'}! Score: ${testResult.score}/100`, {
+                    passed: testResult.ok,
+                    score: testResult.score,
+                    issues: testResult.issues.length,
+                    warnings: testResult.warnings.length
+                });
+            }
 
             await writeBuildLog(buildId, {
                 stage: 'test',
@@ -125,12 +173,26 @@ async function runGamePipeline({
         // Stage 3: Documentation & Metadata
         await onStatusUpdate('📖 Writing documentation...');
 
+        // Log to GUI
+        if (global.logToGUI) {
+            global.logToGUI('info', '📝 Scribe generating docs...', { 
+                plan: plan.metadata.title 
+            });
+        }
+
         const docs = await documentGame({
             plan,
             buildResult,
             testResult,
             buildId
         });
+
+        // Log doc completion to GUI
+        if (global.logToGUI) {
+            global.logToGUI('info', '✅ Documentation complete', {
+                caption: docs.metadata.caption
+            });
+        }
 
         await onStatusUpdate(`✅ Documentation complete\n   Caption: "${docs.metadata.caption}"`);
 
@@ -142,6 +204,15 @@ async function runGamePipeline({
         // Update projectmetadata.json
         const slug = plan.slug;
         await updateProjectMetadata(slug, docs.metadata);
+        
+        // Log metadata update to GUI
+        if (global.logToGUI) {
+            global.logToGUI('info', `✅ Updated projectmetadata.json: ${slug} → ${docs.metadata.collection || 'unsorted'}`, {
+                slug: slug,
+                collection: docs.metadata.collection || 'unsorted'
+            });
+        }
+        
         await onStatusUpdate(`✅ Updated projectmetadata.json: ${slug} → ${docs.metadata.type}-content`);
 
         // Stage 4: Git operations (optional - can be done by caller)
@@ -203,6 +274,9 @@ async function commitGameFiles(result, customMessage = null) {
         ];
 
         console.log('📦 staging files for git commit...');
+        if (global.logToGUI) {
+            global.logToGUI('info', '📦 Staging files for git commit...', { files });
+        }
         await git.add(files);
 
         // Create safe commit message (max 100 chars per user requirements)
@@ -211,6 +285,9 @@ async function commitGameFiles(result, customMessage = null) {
             message = message.substring(0, 97) + '...';
         }
         console.log('💾 creating git commit...');
+        if (global.logToGUI) {
+            global.logToGUI('info', '💾 Creating git commit...', { message });
+        }
         
         // Check git status before committing
         const status = await git.status();
@@ -221,6 +298,9 @@ async function commitGameFiles(result, customMessage = null) {
 
         await git.commit(message);
         console.log(`✅ Committed: ${message}`);
+        if (global.logToGUI) {
+            global.logToGUI('info', `✅ Committed: ${message}`, { message });
+        }
         return true;
         
     } catch (error) {

@@ -90,6 +90,8 @@ function logToGUI(level, message, data = {}) {
         guiServer.log(level, message, data);
     }
 }
+// Make logToGUI available globally for other modules
+global.logToGUI = logToGUI;
 
 function logToolCall(toolName, args, result, error = null) {
     if (guiServer) {
@@ -171,7 +173,7 @@ const octokit = new Octokit({
 
 const git = simpleGit();
 
-// Helper function to get properly encoded remote URL
+// Helper: build an HTTPS URL with encoded token in userinfo (no permanent storage)
 function getEncodedRemoteUrl() {
     const token = process.env.GITHUB_TOKEN;
     if (!token) {
@@ -183,7 +185,7 @@ function getEncodedRemoteUrl() {
         console.warn('⚠️ GitHub token format may be invalid - should start with ghp_ or github_pat_');
     }
     
-    const encodedToken = encodeURIComponent(token);
+    // Don't encode the token - GitHub tokens don't need URL encoding
     const owner = process.env.GITHUB_REPO_OWNER;
     const repo = process.env.GITHUB_REPO_NAME;
     
@@ -191,7 +193,8 @@ function getEncodedRemoteUrl() {
         throw new Error('GITHUB_REPO_OWNER and GITHUB_REPO_NAME must be set');
     }
     
-    const url = `https://${owner}:${encodedToken}@github.com/${owner}/${repo}.git`;
+    // Use milwrite as the username with the GitHub token (no encoding needed)
+    const url = `https://milwrite:${token}@github.com/${owner}/${repo}.git`;
     
     // Validate URL format without logging the actual token
     if (!url.includes('@github.com') || !url.includes('.git')) {
@@ -199,6 +202,53 @@ function getEncodedRemoteUrl() {
     }
     
     return url;
+}
+
+// Helper: push using an ephemeral URL so we never persist tokens in remotes
+async function pushWithAuth(branch = 'main') {
+    const url = getEncodedRemoteUrl();
+    let lastError = null;
+    
+    try {
+        // Preferred: push directly to URL (no remote mutation)
+        console.log('[PUSH] Attempting direct push to authenticated URL...');
+        await gitWithTimeout(() => git.push(url, branch), CONFIG.PUSH_TIMEOUT);
+        console.log('[PUSH] Direct push successful');
+        return;
+    } catch (directErr) {
+        console.log('[PUSH] Direct push failed:', directErr.message);
+        lastError = directErr;
+        
+        // Fallback 1: use raw git invocation
+        try {
+            console.log('[PUSH] Attempting raw git push...');
+            await gitWithTimeout(() => git.raw(['push', url, branch]), CONFIG.PUSH_TIMEOUT);
+            console.log('[PUSH] Raw git push successful');
+            return;
+        } catch (rawErr) {
+            console.log('[PUSH] Raw git push failed:', rawErr.message);
+            lastError = rawErr;
+            
+            // Fallback 2: add a temporary remote, push, then remove
+            const tempRemote = `auth-${Date.now()}`;
+            try {
+                console.log('[PUSH] Attempting temporary remote push...');
+                await git.remote(['add', tempRemote, url]);
+                await gitWithTimeout(() => git.push(tempRemote, branch), CONFIG.PUSH_TIMEOUT);
+                console.log('[PUSH] Temporary remote push successful');
+                return;
+            } catch (tempErr) {
+                console.log('[PUSH] Temporary remote push failed:', tempErr.message);
+                lastError = tempErr;
+            } finally {
+                try { await git.remote(['remove', tempRemote]); } catch (_) {}
+            }
+        }
+    }
+    
+    // If we get here, all methods failed
+    console.error('[PUSH] All push methods failed. Last error:', lastError.message);
+    throw new Error(`Push failed: ${lastError.message}`);
 }
 
 // Initialize Git remote URL with validation and cleanup
@@ -1179,47 +1229,13 @@ async function writeFile(filePath, content) {
         const status = await gitWithTimeout(() => git.status());
         const currentBranch = status.current || 'main';
 
-        // Enhanced authentication setup with validation
         try {
-            // Clean remote first
-            await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
-            
-            // Set authenticated URL
-            const remoteUrl = getEncodedRemoteUrl();
-            await git.remote(['set-url', 'origin', remoteUrl]);
-            console.log('[WRITE_FILE] Remote URL configured for push');
-        } catch (remoteError) {
-            const error = errorLogger.log('WRITE_FILE_REMOTE', remoteError, { filePath });
-            console.warn('Remote URL setup warning:', remoteError.message);
-        }
-
-        try {
-            await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+            await pushWithAuth(currentBranch);
         } catch (pushError) {
             const error = errorLogger.log('WRITE_FILE_PUSH', pushError, { filePath, branch: currentBranch });
             
-            // Try recovery push
-            if (pushError.message.includes('authentication') || pushError.message.includes('Permission')) {
-                console.log('[WRITE_FILE] Auth failed, attempting recovery...');
-                try {
-                    const cleanUrl = getEncodedRemoteUrl();
-                    await git.remote(['set-url', 'origin', cleanUrl]);
-                    await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
-                    console.log('[WRITE_FILE] Recovery push succeeded');
-                } catch (retryError) {
-                    errorLogger.log('WRITE_FILE_PUSH_RETRY', retryError, { filePath });
-                    throw new Error(`Push failed: ${pushError.message}. Retry failed: ${retryError.message}`);
-                }
-            } else {
-                throw pushError;
-            }
-        } finally {
-            // Clean up remote URL
-            try {
-                await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
-            } catch (cleanupError) {
-                console.warn('Remote cleanup warning:', cleanupError.message);
-            }
+            // Surface push error
+            throw pushError;
         }
 
         console.log(`[WRITE_FILE] Auto-pushed: ${commitMessage}`);
@@ -1326,18 +1342,7 @@ Return ONLY the complete updated file content. No explanations, no markdown code
         const status = await gitWithTimeout(() => git.status());
         const currentBranch = status.current || 'main';
 
-        // Configure git remote with token authentication
-        try {
-            const remotes = await git.getRemotes(true);
-            const origin = remotes.find(r => r.name === 'origin');
-            // Always set the remote URL with token for reliability (avoid checking encoded token)
-            const remoteUrl = getEncodedRemoteUrl();
-            await git.remote(['set-url', 'origin', remoteUrl]);
-        } catch (remoteError) {
-            console.warn('Remote URL setup warning:', remoteError.message);
-        }
-
-        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+        await pushWithAuth(currentBranch);
 
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
         console.log(`[EDIT_FILE] Success + pushed: ${filePath} (${totalTime}s total)`);
@@ -1841,18 +1846,7 @@ Return only HTML, no markdown blocks or explanations.`;
         const status = await gitWithTimeout(() => git.status());
         const currentBranch = status.current || 'main';
 
-        // Configure git remote with token authentication
-        try {
-            const remotes = await git.getRemotes(true);
-            const origin = remotes.find(r => r.name === 'origin');
-            // Always set the remote URL with token for reliability (avoid checking encoded token)
-            const remoteUrl = getEncodedRemoteUrl();
-            await git.remote(['set-url', 'origin', remoteUrl]);
-        } catch (remoteError) {
-            console.warn('Remote URL setup warning:', remoteError.message);
-        }
-
-        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+        await pushWithAuth(currentBranch);
 
         const qualityNote = validation.score >= 80 ? '✨ High quality' : validation.score >= 60 ? '✓ Good quality' : '⚠️ May need refinement';
         console.log(`[CREATE_PAGE] Success + pushed: ${fileName} (Score: ${validation.score}/100)`);
@@ -1993,18 +1987,7 @@ Return only HTML code, no markdown blocks or explanations.`;
         const status = await gitWithTimeout(() => git.status());
         const currentBranch = status.current || 'main';
 
-        // Configure git remote with token authentication
-        try {
-            const remotes = await git.getRemotes(true);
-            const origin = remotes.find(r => r.name === 'origin');
-            // Always set the remote URL with token for reliability (avoid checking encoded token)
-            const remoteUrl = getEncodedRemoteUrl();
-            await git.remote(['set-url', 'origin', remoteUrl]);
-        } catch (remoteError) {
-            console.warn('Remote URL setup warning:', remoteError.message);
-        }
-
-        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+        await pushWithAuth(currentBranch);
 
         const qualityNote = htmlValidation.score >= 80 ? '✨ High quality' : htmlValidation.score >= 60 ? '✓ Good quality' : '⚠️ May need refinement';
         console.log(`[CREATE_FEATURE] Success + pushed: ${jsFileName}, ${htmlFileName} (Score: ${htmlValidation.score}/100)`);
@@ -2090,54 +2073,13 @@ async function commitChanges(message, files = '.') {
         const currentBranch = status.current || 'main';
         metadata.branch = currentBranch;
 
-        // Enhanced authentication setup with validation
+        // Push with ephemeral URL and error handling
         try {
-            // Clean any existing auth issues first
-            await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
-            
-            // Set authenticated URL with proper encoding
-            const remoteUrl = getEncodedRemoteUrl();
-            if (!remoteUrl.includes(process.env.GITHUB_TOKEN)) {
-                throw new Error('Token missing from encoded URL');
-            }
-            
-            await git.remote(['set-url', 'origin', remoteUrl]);
-            console.log('[COMMIT] Remote URL configured with authentication');
-        } catch (remoteError) {
-            const error = errorLogger.log('COMMIT_REMOTE', remoteError, metadata);
-            console.warn('⚠️ Remote URL setup failed:', remoteError.message);
-            // Continue with push attempt - might still work
-        }
-
-        // Push with enhanced timeout and error handling
-        try {
-            await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+            await pushWithAuth(currentBranch);
         } catch (pushError) {
             const error = errorLogger.log('COMMIT_PUSH', pushError, metadata);
             
-            // Try to clean up and retry once
-            if (pushError.message.includes('authentication') || pushError.message.includes('Permission')) {
-                console.log('[COMMIT] Auth failed, attempting recovery...');
-                try {
-                    // Reset remote URL and try again
-                    const cleanUrl = getEncodedRemoteUrl();
-                    await git.remote(['set-url', 'origin', cleanUrl]);
-                    await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
-                    console.log('[COMMIT] Recovery push succeeded');
-                } catch (retryError) {
-                    errorLogger.log('COMMIT_PUSH_RETRY', retryError, metadata);
-                    throw new Error(`Push failed: ${pushError.message}. Retry also failed: ${retryError.message}`);
-                }
-            } else {
-                throw new Error(`Push failed: ${pushError.message}`);
-            }
-        }
-
-        // Clean up remote URL after successful push
-        try {
-            await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
-        } catch (cleanupError) {
-            console.warn('Remote URL cleanup warning:', cleanupError.message);
+            throw new Error(`Push failed: ${pushError.message}`);
         }
 
         console.log(`[COMMIT] Success: ${commit.commit.substring(0, 7)}`);
@@ -2291,32 +2233,13 @@ async function buildGameTool(title, prompt, type = 'auto') {
         // Commit and push
         const commitSuccess = await commitGameFiles(result);
         if (commitSuccess) {
-            // Configure git remote with token authentication
             try {
-                const remotes = await git.getRemotes(true);
-                const origin = remotes.find(r => r.name === 'origin');
-                if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                    const remoteUrl = getEncodedRemoteUrl();
-                    await git.remote(['set-url', 'origin', remoteUrl]);
-                }
-            } catch (remoteError) {
-                console.warn('Remote URL setup warning:', remoteError.message);
-            }
-
-            try {
-                await git.push('origin', 'main');
+                await pushWithAuth('main');
                 console.log('[BUILD_GAME_TOOL] Push successful - game deployed');
             } catch (pushError) {
                 const error = errorLogger.log('BUILD_GAME_TOOL_PUSH', pushError);
                 errorLogger.track(error);
                 console.error('🚨 Build game deployment failed:', pushError.message);
-                
-                // Clean up remote URL
-                try {
-                    await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
-                } catch (cleanupError) {
-                    console.warn('Remote cleanup failed:', cleanupError.message);
-                }
                 
                 // Return error message instead of success
                 return `⚠️ Game "${result.plan.metadata.title}" built but deployment failed: ${pushError.message}. Files saved locally but not live. Check GitHub token permissions.`;
@@ -3732,38 +3655,22 @@ async function handleMentionAsync(message) {
                     await thinkingMsg.edit('💾 committing to repo...');
                     const commitSuccess = await commitGameFiles(result);
 
-                    if (commitSuccess) {
-                        await thinkingMsg.edit('🚀 pushing to github pages...');
+            if (commitSuccess) {
+                await thinkingMsg.edit('🚀 pushing to github pages...');
 
-                        // Enhanced authentication and push with proper error handling
-                        try {
-                            // Always use clean remote and temporary token auth
-                            await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
-                            const remoteUrl = getEncodedRemoteUrl();
-                            await git.remote(['set-url', 'origin', remoteUrl]);
-                            
-                            await git.push('origin', 'main');
-                            console.log('[MENTION_PIPELINE] Push successful');
-                            
-                            // Clean up remote URL
-                            await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
-                        } catch (pushError) {
-                            const error = errorLogger.log('MENTION_PIPELINE_PUSH', pushError);
-                            errorLogger.track(error);
-                            console.error('🚨 Mention pipeline deployment failed:', pushError.message);
-                            
-                            // Clean up remote URL even on error
-                            try {
-                                await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
-                            } catch (cleanupError) {
-                                console.warn('Remote cleanup failed:', cleanupError.message);
-                            }
-                            
-                            // Report error to user instead of silently failing
-                            await thinkingMsg.edit(`⚠️ Content built successfully but deployment failed: ${pushError.message}. Files are saved locally but not published. Check GitHub token permissions.`);
-                            return; // Exit early to prevent success message
-                        }
-                    }
+                try {
+                    await pushWithAuth('main');
+                    console.log('[MENTION_PIPELINE] Push successful');
+                } catch (pushError) {
+                    const error = errorLogger.log('MENTION_PIPELINE_PUSH', pushError);
+                    errorLogger.track(error);
+                    console.error('🚨 Mention pipeline deployment failed:', pushError.message);
+                    
+                    // Report error to user instead of silently failing
+                    await thinkingMsg.edit(`⚠️ Content built successfully but deployment failed: ${pushError.message}. Files are saved locally but not published. Check GitHub token permissions.`);
+                    return; // Exit early to prevent success message
+                }
+            }
 
                     // Success message
                     const scoreEmoji = result.testResult.score >= 80 ? '✨' : result.testResult.score >= 60 ? '✓' : '⚠️';
@@ -4135,20 +4042,9 @@ async function executeCommit(interaction, commitData) {
         // Update progress
         await interaction.editReply('Pushing to repository...');
         
-        // Configure git remote with token authentication (only if needed)
-        try {
-            const remotes = await git.getRemotes(true);
-            const origin = remotes.find(r => r.name === 'origin');
-            // Always set the remote URL with token for reliability (avoid checking encoded token)
-            const remoteUrl = getEncodedRemoteUrl();
-            await git.remote(['set-url', 'origin', remoteUrl]);
-        } catch (remoteError) {
-            console.warn('Remote URL setup warning:', remoteError.message);
-        }
-        
-        // Push changes - use current branch
+        // Push changes - use current branch via ephemeral URL
         const currentBranch = commitData.status.current || 'main';
-        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+        await pushWithAuth(currentBranch);
         
         // Success - create and send embed
         const embed = new EmbedBuilder()
@@ -4462,32 +4358,13 @@ async function handleBuildGame(interaction) {
         if (commitSuccess) {
             await interaction.editReply('🚀 pushing to github pages...');
 
-            // Configure git remote with token authentication
             try {
-                const remotes = await git.getRemotes(true);
-                const origin = remotes.find(r => r.name === 'origin');
-                if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                    const remoteUrl = getEncodedRemoteUrl();
-                    await git.remote(['set-url', 'origin', remoteUrl]);
-                }
-            } catch (remoteError) {
-                console.warn('Remote URL setup warning:', remoteError.message);
-            }
-
-            try {
-                await git.push('origin', 'main');
+                await pushWithAuth('main');
                 console.log('[BUILD_GAME_SLASH] Push successful - content deployed');
             } catch (pushError) {
                 const error = errorLogger.log('BUILD_GAME_SLASH_PUSH', pushError);
                 errorLogger.track(error);
                 console.error('🚨 Build game slash deployment failed:', pushError.message);
-                
-                // Clean up remote URL
-                try {
-                    await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
-                } catch (cleanupError) {
-                    console.warn('Remote cleanup failed:', cleanupError.message);
-                }
                 
                 // Create error embed instead of success
                 const errorEmbed = new EmbedBuilder()
@@ -4578,18 +4455,7 @@ async function handleBuildPuzzle(interaction) {
         await gitWithTimeout(() => git.add('.'));
         await gitWithTimeout(() => git.commit(`add ${theme} story riddle puzzle`));
 
-        // Configure git remote with token authentication
-        try {
-            const remotes = await git.getRemotes(true);
-            const origin = remotes.find(r => r.name === 'origin');
-            // Always set the remote URL with token for reliability (avoid checking encoded token)
-            const remoteUrl = getEncodedRemoteUrl();
-            await git.remote(['set-url', 'origin', remoteUrl]);
-        } catch (remoteError) {
-            console.warn('Remote URL setup warning:', remoteError.message);
-        }
-
-        await gitWithTimeout(() => git.push('origin', 'main'), CONFIG.PUSH_TIMEOUT);
+        await pushWithAuth('main');
 
         // Success embed
         const liveUrl = `https://milwrite.github.io/javabot/src/${fileName}.html`;
@@ -5867,20 +5733,9 @@ async function executeMentionCommit(interaction, commitData) {
         // Update progress
         await interaction.editReply('Pushing to repository...');
         
-        // Configure git remote with token authentication (only if needed)
-        try {
-            const remotes = await git.getRemotes(true);
-            const origin = remotes.find(r => r.name === 'origin');
-            // Always set the remote URL with token for reliability (avoid checking encoded token)
-            const remoteUrl = getEncodedRemoteUrl();
-            await git.remote(['set-url', 'origin', remoteUrl]);
-        } catch (remoteError) {
-            console.warn('Remote URL setup warning:', remoteError.message);
-        }
-        
-        // Push changes - use current branch
+        // Push changes - use current branch via ephemeral URL
         const currentBranch = commitData.status.current || 'main';
-        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+        await pushWithAuth(currentBranch);
         
         // Success - create and send embed
         const embed = new EmbedBuilder()
@@ -6613,18 +6468,7 @@ Output ONLY the CSS code, no explanations.`;
         const commitMessage = `update style to ${preset === 'custom' ? 'custom: ' + customDescription : preset}`;
         await git.commit(commitMessage);
 
-        // Configure git remote with token authentication
-        try {
-            const remotes = await git.getRemotes(true);
-            const origin = remotes.find(r => r.name === 'origin');
-            // Always set the remote URL with token for reliability (avoid checking encoded token)
-            const remoteUrl = getEncodedRemoteUrl();
-            await git.remote(['set-url', 'origin', remoteUrl]);
-        } catch (remoteError) {
-            console.warn('Remote URL setup warning:', remoteError.message);
-        }
-
-        await git.push('origin', status.current);
+        await pushWithAuth(status.current || 'main');
 
         const embed = new EmbedBuilder()
             .setTitle('🎨 Style Updated & Pushed')

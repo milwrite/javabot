@@ -44,9 +44,7 @@ class BotGUIServer {
         this.app.get('/default.jpeg', (req, res) => {
             res.sendFile(path.join(__dirname, 'default.jpeg'));
         });
-        this.app.get('/default.png', (req, res) => {
-            res.sendFile(path.join(__dirname, 'default.png'));
-        });
+        // Note: Default asset is a JPEG; no PNG route needed
         
         // Main dashboard
         this.app.get('/', (req, res) => {

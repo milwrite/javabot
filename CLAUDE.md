@@ -135,6 +135,7 @@ The bot automatically commits and pushes changes when:
 ```
 https://milwrite:TOKEN@github.com/milwrite/javabot.git
 ```
+This function properly encodes the GitHub token and uses `milwrite` as the username for authentication.
 
 **Commit Message Format**: Following global user instructions:
 - Lowercase only

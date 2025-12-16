@@ -1,0 +1,154 @@
+{
+  "id": "run-2025-12-16T06-05-04",
+  "timestamp": "2025-12-16T06:08:53.844Z",
+  "startTime": "2025-12-16T06:05:04.983Z",
+  "endTime": "2025-12-16T06:08:53.844Z",
+  "logs": [
+    {
+      "timestamp": "2025-12-16T06:05:06.985Z",
+      "level": "info",
+      "message": "Bot started successfully",
+      "data": {
+        "version": "1.0.0"
+      },
+      "id": 1765865106985.1753
+    },
+    {
+      "timestamp": "2025-12-16T06:05:06.986Z",
+      "level": "debug",
+      "message": "Connecting to Discord",
+      "data": {
+        "token": "HIDDEN"
+      },
+      "id": 1765865106986.4253
+    },
+    {
+      "timestamp": "2025-12-16T06:05:09.995Z",
+      "level": "info",
+      "message": "Game created successfully",
+      "data": {
+        "url": "https://example.com/game.html"
+      },
+      "id": 1765865109995.8206
+    },
+    {
+      "timestamp": "2025-12-16T06:05:09.995Z",
+      "level": "error",
+      "message": "Failed to commit changes",
+      "data": {
+        "error": "Authentication failed"
+      },
+      "id": 1765865109995.5151
+    }
+  ],
+  "toolCalls": [
+    {
+      "timestamp": "2025-12-16T06:05:06.986Z",
+      "tool": "list_files",
+      "args": {
+        "path": "./src"
+      },
+      "result": "file1.html\nfile2.js\nfile3.css",
+      "error": null,
+      "success": true,
+      "id": 1765865106986.247,
+      "loopIteration": null
+    },
+    {
+      "timestamp": "2025-12-16T06:05:06.986Z",
+      "tool": "read_file",
+      "args": {
+        "path": "src/example.html"
+      },
+      "result": "<html>...</html>",
+      "error": null,
+      "success": true,
+      "id": 1765865106986.8286,
+      "loopIteration": null
+    },
+    {
+      "timestamp": "2025-12-16T06:05:06.986Z",
+      "tool": "write_file",
+      "args": {
+        "path": "src/new.html",
+        "content": "<html>New page</html>"
+      },
+      "result": "File created successfully",
+      "error": null,
+      "success": true,
+      "id": 1765865106986.4429,
+      "loopIteration": null
+    },
+    {
+      "timestamp": "2025-12-16T06:05:09.995Z",
+      "tool": "commit_changes",
+      "args": {
+        "message": "Add new game",
+        "files": [
+          "."
+        ]
+      },
+      "result": null,
+      "error": "Authentication error",
+      "success": false,
+      "id": 1765865109995.168,
+      "loopIteration": null
+    }
+  ],
+  "fileChanges": [
+    {
+      "timestamp": "2025-12-16T06:05:06.986Z",
+      "action": "create",
+      "path": "src/new-page.html",
+      "content": "<html>New content</html>",
+      "oldContent": null,
+      "id": 1765865106986.064,
+      "loopIteration": null
+    },
+    {
+      "timestamp": "2025-12-16T06:05:06.986Z",
+      "action": "edit",
+      "path": "src/existing.js",
+      "content": "const updated = true;",
+      "oldContent": "const updated = false;",
+      "id": 1765865106986.01,
+      "loopIteration": null
+    },
+    {
+      "timestamp": "2025-12-16T06:05:06.986Z",
+      "action": "read",
+      "path": "index.html",
+      "content": null,
+      "oldContent": null,
+      "id": 1765865106986.4968,
+      "loopIteration": null
+    }
+  ],
+  "agentLoops": [
+    {
+      "id": 1765865106986.4966,
+      "command": "/chat Build me a game",
+      "user": "testuser",
+      "channel": "#general",
+      "startTime": "2025-12-16T06:05:06.986Z",
+      "iteration": 2,
+      "tools": [
+        "list_files",
+        "read_file",
+        "create_page"
+      ],
+      "status": "completed",
+      "finalResult": "Successfully created game at https://example.com/game.html",
+      "lastUpdate": "2025-12-16T06:05:08.991Z",
+      "endTime": "2025-12-16T06:05:09.994Z",
+      "error": null,
+      "duration": 3008
+    }
+  ],
+  "summary": {
+    "totalLogs": 4,
+    "totalToolCalls": 4,
+    "totalFileChanges": 3,
+    "totalAgentLoops": 1
+  }
+}
