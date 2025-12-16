@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ override: true });
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { Octokit } = require('@octokit/rest');
 const simpleGit = require('simple-git');
@@ -37,7 +37,16 @@ if (missingVars.length > 0) {
     console.error('Please check your .env file');
     process.exit(1);
 }
+
+// Validate GitHub token format and configuration
+const githubToken = process.env.GITHUB_TOKEN;
+if (!githubToken.startsWith('ghp_') && !githubToken.startsWith('github_pat_')) {
+    console.warn('⚠️ GitHub token format may be invalid - should start with ghp_ or github_pat_');
+}
+
 console.log('✅ All required environment variables loaded');
+console.log(`🔐 GitHub token: ${githubToken.substring(0, 8)}...`);
+console.log(`📂 Repository: ${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}`);
 
 // Initialize GUI server
 if (!process.env.NO_GUI) {
