@@ -151,46 +151,37 @@ body::before {
     100% { opacity: 0.97; }
 }
 
-/* Home thumbnail (top-left) */
+/* Home link (top-left) - text-based, no image */
 .home-link {
     position: fixed;
     top: 16px;
     left: 16px;
     z-index: 9999;
-    width: 40px;
-    height: 40px;
-    /* Robust path handling for GitHub Pages project base and local dev */
-    background-image: url('default.jpg'), url('/javabot/default.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    padding: 6px 10px;
     border-radius: 6px;
     border: 1px solid rgba(126, 200, 227, 0.35);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-    display: block;
-    overflow: hidden;
+    display: inline-block;
 }
 
-/* Fill variant: wrapper with inner anchor only
-   Avoid making a.home-link full-bleed (caused giant image)
-*/
+/* Wrapper variant with inner anchor: show text normally */
 .home-link a {
-    display: block;
-    width: 100%;
-    height: 100%;
-    text-indent: -9999px;
-    white-space: nowrap;
-    overflow: hidden;
-    color: transparent;
+    display: inline-block;
+    width: auto;
+    height: auto;
+    text-indent: 0;
+    white-space: normal;
+    overflow: visible;
+    color: inherit;
 }
 
-/* Anchor-as-home-link variant keeps fixed size from .home-link */
+/* Anchor-as-home-link: show text, size to content */
 a.home-link {
-    display: block;
-    text-indent: -9999px;
+    display: inline-block;
+    text-indent: 0;
     white-space: nowrap;
-    overflow: hidden;
-    color: transparent;
+    overflow: visible;
+    color: inherit;
 }
 
 .home-link:hover,
