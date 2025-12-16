@@ -3570,9 +3570,9 @@ async function handleMentionAsync(message) {
                     if (classification.isReadOnly) {
                         logEvent('MENTION', `READ_ONLY request - routing to normal LLM response`);
                         await thinkingMsg.edit('📖 processing your information request...');
-                        // Skip to Loop 4: Normal LLM response
-                        processingAttempt = 4;
-                        continue;
+                        // Break out to proceed with normal LLM response
+                        processingAttempt = maxProcessingAttempts + 1; // Exit the classification loop
+                        break;
                     }
 
                     // Handle COMMIT requests immediately
@@ -3760,7 +3760,12 @@ async function handleMentionAsync(message) {
         }
 
         // Final processing loops: Normal LLM flow with multiple fallbacks
-        processingAttempt = Math.max(processingAttempt, 1); // Ensure we start from 1
+        // Reset to 1 for normal LLM processing (especially for READ_ONLY requests)
+        if (processingAttempt > maxProcessingAttempts) {
+            processingAttempt = 1; // READ_ONLY or other requests that broke out early
+        } else {
+            processingAttempt = Math.max(processingAttempt, 1); // Ensure we start from 1
+        }
         let finalResponse = '';
         let finalSearchContext = null;
         
