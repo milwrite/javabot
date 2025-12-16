@@ -378,6 +378,13 @@
       "description": "memory pattern arcade challenge",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "tuesday-letter-cen": {
+      "title": "Tuesday Letter for Cen",
+      "icon": "💌",
+      "description": "warm tuesday check-in letter",
+      "collection": "stories-content",
+      "hidden": false
     }
   }
 }

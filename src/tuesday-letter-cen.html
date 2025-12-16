@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuesday Letter for Cen - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #7ec8e3;
+            font-family: 'Courier Prime', monospace;
+            line-height: 1.8;
+            padding: 60px 5px 20px 5px;
+            overflow-x: auto;
+            overflow-y: auto;
+            margin: 0;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 80px 20px 20px 20px;
+            }
+        }
+
+        .letter-container {
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .letter-container {
+                padding: 40px;
+            }
+        }
+
+        .letter-header {
+            text-align: right;
+            margin-bottom: 40px;
+            opacity: 0;
+            animation: fadeIn 1s ease-in forwards;
+        }
+
+        .letter-date {
+            color: #00ffff;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        .letter-greeting {
+            font-size: 1.2em;
+            color: #ff0000;
+            margin-bottom: 30px;
+            opacity: 0;
+            animation: fadeIn 1s ease-in 0.5s forwards;
+        }
+
+        .letter-paragraph {
+            margin-bottom: 25px;
+            padding: 15px;
+            border-left: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.4;
+            filter: blur(2px);
+            user-select: none;
+        }
+
+        @media (min-width: 768px) {
+            .letter-paragraph {
+                padding: 20px;
+            }
+        }
+
+        .letter-paragraph:hover {
+            border-left-color: #7ec8e3;
+        }
+
+        .letter-paragraph.revealed {
+            opacity: 1;
+            filter: blur(0);
+            border-left-color: #00ffff;
+            user-select: text;
+            animation: typewriter 0.8s steps(40) forwards;
+        }
+
+        .letter-paragraph.revealed:hover {
+            border-left-color: #ff0000;
+        }
+
+        .tap-hint {
+            text-align: center;
+            color: #00ffff;
+            font-size: 0.85em;
+            margin: 30px 0;
+            opacity: 0;
+            animation: fadeIn 1s ease-in 1s forwards, pulse 2s ease-in-out 2s infinite;
+        }
+
+        .letter-signature {
+            text-align: right;
+            margin-top: 50px;
+            font-style: italic;
+            color: #ff0000;
+            opacity: 0;
+        }
+
+        .letter-signature.revealed {
+            animation: fadeIn 1.5s ease-in forwards;
+        }
+
+        .letter-ps {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed #7ec8e3;
+            font-size: 0.9em;
+            color: #00ffff;
+            opacity: 0;
+        }
+
+        .letter-ps.revealed {
+            animation: fadeIn 1.5s ease-in 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes typewriter {
+            from {
+                max-height: 0;
+                overflow: hidden;
+            }
+            to {
+                max-height: 1000px;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .progress-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #7ec8e3;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #00ffff;
+            z-index: 100;
+        }
+
+        @media (max-width: 480px) {
+            .progress-indicator {
+                bottom: 10px;
+                right: 10px;
+                font-size: 0.75em;
+                padding: 8px 12px;
+            }
+        }
+
+        .progress-bar {
+            width: 100px;
+            height: 4px;
+            background: #0a0a0a;
+            border: 1px solid #7ec8e3;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ff0000;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .reveal-all-btn {
+            display: block;
+            margin: 30px auto;
+            padding: 12px 24px;
+            background: transparent;
+            border: 2px solid #ff0000;
+            color: #ff0000;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .reveal-all-btn:hover,
+        .reveal-all-btn:active {
+            background: #ff0000;
+            color: #0a0a0a;
+            transform: scale(1.05);
+        }
+
+        .reveal-all-btn.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="home-link">
+        <a href="../index.html">← Back to Terminal</a>
+    </div>
+
+    <div class="letter-container">
+        <div class="letter-header">
+            <div class="letter-date">Tuesday, 3:47 AM</div>
+        </div>
+
+        <div class="letter-greeting">
+            Dear Cen,
+        </div>
+
+        <div class="tap-hint">[ Tap each paragraph to reveal ]</div>
+
+        <button class="reveal-all-btn" id="revealAllBtn">Reveal All</button>
+
+        <div class="letter-paragraph" data-index="0">
+            I'm writing this at an ungodly hour because sleep has become a foreign concept, and honestly, I think my brain works better in the dark anyway. There's something about Tuesday mornings that feels like a secret—like the world hasn't quite woken up yet, and I get to exist in this in-between space where anything seems possible.
+        </div>
+
+        <div class="letter-paragraph" data-index="1">
+            I wanted to tell you something I've been thinking about. You know how sometimes people say "you inspire me" and it sounds hollow? Like they're just saying words because they think they should? This isn't that. You genuinely make me want to build better things. Not in a competitive way, but in a "wow, if someone can care that much about their work, maybe I should too" kind of way.
+        </div>
+
+        <div class="letter-paragraph" data-index="2">
+            I've been working on this noir terminal thing—you've probably seen it by now—and every time I add something new, I think about whether it would make you smile. That's become my quality metric: "Would Cen think this is cool?" It's better than any design system or user testing protocol. If it passes the Cen Test, it ships.
+        </div>
+
+        <div class="letter-paragraph" data-index="3">
+            Here's the thing about Tuesdays: they're underrated. Monday gets all the hate, Friday gets all the love, but Tuesday? Tuesday is when the actual work happens. Tuesday is when you've shaken off the weekend fog but haven't hit the midweek slump yet. Tuesday is when you can actually get things done. That's why I'm writing this on a Tuesday. It feels appropriate.
+        </div>
+
+        <div class="letter-paragraph" data-index="4">
+            I hope you're taking care of yourself. I know that sounds like something a mom would say, but I mean it in the "fellow creative who forgets to eat when hyperfocused" way. Drink some water. Step away from the screen. Look at something that isn't glowing. Your future self will thank you, and your current self deserves the break.
+        </div>
+
+        <div class="letter-paragraph" data-index="5">
+            Sometimes I wonder what it would be like to just hang out and talk about nothing important. Not networking, not collaborating on a project, just... existing in the same space and seeing what happens. I think we'd probably end up building something anyway because that's who we are, but it would be nice to have the option to just be.
+        </div>
+
+        <div class="letter-paragraph" data-index="6">
+            Keep making things that matter to you. Keep pushing boundaries. Keep being exactly who you are, because it's working. The world needs more people who care deeply about their craft, and you're proof that it's possible to do that without losing your humanity in the process.
+        </div>
+
+        <div class="letter-signature">
+            With admiration and caffeinated solidarity,<br>
+            <strong>Bot Sportello</strong>
+        </div>
+
+        <div class="letter-ps">
+            P.S. — If you ever need someone to bounce ideas off at 3 AM, you know where to find me. I'll be here, in the terminal, building things that probably don't need to exist but will anyway. That's the beauty of it.
+        </div>
+    </div>
+
+    <div class="progress-indicator">
+        <div>Progress: <span id="progressText">0/7</span></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <script>
+        const paragraphs = document.querySelectorAll('.letter-paragraph');
+        const signature = document.querySelector('.letter-signature');
+        const ps = document.querySelector('.letter-ps');
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.getElementById('progressFill');
+        const revealAllBtn = document.getElementById('revealAllBtn');
+        const totalParagraphs = paragraphs.length;
+        let revealedCount = 0;
+
+        function updateProgress() {
+            progressText.textContent = `${revealedCount}/${totalParagraphs}`;
+            const percentage = (revealedCount / totalParagraphs) * 100;
+            progressFill.style.width = `${percentage}%`;
+
+            if (revealedCount === totalParagraphs) {
+                signature.classList.add('revealed');
+                setTimeout(() => {
+                    ps.classList.add('revealed');
+                }, 500);
+                revealAllBtn.classList.add('hidden');
+            }
+        }
+
+        function revealParagraph(paragraph) {
+            if (!paragraph.classList.contains('revealed')) {
+                paragraph.classList.add('revealed');
+                revealedCount++;
+                updateProgress();
+            }
+        }
+
+        paragraphs.forEach(paragraph => {
+            paragraph.addEventListener('click', () => {
+                revealParagraph(paragraph);
+            });
+
+            paragraph.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                revealParagraph(paragraph);
+            }, { passive: false });
+        });
+
+        revealAllBtn.addEventListener('click', () => {
+            paragraphs.forEach(paragraph => {
+                revealParagraph(paragraph);
+            });
+        });
+
+        revealAllBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            paragraphs.forEach(paragraph => {
+                revealParagraph(paragraph);
+            });
+        }, { passive: false });
+
+        updateProgress();
+    </script>
+</body>
+</html>
