@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequence Recall - Bot Sportello Arcade</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 60px 5px 20px 5px;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            font-family: 'Courier Prime', monospace;
+            overflow-x: hidden;
+            overflow-y: auto;
+            min-height: 100vh;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 80px 20px 20px 20px;
+            }
+        }
+
+        .game-container {
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #00ffff;
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .subtitle {
+            color: #7ec8e3;
+            font-size: 0.9em;
+            margin-bottom: 30px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: rgba(126, 200, 227, 0.1);
+            border: 2px solid #7ec8e3;
+            padding: 10px 20px;
+            border-radius: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #7ec8e3;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            color: #00ffff;
+            font-weight: bold;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 30px auto;
+            padding: 0 10px;
+        }
+
+        @media (max-width: 480px) {
+            .game-board {
+                gap: 10px;
+            }
+        }
+
+        .color-button {
+            aspect-ratio: 1;
+            border: 3px solid #0a0a0a;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            position: relative;
+            min-height: 120px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @media (max-width: 480px) {
+            .color-button {
+                min-height: 80px;
+            }
+        }
+
+        .color-button:active {
+            transform: scale(0.95);
+        }
+
+        .color-button.lit {
+            filter: brightness(1.8);
+            box-shadow: 0 0 20px currentColor;
+            transform: scale(1.05);
+        }
+
+        .color-button.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .btn-red {
+            background: #8b0000;
+            border-color: #ff0000;
+        }
+
+        .btn-blue {
+            background: #00008b;
+            border-color: #0000ff;
+        }
+
+        .btn-green {
+            background: #006400;
+            border-color: #00ff00;
+        }
+
+        .btn-yellow {
+            background: #8b8b00;
+            border-color: #ffff00;
+        }
+
+        .message {
+            min-height: 40px;
+            margin: 20px 0;
+            font-size: 1.1em;
+            color: #00ffff;
+        }
+
+        .message.error {
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        .message.success {
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .controls {
+            margin-top: 30px;
+        }
+
+        .btn {
+            background: #ff0000;
+            color: #0a0a0a;
+            border: 2px solid #ff0000;
+            padding: 12px 30px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            min-height: 44px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:hover {
+            background: #0a0a0a;
+            color: #ff0000;
+            box-shadow: 0 0 15px #ff0000;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .instructions {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(126, 200, 227, 0.05);
+            border: 1px solid #7ec8e3;
+            border-radius: 4px;
+            text-align: left;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .instructions h2 {
+            color: #00ffff;
+            font-size: 1.2em;
+            margin-top: 0;
+        }
+
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .watching {
+            animation: pulse 1s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">← Back to Collection</a>
+
+    <div class="game-container">
+        <h1>SEQUENCE RECALL</h1>
+        <p class="subtitle">Memory Protocol v2.1</p>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">ROUND</div>
+                <div class="stat-value" id="round">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">STREAK</div>
+                <div class="stat-value" id="streak">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">BEST</div>
+                <div class="stat-value" id="best">0</div>
+            </div>
+        </div>
+
+        <div class="message" id="message">Press START to begin</div>
+
+        <div class="game-board">
+            <button class="color-button btn-red disabled" data-color="0" id="btn-0"></button>
+            <button class="color-button btn-blue disabled" data-color="1" id="btn-1"></button>
+            <button class="color-button btn-green disabled" data-color="2" id="btn-2"></button>
+            <button class="color-button btn-yellow disabled" data-color="3" id="btn-3"></button>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn">Start Game</button>
+        </div>
+
+        <div class="instructions">
+            <h2>HOW TO PLAY</h2>
+            <ul>
+                <li>Watch the sequence of colors light up</li>
+                <li>Repeat the sequence by tapping the buttons</li>
+                <li>Each round adds one more color to remember</li>
+                <li>One mistake ends the game</li>
+                <li>Build your streak and beat your best score</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        const frequencies = [329.63, 261.63, 392.00, 493.88];
+
+        function playTone(colorIndex, duration = 300) {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.frequency.value = frequencies[colorIndex];
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
+            
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration / 1000);
+        }
+
+        function playErrorSound() {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.frequency.value = 100;
+            oscillator.type = 'sawtooth';
+            
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.5);
+        }
+
+        class SequenceGame {
+            constructor() {
+                this.sequence = [];
+                this.playerSequence = [];
+                this.round = 1;
+                this.streak = 0;
+                this.best = parseInt(localStorage.getItem('sequenceRecallBest')) || 0;
+                this.isPlaying = false;
+                this.isWatching = false;
+                
+                this.buttons = Array.from(document.querySelectorAll('.color-button'));
+                this.startBtn = document.getElementById('startBtn');
+                this.messageEl = document.getElementById('message');
+                this.roundEl = document.getElementById('round');
+                this.streakEl = document.getElementById('streak');
+                this.bestEl = document.getElementById('best');
+                
+                this.init();
+            }
+            
+            init() {
+                this.updateDisplay();
+                
+                this.startBtn.addEventListener('click', () => this.startGame());
+                
+                this.buttons.forEach((btn, index) => {
+                    btn.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        if (!this.isPlaying || this.isWatching) return;
+                        this.handleButtonPress(index);
+                    }, { passive: false });
+                    
+                    btn.addEventListener('click', (e) => {
+                        if (e.detail === 0) return;
+                        if (!this.isPlaying || this.isWatching) return;
+                        this.handleButtonPress(index);
+                    });
+                });
+            }
+            
+            startGame() {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                
+                this.sequence = [];
+                this.playerSequence = [];
+                this.round = 1;
+                this.streak = 0;
+                this.isPlaying = true;
+                
+                this.startBtn.disabled = true;
+                this.startBtn.textContent = 'Playing...';
+                
+                this.updateDisplay();
+                this.nextRound();
+            }
+            
+            nextRound() {
+                this.playerSequence = [];
+                this.sequence.push(Math.floor(Math.random() * 4));
+                
+                this.setMessage('Watch the sequence...', 'watching');
+                this.isWatching = true;
+                this.disableButtons();
+                
+                setTimeout(() => this.playSequence(), 1000);
+            }
+            
+            async playSequence() {
+                for (let i = 0; i < this.sequence.length; i++) {
+                    await this.lightButton(this.sequence[i]);
+                    await this.wait(200);
+                }
+                
+                this.isWatching = false;
+                this.enableButtons();
+                this.setMessage('Your turn! Repeat the sequence', 'success');
+            }
+            
+            lightButton(index) {
+                return new Promise(resolve => {
+                    const btn = this.buttons[index];
+                    btn.classList.add('lit');
+                    playTone(index);
+                    
+                    setTimeout(() => {
+                        btn.classList.remove('lit');
+                        resolve();
+                    }, 400);
+                });
+            }
+            
+            handleButtonPress(index) {
+                const btn = this.buttons[index];
+                btn.classList.add('lit');
+                playTone(index, 200);
+                
+                setTimeout(() => {
+                    btn.classList.remove('lit');
+                }, 200);
+                
+                this.playerSequence.push(index);
+                
+                const currentStep = this.playerSequence.length - 1;
+                
+                if (this.playerSequence[currentStep] !== this.sequence[currentStep]) {
+                    this.gameOver();
+                    return;
+                }
+                
+                if (this.playerSequence.length === this.sequence.length) {
+                    this.roundComplete();
+                }
+            }
+            
+            roundComplete() {
+                this.streak++;
+                this.round++;
+                
+                if (this.streak > this.best) {
+                    this.best = this.streak;
+                    localStorage.setItem('sequenceRecallBest', this.best);
+                }
+                
+                this.updateDisplay();
+                this.disableButtons();
+                this.setMessage(`Round ${this.round - 1} complete! Get ready...`, 'success');
+                
+                setTimeout(() => this.nextRound(), 1500);
+            }
+            
+            gameOver() {
+                this.isPlaying = false;
+                playErrorSound();
+                this.disableButtons();
+                
+                this.setMessage(`Game Over! Final streak: ${this.streak}`, 'error');
+                
+                this.startBtn.disabled = false;
+                this.startBtn.textContent = 'Play Again';
+            }
+            
+            enableButtons() {
+                this.buttons.forEach(btn => btn.classList.remove('disabled'));
+            }
+            
+            disableButtons() {
+                this.buttons.forEach(btn => btn.classList.add('disabled'));
+            }
+            
+            setMessage(text, type = '') {
+                this.messageEl.textContent = text;
+                this.messageEl.className = 'message';
+                if (type) this.messageEl.classList.add(type);
+            }
+            
+            updateDisplay() {
+                this.roundEl.textContent = this.round;
+                this.streakEl.textContent = this.streak;
+                this.bestEl.textContent = this.best;
+            }
+            
+            wait(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        const game = new SequenceGame();
+    </script>
+</body>
+</html>

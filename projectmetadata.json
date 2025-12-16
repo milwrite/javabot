@@ -371,6 +371,13 @@
       "description": "cheerful card matching game",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "sequence-recall": {
+      "title": "Sequence Recall",
+      "icon": "🧩",
+      "description": "memory pattern arcade challenge",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }
