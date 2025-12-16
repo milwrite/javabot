@@ -16,6 +16,10 @@ const { classifyRequest } = require('./services/requestClassifier');
 // Site inventory system
 const { generateSiteInventory } = require('./generateSiteInventory.js');
 
+// GUI Server for verbose logging
+const BotGUIServer = require('./gui-server.js');
+let guiServer = null;
+
 // Validate required environment variables
 const REQUIRED_ENV_VARS = [
     'DISCORD_TOKEN',
@@ -34,6 +38,15 @@ if (missingVars.length > 0) {
     process.exit(1);
 }
 console.log('✅ All required environment variables loaded');
+
+// Initialize GUI server
+if (!process.env.NO_GUI) {
+    guiServer = new BotGUIServer(process.env.GUI_PORT || 3001);
+    guiServer.start().catch(err => {
+        console.error('Failed to start GUI server:', err);
+        guiServer = null;
+    });
+}
 
 // Configuration constants
 const CONFIG = {
@@ -61,6 +74,44 @@ const DEFAULT_COLLECTIONS = {
 const errorTracker = new Map();
 const MAX_ERROR_COUNT = 3;
 const ERROR_RESET_TIME = 5 * 60 * 1000; // 5 minutes
+
+// GUI logging helper functions
+function logToGUI(level, message, data = {}) {
+    if (guiServer) {
+        guiServer.log(level, message, data);
+    }
+}
+
+function logToolCall(toolName, args, result, error = null) {
+    if (guiServer) {
+        guiServer.logToolCall(toolName, args, result, error);
+    }
+}
+
+function logFileChange(action, path, content = null, oldContent = null) {
+    if (guiServer) {
+        guiServer.logFileChange(action, path, content, oldContent);
+    }
+}
+
+function startAgentLoop(command, user, channel) {
+    if (guiServer) {
+        return guiServer.startAgentLoop(command, user, channel);
+    }
+    return null;
+}
+
+function updateAgentLoop(iteration, toolsUsed, thinking = null) {
+    if (guiServer) {
+        guiServer.updateAgentLoop(iteration, toolsUsed, thinking);
+    }
+}
+
+function endAgentLoop(result, error = null) {
+    if (guiServer) {
+        guiServer.endAgentLoop(result, error);
+    }
+}
 
 // Periodic cleanup of error tracker to prevent memory leaks
 setInterval(() => {
@@ -113,22 +164,56 @@ const git = simpleGit();
 
 // Helper function to get properly encoded remote URL
 function getEncodedRemoteUrl() {
-    const encodedToken = encodeURIComponent(process.env.GITHUB_TOKEN);
-    return `https://${process.env.GITHUB_REPO_OWNER}:${encodedToken}@github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}.git`;
+    const token = process.env.GITHUB_TOKEN;
+    if (!token) {
+        throw new Error('GITHUB_TOKEN environment variable is not set');
+    }
+    
+    // Validate token format (should start with ghp_ or github_pat_)
+    if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+        console.warn('⚠️ GitHub token format may be invalid - should start with ghp_ or github_pat_');
+    }
+    
+    const encodedToken = encodeURIComponent(token);
+    const owner = process.env.GITHUB_REPO_OWNER;
+    const repo = process.env.GITHUB_REPO_NAME;
+    
+    if (!owner || !repo) {
+        throw new Error('GITHUB_REPO_OWNER and GITHUB_REPO_NAME must be set');
+    }
+    
+    const url = `https://${owner}:${encodedToken}@github.com/${owner}/${repo}.git`;
+    
+    // Validate URL format without logging the actual token
+    if (!url.includes('@github.com') || !url.includes('.git')) {
+        throw new Error('Generated remote URL format is invalid');
+    }
+    
+    return url;
 }
 
-// Initialize Git remote URL with current token
+// Initialize Git remote URL with validation and cleanup
 async function initializeGitRemote() {
     try {
-        const remoteUrl = getEncodedRemoteUrl();
-        await git.remote(['set-url', 'origin', remoteUrl]);
-        console.log('✅ Git remote URL initialized with current token');
+        // First ensure we have a clean remote URL
+        await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
+        console.log('✅ Git remote URL initialized (clean)');
+        
+        // Validate token without setting it permanently
+        try {
+            const testUrl = getEncodedRemoteUrl();
+            console.log('✅ GitHub token validation passed');
+        } catch (tokenError) {
+            console.error('❌ GitHub token validation failed:', tokenError.message);
+            console.error('⚠️ Git operations may fail due to authentication issues');
+        }
     } catch (error) {
+        const errorEntry = errorLogger.log('INIT_REMOTE', error);
         console.warn('⚠️ Git remote URL initialization warning:', error.message);
     }
 }
 
-// Git operation wrapper with timeout
+// Git operation wrapper with timeout and authentication protection
 async function gitWithTimeout(operation, timeoutMs = CONFIG.GIT_TIMEOUT) {
     return Promise.race([
         operation(),
@@ -137,6 +222,118 @@ async function gitWithTimeout(operation, timeoutMs = CONFIG.GIT_TIMEOUT) {
         )
     ]);
 }
+
+// Enhanced error logging and tracking for better debugging
+const errorLogger = {
+    log: (context, error, metadata = {}) => {
+        const timestamp = new Date().toISOString();
+        const errorEntry = {
+            timestamp,
+            context,
+            message: error.message || error,
+            stack: error.stack,
+            metadata
+        };
+        
+        console.error(`[${context}] ${timestamp}:`, error.message || error);
+        if (error.stack && !error.message?.includes('timeout')) {
+            console.error('Stack:', error.stack);
+        }
+        
+        // Log additional metadata if present
+        if (Object.keys(metadata).length > 0) {
+            console.error('Metadata:', JSON.stringify(metadata, null, 2));
+        }
+        
+        // Track authentication-related errors specifically
+        if (error.message?.includes('authentication') || 
+            error.message?.includes('Permission') ||
+            error.message?.includes('fatal: could not read') ||
+            error.message?.includes('remote: Invalid username or password')) {
+            console.error('🔐 AUTHENTICATION ERROR DETECTED - Check GitHub token');
+            if (guiServer) {
+                guiServer.logError('AUTH_ERROR', `Authentication failure in ${context}: ${error.message}`);
+            }
+        }
+        
+        return errorEntry;
+    },
+    
+    track: (errorEntry) => {
+        // Track error for patterns (could be enhanced to write to file)
+        if (guiServer) {
+            guiServer.logError(errorEntry.context, errorEntry.message, errorEntry.metadata);
+        }
+    }
+};
+
+// Pipeline validation and recovery system
+const pipelineValidator = {
+    // Validate git repository state before operations
+    async validateGitState() {
+        try {
+            const status = await gitWithTimeout(() => git.status(), 5000);
+            const isRepo = await git.checkIsRepo();
+            
+            if (!isRepo) {
+                throw new Error('Not a git repository');
+            }
+            
+            return {
+                valid: true,
+                branch: status.current,
+                hasChanges: status.files.length > 0,
+                status
+            };
+        } catch (error) {
+            errorLogger.log('VALIDATE_GIT_STATE', error);
+            return { valid: false, error: error.message };
+        }
+    },
+    
+    // Validate environment variables are present
+    validateEnvironment() {
+        const required = ['GITHUB_TOKEN', 'GITHUB_REPO_OWNER', 'GITHUB_REPO_NAME'];
+        const missing = required.filter(env => !process.env[env]);
+        
+        if (missing.length > 0) {
+            const error = new Error(`Missing environment variables: ${missing.join(', ')}`);
+            errorLogger.log('VALIDATE_ENV', error);
+            return { valid: false, missing };
+        }
+        
+        return { valid: true };
+    },
+    
+    // Validate file operations before committing
+    async validateFileOperations(filePaths) {
+        const issues = [];
+        
+        for (const filePath of filePaths) {
+            try {
+                const stats = await fs.stat(filePath);
+                if (stats.size === 0) {
+                    issues.push(`${filePath} is empty`);
+                }
+                
+                // Check if HTML files are valid (basic check)
+                if (filePath.endsWith('.html')) {
+                    const content = await fs.readFile(filePath, 'utf-8');
+                    if (!content.includes('</html>')) {
+                        issues.push(`${filePath} appears to be incomplete (missing closing html tag)`);
+                    }
+                }
+            } catch (error) {
+                issues.push(`${filePath} cannot be accessed: ${error.message}`);
+            }
+        }
+        
+        return {
+            valid: issues.length === 0,
+            issues
+        };
+    }
+};
 
 // Configure axios with retry logic
 axiosRetry(axios, {
@@ -435,6 +632,12 @@ function logEvent(type, message, details = null) {
     if (details && process.env.NODE_ENV === 'development') {
         console.log(details);
     }
+    
+    // Log to GUI
+    const level = type === 'ERROR' ? 'error' : 
+                  type === 'WARN' ? 'warn' : 
+                  type === 'DEBUG' ? 'debug' : 'info';
+    logToGUI(level, `${type}: ${message}`, details || {});
 }
 
 // Helper function to track and prevent error loops
@@ -830,6 +1033,7 @@ function buildMessagesFromHistory(maxMessages = 50) {
 
 // Filesystem tools for the AI
 async function listFiles(dirPath = './src') {
+    logToolCall('list_files', { path: dirPath }, null, null);
     try {
         // Handle multiple directories (array input)
         if (Array.isArray(dirPath)) {
@@ -909,18 +1113,48 @@ async function writeFile(filePath, content) {
         const status = await gitWithTimeout(() => git.status());
         const currentBranch = status.current || 'main';
 
-        // Configure git remote with token authentication
+        // Enhanced authentication setup with validation
         try {
-            const remotes = await git.getRemotes(true);
-            const origin = remotes.find(r => r.name === 'origin');
-            // Always set the remote URL with token for reliability (avoid checking encoded token)
+            // Clean remote first
+            await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
+            
+            // Set authenticated URL
             const remoteUrl = getEncodedRemoteUrl();
             await git.remote(['set-url', 'origin', remoteUrl]);
+            console.log('[WRITE_FILE] Remote URL configured for push');
         } catch (remoteError) {
+            const error = errorLogger.log('WRITE_FILE_REMOTE', remoteError, { filePath });
             console.warn('Remote URL setup warning:', remoteError.message);
         }
 
-        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+        try {
+            await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+        } catch (pushError) {
+            const error = errorLogger.log('WRITE_FILE_PUSH', pushError, { filePath, branch: currentBranch });
+            
+            // Try recovery push
+            if (pushError.message.includes('authentication') || pushError.message.includes('Permission')) {
+                console.log('[WRITE_FILE] Auth failed, attempting recovery...');
+                try {
+                    const cleanUrl = getEncodedRemoteUrl();
+                    await git.remote(['set-url', 'origin', cleanUrl]);
+                    await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+                    console.log('[WRITE_FILE] Recovery push succeeded');
+                } catch (retryError) {
+                    errorLogger.log('WRITE_FILE_PUSH_RETRY', retryError, { filePath });
+                    throw new Error(`Push failed: ${pushError.message}. Retry failed: ${retryError.message}`);
+                }
+            } else {
+                throw pushError;
+            }
+        } finally {
+            // Clean up remote URL
+            try {
+                await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
+            } catch (cleanupError) {
+                console.warn('Remote cleanup warning:', cleanupError.message);
+            }
+        }
 
         console.log(`[WRITE_FILE] Auto-pushed: ${commitMessage}`);
         return `File written and pushed: ${filePath} (${content.length} bytes) - now live at https://milwrite.github.io/javabot/${filePath}`;
@@ -1717,12 +1951,28 @@ Return only HTML code, no markdown blocks or explanations.`;
 
 async function commitChanges(message, files = '.') {
     console.log(`[COMMIT] Starting: "${message}"`);
+    const metadata = { files, messageLength: message.length };
+    
     try {
-        const status = await gitWithTimeout(() => git.status());
+        // Validate environment before starting
+        const envValidation = pipelineValidator.validateEnvironment();
+        if (!envValidation.valid) {
+            throw new Error(`Environment validation failed: ${envValidation.missing.join(', ')} missing`);
+        }
+        
+        // Validate git state
+        const gitValidation = await pipelineValidator.validateGitState();
+        if (!gitValidation.valid) {
+            throw new Error(`Git validation failed: ${gitValidation.error}`);
+        }
+        
+        // Enhanced status check with timeout protection
+        const status = gitValidation.status || await gitWithTimeout(() => git.status(), 10000);
 
         console.log(`[COMMIT] Status:`, {
             branch: status.current,
-            filesChanged: status.files.length
+            filesChanged: status.files.length,
+            files: status.files.map(f => f.path).slice(0, 5) // Log first 5 files
         });
 
         if (status.files.length === 0) {
@@ -1730,38 +1980,117 @@ async function commitChanges(message, files = '.') {
             return 'Nothing to commit';
         }
 
+        // Stage files with enhanced error handling
         console.log('[COMMIT] Staging files...');
-        if (files === '.') {
-            await gitWithTimeout(() => git.add('.'));
-        } else {
-            const fileList = files.split(',').map(f => f.trim());
-            await gitWithTimeout(() => git.add(fileList));
+        try {
+            if (files === '.') {
+                await gitWithTimeout(() => git.add('.'), 15000);
+            } else {
+                const fileList = files.split(',').map(f => f.trim());
+                await gitWithTimeout(() => git.add(fileList), 15000);
+            }
+        } catch (stageError) {
+            const error = errorLogger.log('COMMIT_STAGE', stageError, metadata);
+            throw new Error(`Staging failed: ${stageError.message}`);
         }
 
+        // Validate files before committing if specific files were requested
+        if (files !== '.') {
+            const fileList = files.split(',').map(f => f.trim());
+            const fileValidation = await pipelineValidator.validateFileOperations(fileList);
+            if (!fileValidation.valid) {
+                console.warn('⚠️ File validation issues:', fileValidation.issues);
+                // Continue with commit but log the issues
+                metadata.fileIssues = fileValidation.issues;
+            }
+        }
+        
+        // Create commit with protection against empty commits
         console.log('[COMMIT] Creating commit...');
-        const commit = await gitWithTimeout(() => git.commit(message));
+        let commit;
+        try {
+            // Verify we still have staged changes
+            const stagedStatus = await gitWithTimeout(() => git.status(), 5000);
+            if (stagedStatus.staged.length === 0) {
+                throw new Error('No staged changes found after add operation');
+            }
+            commit = await gitWithTimeout(() => git.commit(message), 15000);
+        } catch (commitError) {
+            const error = errorLogger.log('COMMIT_CREATE', commitError, metadata);
+            throw new Error(`Commit failed: ${commitError.message}`);
+        }
 
         console.log('[COMMIT] Pushing to remote...');
         const currentBranch = status.current || 'main';
+        metadata.branch = currentBranch;
 
-        // Configure git remote with token authentication
+        // Enhanced authentication setup with validation
         try {
-            const remotes = await git.getRemotes(true);
-            const origin = remotes.find(r => r.name === 'origin');
-            // Always set the remote URL with token for reliability (avoid checking encoded token)
+            // Clean any existing auth issues first
+            await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
+            
+            // Set authenticated URL with proper encoding
             const remoteUrl = getEncodedRemoteUrl();
+            if (!remoteUrl.includes(process.env.GITHUB_TOKEN)) {
+                throw new Error('Token missing from encoded URL');
+            }
+            
             await git.remote(['set-url', 'origin', remoteUrl]);
+            console.log('[COMMIT] Remote URL configured with authentication');
         } catch (remoteError) {
-            console.warn('Remote URL setup warning:', remoteError.message);
+            const error = errorLogger.log('COMMIT_REMOTE', remoteError, metadata);
+            console.warn('⚠️ Remote URL setup failed:', remoteError.message);
+            // Continue with push attempt - might still work
         }
 
-        await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+        // Push with enhanced timeout and error handling
+        try {
+            await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+        } catch (pushError) {
+            const error = errorLogger.log('COMMIT_PUSH', pushError, metadata);
+            
+            // Try to clean up and retry once
+            if (pushError.message.includes('authentication') || pushError.message.includes('Permission')) {
+                console.log('[COMMIT] Auth failed, attempting recovery...');
+                try {
+                    // Reset remote URL and try again
+                    const cleanUrl = getEncodedRemoteUrl();
+                    await git.remote(['set-url', 'origin', cleanUrl]);
+                    await gitWithTimeout(() => git.push('origin', currentBranch), CONFIG.PUSH_TIMEOUT);
+                    console.log('[COMMIT] Recovery push succeeded');
+                } catch (retryError) {
+                    errorLogger.log('COMMIT_PUSH_RETRY', retryError, metadata);
+                    throw new Error(`Push failed: ${pushError.message}. Retry also failed: ${retryError.message}`);
+                }
+            } else {
+                throw new Error(`Push failed: ${pushError.message}`);
+            }
+        }
+
+        // Clean up remote URL after successful push
+        try {
+            await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
+        } catch (cleanupError) {
+            console.warn('Remote URL cleanup warning:', cleanupError.message);
+        }
 
         console.log(`[COMMIT] Success: ${commit.commit.substring(0, 7)}`);
         return `Committed and pushed: ${commit.commit.substring(0, 7)} - ${message}`;
+        
     } catch (error) {
-        console.error('[COMMIT] Error:', error.message);
-        return `Error committing: ${error.message}`;
+        const errorEntry = errorLogger.log('COMMIT', error, metadata);
+        errorLogger.track(errorEntry);
+        
+        // Return user-friendly error message
+        if (error.message.includes('authentication')) {
+            return `Error: GitHub authentication failed. Check token permissions.`;
+        } else if (error.message.includes('timeout')) {
+            return `Error: Git operation timed out. Repository may be busy.`;
+        } else if (error.message.includes('nothing to commit')) {
+            return 'Nothing to commit - no changes detected.';
+        } else {
+            return `Error committing: ${error.message}`;
+        }
     }
 }
 
@@ -1910,8 +2239,21 @@ async function buildGameTool(title, prompt, type = 'auto') {
 
             try {
                 await git.push('origin', 'main');
+                console.log('[BUILD_GAME_TOOL] Push successful - game deployed');
             } catch (pushError) {
-                console.error('Push error (non-fatal):', pushError);
+                const error = errorLogger.log('BUILD_GAME_TOOL_PUSH', pushError);
+                errorLogger.track(error);
+                console.error('🚨 Build game deployment failed:', pushError.message);
+                
+                // Clean up remote URL
+                try {
+                    await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
+                } catch (cleanupError) {
+                    console.warn('Remote cleanup failed:', cleanupError.message);
+                }
+                
+                // Return error message instead of success
+                return `⚠️ Game "${result.plan.metadata.title}" built but deployment failed: ${pushError.message}. Files saved locally but not live. Check GitHub token permissions.`;
             }
         }
 
@@ -2171,8 +2513,15 @@ Do not use web search or create new content - only edit existing files.`
 }
 
 // Enhanced LLM response with tool calling
-async function getLLMResponse(userMessage, conversationMessages = []) {
+async function getLLMResponse(userMessage, conversationMessages = [], discordContext = {}) {
     try {
+        // Start agent loop tracking for GUI
+        startAgentLoop(
+            userMessage.substring(0, 100), 
+            discordContext.user || 'AI',
+            discordContext.channel || 'Direct'
+        );
+        
         // Build the full messages array for the API
         const messages = [
             {
@@ -2544,6 +2893,12 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
             // Add assistant message and tool results to conversation
             messages.push(lastResponse);
             messages.push(...toolResults);
+            
+            // Update agent loop with tools used in this iteration
+            if (guiServer && lastResponse.tool_calls) {
+                const toolsUsed = lastResponse.tool_calls.map(tc => tc.function.name);
+                updateAgentLoop(iteration, toolsUsed);
+            }
 
             // After completing a primary action, give AI one more iteration to naturally respond
             // If it tries to call more tools, stop and force a text response
@@ -2623,14 +2978,39 @@ async function getLLMResponse(userMessage, conversationMessages = []) {
             };
         }
 
+        // End agent loop tracking with success
+        endAgentLoop(content, null);
+        
         // Return response with search context for history persistence
         return {
             text: content,
             searchContext: searchResults.length > 0 ? searchResults : null
         };
     } catch (error) {
-        console.error('LLM Error:', error.response?.data || error.message);
-        return { text: getBotResponse('errors'), searchContext: null };
+        const errorEntry = errorLogger.log('LLM', error, {
+            model: MODEL,
+            messageLength: userMessage.length,
+            conversationLength: conversationMessages.length,
+            context: discordContext
+        });
+        errorLogger.track(errorEntry);
+        
+        // End agent loop tracking with error
+        endAgentLoop(null, error.message);
+        
+        // Provide specific error messages based on error type
+        let errorMessage = getBotResponse('errors');
+        if (error.message?.includes('timeout')) {
+            errorMessage += ' Request timed out - try again with a shorter message.';
+        } else if (error.message?.includes('rate limit')) {
+            errorMessage += ' API rate limit reached - wait a moment and try again.';
+        } else if (error.response?.status === 401) {
+            errorMessage += ' API authentication failed - check OpenRouter key.';
+        } else if (error.response?.status >= 500) {
+            errorMessage += ' Server error - the AI service might be down.';
+        }
+        
+        return { text: errorMessage, searchContext: null };
     }
 }
 
@@ -3178,22 +3558,33 @@ async function handleMentionAsync(message) {
                     if (commitSuccess) {
                         await thinkingMsg.edit('🚀 pushing to github pages...');
 
-                        // Configure git remote with token authentication
+                        // Enhanced authentication and push with proper error handling
                         try {
-                            const remotes = await git.getRemotes(true);
-                            const origin = remotes.find(r => r.name === 'origin');
-                            if (!origin || !origin.refs.push.includes(process.env.GITHUB_TOKEN)) {
-                                const remoteUrl = getEncodedRemoteUrl();
-                                await git.remote(['set-url', 'origin', remoteUrl]);
-                            }
-                        } catch (remoteError) {
-                            console.warn('Remote URL setup warning:', remoteError.message);
-                        }
-
-                        try {
+                            // Always use clean remote and temporary token auth
+                            await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
+                            const remoteUrl = getEncodedRemoteUrl();
+                            await git.remote(['set-url', 'origin', remoteUrl]);
+                            
                             await git.push('origin', 'main');
+                            console.log('[MENTION_PIPELINE] Push successful');
+                            
+                            // Clean up remote URL
+                            await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
                         } catch (pushError) {
-                            console.error('Push error (non-fatal):', pushError);
+                            const error = errorLogger.log('MENTION_PIPELINE_PUSH', pushError);
+                            errorLogger.track(error);
+                            console.error('🚨 Mention pipeline deployment failed:', pushError.message);
+                            
+                            // Clean up remote URL even on error
+                            try {
+                                await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
+                            } catch (cleanupError) {
+                                console.warn('Remote cleanup failed:', cleanupError.message);
+                            }
+                            
+                            // Report error to user instead of silently failing
+                            await thinkingMsg.edit(`⚠️ Content built successfully but deployment failed: ${pushError.message}. Files are saved locally but not published. Check GitHub token permissions.`);
+                            return; // Exit early to prevent success message
                         }
                     }
 
@@ -3295,21 +3686,26 @@ async function handleMentionAsync(message) {
 
                 // Progressive fallback strategies for LLM processing
                 let llmResult;
+                const discordContext = {
+                    user: message.author.username,
+                    channel: message.channel.name || message.channel.id
+                };
+                
                 if (processingAttempt === 1) {
                     // Full LLM with all tools
-                    llmResult = await getLLMResponse(content, conversationMessages);
+                    llmResult = await getLLMResponse(content, conversationMessages, discordContext);
                 } else if (processingAttempt === 2) {
                     // Simplified LLM with fewer tools (retry with reduced complexity)
                     await thinkingMsg.edit(`${getBotResponse('thinking')} (simplifying approach...)`);
-                    llmResult = await getLLMResponse(content, conversationMessages.slice(-10)); // Less context
+                    llmResult = await getLLMResponse(content, conversationMessages.slice(-10), discordContext); // Less context
                 } else if (processingAttempt === 3) {
                     // Direct response with minimal context (emergency fallback)
                     await thinkingMsg.edit(`${getBotResponse('thinking')} (trying direct response...)`);
-                    llmResult = await getLLMResponse(content, []);
+                    llmResult = await getLLMResponse(content, [], discordContext);
                 } else {
                     // Final attempt: Force normal LLM with absolute minimal constraints
                     await thinkingMsg.edit(`${getBotResponse('thinking')} (final attempt with minimal constraints...)`);
-                    llmResult = await getLLMResponse(content, [], { minimal: true });
+                    llmResult = await getLLMResponse(content, [], { ...discordContext, minimal: true });
                 }
 
                 let response = llmResult.text;
@@ -3845,8 +4241,32 @@ async function handleBuildGame(interaction) {
 
             try {
                 await git.push('origin', 'main');
+                console.log('[BUILD_GAME_SLASH] Push successful - content deployed');
             } catch (pushError) {
-                console.error('Push error (non-fatal):', pushError);
+                const error = errorLogger.log('BUILD_GAME_SLASH_PUSH', pushError);
+                errorLogger.track(error);
+                console.error('🚨 Build game slash deployment failed:', pushError.message);
+                
+                // Clean up remote URL
+                try {
+                    await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
+                } catch (cleanupError) {
+                    console.warn('Remote cleanup failed:', cleanupError.message);
+                }
+                
+                // Create error embed instead of success
+                const errorEmbed = new EmbedBuilder()
+                    .setTitle('⚠️ Deployment Failed')
+                    .setDescription(`Content "${result.plan?.metadata?.title || 'New Content'}" was built successfully but could not be deployed to GitHub Pages.`)
+                    .addFields(
+                        { name: 'Error', value: pushError.message.substring(0, 1000), inline: false },
+                        { name: 'Status', value: 'Files saved locally but not live', inline: false },
+                        { name: 'Solution', value: 'Check GitHub token permissions and try again', inline: false }
+                    )
+                    .setColor('#FF6B6B');
+                
+                await interaction.editReply({ content: '', embeds: [errorEmbed] });
+                return;
             }
         }
 
@@ -4981,7 +5401,11 @@ async function handleChat(interaction) {
         const conversationMessages = buildMessagesFromHistory(50);
 
         // Get response with proper conversation context
-        let llmResult = await getLLMResponse(userMessage, conversationMessages);
+        const discordContext = {
+            user: interaction.user.username,
+            channel: interaction.channel?.name || interaction.channel?.id || 'DM'
+        };
+        let llmResult = await getLLMResponse(userMessage, conversationMessages, discordContext);
         let response = llmResult.text;
 
         // Clean duplicate Bot Sportello prefixes

@@ -57,6 +57,24 @@
             font-size: clamp(1.8rem, 4vw, 3rem);
             color: #ff0000;
             text-shadow: 0 0 18px rgba(255, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .header-logo {
+            width: clamp(32px, 6vw, 48px);
+            height: clamp(32px, 6vw, 48px);
+            border-radius: 4px;
+            filter: brightness(0.85) contrast(1.1) hue-rotate(-10deg);
+            box-shadow: 0 0 12px rgba(255, 0, 0, 0.2), inset 0 0 8px rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(126, 200, 227, 0.3);
+            transition: all 0.3s ease;
+        }
+        .header-logo:hover {
+            filter: brightness(1) contrast(1.2) hue-rotate(0deg);
+            box-shadow: 0 0 18px rgba(255, 0, 0, 0.4), inset 0 0 12px rgba(0, 255, 255, 0.2);
+            border-color: rgba(255, 0, 0, 0.5);
         }
         .subtitle {
             color: #00ffff;
@@ -178,7 +196,7 @@
 <body>
     <div class="home-container">
         <div class="header-section">
-            <h1>🎮 Bot Sportello's Arcade</h1>
+            <h1><img src="default.jpeg" alt="Bot Sportello" class="header-logo"> Bot Sportello's Arcade</h1>
             <p class="subtitle">Noir arcade experiments deployed live from Discord</p>
             <p class="sync-hint">Add a new page, run <code>/sync-index</code>, and it shows up here automatically.</p>
         </div>
