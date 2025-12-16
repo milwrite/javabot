@@ -373,6 +373,63 @@ const MODEL_PRESETS = {
     'glm': 'z-ai/glm-4.6:exacto'
 };
 
+// API Health tracking
+let apiHealthStatus = {
+    lastCheck: null,
+    isHealthy: true,
+    consecutiveFailures: 0,
+    lastError: null,
+    lastSuccessfulModel: 'anthropic/claude-haiku-4.5'
+};
+
+// Check API health with quick test request
+async function checkAPIHealth() {
+    try {
+        const testResponse = await axios.post(OPENROUTER_URL, {
+            model: 'anthropic/claude-haiku-4.5',
+            messages: [{ role: 'user', content: 'ping' }],
+            max_tokens: 10,
+            temperature: 0.1
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 10000,
+            validateStatus: (status) => status < 500
+        });
+        
+        if (testResponse.status === 200) {
+            apiHealthStatus.isHealthy = true;
+            apiHealthStatus.consecutiveFailures = 0;
+            apiHealthStatus.lastError = null;
+            apiHealthStatus.lastSuccessfulModel = 'anthropic/claude-haiku-4.5';
+            logEvent('API_HEALTH', 'API healthy');
+        } else {
+            apiHealthStatus.isHealthy = false;
+            apiHealthStatus.lastError = `Status ${testResponse.status}`;
+        }
+        apiHealthStatus.lastCheck = new Date();
+        
+    } catch (error) {
+        apiHealthStatus.isHealthy = false;
+        apiHealthStatus.consecutiveFailures++;
+        apiHealthStatus.lastError = error.message;
+        apiHealthStatus.lastCheck = new Date();
+        logEvent('API_HEALTH', `Health check failed (${apiHealthStatus.consecutiveFailures}x): ${error.message}`);
+        
+        // If API is down for too long, log warning
+        if (apiHealthStatus.consecutiveFailures >= 3) {
+            console.warn(`⚠️ OpenRouter API appears to be down (${apiHealthStatus.consecutiveFailures} consecutive failures)`);
+        }
+    }
+}
+
+// Start health checks every 2 minutes
+setInterval(checkAPIHealth, 120000);
+// Run initial check after 10 seconds
+setTimeout(checkAPIHealth, 10000);
+
 // Bot system prompt with enhanced capabilities
 // Default system prompt - can be modified at runtime
 const DEFAULT_SYSTEM_PROMPT = `You are Bot Sportello, a laid-back Discord bot who helps people with web development projects. You're helpful but a little spacey, like Doc Sportello - generally competent but sometimes distracted, speaking in a relaxed, slightly rambling way.
@@ -2777,20 +2834,78 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         while (iteration < MAX_ITERATIONS) {
             iteration++;
 
-            const response = await axios.post(OPENROUTER_URL, {
-                model: MODEL,
-                messages: messages,
-                max_tokens: 10000,
-                temperature: 0.7,
-                tools: tools,
-                tool_choice: 'auto'
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                timeout: 45000
-            });
+            let response;
+            let retryCount = 0;
+            const maxRetries = 3;
+            let currentModel = MODEL;
+            
+            // Check API health and use fallback model if API has been failing
+            if (apiHealthStatus.consecutiveFailures >= 2 && currentModel !== apiHealthStatus.lastSuccessfulModel) {
+                currentModel = apiHealthStatus.lastSuccessfulModel || 'anthropic/claude-haiku-4.5';
+                logEvent('LLM', `API unhealthy, using fallback model: ${currentModel}`);
+            }
+            
+            // Try request with retries and model fallback
+            while (retryCount < maxRetries) {
+                try {
+                    response = await axios.post(OPENROUTER_URL, {
+                        model: currentModel,
+                        messages: messages,
+                        max_tokens: 10000,
+                        temperature: 0.7,
+                        tools: tools,
+                        tool_choice: 'auto'
+                    }, {
+                        headers: {
+                            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                            'Content-Type': 'application/json',
+                            'X-Request-ID': `${Date.now()}-${iteration}-${retryCount}` // Add unique request ID
+                        },
+                        timeout: 45000 + (retryCount * 15000), // Increase timeout on retries
+                        validateStatus: function (status) {
+                            return status < 500; // Don't throw on client errors, only server errors
+                        }
+                    });
+                    
+                    // Check if response has expected structure
+                    if (!response.data || !response.data.choices || !response.data.choices[0]) {
+                        throw new Error('Invalid response structure from OpenRouter');
+                    }
+                    
+                    break; // Success, exit retry loop
+                    
+                } catch (error) {
+                    retryCount++;
+                    logEvent('LLM', `API request failed (attempt ${retryCount}/${maxRetries}): ${error.message}`);
+                    
+                    if (retryCount < maxRetries) {
+                        // Exponential backoff with jitter
+                        const delay = Math.min(1000 * Math.pow(2, retryCount) + Math.random() * 1000, 10000);
+                        logEvent('LLM', `Waiting ${Math.round(delay/1000)}s before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        
+                        // On second retry, try fallback model
+                        if (retryCount === 2 && currentModel !== 'anthropic/claude-haiku-4.5') {
+                            currentModel = 'anthropic/claude-haiku-4.5';
+                            logEvent('LLM', 'Switching to Haiku model for retry');
+                        }
+                    } else {
+                        // All retries exhausted
+                        throw new Error(`OpenRouter API failed after ${maxRetries} attempts: ${error.message}`);
+                    }
+                }
+            }
+
+            // Handle 4xx errors gracefully
+            if (response.status >= 400 && response.status < 500) {
+                logEvent('LLM', `Client error ${response.status}: ${response.data?.error?.message || 'Unknown error'}`);
+                // Return a simple text response without tools
+                lastResponse = {
+                    content: "I encountered an issue processing that request. Let me try a simpler approach.",
+                    tool_calls: null
+                };
+                break;
+            }
 
             lastResponse = response.data.choices[0].message;
 
@@ -3456,7 +3571,7 @@ async function handleMentionAsync(message) {
         // Build conversation context for all processing loops
         const conversationMessages = buildMessagesFromHistory(50);
         let processingAttempt = 1;
-        const maxProcessingAttempts = 5;
+        const maxProcessingAttempts = 6; // Increased to support multiple model fallbacks
         let lastFailureReason = '';
 
         // Multi-loop processing with resilient reassessment
@@ -3704,17 +3819,61 @@ async function handleMentionAsync(message) {
                     // Full LLM with all tools
                     llmResult = await getLLMResponse(content, conversationMessages, discordContext);
                 } else if (processingAttempt === 2) {
-                    // Simplified LLM with fewer tools (retry with reduced complexity)
-                    await thinkingMsg.edit(`${getBotResponse('thinking')} (simplifying approach...)`);
-                    llmResult = await getLLMResponse(content, conversationMessages.slice(-10), discordContext); // Less context
+                    // Retry with Haiku model and reduced context
+                    await thinkingMsg.edit(`${getBotResponse('thinking')} (trying faster model...)`);
+                    const originalModel = MODEL;
+                    MODEL = MODEL_PRESETS.haiku; // Switch to Haiku for reliability
+                    try {
+                        llmResult = await getLLMResponse(content, conversationMessages.slice(-10), discordContext);
+                    } finally {
+                        MODEL = originalModel; // Restore original model
+                    }
                 } else if (processingAttempt === 3) {
-                    // Direct response with minimal context (emergency fallback)
-                    await thinkingMsg.edit(`${getBotResponse('thinking')} (trying direct response...)`);
-                    llmResult = await getLLMResponse(content, [], discordContext);
+                    // Try GPT-5 Nano as alternative
+                    await thinkingMsg.edit(`${getBotResponse('thinking')} (trying alternative model...)`);
+                    const originalModel = MODEL;
+                    MODEL = MODEL_PRESETS.gpt5;
+                    try {
+                        llmResult = await getLLMResponse(content, [], discordContext);
+                    } finally {
+                        MODEL = originalModel;
+                    }
+                } else if (processingAttempt === 4) {
+                    // Try Gemini as last resort
+                    await thinkingMsg.edit(`${getBotResponse('thinking')} (trying backup model...)`);
+                    const originalModel = MODEL;
+                    MODEL = MODEL_PRESETS.gemini;
+                    try {
+                        llmResult = await getLLMResponse(content, [], discordContext);
+                    } finally {
+                        MODEL = originalModel;
+                    }
                 } else {
-                    // Final attempt: Force normal LLM with absolute minimal constraints
-                    await thinkingMsg.edit(`${getBotResponse('thinking')} (final attempt with minimal constraints...)`);
-                    llmResult = await getLLMResponse(content, [], { ...discordContext, minimal: true });
+                    // Final attempt: Haiku with absolute minimal constraints and no tools
+                    await thinkingMsg.edit(`${getBotResponse('thinking')} (final simplified attempt...)`);
+                    const originalModel = MODEL;
+                    MODEL = MODEL_PRESETS.haiku;
+                    try {
+                        // Make a direct API call without tools for maximum reliability
+                        const simpleResponse = await axios.post(OPENROUTER_URL, {
+                            model: MODEL,
+                            messages: [
+                                { role: 'system', content: 'You are Bot Sportello, a helpful Discord bot. Give a brief, friendly response.' },
+                                { role: 'user', content: content }
+                            ],
+                            max_tokens: 500,
+                            temperature: 0.7
+                        }, {
+                            headers: {
+                                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                                'Content-Type': 'application/json'
+                            },
+                            timeout: 30000
+                        });
+                        llmResult = { text: simpleResponse.data.choices[0].message.content };
+                    } finally {
+                        MODEL = originalModel;
+                    }
                 }
 
                 let response = llmResult.text;
@@ -3793,21 +3952,35 @@ async function handleMentionAsync(message) {
         const errorDetails = error.response?.data || error.message || 'Unknown error';
         console.error('Error details:', errorDetails);
 
+        // Provide user-friendly fallback messages based on error type
+        let userMessage;
+        if (error.message?.includes('500') || error.message?.includes('OpenRouter')) {
+            userMessage = `${getBotResponse('thinking')} the AI service is having issues right now. give me a sec to reconnect...`;
+        } else if (error.message?.includes('timeout')) {
+            userMessage = `${getBotResponse('errors')} that took too long, my connection timed out. try again in a moment?`;
+        } else if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+            userMessage = `whoa, slow down there... the AI needs a breather. try again in like 30 seconds`;
+        } else if (error.message?.includes('401') || error.message?.includes('authentication')) {
+            userMessage = `${getBotResponse('errors')} looks like my API credentials expired. someone needs to update my config...`;
+        } else if (error.message?.includes('All') && error.message?.includes('attempts failed')) {
+            userMessage = `man, i tried like ${maxProcessingAttempts} different ways but couldn't get through. the AI servers might be overloaded. maybe try again in a minute?`;
+        } else {
+            userMessage = `${getBotResponse('errors')}\n\n*couldn't process that one: ${error.message?.substring(0, 100) || 'technical difficulties'}*`;
+        }
+
         try {
             // Try to edit thinking message with error, or send new error message
-            const errorMsg = `${getBotResponse('errors')}\n\n*Error: ${error.message?.substring(0, 100)}*`;
-
             if (thinkingMsg && !thinkingMsg.deleted) {
                 try {
-                    await thinkingMsg.edit(errorMsg);
+                    await thinkingMsg.edit(userMessage);
                     console.log(`[MENTION] Error message edited into thinking message`);
                 } catch (editErr) {
                     console.warn(`[MENTION] Could not edit thinking message:`, editErr.message);
-                    await message.reply(errorMsg);
+                    await message.reply(userMessage);
                 }
             } else {
                 console.log(`[MENTION] Sending error as new reply (no thinking message)`);
-                await message.reply(errorMsg);
+                await message.reply(userMessage);
             }
         } catch (replyError) {
             console.error('❌ Failed to send error reply:', replyError.message);
