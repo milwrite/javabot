@@ -364,6 +364,13 @@
       "description": "repository scanner utility",
       "collection": "utilities-apps",
       "hidden": false
+    },
+    "memory-cheer-cen": {
+      "title": "Memory Cheer for Cen",
+      "icon": "🎮",
+      "description": "cheerful card matching game",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }

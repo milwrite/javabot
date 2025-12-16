@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Cheer for Cen - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 60px 5px 20px 5px;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            font-family: 'Courier Prime', monospace;
+            overflow-x: auto;
+            overflow-y: auto;
+            min-height: 100vh;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 80px 20px 20px 20px;
+            }
+        }
+
+        .game-container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #00ffff;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .subtitle {
+            color: #7ec8e3;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(126, 200, 227, 0.1);
+            border: 2px solid #7ec8e3;
+            border-radius: 8px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #7ec8e3;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            color: #00ffff;
+            font-weight: bold;
+        }
+
+        .message-box {
+            min-height: 60px;
+            padding: 15px;
+            margin: 20px 0;
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            color: #00ffff;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .message-box.success {
+            background: rgba(0, 255, 255, 0.1);
+            border-color: #00ffff;
+            animation: pulse 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+            perspective: 1000px;
+        }
+
+        @media (max-width: 480px) {
+            .card-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+        }
+
+        .card {
+            aspect-ratio: 1;
+            position: relative;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #7ec8e3;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .card-face {
+                font-size: 1.2rem;
+                border-radius: 6px;
+            }
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            color: #ff0000;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #00ffff;
+            transform: rotateY(180deg);
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .controls {
+            margin: 30px 0;
+        }
+
+        .btn {
+            background: #ff0000;
+            color: #0a0a0a;
+            border: none;
+            padding: 12px 24px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+        }
+
+        .btn:hover {
+            background: #00ffff;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #00ffff;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            background: rgba(126, 200, 227, 0.2);
+            color: #7ec8e3;
+            border: 2px solid #7ec8e3;
+            padding: 8px 16px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+        }
+
+        .difficulty-btn.active {
+            background: #7ec8e3;
+            color: #0a0a0a;
+        }
+
+        .difficulty-btn:hover {
+            border-color: #00ffff;
+            color: #00ffff;
+        }
+
+        .win-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .win-overlay.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .win-content {
+            text-align: center;
+            padding: 40px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 3px solid #00ffff;
+            border-radius: 12px;
+            max-width: 90%;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .win-content h2 {
+            color: #00ffff;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #00ffff;
+        }
+
+        .win-content p {
+            color: #7ec8e3;
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+
+        .encouragement {
+            font-size: 0.9rem;
+            color: #7ec8e3;
+            margin: 20px 0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">← BACK TO TERMINAL</a>
+
+    <div class="game-container">
+        <h1>MEMORY CHEER</h1>
+        <p class="subtitle">For Cen - You've got this! 💙</p>
+
+        <div class="encouragement">
+            "Every match is a win, every try is progress."
+        </div>
+
+        <div class="difficulty-selector">
+            <button class="difficulty-btn" data-level="easy">EASY (12 cards)</button>
+            <button class="difficulty-btn active" data-level="medium">MEDIUM (16 cards)</button>
+            <button class="difficulty-btn" data-level="hard">HARD (20 cards)</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">MOVES</div>
+                <div class="stat-value" id="moves">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">MATCHES</div>
+                <div class="stat-value" id="matches">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">TIME</div>
+                <div class="stat-value" id="timer">0:00</div>
+            </div>
+        </div>
+
+        <div class="message-box" id="messageBox">
+            Tap any card to begin!
+        </div>
+
+        <div class="card-grid" id="cardGrid"></div>
+
+        <div class="controls">
+            <button class="btn" id="resetBtn">NEW GAME</button>
+        </div>
+    </div>
+
+    <div class="win-overlay" id="winOverlay">
+        <div class="win-content">
+            <h2>✨ AMAZING! ✨</h2>
+            <p id="winMessage"></p>
+            <p id="winStats"></p>
+            <div class="encouragement" id="winEncouragement"></div>
+            <button class="btn" id="playAgainBtn">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const symbols = ['🌟', '💙', '🎯', '🔥', '⭐', '💫', '🌈', '✨', '🎨', '🎭', '🎪', '🎬', '🎮', '🎲', '🎯', '🎪'];
+        
+        const encouragements = [
+            "You're doing great!",
+            "Nice memory!",
+            "Keep it up, Cen!",
+            "Brilliant match!",
+            "You're on fire!",
+            "Fantastic!",
+            "Way to go!",
+            "Excellent!",
+            "You're amazing!",
+            "Perfect match!"
+        ];
+
+        const winMessages = [
+            "Cen, you're absolutely brilliant! 🌟",
+            "What a memory champion! 💙",
+            "You crushed it! ✨",
+            "Incredible work! 🎯",
+            "You're unstoppable! 🔥"
+        ];
+
+        let gameState = {
+            cards: [],
+            flippedCards: [],
+            matchedPairs: 0,
+            moves: 0,
+            startTime: null,
+            timerInterval: null,
+            difficulty: 'medium',
+            totalPairs: 8
+        };
+
+        const difficultySettings = {
+            easy: { pairs: 6, gridCols: 4 },
+            medium: { pairs: 8, gridCols: 4 },
+            hard: { pairs: 10, gridCols: 5 }
+        };
+
+        function initGame() {
+            const settings = difficultySettings[gameState.difficulty];
+            gameState.totalPairs = settings.pairs;
+            gameState.matchedPairs = 0;
+            gameState.moves = 0;
+            gameState.flippedCards = [];
+            gameState.startTime = null;
+            
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+                gameState.timerInterval = null;
+            }
+
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('matches').textContent = '0';
+            document.getElementById('timer').textContent = '0:00';
+            document.getElementById('messageBox').textContent = 'Tap any card to begin!';
+            document.getElementById('messageBox').className = 'message-box';
+
+            const selectedSymbols = symbols.slice(0, settings.pairs);
+            const cardSymbols = [...selectedSymbols, ...selectedSymbols];
+            gameState.cards = shuffle(cardSymbols);
+
+            const cardGrid = document.getElementById('cardGrid');
+            cardGrid.style.gridTemplateColumns = `repeat(${settings.gridCols}, 1fr)`;
+            cardGrid.innerHTML = '';
+
+            gameState.cards.forEach((symbol, index) => {
+                const card = createCard(symbol, index);
+                cardGrid.appendChild(card);
+            });
+        }
+
+        function createCard(symbol, index) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.index = index;
+            card.dataset.symbol = symbol;
+
+            card.innerHTML = `
+                <div class="card-face card-back">?</div>
+                <div class="card-face card-front">${symbol}</div>
+            `;
+
+            card.addEventListener('click', () => handleCardClick(card));
+            card.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleCardClick(card);
+            }, { passive: false });
+
+            return card;
+        }
+
+        function handleCardClick(card) {
+            if (!gameState.startTime) {
+                startTimer();
+            }
+
+            if (card.classList.contains('flipped') || 
+                card.classList.contains('matched') || 
+                gameState.flippedCards.length >= 2) {
+                return;
+            }
+
+            card.classList.add('flipped');
+            gameState.flippedCards.push(card);
+
+            if (gameState.flippedCards.length === 2) {
+                gameState.moves++;
+                document.getElementById('moves').textContent = gameState.moves;
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = gameState.flippedCards;
+            const symbol1 = card1.dataset.symbol;
+            const symbol2 = card2.dataset.symbol;
+
+            if (symbol1 === symbol2) {
+                setTimeout(() => {
+                    card1.classList.add('matched');
+                    card2.classList.add('matched');
+                    gameState.matchedPairs++;
+                    document.getElementById('matches').textContent = gameState.matchedPairs;
+                    
+                    const messageBox = document.getElementById('messageBox');
+                    messageBox.textContent = encouragements[Math.floor(Math.random() * encouragements.length)];
+                    messageBox.className = 'message-box success';
+                    
+                    gameState.flippedCards = [];
+
+                    if (gameState.matchedPairs === gameState.totalPairs) {
+                        setTimeout(showWinScreen, 500);
+                    }
+                }, 500);
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    gameState.flippedCards = [];
+                    
+                    const messageBox = document.getElementById('messageBox');
+                    messageBox.textContent = "Keep trying! You're doing great!";
+                    messageBox.className = 'message-box';
+                }, 1000);
+            }
+        }
+
+        function startTimer() {
+            gameState.startTime = Date.now();
+            gameState.timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('timer').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function showWinScreen() {
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
+
+            const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            document.getElementById('winMessage').textContent = 
+                winMessages[Math.floor(Math.random() * winMessages.length)];
+            document.getElementById('winStats').textContent = 
+                `Completed in ${gameState.moves} moves and ${timeStr}!`;
+            
+            const encouragement = gameState.moves <= gameState.totalPairs * 1.5 
+                ? "Perfect memory! You're a natural! 🌟"
+                : gameState.moves <= gameState.totalPairs * 2
+                ? "Great job! Your memory is impressive! 💙"
+                : "You did it! Every completion is a victory! ✨";
+            
+            document.getElementById('winEncouragement').textContent = encouragement;
+            document.getElementById('winOverlay').classList.add('show');
+        }
+
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        document.getElementById('resetBtn').addEventListener('click', initGame);
+        document.getElementById('resetBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            initGame();
+        }, { passive: false });
+
+        document.getElementById('playAgainBtn').addEventListener('click', () => {
+            document.getElementById('winOverlay').classList.remove('show');
+            initGame();
+        });
+        document.getElementById('playAgainBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            document.getElementById('winOverlay').classList.remove('show');
+            initGame();
+        }, { passive: false });
+
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameState.difficulty = btn.dataset.level;
+                initGame();
+            });
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameState.difficulty = btn.dataset.level;
+                initGame();
+            }, { passive: false });
+        });
+
+        initGame();
+    </script>
+</body>
+</html>
