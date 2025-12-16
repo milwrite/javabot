@@ -184,58 +184,10 @@
             text-align: center;
         }
 
-        /* Back Button Styling */
-        .home-link {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .home-link a {
-            background-color: #ff0000;
-            color: #0a0a0a;
-            border: none;
-            padding: 10px 20px;
-            font-size: 1em;
-            font-family: 'Courier Prime', monospace;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            min-width: 44px;
-            min-height: 44px;
-        }
-
-        .home-link a:hover {
-            background-color: #ff3333;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-            transform: scale(1.05);
-        }
-
-        .home-link a:active {
-            transform: scale(0.95);
-        }
+        /* Page-specific home-link overrides removed to use shared theme */
 
         @media (max-width: 768px) {
-            .home-link {
-                top: 10px;
-                left: 10px;
-            }
-
-            .home-link a {
-                padding: 8px 16px;
-                font-size: 0.9em;
-            }
+            /* home-link uses shared theme positioning */
         }
 
         /* Centered Text Utilities */
