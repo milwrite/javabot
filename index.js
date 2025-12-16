@@ -261,7 +261,7 @@ const errorLogger = {
             error.message?.includes('remote: Invalid username or password')) {
             console.error('🔐 AUTHENTICATION ERROR DETECTED - Check GitHub token');
             if (guiServer) {
-                guiServer.logError('AUTH_ERROR', `Authentication failure in ${context}: ${error.message}`);
+                guiServer.log('error', 'AUTH_ERROR', { context, error: error.message });
             }
         }
         
@@ -271,7 +271,7 @@ const errorLogger = {
     track: (errorEntry) => {
         // Track error for patterns (could be enhanced to write to file)
         if (guiServer) {
-            guiServer.logError(errorEntry.context, errorEntry.message, errorEntry.metadata);
+            guiServer.log('error', errorEntry.context, { message: errorEntry.message, metadata: errorEntry.metadata });
         }
     }
 };
