@@ -171,12 +171,22 @@ body::before {
     overflow: hidden;
 }
 
-/* Fill variant: wrapper with inner anchor */
-.home-link a,
-a.home-link {
+/* Fill variant: wrapper with inner anchor only
+   Avoid making a.home-link full-bleed (caused giant image)
+*/
+.home-link a {
     display: block;
     width: 100%;
     height: 100%;
+    text-indent: -9999px;
+    white-space: nowrap;
+    overflow: hidden;
+    color: transparent;
+}
+
+/* Anchor-as-home-link variant keeps fixed size from .home-link */
+a.home-link {
+    display: block;
     text-indent: -9999px;
     white-space: nowrap;
     overflow: hidden;
