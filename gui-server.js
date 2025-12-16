@@ -36,6 +36,17 @@ class BotGUIServer {
     setupRoutes() {
         // Serve static files
         this.app.use(express.static(path.join(__dirname, 'gui')));
+
+        // Serve root-level default images for dashboard branding
+        this.app.get('/default.jpg', (req, res) => {
+            res.sendFile(path.join(__dirname, 'default.jpg'));
+        });
+        this.app.get('/default.jpeg', (req, res) => {
+            res.sendFile(path.join(__dirname, 'default.jpeg'));
+        });
+        this.app.get('/default.png', (req, res) => {
+            res.sendFile(path.join(__dirname, 'default.png'));
+        });
         
         // Main dashboard
         this.app.get('/', (req, res) => {

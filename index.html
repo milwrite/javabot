@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bot Sportello's Arcade</title>
+    <link rel="preload" href="default.jpg" as="image">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -63,8 +64,8 @@
             gap: 12px;
         }
         .header-logo {
-            width: clamp(32px, 6vw, 48px);
-            height: clamp(32px, 6vw, 48px);
+            width: clamp(40px, 6vw, 64px);
+            height: clamp(40px, 6vw, 64px);
             border-radius: 4px;
             filter: brightness(0.85) contrast(1.1) hue-rotate(-10deg);
             box-shadow: 0 0 12px rgba(255, 0, 0, 0.2), inset 0 0 8px rgba(0, 255, 255, 0.1);
@@ -196,7 +197,7 @@
 <body>
     <div class="home-container">
         <div class="header-section">
-            <h1><img src="default.jpeg" alt="Bot Sportello" class="header-logo"> Bot Sportello's Arcade</h1>
+            <h1><img src="default.jpg" alt="Bot Sportello" class="header-logo"> Bot Sportello's Arcade</h1>
             <p class="subtitle">Noir arcade experiments deployed live from Discord</p>
             <p class="sync-hint">Add a new page, run <code>/sync-index</code>, and it shows up here automatically.</p>
         </div>

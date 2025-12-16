@@ -50,6 +50,21 @@
             100% { background-position: 100% 50%; }
         }
         
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-thumb {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            object-fit: cover;
+            border: 1px solid rgba(126, 200, 227, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        }
+
         .title {
             font-size: 1.5em;
             font-weight: bold;
@@ -617,7 +632,10 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <div class="title">🤖 Bot Sportello - Agent Dashboard</div>
+        <div class="brand">
+            <img src="../default.jpg" alt="Bot Sportello" class="logo-thumb" />
+            <div class="title">Bot Sportello - Agent Dashboard</div>
+        </div>
         <div class="status">
             <div class="status-item">
                 <span class="status-dot"></span>
