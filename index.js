@@ -368,7 +368,7 @@ const MODEL_PRESETS = {
     'haiku': 'anthropic/claude-haiku-4.5',
     'sonnet': 'anthropic/claude-sonnet-4.5',
     'kimi': 'moonshotai/kimi-k2-0905:exacto',
-    'gpt5': 'openai/gpt-5.1-codex',
+    'qwen': 'qwen/qwen3-coder',
     'gemini': 'google/gemini-2.5-pro',
     'glm': 'z-ai/glm-4.6:exacto'
 };
@@ -3224,16 +3224,21 @@ const commands = [
         .setDescription('Change the AI model used by the bot')
         .addStringOption(option =>
             option.setName('model')
-                .setDescription('Model to use')
+                .setDescription('Model to use (or enter custom model name)')
                 .setRequired(true)
                 .addChoices(
                     { name: 'Claude Haiku 4.5 (Fast, Cheap)', value: 'haiku' },
                     { name: 'Claude Sonnet 4.5 (Balanced)', value: 'sonnet' },
                     { name: 'Kimi K2 Exacto (Moonshot AI)', value: 'kimi' },
-                    { name: 'GPT-5.1 Codex (Latest OpenAI)', value: 'gpt5' },
+                    { name: 'Qwen 3 Coder (Alibaba)', value: 'qwen' },
                     { name: 'Gemini 2.5 Pro (Google)', value: 'gemini' },
-                    { name: 'GLM-4.6 Exacto (Z-AI)', value: 'glm' }
-                )),
+                    { name: 'GLM-4.6 Exacto (Z-AI)', value: 'glm' },
+                    { name: 'Custom Model (enter name)', value: 'custom' }
+                ))
+        .addStringOption(option =>
+            option.setName('custom_model')
+                .setDescription('Custom model name (e.g. anthropic/claude-3-5-sonnet-20241022)')
+                .setRequired(false)),
 
     new SlashCommandBuilder()
         .setName('poll')
@@ -3623,12 +3628,20 @@ async function handleMentionAsync(message) {
         // Continue with additional processing loops
         processingAttempt = Math.max(processingAttempt, 1); // Reset if needed
         
+        // Cache classification so we only do it once per mention
+        let classificationResult = null;
+        let classificationTried = false;
+
         while (processingAttempt <= maxProcessingAttempts) {
             try {
                 // Use LLM classifier to determine request type (replaces keyword-based detection)
                 if (processingAttempt <= 3) {
-                    const classification = await classifyRequest(content);
-                    logEvent('MENTION', `Attempt ${processingAttempt}: LLM classified as ${classification.type}`);
+                    if (!classificationTried) {
+                        classificationResult = await classifyRequest(content);
+                        classificationTried = true;
+                    }
+                    const classification = classificationResult;
+                    logEvent('MENTION', `Attempt ${processingAttempt}: LLM classified as ${classification.type}${classification?.method ? ` (${classification.method})` : ''}`);
                     
                     // Handle READ_ONLY requests immediately (like "print the site inventory")
                     if (classification.isReadOnly) {
@@ -3637,6 +3650,46 @@ async function handleMentionAsync(message) {
                         // Skip to Loop 4: Normal LLM response
                         processingAttempt = 4;
                         continue;
+                    }
+
+                    // Handle COMMIT requests immediately
+                    if (classification.isCommit) {
+                        logEvent('MENTION', `COMMIT request - executing git commit`);
+                        await thinkingMsg.edit('💾 committing changes...');
+                        
+                        try {
+                            // Extract commit message from the request, or use default
+                            let commitMessage = 'commit changes';
+                            const lowerContent = content.toLowerCase();
+                            
+                            // Extract the file reference if mentioned (e.g., "commit this game" -> look for recent files)
+                            if (lowerContent.includes('this game') || lowerContent.includes('this file') || lowerContent.includes('this page')) {
+                                // Get git status to find modified files
+                                const status = await git.status();
+                                if (status.files.length > 0) {
+                                    const recentFile = status.files[0].path;
+                                    commitMessage = `commit ${recentFile}`;
+                                }
+                            }
+                            
+                            // Try to extract explicit commit message (e.g., "commit with message 'fix bug'")
+                            const messageMatch = content.match(/(?:commit.*?(?:with message|as|:)\s*['"]([^'"]+)['"])|(?:commit\s+['"]([^'"]+)['"])/i);
+                            if (messageMatch) {
+                                commitMessage = messageMatch[1] || messageMatch[2];
+                            }
+
+                            const result = await commitChanges(commitMessage);
+                            await thinkingMsg.edit(`✅ ${result}`);
+                            
+                            // Success - break out of retry loop
+                            return;
+                            
+                        } catch (error) {
+                            lastFailureReason = `commit-failed`;
+                            logEvent('MENTION', `Commit failed: ${error.message}`);
+                            await thinkingMsg.edit(`❌ commit failed: ${error.message}`);
+                            return;
+                        }
                     }
                     
                     // Handle content creation requests with game pipeline
@@ -5421,25 +5474,37 @@ async function handleSearch(interaction) {
 
 async function handleSetModel(interaction) {
     const modelChoice = interaction.options.getString('model');
+    const customModel = interaction.options.getString('custom_model');
 
     try {
         const previousModel = MODEL;
-        MODEL = MODEL_PRESETS[modelChoice];
+        
+        // Handle custom model input
+        if (modelChoice === 'custom') {
+            if (!customModel || customModel.trim() === '') {
+                await interaction.editReply('❌ Custom model name is required when selecting "Custom Model"');
+                return;
+            }
+            MODEL = customModel.trim();
+        } else {
+            MODEL = MODEL_PRESETS[modelChoice];
+        }
 
         const modelNames = {
             'haiku': 'Claude Haiku 4.5',
             'sonnet': 'Claude Sonnet 4.5',
             'kimi': 'Kimi K2 Exacto',
-            'gpt5': 'GPT-5.1 Codex',
+            'qwen': 'Qwen 3 Coder',
             'gemini': 'Gemini 2.5 Pro',
-            'glm': 'GLM-4.6 Exacto'
+            'glm': 'GLM-4.6 Exacto',
+            'custom': customModel || 'Custom Model'
         };
 
         const embed = new EmbedBuilder()
             .setTitle('🤖 Model Changed')
             .setDescription(getBotResponse('success'))
             .addFields(
-                { name: 'New Model', value: modelNames[modelChoice], inline: true },
+                { name: 'New Model', value: modelNames[modelChoice] || 'Custom Model', inline: true },
                 { name: 'Model ID', value: MODEL, inline: false }
             )
             .setColor(0xe74c3c)

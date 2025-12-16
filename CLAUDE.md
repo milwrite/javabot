@@ -30,6 +30,15 @@ npm run dev
 
 # Run in production mode
 npm start
+
+# RECOMMENDED: Run with comprehensive logging and monitoring
+./run-bot.sh
+
+# Run with custom GUI port
+./run-bot.sh --gui-port 3001
+
+# Run without GUI dashboard
+./run-bot.sh --no-gui
 ```
 
 **No testing, linting, or build commands** - This project uses direct Node.js execution without build steps or formal testing frameworks.
@@ -40,6 +49,48 @@ npm start
 - Copy `.env.example` to `.env` before first run
 - All required environment variables must be present or bot will exit with error message
 - Bot validates all `REQUIRED_ENV_VARS` on startup (see index.js:11-26)
+
+## 📊 Log Preservation System
+
+**CRITICAL**: Use `./run-bot.sh` instead of `node index.js` for comprehensive activity tracking and failure documentation.
+
+### Features
+- **Automatic Activity Preservation**: All bot operations, mentions, tool calls, errors captured
+- **Broken Process Documentation**: Failed sessions analyzed with detailed failure reports  
+- **Real-time GUI Dashboard**: WebSocket-based monitoring at http://localhost:3001
+- **Session Reports**: JSON and Markdown summaries for each bot session
+- **Health Monitoring**: Detects hanging processes, memory issues, authentication failures
+
+### Log Files Structure
+```
+session-logs/
+├── bot-session-2025-12-15_14-30-00-raw.log    # Raw stdout/stderr
+├── bot-session-2025-12-15_14-30-00-report.json # Detailed activity data
+└── bot-session-2025-12-15_14-30-00-summary.md  # Human-readable report
+```
+
+### Key Tracking Patterns
+- **Mentions**: User interactions, @ mention responses, channel activity
+- **Tool Calls**: AI function executions (list_files, edit_file, create_page, etc.)  
+- **Errors**: Categorized by type (auth, network, git, discord, critical)
+- **Health**: Process responsiveness, memory usage, activity frequency
+- **Broken Processes**: Crash analysis, exit codes, hanging detection
+
+### Troubleshooting Failed Sessions
+1. Check latest session report in `session-logs/`
+2. Look for patterns in error categorization
+3. Review tool call sequences before failures
+4. Analyze health check warnings for hanging processes
+
+Example broken process documentation:
+```markdown
+# Session Report: FAILURE
+- Duration: 12m 34s
+- Exit Reason: authentication-error
+- Mentions: 3 processed successfully
+- Tool Calls: 12 executed, last: commit_changes (failed)
+- Critical Errors: 1 (GitHub token expired)
+```
 
 ## 🚀 COMMIT PROCEDURES
 
@@ -134,102 +185,22 @@ The entire bot is contained in `index.js` (~3700+ lines) with these key sections
 - `page-theme.css` - Shared arcade theme for all /src/ pages
 - `projectmetadata.json` - Project collections + metadata (title, icon, caption) loaded dynamically by index.html
 
-### System-V1: Modular Content Pipeline (NEW)
+### System-V1: Modular Content Pipeline
 
-**Branch**: `system-v1` introduces a modular architecture for AI-driven content creation across 9 content types.
+**Branch**: `system-v1` adds modular AI-driven content creation.
 
-**New Directory Structure**:
-```
-/services/
-  buildLogs.js         - Build logging and pattern analysis
-  llmClient.js         - Unified OpenRouter API client with role-specific prompts
-  gamePipeline.js      - Orchestrator for Architect → Builder → Tester → Scribe flow
+**New Components**:
+- `/services/` - Build logging, LLM client, pipeline orchestrator
+- `/agents/` - Architect, Builder, Tester, Scribe roles
+- `/build-logs/` - JSON logs for pattern analysis
 
-/agents/
-  gameArchitect.js     - Plans game structure from user prompt
-  gameBuilder.js       - Generates HTML/JS code with mobile-first standards
-  gameTester.js        - Validates code quality and responsiveness
-  gameScribe.js        - Creates metadata and documentation
+**Pipeline**: Architect → Builder → Tester → Scribe for 9 content types (games, letters, recipes, infographics, stories, logs, parodies, utilities, visualizations)
 
-/build-logs/           - JSON logs of each build (created on first run)
-
-SYSTEM_V1.md           - Complete architecture documentation
-TESTING.md             - Comprehensive test checklist
-```
-
-**Content Pipeline Flow**:
-1. **Architect**: Analyzes user request → classifies content type → creates JSON plan
-   - Content types: arcade-game, letter, recipe, infographic, story, log, parody, utility, visualization
-2. **Builder**: Generates code tailored to content type:
-   - arcade-game: mobile controls, game loop, scoring
-   - letter: typography, reveal animations, personal tone
-   - recipe: ingredients list, step-by-step structure
-   - infographic: charts, data viz, interactive elements
-   - story: narrative flow, atmospheric design
-   - log: structured documentation, lists
-   - parody: humorous mockups, satire
-   - utility: functional UI, forms, data persistence
-   - visualization: interactive charts, data input
-3. **Tester**: Content-type-aware validation → scores quality (0-100)
-   - Games MUST have mobile controls
-   - Non-games MUST NOT have game controls
-   - If failed: sends issues back to Builder (up to 3 attempts)
-   - If passed: proceed to Scribe
-4. **Scribe**: Generates metadata → updates projectmetadata.json → writes content-appropriate release notes
-
-**Key Features**:
-- **Content-type awareness**: System classifies and handles 9 distinct content types appropriately
-- **Automatic mobile-first enforcement**: Viewport tags, responsive breakpoints for all content
-- **Content-specific patterns**: Games get D-pad controls, letters get typography focus, utilities get forms, etc.
-- **Iterative quality loop**: Builder retries with specific fixes until tests pass
-- **Learning from history**: Recent build failures inform future planning
-- **Dual triggers**: `/build-game` slash command OR @mention with content keywords
-- **Build logging**: Complete audit trail in `/build-logs/{timestamp}.json`
-- **Reusable modules**: Core agents work across different bot platforms
-
-**New Slash Command**: `/build-game`
-- **Parameters**: `title` (required), `prompt` (required), `type` (optional)
-- **Output**: Complete game with tests, committed to GitHub, live URL returned
-- **Progress**: Real-time status updates via edited Discord reply
-
-**@Mention Content Detection**:
-- Bot detects content-related keywords across all types:
-  * Games: game, arcade, maze, puzzle, snake, tetris, etc.
-  * Letters: letter, note, message, write to, correspondence
-  * Recipes: recipe, cook, ingredient, bake, dish, meal
-  * Infographics: infographic, chart, graph, data viz, statistics
-  * Stories: story, narrative, tale, chronicle, journey, fiction
-  * Logs: log, field guide, inventory, report, documentation
-  * Parodies: parody, satire, mockup, spoof, infomercial
-  * Utilities: planner, tracker, calculator, tool, todo, schedule
-  * Visualizations: visualization, chart, graph, probability
-- Automatically routes to content pipeline instead of normal chat
-- Falls back to normal AI response if pipeline fails
-
-**Mobile-First Standards Enforced** (ALL content types):
-- Viewport meta tag (required)
-- Responsive breakpoints @768px, @480px (required)
-- Min 44px touch targets for interactive elements (W3C AAA accessibility)
-- **For arcade-games only**:
-  * Touch controls with `touch-action: manipulation`
-  * `touchstart` + `preventDefault` event handling (prevents zoom)
-  * Standard D-pad pattern for directional games
-- **For non-games**:
-  * NO game controls (critical validation failure if present)
-  * Typography-focused or form-focused UI as appropriate to content type
-
-**Build Log Pattern Learning**:
-- System analyzes last 10 builds for common failures
-- Summarizes issues like "Missing mobile controls (seen 3 times)"
-- Feeds summary into Architect's prompt for next build
-- Creates feedback loop without model fine-tuning
-
-**Reusability**:
-- `/services` and `/agents` are portable across bot frameworks
-- Only `index.js` and `gamePipeline.js` have Discord/git dependencies
-- Can adapt for Slack, Teams, CLI tools by swapping orchestrator
-
-See `SYSTEM_V1.md` for complete architecture documentation.
+**Features**:
+- Content-type-aware generation and validation
+- Mobile-first enforcement with responsive breakpoints
+- Iterative quality loop with Builder retries
+- Dual triggers: `/build-game` command or @mention detection
 
 ### Key Integrations
 
@@ -369,18 +340,7 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - **Layout hierarchy**: Controls → Start → Instructions (always in this order)
 - Prompts optimized for token efficiency with inline examples
 
-**`/update-style`**:
-1. User selects preset or "Custom" with description
-2. Built-in presets stored in `stylePresets` object:
-   - `noir-terminal` - Current style (green #00ff41, red #ff0000, black #0a0a0a)
-   - `neon-arcade` - Intense bright green with animations
-   - `dark-minimal` - Clean modern dark theme
-   - `retro-terminal` - Classic green terminal style
-3. For custom: AI generates complete CSS based on description
-4. Updates embedded CSS in `index.html`, commits, pushes to GitHub
-5. Shows confirmation with live site link
-
-**Note**: This command modifies embedded CSS in `index.html` directly since the main page is self-contained.
+**`/update-style`**: Updates website theme with presets (noir-terminal, neon-arcade, dark-minimal, retro-terminal) or AI-generated custom CSS. Modifies embedded CSS in `index.html`.
 
 ### Doc Sportello Personality System
 
@@ -683,216 +643,20 @@ btn.addEventListener('click', (e) => {
 .message-box { padding: 8px; margin: 5px 0; }
 ```
 
-### Standard Mobile D-Pad Controls (USE THIS PATTERN)
+### Standard Mobile D-Pad Controls
 
-**CRITICAL**: All games with directional input MUST use this standardized mobile control pattern for consistency and optimal playability:
-
-```css
-/* STANDARD MOBILE CONTROLS - Reusable pattern */
-.mobile-controls {
-    display: none;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
-    max-width: 140px;
-    margin: 15px auto 10px;
-}
-
-.mobile-controls.show {
-    display: grid;
-}
-
-.mobile-controls-label {
-    text-align: center;
-    color: #00ffff;
-    font-size: 0.75em;
-    margin-bottom: 5px;
-    opacity: 0.8;
-}
-
-.dpad-btn {
-    padding: 0;
-    background: rgba(0, 255, 65, 0.15);
-    border: 2px solid #00ff41;
-    color: #00ff41;
-    font-size: 1.1em;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.15s;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    min-height: 44px;
-    min-width: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.dpad-btn:active {
-    background: rgba(0, 255, 65, 0.5);
-    transform: scale(0.92);
-    border-color: #00ffff;
-}
-
-.dpad-up { grid-column: 2; grid-row: 1; }
-.dpad-left { grid-column: 1; grid-row: 2; }
-.dpad-center {
-    grid-column: 2;
-    grid-row: 2;
-    opacity: 0.2;
-    cursor: default;
-    border-style: dashed;
-    pointer-events: none;
-}
-.dpad-right { grid-column: 3; grid-row: 2; }
-.dpad-down { grid-column: 2; grid-row: 3; }
-
-/* Mobile adjustments */
-@media (max-width: 480px) {
-    .dpad-btn {
-        font-size: 1em;
-        min-height: 44px;
-        min-width: 44px;
-    }
-    .mobile-controls {
-        max-width: 132px;
-        gap: 3px;
-    }
-}
-```
-
-**HTML Structure**:
-```html
-<div class="mobile-controls-label">Tap arrows to move →</div>
-<div class="mobile-controls" id="mobileControls">
-    <button class="dpad-btn dpad-up" data-direction="up" aria-label="Move up">▲</button>
-    <button class="dpad-btn dpad-left" data-direction="left" aria-label="Move left">◄</button>
-    <button class="dpad-btn dpad-center" disabled aria-hidden="true">●</button>
-    <button class="dpad-btn dpad-right" data-direction="right" aria-label="Move right">►</button>
-    <button class="dpad-btn dpad-down" data-direction="down" aria-label="Move down">▼</button>
-</div>
-```
-
-**Key Benefits**:
-- Compact 140px width (doesn't obscure game)
-- Tight 4px gaps for precision
-- Instructional label above controls
-- Aria labels for accessibility
-- Touch-optimized with no zoom
-- Consistent across all games
-
-**When to Use**:
-- Any game requiring directional movement (snake, maze, etc.)
-- Games where precision is important
-- Mobile-first experiences
+**Standard Pattern**: 3x3 grid with directional arrows, 140px max-width, touch-optimized buttons with `touch-action: manipulation`. Use for all directional games (snake, maze, etc.).
 
 ### Game-Specific Mobile Patterns
 
-**For Canvas Games** (like Frogger, Snake):
-```css
-canvas {
-    max-width: 100%;
-    height: auto;
-    display: block;
-}
+**Canvas Games**: Max-width 95vw on mobile, responsive height  
+**Grid Games**: Max-width 90vw, tighter gaps, smaller fonts on mobile
 
-@media (max-width: 768px) {
-    canvas {
-        max-width: 95vw;
-        max-height: 60vh;
-    }
-}
+### Mobile Requirements Summary
 
-/* Mobile touch controls */
-.mobile-controls {
-    display: none;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-}
-
-@media (max-width: 768px) {
-    .mobile-controls { display: grid; }
-}
-```
-
-**For Grid Games** (like Sudoku):
-```css
-.game-grid {
-    max-width: 100%;
-    aspect-ratio: 1;
-}
-
-@media (max-width: 768px) {
-    .game-grid {
-        max-width: 90vw;
-        gap: 1px; /* Tighter gaps on mobile */
-    }
-    .cell {
-        font-size: 12px;
-        min-height: 30px;
-    }
-}
-```
-
-### Common Anti-Patterns to AVOID
-
-❌ **Never use**: `overflow: hidden` on body (prevents scrolling)  
-❌ **Never use**: Fixed widths without max-width fallbacks  
-❌ **Never use**: Touch targets smaller than 44px  
-❌ **Never use**: Viewport-breaking fixed positioning  
-
-✅ **Always use**: `overflow-x: auto; overflow-y: auto` for scrollability  
-✅ **Always use**: Responsive units (vw, vh, %, em, rem)  
-✅ **Always use**: Flexible layouts (flexbox, grid with auto-fit)  
-
-### Page Layout Standards
-
-**Consistent Mobile Structure**:
-```css
-body {
-    min-height: 100vh;
-    overflow-x: auto;
-    overflow-y: auto;
-    padding: 10px;
-}
-
-.container, .game-container {
-    max-width: 100%;
-    margin: 0 auto;
-    padding-bottom: 50px; /* Space for scrolling */
-}
-
-@media (max-width: 768px) {
-    body { 
-        align-items: flex-start; /* Top-align on mobile */
-        padding-top: 80px; /* Space for home button */
-    }
-}
-```
-
-### Implementation Checklist
-
-When creating or updating any page, the bot MUST verify:
-
-**Layout & Structure**:
-- [ ] Correct element order: Canvas → Controls → Start Button → Instructions
-- [ ] Canvas + controls visible without scrolling on mobile
-- [ ] Start button uses economical sizing (0.85-0.95em font, 8-10px padding)
-- [ ] Tight spacing throughout (5-8px margins, not 15-20px)
-- [ ] No unnecessary text blocking core UI elements
-
-**Mobile Responsiveness**:
-- [ ] Viewport meta tag present
-- [ ] Body has proper overflow settings (auto, not hidden)
-- [ ] Mobile breakpoints at 768px and 480px minimum
-- [ ] All buttons/inputs minimum 44px touch targets
-- [ ] Content scrollable on mobile without horizontal overflow
-- [ ] Text readable at mobile sizes (minimum 14px)
-- [ ] Home button doesn't interfere with content on mobile
-- [ ] Games have mobile controls if needed
-- [ ] Consistent spacing and padding patterns
-
-The bot should reference `frogger.html` and `sudoku.html` as exemplary implementations of mobile responsiveness.
+**Required**: Viewport meta, responsive breakpoints (@768px, @480px), 44px+ touch targets, scrollable content
+**Avoid**: `overflow: hidden`, fixed widths without fallbacks, sub-44px touch targets  
+**Layout Order**: Canvas → Controls → Start Button → Instructions
 
 ## Key Configuration Constants
 
@@ -920,19 +684,13 @@ const CONFIG = {
 - Response deduplication prevents "Bot Sportello: Bot Sportello:" patterns
 - Message deduplication in mention handler prevents duplicate responses from Discord API glitches
 
-## Critical Bug Fixes & Lessons Learned
+## Key Development Patterns
 
 **Discord.js Event Names**:
 - Use `client.once('clientReady', ...)` NOT `client.once('ready', ...)`
 - Discord.js v14 uses `'ready'` but shows deprecation warning that it will be renamed to `'clientReady'` in v15
 - Using `'ready'` works but triggers deprecation warnings
 - Use `'clientReady'` for forward compatibility and to avoid warnings
-
-**iCloud Drive Corruption**:
-- **Never run the bot from an iCloud-synced directory** (e.g., ~/Desktop on macOS)
-- iCloud offloads .git files causing "Stale NFS file handle" errors and git hangs
-- Symptoms: git operations timeout, "dataless" file attributes, Operation timed out errors
-- Solution: Move project to non-iCloud location (e.g., ~/projects/)
 
 **Git Remote URL Management**:
 - Never embed GITHUB_TOKEN in git remote URL permanently
@@ -962,4 +720,33 @@ const CONFIG = {
 - **simple-git**: Git operations
 - **axios + axios-retry**: HTTP requests with retry logic
 - **dotenv**: Environment variable management
+- **express + socket.io**: GUI dashboard server and real-time updates
 - **nodemon** (dev): Auto-restart during development
+
+## 🖥️ GUI Dashboard System
+
+**Real-time Monitoring**: WebSocket-based dashboard showing bot activity, tool calls, file changes, and agent workflows.
+
+### Starting the GUI
+The GUI automatically starts when using `./run-bot.sh` and is available at:
+- **URL**: http://localhost:3001 (or custom port with `--gui-port`)
+- **Disable**: Use `--no-gui` flag or set `NO_GUI=true` environment variable
+
+### Dashboard Panels
+1. **System Logs**: All bot events with color-coded severity (error/warn/info/debug)
+2. **Tool Calls**: AI function executions with args, results, success/failure status
+3. **File Changes**: Monitors create/edit/delete/read operations with before/after content
+4. **Agent Loops**: Multi-step AI workflows showing iteration progress and tool usage
+
+### GUI Integration Points
+- `logToGUI(level, message, data)` - General event logging
+- `logToolCall(tool, args, result, error)` - Track AI tool executions  
+- `logFileChange(action, path, content, old)` - File system operations
+- `startAgentLoop/updateAgentLoop/endAgentLoop` - Workflow tracking
+
+### Performance Features
+- Logs capped at 1000 entries per panel
+- Tool results and content truncated for display
+- Auto-scroll with toggle
+- Clear functions per panel
+- Real-time WebSocket updates
