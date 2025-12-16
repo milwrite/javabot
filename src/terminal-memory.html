@@ -14,37 +14,47 @@
             padding: 80px 20px 20px;
             overflow-x: auto;
             overflow-y: auto;
+            background: #0a0a0a;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 700px;
             margin: 0 auto;
             padding: 20px;
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
         }
 
         header {
             text-align: center;
             margin-bottom: 30px;
-            animation: glitch 3s infinite;
         }
 
         h1 {
-            font-size: 3.5em;
-            text-shadow: 0 0 10px #7ec8e3, 0 0 20px #7ec8e3;
+            font-size: 2.5em;
+            color: #7ec8e3;
+            text-shadow: 0 0 10px #7ec8e3;
             margin-bottom: 10px;
-            letter-spacing: 4px;
+            letter-spacing: 2px;
+            font-family: 'Courier Prime', monospace;
         }
 
         .subtitle {
-            font-size: 1.5em;
+            font-size: 1.2em;
             color: #00ffff;
             text-shadow: 0 0 5px #00ffff;
+            font-family: 'Courier Prime', monospace;
         }
 
         .stats {
             display: flex;
             justify-content: center;
-            gap: 30px;
+            gap: 20px;
             margin-bottom: 30px;
             flex-wrap: wrap;
         }
@@ -52,20 +62,20 @@
         .stat-box {
             background: rgba(126, 200, 227, 0.1);
             border: 2px solid #7ec8e3;
-            padding: 15px 30px;
+            padding: 15px 25px;
             border-radius: 5px;
-            min-width: 150px;
             text-align: center;
+            font-family: 'Courier Prime', monospace;
         }
 
         .stat-label {
-            font-size: 1em;
+            font-size: 0.9em;
             color: #00ffff;
             margin-bottom: 5px;
         }
 
         .stat-value {
-            font-size: 2em;
+            font-size: 1.8em;
             color: #7ec8e3;
             text-shadow: 0 0 10px #7ec8e3;
             font-weight: bold;
@@ -76,10 +86,7 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             margin-bottom: 30px;
-            max-width: 600px;
             width: 100%;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .card {
@@ -92,49 +99,57 @@
             justify-content: center;
             padding: 10px;
             border-radius: 5px;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             touch-action: manipulation;
             user-select: none;
-            min-height: 120px;
+            min-height: 100px;
+            font-family: 'Courier Prime', monospace;
+            position: relative;
+            perspective: 1000px;
         }
 
-        .card:hover:not(.matched):not(.flipped) {
-            background: rgba(126, 200, 227, 0.1);
+        .card:not(.matched):not(.disabled) {
+            cursor: pointer;
+        }
+
+        .card:hover:not(.matched):not(.disabled) {
+            background: rgba(126, 200, 227, 0.15);
             box-shadow: 0 0 15px rgba(126, 200, 227, 0.5);
+            transform: scale(1.05);
         }
 
         .card.flipped {
             background: rgba(0, 50, 50, 0.9);
             border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
         }
 
         .card.matched {
             background: rgba(0, 100, 0, 0.9);
             border-color: #7ec8e3;
             cursor: default;
-            animation: matchPulse 0.6s ease-out;
+            animation: matchPulse 0.5s ease-out;
+        }
+
+        .card.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
         }
 
         .card-back {
-            font-size: 3em;
+            font-size: 2.5em;
             color: #7ec8e3;
             text-shadow: 0 0 10px #7ec8e3;
         }
 
         .card-front {
             display: none;
-            font-size: 1.1em;
+            font-size: 1em;
             text-align: center;
             color: #00ffff;
             text-shadow: 0 0 5px #00ffff;
-            line-height: 1.4;
+            line-height: 1.3;
             word-wrap: break-word;
-        }
-
-        .card.command .card-front {
-            color: #7ec8e3;
-            text-shadow: 0 0 5px #7ec8e3;
-            font-size: 1.8em;
             font-weight: bold;
         }
 
@@ -151,38 +166,48 @@
         .controls {
             text-align: center;
             margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .btn {
             font-family: 'Courier Prime', monospace;
-            font-size: 1.5em;
-            padding: 15px 40px;
+            font-size: 1em;
+            padding: 12px 30px;
             background: rgba(126, 200, 227, 0.2);
             border: 2px solid #7ec8e3;
             color: #7ec8e3;
             cursor: pointer;
             border-radius: 5px;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             text-shadow: 0 0 5px #7ec8e3;
             touch-action: manipulation;
             min-height: 44px;
         }
 
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             background: rgba(126, 200, 227, 0.3);
             box-shadow: 0 0 20px rgba(126, 200, 227, 0.7);
         }
 
-        .btn:active {
+        .btn:active:not(:disabled) {
             transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .message {
             text-align: center;
-            font-size: 1.8em;
-            min-height: 40px;
+            font-size: 1.3em;
+            min-height: 30px;
             margin-bottom: 20px;
             text-shadow: 0 0 10px currentColor;
+            font-family: 'Courier Prime', monospace;
         }
 
         .message.success {
@@ -193,180 +218,131 @@
             color: #ff0000;
         }
 
-        .victory {
+        .message.info {
+            color: #00ffff;
+        }
+
+        .victory-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0, 0, 0, 0.9);
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
         }
 
-        .victory.show {
+        .victory-overlay.show {
             display: flex;
-            animation: fadeIn 0.5s;
         }
 
         .victory-content {
-            background: rgba(0, 10, 0, 0.95);
-            border: 3px solid #7ec8e3;
-            border-radius: 10px;
-            padding: 50px;
             text-align: center;
-            box-shadow: 0 0 50px rgba(126, 200, 227, 0.8);
-            max-width: 90%;
+            background: rgba(0, 20, 20, 0.95);
+            border: 3px solid #7ec8e3;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(126, 200, 227, 0.8);
         }
 
-        .victory-title {
-            font-size: 3em;
+        .victory-content h2 {
+            font-size: 2.5em;
             color: #7ec8e3;
-            text-shadow: 0 0 20px #7ec8e3;
+            text-shadow: 0 0 10px #7ec8e3;
             margin-bottom: 20px;
+            font-family: 'Courier Prime', monospace;
         }
 
-        .victory-stats {
-            font-size: 1.5em;
+        .victory-content p {
+            font-size: 1.3em;
             color: #00ffff;
-            margin-bottom: 30px;
-        }
-
-        .victory-stats div {
-            margin: 10px 0;
-        }
-
-        @keyframes glitch {
-            0%, 90%, 100% { transform: translate(0); }
-            92% { transform: translate(-2px, 2px); }
-            94% { transform: translate(2px, -2px); }
-            96% { transform: translate(-2px, -2px); }
-            98% { transform: translate(2px, 2px); }
+            margin-bottom: 20px;
+            font-family: 'Courier Prime', monospace;
         }
 
         @keyframes matchPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); box-shadow: 0 0 30px rgba(126, 200, 227, 1); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 80px 10px 20px;
+            from {
+                opacity: 0;
             }
-
-            .container {
-                padding: 15px;
-            }
-
-            .game-board {
-                gap: 10px;
-                max-width: calc(100vw - 50px);
-            }
-
-            h1 {
-                font-size: 2em;
-            }
-
-            .subtitle {
-                font-size: 1.1em;
-            }
-
-            .card {
-                min-height: 90px;
-                font-size: 0.9em;
-                padding: 6px;
-            }
-
-            .stat-box {
-                min-width: 100px;
-                padding: 10px 20px;
-            }
-
-            .stat-value {
-                font-size: 1.5em;
-            }
-
-            .btn {
-                padding: 12px 30px;
-                font-size: 1.3em;
+            to {
+                opacity: 1;
             }
         }
 
         @media (max-width: 480px) {
-            body {
-                padding: 80px 5px 20px;
-            }
-
-            .container {
-                padding: 10px;
+            h1 {
+                font-size: 1.8em;
             }
 
             .game-board {
-                gap: 8px;
-                max-width: calc(100vw - 30px);
-            }
-
-            .stats {
                 gap: 10px;
-            }
-
-            h1 {
-                font-size: 1.5em;
             }
 
             .card {
                 min-height: 80px;
-                font-size: 0.8em;
-                padding: 5px;
+                font-size: 0.9em;
             }
 
-            .card.command .card-front {
-                font-size: 1.3em;
+            .card-back {
+                font-size: 2em;
             }
 
-            .stat-box {
-                padding: 8px 15px;
+            .card-front {
+                font-size: 0.85em;
+            }
+
+            .btn {
+                font-size: 0.9em;
+                padding: 10px 20px;
             }
 
             .victory-content {
-                padding: 30px;
+                padding: 30px 20px;
             }
 
-            .victory-title {
-                font-size: 2em;
+            .victory-content h2 {
+                font-size: 1.8em;
             }
         }
     </style>
 </head>
 <body>
-    <a href="../index.html" class="home-link">← HOME</a>
+    <a href="../" class="home-link">← HOME</a>
 
     <div class="container">
         <header>
             <h1>TERMINAL MEMORY</h1>
-            <div class="subtitle">&gt; Match Commands with Descriptions_</div>
+            <p class="subtitle">Match the pairs and clear the board</p>
         </header>
 
         <div class="stats">
-            <div class="stat-box">
-                <div class="stat-label">TIME</div>
-                <div class="stat-value" id="timer">0:00</div>
-            </div>
             <div class="stat-box">
                 <div class="stat-label">MOVES</div>
                 <div class="stat-value" id="moves">0</div>
             </div>
             <div class="stat-box">
-                <div class="stat-label">MATCHES</div>
-                <div class="stat-value" id="matches">0/6</div>
+                <div class="stat-label">MATCHED</div>
+                <div class="stat-value" id="matched">0/9</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">TIME</div>
+                <div class="stat-value" id="timer">00:00</div>
             </div>
         </div>
 
@@ -376,206 +352,225 @@
 
         <div class="controls">
             <button class="btn" id="resetBtn">NEW GAME</button>
+            <button class="btn" id="hintBtn">HINT</button>
         </div>
     </div>
 
-    <div class="victory" id="victory">
+    <div class="victory-overlay" id="victoryOverlay">
         <div class="victory-content">
-            <div class="victory-title">LEVEL COMPLETE!</div>
-            <div class="victory-stats">
-                <div>Time: <span id="finalTime"></span></div>
-                <div>Moves: <span id="finalMoves"></span></div>
-            </div>
-            <button class="btn" onclick="resetGame()">PLAY AGAIN</button>
+            <h2>🎮 VICTORY! 🎮</h2>
+            <p>You matched all pairs in <span id="finalMoves">0</span> moves and <span id="finalTime">00:00</span>!</p>
+            <button class="btn" id="playAgainBtn" style="margin-top: 20px;">PLAY AGAIN</button>
         </div>
     </div>
 
     <script>
-        const commands = [
-            { command: 'ls', description: 'List directory contents' },
-            { command: 'cd', description: 'Change directory' },
-            { command: 'mkdir', description: 'Make directory' },
-            { command: 'rm', description: 'Remove files' },
-            { command: 'cat', description: 'Display file contents' },
-            { command: 'pwd', description: 'Print working directory' }
+        const CARD_PAIRS = [
+            { command: 'ls', description: 'List files' },
+            { command: 'cd', description: 'Change dir' },
+            { command: 'pwd', description: 'Print path' },
+            { command: 'mkdir', description: 'Make dir' },
+            { command: 'rm', description: 'Remove file' },
+            { command: 'cp', description: 'Copy file' },
+            { command: 'mv', description: 'Move file' },
+            { command: 'cat', description: 'Show file' },
+            { command: 'grep', description: 'Find text' }
         ];
 
-        let state = {
-            flippedCards: [],
-            matchedPairs: 0,
+        let gameState = {
+            cards: [],
+            flipped: [],
+            matched: [],
             moves: 0,
-            timer: 0,
-            timerInterval: null,
-            gameStarted: false,
-            locked: false
+            time: 0,
+            gameActive: false,
+            timerInterval: null
         };
 
         function initGame() {
-            const gameBoard = document.getElementById('gameBoard');
-            gameBoard.innerHTML = '';
-
-            state = {
-                flippedCards: [],
-                matchedPairs: 0,
+            // Reset state
+            gameState = {
+                cards: [],
+                flipped: [],
+                matched: [],
                 moves: 0,
-                timer: 0,
-                timerInterval: null,
-                gameStarted: false,
-                locked: false
+                time: 0,
+                gameActive: true,
+                timerInterval: null
             };
 
-            updateStats();
-            showMessage('', '');
+            // Clear previous timer
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
 
-            const cardPairs = [];
-            commands.forEach((cmd, index) => {
-                cardPairs.push({
-                    id: `cmd-${index}`,
-                    type: 'command',
-                    content: cmd.command,
-                    pairId: index
-                });
-                cardPairs.push({
-                    id: `desc-${index}`,
-                    type: 'description',
-                    content: cmd.description,
-                    pairId: index
-                });
+            // Create card deck (pairs)
+            const deck = [];
+            CARD_PAIRS.forEach(pair => {
+                deck.push({ ...pair, id: Math.random() });
+                deck.push({ ...pair, id: Math.random() });
             });
 
-            cardPairs.sort(() => Math.random() - 0.5);
+            // Shuffle
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
 
-            cardPairs.forEach((cardData) => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                if (cardData.type === 'command') {
-                    card.classList.add('command');
-                }
-                card.dataset.pairId = cardData.pairId;
+            gameState.cards = deck;
 
-                card.innerHTML = `
-                    <div class="card-back">&gt;</div>
-                    <div class="card-front">${cardData.content}</div>
-                `;
+            // Render board
+            renderBoard();
 
-                card.addEventListener('click', () => flipCard(card));
-                card.addEventListener('touchstart', (e) => {
+            // Update display
+            updateStats();
+            document.getElementById('message').textContent = 'Match the pairs!';
+            document.getElementById('message').className = 'message info';
+
+            // Start timer
+            startTimer();
+
+            // Hide victory overlay
+            document.getElementById('victoryOverlay').classList.remove('show');
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+
+            gameState.cards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card';
+                cardEl.dataset.index = index;
+
+                const back = document.createElement('div');
+                back.className = 'card-back';
+                back.textContent = '?';
+
+                const front = document.createElement('div');
+                front.className = 'card-front';
+                front.textContent = card.command;
+
+                cardEl.appendChild(back);
+                cardEl.appendChild(front);
+
+                cardEl.addEventListener('click', () => flipCard(index));
+                cardEl.addEventListener('touchstart', (e) => {
                     e.preventDefault();
-                    flipCard(card);
+                    flipCard(index);
                 }, { passive: false });
 
-                gameBoard.appendChild(card);
+                board.appendChild(cardEl);
             });
         }
 
-        function flipCard(card) {
-            if (!state.gameStarted) {
-                state.gameStarted = true;
-                startTimer();
-            }
+        function flipCard(index) {
+            if (!gameState.gameActive) return;
+            if (gameState.flipped.includes(index)) return;
+            if (gameState.matched.includes(index)) return;
+            if (gameState.flipped.length >= 2) return;
 
-            if (state.locked) return;
-            if (card.classList.contains('flipped')) return;
-            if (card.classList.contains('matched')) return;
-            if (state.flippedCards.length >= 2) return;
+            const cardEl = document.querySelector(`[data-index="${index}"]`);
+            cardEl.classList.add('flipped');
+            gameState.flipped.push(index);
 
-            card.classList.add('flipped');
-            state.flippedCards.push(card);
-
-            if (state.flippedCards.length === 2) {
-                state.locked = true;
-                state.moves++;
+            if (gameState.flipped.length === 2) {
+                gameState.gameActive = false;
+                gameState.moves++;
                 updateStats();
                 checkMatch();
             }
         }
 
         function checkMatch() {
-            const [card1, card2] = state.flippedCards;
-            const pairId1 = card1.dataset.pairId;
-            const pairId2 = card2.dataset.pairId;
+            const [idx1, idx2] = gameState.flipped;
+            const card1 = gameState.cards[idx1];
+            const card2 = gameState.cards[idx2];
 
-            if (pairId1 === pairId2) {
-                setTimeout(() => {
-                    card1.classList.add('matched');
-                    card2.classList.add('matched');
-                    state.matchedPairs++;
-                    updateStats();
-                    showMessage('MATCH! ✓', 'success');
+            const isMatch = card1.command === card2.command;
 
-                    if (state.matchedPairs === commands.length) {
-                        endGame();
+            setTimeout(() => {
+                if (isMatch) {
+                    gameState.matched.push(idx1, idx2);
+                    document.querySelector(`[data-index="${idx1}"]`).classList.add('matched');
+                    document.querySelector(`[data-index="${idx2}"]`).classList.add('matched');
+                    
+                    document.getElementById('message').textContent = '✓ Match found!';
+                    document.getElementById('message').className = 'message success';
+
+                    gameState.flipped = [];
+                    gameState.gameActive = true;
+
+                    // Check win
+                    if (gameState.matched.length === gameState.cards.length) {
+                        winGame();
                     }
+                } else {
+                    document.querySelector(`[data-index="${idx1}"]`).classList.remove('flipped');
+                    document.querySelector(`[data-index="${idx2}"]`).classList.remove('flipped');
+                    
+                    document.getElementById('message').textContent = '✗ No match';
+                    document.getElementById('message').className = 'message error';
 
-                    state.flippedCards = [];
-                    state.locked = false;
-                }, 600);
-            } else {
-                showMessage('TRY AGAIN...', 'error');
-                setTimeout(() => {
-                    card1.classList.remove('flipped');
-                    card2.classList.remove('flipped');
-                    state.flippedCards = [];
-                    state.locked = false;
-                }, 1000);
-            }
-        }
+                    gameState.flipped = [];
+                    gameState.gameActive = true;
+                }
 
-        function startTimer() {
-            state.timerInterval = setInterval(() => {
-                state.timer++;
                 updateStats();
             }, 1000);
         }
 
         function updateStats() {
-            const minutes = Math.floor(state.timer / 60);
-            const seconds = state.timer % 60;
-            document.getElementById('timer').textContent =
-                `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            document.getElementById('moves').textContent = state.moves;
-            document.getElementById('matches').textContent = `${state.matchedPairs}/${commands.length}`;
+            document.getElementById('moves').textContent = gameState.moves;
+            document.getElementById('matched').textContent = `${gameState.matched.length / 2}/${CARD_PAIRS.length}`;
         }
 
-        function showMessage(text, type) {
-            const messageEl = document.getElementById('message');
-            messageEl.textContent = text;
-            messageEl.className = `message ${type}`;
-
-            if (text) {
-                setTimeout(() => {
-                    messageEl.textContent = '';
-                    messageEl.className = 'message';
-                }, 1500);
-            }
-        }
-
-        function endGame() {
-            clearInterval(state.timerInterval);
-
-            const minutes = Math.floor(state.timer / 60);
-            const seconds = state.timer % 60;
-            const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-            document.getElementById('finalTime').textContent = timeStr;
-            document.getElementById('finalMoves').textContent = state.moves;
-
-            setTimeout(() => {
-                document.getElementById('victory').classList.add('show');
+        function startTimer() {
+            gameState.timerInterval = setInterval(() => {
+                gameState.time++;
+                const mins = Math.floor(gameState.time / 60);
+                const secs = gameState.time % 60;
+                document.getElementById('timer').textContent = 
+                    `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
             }, 1000);
         }
 
-        function resetGame() {
-            document.getElementById('victory').classList.remove('show');
-            initGame();
+        function winGame() {
+            gameState.gameActive = false;
+            clearInterval(gameState.timerInterval);
+
+            const mins = Math.floor(gameState.time / 60);
+            const secs = gameState.time % 60;
+            const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+            document.getElementById('finalMoves').textContent = gameState.moves;
+            document.getElementById('finalTime').textContent = timeStr;
+            document.getElementById('victoryOverlay').classList.add('show');
         }
 
-        document.getElementById('resetBtn').addEventListener('click', resetGame);
-        document.getElementById('resetBtn').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            resetGame();
-        }, { passive: false });
+        // Event listeners
+        document.getElementById('resetBtn').addEventListener('click', initGame);
+        document.getElementById('playAgainBtn').addEventListener('click', initGame);
+        
+        document.getElementById('hintBtn').addEventListener('click', () => {
+            if (gameState.flipped.length > 0) return;
+            
+            const unmatched = gameState.cards
+                .map((card, idx) => idx)
+                .filter(idx => !gameState.matched.includes(idx));
+            
+            if (unmatched.length > 0) {
+                const randomIdx = unmatched[Math.floor(Math.random() * unmatched.length)];
+                const cardEl = document.querySelector(`[data-index="${randomIdx}"]`);
+                
+                cardEl.classList.add('flipped');
+                setTimeout(() => {
+                    cardEl.classList.remove('flipped');
+                }, 800);
+            }
+        });
 
+        // Start game
         initGame();
     </script>
 </body>
