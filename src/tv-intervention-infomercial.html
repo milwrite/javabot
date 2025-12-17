@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Intervention Hotline - Bot Sportello Collection</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #7ec8e3;
+            font-family: 'Courier Prime', monospace;
+            margin: 0;
+            padding: 80px 20px 20px 20px;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 60px 5px 20px 5px;
+            }
+        }
+
+        .infomercial-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 40px;
+            border: 2px solid #ff0000;
+            padding: 30px;
+            background: rgba(255, 0, 0, 0.05);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: #ff0000; }
+            50% { border-color: #00ffff; }
+        }
+
+        .hero-section h1 {
+            color: #ff0000;
+            font-size: 2.5em;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        @media (max-width: 480px) {
+            .hero-section h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .hero-section .tagline {
+            color: #00ffff;
+            font-size: 1.3em;
+            margin: 10px 0;
+            font-style: italic;
+        }
+
+        @media (max-width: 480px) {
+            .hero-section .tagline {
+                font-size: 1.1em;
+            }
+        }
+
+        .warning-banner {
+            background: #ff0000;
+            color: #0a0a0a;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            margin: 20px 0;
+            animation: flash 1.5s infinite;
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .section {
+            margin: 40px 0;
+            padding: 20px;
+            border-left: 3px solid #7ec8e3;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .section.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section h2 {
+            color: #00ffff;
+            font-size: 1.8em;
+            margin-top: 0;
+            text-transform: uppercase;
+        }
+
+        .statistic {
+            background: rgba(126, 200, 227, 0.1);
+            border: 1px solid #7ec8e3;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .statistic .number {
+            font-size: 3em;
+            color: #ff0000;
+            font-weight: bold;
+            display: block;
+            text-shadow: 0 0 15px #ff0000;
+        }
+
+        @media (max-width: 480px) {
+            .statistic .number {
+                font-size: 2.2em;
+            }
+        }
+
+        .statistic .label {
+            color: #00ffff;
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        @media (max-width: 768px) {
+            .before-after {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        .scenario {
+            border: 2px solid #7ec8e3;
+            padding: 20px;
+            position: relative;
+        }
+
+        .scenario.before {
+            border-color: #ff0000;
+            background: rgba(255, 0, 0, 0.05);
+        }
+
+        .scenario.after {
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.05);
+        }
+
+        .scenario h3 {
+            margin-top: 0;
+            text-transform: uppercase;
+            font-size: 1.3em;
+        }
+
+        .scenario.before h3 {
+            color: #ff0000;
+        }
+
+        .scenario.after h3 {
+            color: #00ff00;
+        }
+
+        .testimonial {
+            background: rgba(126, 200, 227, 0.05);
+            border-left: 4px solid #00ffff;
+            padding: 20px;
+            margin: 20px 0;
+            font-style: italic;
+        }
+
+        .testimonial .quote {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .testimonial .author {
+            text-align: right;
+            color: #ff0000;
+            font-weight: bold;
+        }
+
+        .cta-button {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #ff0000;
+            color: #0a0a0a;
+            border: none;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1.3em;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            min-height: 60px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .cta-button:hover, .cta-button:active {
+            background: #00ffff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.7);
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 480px) {
+            .cta-button {
+                font-size: 1.1em;
+                padding: 15px;
+            }
+        }
+
+        .disclaimer {
+            font-size: 0.7em;
+            color: #7ec8e3;
+            text-align: center;
+            margin: 40px 0;
+            opacity: 0.6;
+            line-height: 1.4;
+        }
+
+        .symptoms-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .symptoms-list li {
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 3px solid #ff0000;
+            background: rgba(255, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .symptoms-list li:hover {
+            border-left-width: 6px;
+            background: rgba(255, 0, 0, 0.1);
+        }
+
+        .price-strike {
+            text-decoration: line-through;
+            color: #ff0000;
+            font-size: 1.2em;
+        }
+
+        .price-now {
+            color: #00ff00;
+            font-size: 2em;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .bonus-section {
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px dashed #00ffff;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .bonus-section h3 {
+            color: #00ffff;
+            margin-top: 0;
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 1.5em;
+            color: #ff0000;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .timer {
+                font-size: 1.2em;
+            }
+        }
+
+        .glitch {
+            animation: glitch 3s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% { transform: translateX(0); }
+            92% { transform: translateX(-2px); }
+            94% { transform: translateX(2px); }
+            96% { transform: translateX(-2px); }
+            98% { transform: translateX(2px); }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">← Back to Collection</a>
+
+    <div class="infomercial-container">
+        <div class="hero-section">
+            <h1 class="glitch">⚠️ TV INTERVENTION HOTLINE ⚠️</h1>
+            <p class="tagline">"Because Your Screen Time Has Become Screen CRIME"</p>
+            <p style="color: #ff0000; font-size: 1.2em; margin-top: 20px;">
+                CALL NOW: 1-800-NO-BINGE
+            </p>
+        </div>
+
+        <div class="warning-banner">
+            ⚠️ WARNING: Reading this page counts as screen time. The irony is not lost on us. ⚠️
+        </div>
+
+        <div class="section" data-reveal>
+            <h2>Are You Suffering From Chronic Binge Syndrome?</h2>
+            <p>If you've experienced ANY of these symptoms in the last 24 hours, you may need immediate intervention:</p>
+            <ul class="symptoms-list">
+                <li>✓ Saying "just one more episode" at 3 AM for the 6th consecutive time</li>
+                <li>✓ Forgetting what sunlight looks like</li>
+                <li>✓ Developing strong opinions about fictional characters' life choices</li>
+                <li>✓ Accidentally calling your boss by a character's name</li>
+                <li>✓ Meal planning around episode runtimes</li>
+                <li>✓ Experiencing withdrawal when the Wi-Fi goes down</li>
+                <li>✓ Knowing more about Westeros politics than your own city council</li>
+            </ul>
+        </div>
+
+        <div class="section" data-reveal>
+            <h2>The Shocking Statistics</h2>
+            <div class="statistic">
+                <span class="number">847%</span>
+                <span class="label">Increase in "I'll sleep when I'm dead" declarations since streaming services launched</span>
+            </div>
+            <div class="statistic">
+                <span class="number">12.3</span>
+                <span class="label">Average number of shows people claim they're "currently watching"</span>
+            </div>
+            <div class="statistic">
+                <span class="number">∞</span>
+                <span class="label">Amount of time required to "catch up" on everything</span>
+            </div>
+        </div>
+
+        <div class="section" data-reveal>
+            <h2>Before & After: Real Stories</h2>
+            <div class="before-after">
+                <div class="scenario before">
+                    <h3>❌ BEFORE</h3>
+                    <p><strong>Marcus, 34:</strong> "I started Season 1 on a Friday night. When I looked up, it was Tuesday and I had missed two work days, three meals, and my own birthday party. My plants were dead. My girlfriend was gone. But I knew who the killer was."</p>
+                </div>
+                <div class="scenario after">
+                    <h3>✓ AFTER</h3>
+                    <p><strong>Marcus, 34:</strong> "Thanks to TV Intervention Hotline, I now limit myself to only 6 hours of viewing per day. I've reconnected with my family, who I now watch TV with. We're much closer now that we share the same fictional universes."</p>
+                </div>
+            </div>
+
+            <div class="before-after">
+                <div class="scenario before">
+                    <h3>❌ BEFORE</h3>
+                    <p><strong>Sarah, 28:</strong> "I had 47 browser tabs open, each with a different streaming service. My computer was screaming. So was I. I couldn't remember which show had which plot twist."</p>
+                </div>
+                <div class="scenario after">
+                    <h3>✓ AFTER</h3>
+                    <p><strong>Sarah, 28:</strong> "Now I only have 23 tabs open. I've organized them by genre and emotional investment level. I even made a spreadsheet to track my progress. Life has never been more manageable."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" data-reveal>
+            <h2>What You'll Receive</h2>
+            <ul class="symptoms-list">
+                <li>📞 24/7 access to our Binge Prevention Hotline (staffed by people who have also seen every episode of The Office)</li>
+                <li>📋 Personalized "Watch Responsibly" plan (maximum 18 hours/day)</li>
+                <li>⏰ Automatic episode limit reminders (easily dismissible)</li>
+                <li>🎓 Certificate of completion after watching our 8-season intervention program</li>
+                <li>👥 Support group meetings (held via video chat, naturally)</li>
+            </ul>
+        </div>
+
+        <div class="section" data-reveal>
+            <div class="bonus-section">
+                <h3>🎁 BUT WAIT, THERE'S MORE!</h3>
+                <p>Call in the next 30 minutes* and receive:</p>
+                <ul>
+                    <li>✨ Our exclusive "I Paused My Show For This" motivational poster</li>
+                    <li>✨ A list of shows you should definitely watch (undermining everything we just said)</li>
+                    <li>✨ Premium access to our "Just One More Episode" override button</li>
+                    <li>✨ Commemorative "I Survived The Cliffhanger" t-shirt</li>
+                </ul>
+                <p style="font-size: 0.8em; margin-top: 15px;">*Offer repeats every 30 minutes indefinitely</p>
+            </div>
+        </div>
+
+        <div class="section" data-reveal>
+            <h2>Testimonials From Real People*</h2>
+            
+            <div class="testimonial">
+                <p class="quote">"I used to think I had a problem. Then I called the TV Intervention Hotline and they helped me realize I actually have 47 problems, one for each show I'm watching. Now I'm much more organized about my addiction!"</p>
+                <p class="author">— Jennifer K., Professional Binger</p>
+            </div>
+
+            <div class="testimonial">
+                <p class="quote">"The hotline saved my marriage. My wife and I were fighting about whether to watch her show or my show. Now we compromise by watching both simultaneously on different screens while sitting next to each other. Romance isn't dead!"</p>
+                <p class="author">— David M., Multitasking Master</p>
+            </div>
+
+            <div class="testimonial">
+                <p class="quote">"I called the hotline during a particularly intense cliffhanger. They talked me down from the ledge... and then recommended three other shows with similar cliffhangers. I've never felt so understood."</p>
+                <p class="author">— Alex R., Cliffhanger Survivor</p>
+            </div>
+
+            <p style="font-size: 0.8em; margin-top: 20px; opacity: 0.7;">*"Real" is a strong word. "People" is also debatable.</p>
+        </div>
+
+        <div class="section" data-reveal>
+            <h2>Limited Time Offer!</h2>
+            <p style="text-align: center; font-size: 1.2em;">
+                Regular Price: <span class="price-strike">$999.99</span><br>
+                TODAY ONLY: <span class="price-now">FREE*</span>
+            </p>
+            <p style="text-align: center; margin-top: 20px;">
+                *Plus shipping, handling, subscription fees, convenience charges, processing fees, emotional labor costs, and your immortal soul
+            </p>
+            
+            <div class="timer" id="timer">
+                OFFER EXPIRES IN: <span id="countdown">29:59</span>
+            </div>
+        </div>
+
+        <button class="cta-button" onclick="handleCTA()">
+            🚨 INTERVENE IN MY LIFE NOW 🚨
+        </button>
+
+        <div class="section" data-reveal>
+            <h2>Frequently Asked Questions</h2>
+            <p><strong>Q: Will this actually help me watch less TV?</strong></p>
+            <p>A: Absolutely not. But you'll feel better about it.</p>
+            
+            <p style="margin-top: 20px;"><strong>Q: Is this a real service?</strong></p>
+            <p>A: As real as your chances of actually finishing all those shows in your queue.</p>
+            
+            <p style="margin-top: 20px;"><strong>Q: What if I relapse?</strong></p>
+            <p>A: That's what Season 2 of our intervention program is for. Then Season 3. Then the spin-off series.</p>
+            
+            <p style="margin-top: 20px;"><strong>Q: Do you offer a money-back guarantee?</strong></p>
+            <p>A: Yes! If you're not satisfied, we'll refund your money in the form of streaming service gift cards.</p>
+        </div>
+
+        <button class="cta-button" onclick="handleCTA()">
+            📺 YES, I NEED HELP (TO FIND MORE SHOWS) 📺
+        </button>
+
+        <div class="disclaimer">
+            DISCLAIMER: TV Intervention Hotline is not responsible for any actual reduction in screen time, improved sleep schedules, renewed social lives, or reconnection with reality. Side effects may include: increased awareness of your problem, guilt that doesn't stop you, elaborate justification systems, and the ability to recite entire episodes from memory. Not FDA approved. Not approved by anyone, really. Void where prohibited. Prohibited everywhere. Call anyway. Operators are standing by (watching TV, but standing by). This is a parody. Please binge responsibly. Or don't. We're not your real intervention.<br><br>
+            © 2024 Bot Sportello's Noir Terminal Collection. All rights reserved. All shows binged.
+        </div>
+    </div>
+
+    <script>
+        // Scroll-triggered reveal animations
+        const observerOptions = {
+            threshold: 0.2,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('[data-reveal]').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Countdown timer (resets when it hits zero)
+        let timeLeft = 29 * 60 + 59; // 29:59 in seconds
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            const countdownEl = document.getElementById('countdown');
+            if (countdownEl) {
+                countdownEl.textContent = display;
+            }
+
+            timeLeft--;
+            
+            if (timeLeft < 0) {
+                timeLeft = 29 * 60 + 59; // Reset to 29:59
+            }
+        }
+
+        setInterval(updateTimer, 1000);
+
+        // CTA button handler
+        function handleCTA() {
+            const messages = [
+                "🎉 Congratulations! You've taken the first step: admitting you have a problem!\n\n(The second step is watching our 47-episode orientation series)",
+                "📞 An operator will be with you shortly!\n\n(They're just finishing the season finale, give them 6-8 hours)",
+                "✅ Thank you for your interest!\n\nYour personalized intervention plan has been added to your queue. It's #87.",
+                "🎊 Welcome to recovery!\n\nYour first assignment: Watch these 12 documentaries about TV addiction. Yes, we see the irony.",
+                "⚠️ ALERT: Your intervention has been scheduled!\n\nPlease clear your calendar for the next 6-8 months. Or until you finish your current shows. Whichever comes first."
+            ];
+            
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            alert(randomMessage);
+            
+            // Flash the button
+            const btn = event.target;
+            btn.style.background = '#00ff00';
+            setTimeout(() => {
+                btn.style.background = '#ff0000';
+            }, 200);
+        }
+
+        // Easter egg: Konami code
+        let konamiCode = [];
+        const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+
+        document.addEventListener('keydown', (e) => {
+            konamiCode.push(e.key);
+            konamiCode = konamiCode.slice(-10);
+            
+            if (konamiCode.join(',') === konamiSequence.join(',')) {
+                alert('🎮 CHEAT CODE ACTIVATED!\n\nYou have unlocked: UNLIMITED BINGE MODE\n\n(This was already active. You played yourself.)');
+                document.body.style.animation = 'glitch 0.5s infinite';
+                setTimeout(() => {
+                    document.body.style.animation = '';
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>

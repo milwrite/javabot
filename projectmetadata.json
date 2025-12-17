@@ -385,6 +385,13 @@
       "description": "warm tuesday check-in letter",
       "collection": "stories-content",
       "hidden": false
+    },
+    "tv-intervention-infomercial": {
+      "title": "TV Intervention Infomercial",
+      "icon": "📺",
+      "description": "late-night hype parody",
+      "collection": "stories-content",
+      "hidden": false
     }
   }
 }
