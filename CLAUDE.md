@@ -200,8 +200,57 @@ The entire bot is contained in `index.js` (~3700+ lines) with these key sections
 **Features**:
 - Content-type-aware generation and validation
 - Mobile-first enforcement with responsive breakpoints
-- Iterative quality loop with Builder retries
+- Iterative quality loop with Builder retries (3 attempts max)
 - Dual triggers: `/build-game` command or @mention detection
+- Build log pattern detection (learns from past failures)
+
+#### Multi-Agent Pipeline Flow
+
+**Request Entry**:
+```
+User request
+  ↓
+requestClassifier.js (LLM-based routing)
+  ├─ CREATE_NEW       → runGamePipeline() [System-V1]
+  ├─ SIMPLE_EDIT      → normal LLM loop with edit_file tool
+  ├─ FUNCTIONALITY_FIX → normal LLM loop with edit_file + search tools
+  ├─ READ_ONLY        → direct LLM answer (no tool access)
+  └─ CONVERSATION     → normal chat
+```
+
+**Pipeline Stages** (in gamePipeline.js → runGamePipeline):
+
+1. **Architect** (gameArchitect.js)
+   - Analyzes request, generates JSON implementation plan
+   - Plan includes: content type, slug, files, features, interaction pattern
+   - Integrates past failures summary from buildLogs (avoids repeating issues)
+   - Output: Structured JSON for Builder
+
+2. **Builder** (gameBuilder.js)
+   - Generates complete HTML/JS from plan
+   - Content-type-specific: games use canvas + controls; letters use typography focus; utilities use forms
+   - 3-attempt retry loop: test failures trigger Builder retry with issue feedback
+   - Enforces: mobile-first, noir colors, viewport meta, home link, responsive breakpoints
+   - Output: Complete self-contained HTML file
+
+3. **Tester** (gameTester.js)
+   - Dual validation: automated checks + LLM semantic review
+   - Automated: DOCTYPE, viewport, CSS/script links, home-link, closing </html>, canvas/controls
+   - LLM checks: logical consistency, performance, mobile UX issues
+   - Produces quality score (0-100) and issues array
+   - Failure → Builder retry with feedback; after 3 attempts → halt with score
+
+4. **Scribe** (gameScribe.js)
+   - Generates documentation and metadata
+   - Produces: refined title/icon/description, release notes in Doc Sportello voice, optional How-to-Play
+   - Updates `projectmetadata.json` with new entry (auto-assigns collection)
+   - Output: Updated index, metadata file ready for commit
+
+**Build Log Pattern Detection** (buildLogs.js):
+- `getRecentPatternsSummary()` analyzes last 10 builds
+- Extracts top 5 recurring issues (e.g., "missing viewport tag", "no mobile controls")
+- Passed to Architect as "lessons learned" to inform planning
+- Prevents repeated failures across build attempts
 
 ### Key Integrations
 
@@ -250,6 +299,20 @@ The entire bot is contained in `index.js` (~3700+ lines) with these key sections
 - **Icon selection**: `getIconForDescription()` auto-assigns emoji based on keywords in description
 - **Captions**: 3-6 word summaries generated via `condenseDescription()` but can be edited manually
 - **Dynamic loading**: `index.html` fetches `projectmetadata.json`, groups projects by collection, and renders cards automatically
+
+### Data Persistence & Memory
+
+| File/Directory | Purpose | Format | Lifecycle |
+|---|---|---|---|
+| **projectmetadata.json** | Canonical page registry (index) | JSON: {collections, projects} | Persistent; updated on each page creation |
+| **agents.md** | Conversation history (context for LLM) | Markdown: timestamp, user, message, isBot | Rolling 100 messages; auto-maintained |
+| **build-logs/{id}.json** | Per-build pipeline execution logs | JSON array with stages, plans, test results | One per build; kept for history |
+| **responses/{timestamp}.txt** | Long responses >2000 chars (Discord limit) | Text with timestamp header | One per response; kept for audit trail |
+| **session-logs/*.json/.md** | Bot session reports (failure/success analysis) | JSON + Markdown summaries | One per bot session run; via run-bot.sh |
+| **gui-run-logs/*.json** | GUI dashboard history (real-time events) | Serialized panel state | Per-run; cleared on new session |
+| **index.html** | Main page (project hub) | HTML with embedded CSS | Persistent; manually edited theme |
+| **page-theme.css** | Shared noir styling (all pages) | CSS with color vars + mobile breakpoints | Persistent; theme source of truth |
+| **/src/*.html** | Generated pages (games, pages, features) | Self-contained HTML + inline CSS/JS | Created by `/add-page`, `/build-game`, etc. |
 
 ### Available Slash Commands
 
@@ -751,3 +814,49 @@ The GUI automatically starts when using `./run-bot.sh` and is available at:
 - Auto-scroll with toggle
 - Clear functions per panel
 - Real-time WebSocket updates
+
+## Architectural Decisions & Technical Debt
+
+This section documents key architectural trade-offs and known issues. See `ARCHITECTURE_REVIEW.md` for detailed analysis.
+
+### ✅ Resolved Issues (Dec 2025)
+- **Classifier fallback behavior**: Added read-only verb detection to `isEditRequest()` and improved `isContentRequest()` routing
+- **Mobile-first design enforcement**: All 76 HTML pages unified to noir terminal aesthetic with mandatory responsive breakpoints
+
+### 🔄 In Progress / Working as Designed
+- **Discord ready event** (`clientReady`): Intentional for discord.js v15 forward compatibility; expected deprecation warning is normal
+- **OpenRouter model references**: 2025 models with varying availability; failures handled gracefully with user-facing messages
+- **Remote URL + token handling**: Uses `getEncodedRemoteUrl()` for secure ephemeral token formatting (never persists in .git/config)
+- **Error loop tracker**: 3 errors = 5-minute cooldown; working correctly to prevent spam loops
+
+### ⏳ Known Issues & Priorities for Future Work
+
+**High Priority** (affects all users):
+1. **Tool API mismatches** - `search_files` schema vs implementation (camelCase vs snake_case mismatch in tool definitions)
+2. **Duplication across edit vs normal loops** - Similar tool specs in `getEditResponse` and `getLLMResponse` create maintenance burden
+
+**Medium Priority** (quality/performance):
+3. **Testing & CI** - No automated unit tests for tool-calling layer (searchFiles, editFile, classifier routing)
+4. **Long response storage** - Unbounded growth in `responses/` directory (needs rotation or cleanup command)
+
+**Low Priority** (nice-to-have):
+- GUI server CORS: Currently unrestricted (`origin: "*"`), should restrict to localhost
+- Global MODEL leak: requestClassifier.js reads free variable if available (use process.env instead)
+- Index sync improvements: `/sync-index --reflow` to re-balance collections by rules
+- Docs: Add `/where <url>` command to print local file path
+
+### Design Rationale: Single-File Architecture
+
+The monolithic `index.js` (6,585 lines) may seem large, but is intentional:
+- **Simplicity**: All bot logic visible in one place; easy to understand complete flow
+- **Hot-reload**: Services/agents in `/services` and `/agents` can be modified without restarting bot
+- **System-V1 modularity**: Architect/Builder/Tester/Scribe separation handles complexity at agent level
+- **Trade-off**: Maintainability prioritized over perfect separation of concerns
+
+### Design Rationale: No Build Steps or Tests
+
+Discord bot projects often skip formal testing/linting because:
+- **Rapid iteration**: Content generation is inherently exploratory; test suites slow feedback loops
+- **Runtime validation**: Built into pipeline (Tester agent validates all output)
+- **Observability over tests**: GUI dashboard + session logs provide better failure diagnosis than unit tests
+- **Acceptable for bot scale**: Single Discord bot for one repository; not a mission-critical system
