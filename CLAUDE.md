@@ -210,13 +210,14 @@ The entire bot is contained in `index.js` (~3700+ lines) with these key sections
 ```
 User request
   ↓
-requestClassifier.js (LLM-based routing)
+requestClassifier.js (keyword-based by default, no API call)
   ├─ CREATE_NEW       → runGamePipeline() [System-V1]
   ├─ SIMPLE_EDIT      → normal LLM loop with edit_file tool
   ├─ FUNCTIONALITY_FIX → normal LLM loop with edit_file + search tools
   ├─ READ_ONLY        → direct LLM answer (no tool access)
   └─ CONVERSATION     → normal chat
 ```
+Set `CLASSIFIER_USE_LLM=true` in .env to enable LLM-based classification (optional).
 
 **Pipeline Stages** (in gamePipeline.js → runGamePipeline):
 
@@ -234,9 +235,9 @@ requestClassifier.js (LLM-based routing)
    - Output: Complete self-contained HTML file
 
 3. **Tester** (gameTester.js)
-   - Dual validation: automated checks + LLM semantic review
-   - Automated: DOCTYPE, viewport, CSS/script links, home-link, closing </html>, canvas/controls
-   - LLM checks: logical consistency, performance, mobile UX issues
+   - Automated regex checks by default (fast, no API call)
+   - Checks: DOCTYPE, viewport, CSS/script links, home-link, closing </html>, canvas/controls
+   - LLM validation optional: pass `useLLMValidation: true` for semantic review
    - Produces quality score (0-100) and issues array
    - Failure → Builder retry with feedback; after 3 attempts → halt with score
 
@@ -828,6 +829,10 @@ This section documents key architectural trade-offs and known issues. See `ARCHI
 ### ✅ Resolved Issues (Dec 2025)
 - **Classifier fallback behavior**: Added read-only verb detection to `isEditRequest()` and improved `isContentRequest()` routing
 - **Mobile-first design enforcement**: All 76 HTML pages unified to noir terminal aesthetic with mandatory responsive breakpoints
+- **API call optimization**: Reduced API calls per content creation from 4-10 to 2-4:
+  * Request classifier now keyword-based by default (no API call)
+  * Tester uses automated regex checks only (LLM validation optional)
+  * System prompts condensed ~75% (llmClient.js: 635→288 lines)
 
 ### 🔄 In Progress / Working as Designed
 - **Discord ready event** (`clientReady`): Intentional for discord.js v15 forward compatibility; expected deprecation warning is normal
@@ -847,7 +852,6 @@ This section documents key architectural trade-offs and known issues. See `ARCHI
 
 **Low Priority** (nice-to-have):
 - GUI server CORS: Currently unrestricted (`origin: "*"`), should restrict to localhost
-- Global MODEL leak: requestClassifier.js reads free variable if available (use process.env instead)
 - Index sync improvements: `/sync-index --reflow` to re-balance collections by rules
 - Docs: Add `/where <url>` command to print local file path
 
