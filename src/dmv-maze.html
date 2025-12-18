@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMV Maze of Despair - Bot Sportello's Arcade</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            padding: 60px 10px 10px 10px;
+            overflow-x: auto;
+            overflow-y: auto;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            font-family: 'Courier Prime', monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 5px;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .game-header h1 {
+            color: #ff0000;
+            font-size: 1.5em;
+            margin: 0;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        .game-header .subtitle {
+            color: #00ffff;
+            font-size: 1em;
+            margin: 5px 0;
+        }
+
+        #gameCanvas {
+            display: block;
+            margin: 5px auto;
+            background: #1a1a1a;
+            border: 2px solid #7ec8e3;
+            box-shadow: 0 0 20px rgba(126, 200, 227, 0.3);
+            max-width: 100%;
+            height: auto;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .stats-panel {
+            background: #1a1a1a;
+            border: 2px solid #7ec8e3;
+            padding: 15px;
+            margin: 15px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #00ffff;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #ff0000;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .forms-collected {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin: 5px 0;
+        }
+
+        .form-badge {
+            background: #0a0a0a;
+            border: 2px solid #555;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #555;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+
+        .form-badge.collected {
+            border-color: #00ffff;
+            color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .message-box {
+            background: #1a1a1a;
+            border: 2px solid #ff0000;
+            padding: 8px;
+            margin: 5px 0;
+            text-align: center;
+            color: #ff0000;
+            min-height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+        }
+
+        .controls-info {
+            background: #1a1a1a;
+            border: 2px solid #7ec8e3;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .controls-info h3 {
+            color: #00ffff;
+            margin-top: 0;
+        }
+
+        .controls-info p {
+            margin: 5px 0;
+            color: #7ec8e3;
+        }
+
+        .mobile-controls-label {
+            display: none;
+            text-align: center;
+            color: #00ffff;
+            font-size: 0.85em;
+            margin: 5px 0 3px 0;
+        }
+
+        .mobile-controls {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            max-width: 160px;
+            margin: 5px auto 8px auto;
+            touch-action: manipulation;
+        }
+
+        .dpad-btn {
+            background: #1a1a1a;
+            border: 2px solid #7ec8e3;
+            color: #7ec8e3;
+            font-size: 24px;
+            min-height: 50px;
+            min-width: 50px;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dpad-btn:active:not(:disabled) {
+            background: #7ec8e3;
+            color: #0a0a0a;
+            transform: scale(0.95);
+        }
+
+        .dpad-btn:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .dpad-up {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .dpad-left {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .dpad-center {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        .dpad-right {
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        .dpad-down {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        .legend {
+            background: #1a1a1a;
+            border: 2px solid #7ec8e3;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .legend h3 {
+            color: #00ffff;
+            margin-top: 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            gap: 10px;
+        }
+
+        .legend-symbol {
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-controls-label {
+                display: block;
+            }
+
+            .mobile-controls {
+                display: grid;
+            }
+
+            .controls-info {
+                display: none;
+            }
+
+            .game-header h1 {
+                font-size: 1.5em;
+            }
+
+            .stats-panel {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .stat-label {
+                font-size: 0.8em;
+            }
+
+            .stat-value {
+                font-size: 1em;
+            }
+
+            .message-box {
+                font-size: 0.9em;
+                padding: 10px;
+                min-height: 50px;
+            }
+
+            #gameCanvas {
+                max-width: 95vw;
+                height: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 60px 5px 20px 5px;
+            }
+
+            .game-header h1 {
+                font-size: 1.3em;
+            }
+
+            .stats-panel {
+                padding: 8px;
+            }
+
+            .forms-collected {
+                gap: 5px;
+            }
+
+            .form-badge {
+                padding: 6px 10px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../index.html">← HOME</a>
+
+    <div class="game-container">
+        <div class="game-header">
+            <h1>DMV MAZE OF DESPAIR</h1>
+        </div>
+
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+        <div class="mobile-controls-label">Tap arrows to navigate →</div>
+        <div class="mobile-controls" id="mobileControls">
+            <button class="dpad-btn dpad-up" data-direction="up">▲</button>
+            <button class="dpad-btn dpad-left" data-direction="left">◄</button>
+            <button class="dpad-btn dpad-center" disabled>●</button>
+            <button class="dpad-btn dpad-right" data-direction="right">►</button>
+            <button class="dpad-btn dpad-down" data-direction="down">▼</button>
+        </div>
+
+        <div class="forms-collected">
+            <div class="form-badge" id="formA27">A-27</div>
+            <div class="form-badge" id="formB14">B-14</div>
+            <div class="form-badge" id="formC9">C-9</div>
+        </div>
+
+        <div class="message-box" id="messageBox">
+            Collect forms: A-27, B-14, C-9
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const GRID_SIZE = 20;
+        const CELL_SIZE = canvas.width / GRID_SIZE;
+        
+        const FORMS = ['A-27', 'B-14', 'C-9'];
+        
+        let player = { x: 1, y: 1 };
+        let maze = [];
+        let forms = [];
+        let npcs = [];
+        let exit = null;
+        let collectedForms = new Set();
+        let stats = {
+            formsCollected: 0,
+            npcsEncountered: 0,
+            restarts: 0,
+            startTime: Date.now()
+        };
+        
+        const messages = [
+            "Welcome to the DMV. Collect all required forms to proceed.",
+            "Please take a number. Your wait time is... indefinite.",
+            "Form collected! Only bureaucracy stands between you and freedom.",
+            "Wrong form! Back to the start. Please take a new number.",
+            "The maze has been reorganized for your inconvenience.",
+            "You've been here before. The walls remember.",
+            "An employee blocks your path. They look... hungry for paperwork.",
+            "Congratulations! You found the exit! Just kidding, it's another maze.",
+            "Time is an illusion. Waiting at the DMV is eternal.",
+            "You're making progress! (This is a lie to keep you motivated)",
+            "The fluorescent lights flicker. They've been on since 1987.",
+            "You smell stale coffee and broken dreams.",
+            "A distant phone rings. No one answers. No one ever answers.",
+            "The line never moves. The line IS the destination.",
+            "You've collected all forms! Surely this nightmare ends now... right?"
+        ];
+        
+        function generateMaze() {
+            maze = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(1));
+            
+            function carvePath(x, y) {
+                const directions = [
+                    [0, -2], [2, 0], [0, 2], [-2, 0]
+                ].sort(() => Math.random() - 0.5);
+                
+                maze[y][x] = 0;
+                
+                for (let [dx, dy] of directions) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    
+                    if (nx > 0 && nx < GRID_SIZE - 1 && ny > 0 && ny < GRID_SIZE - 1 && maze[ny][nx] === 1) {
+                        maze[y + dy/2][x + dx/2] = 0;
+                        carvePath(nx, ny);
+                    }
+                }
+            }
+            
+            carvePath(1, 1);
+            
+            for (let i = 0; i < GRID_SIZE * 2; i++) {
+                const x = Math.floor(Math.random() * (GRID_SIZE - 2)) + 1;
+                const y = Math.floor(Math.random() * (GRID_SIZE - 2)) + 1;
+                if (maze[y][x] === 1) {
+                    maze[y][x] = 0;
+                }
+            }
+        }
+        
+        function placeItems() {
+            forms = [];
+            npcs = [];
+            exit = null;
+            
+            const emptySpaces = [];
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    if (maze[y][x] === 0 && !(x === player.x && y === player.y)) {
+                        emptySpaces.push({x, y});
+                    }
+                }
+            }
+            
+            for (let i = 0; i < 3 && emptySpaces.length > 0; i++) {
+                const idx = Math.floor(Math.random() * emptySpaces.length);
+                const pos = emptySpaces.splice(idx, 1)[0];
+                forms.push({
+                    x: pos.x,
+                    y: pos.y,
+                    type: FORMS[i],
+                    collected: collectedForms.has(FORMS[i])
+                });
+            }
+            
+            const npcCount = 3 + Math.floor(stats.restarts / 2);
+            for (let i = 0; i < npcCount && emptySpaces.length > 0; i++) {
+                const idx = Math.floor(Math.random() * emptySpaces.length);
+                const pos = emptySpaces.splice(idx, 1)[0];
+                npcs.push({
+                    x: pos.x,
+                    y: pos.y,
+                    wantsForm: FORMS[Math.floor(Math.random() * FORMS.length)]
+                });
+            }
+            
+            if (collectedForms.size === 3 && emptySpaces.length > 0) {
+                const idx = Math.floor(Math.random() * emptySpaces.length);
+                const pos = emptySpaces[idx];
+                exit = {x: pos.x, y: pos.y};
+            }
+        }
+        
+        function init() {
+            player = { x: 1, y: 1 };
+            generateMaze();
+            placeItems();
+            showMessage(messages[0]);
+            draw();
+        }
+        
+        function resetGame(wrongForm = false) {
+            if (wrongForm) {
+                stats.restarts++;
+                collectedForms.clear();
+                updateFormBadges();
+                showMessage(messages[3] + " " + messages[4]);
+            }
+            player = { x: 1, y: 1 };
+            generateMaze();
+            placeItems();
+            updateStats();
+            draw();
+        }
+        
+        function showMessage(msg) {
+            document.getElementById('messageBox').textContent = msg;
+        }
+        
+        function updateStats() {
+            document.getElementById('formsCount').textContent = stats.formsCollected;
+            document.getElementById('npcsCount').textContent = stats.npcsEncountered;
+            document.getElementById('restartsCount').textContent = stats.restarts;
+            
+            const elapsed = Math.floor((Date.now() - stats.startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('timeCount').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        function updateFormBadges() {
+            FORMS.forEach(form => {
+                const badge = document.getElementById('form' + form.replace('-', ''));
+                if (collectedForms.has(form)) {
+                    badge.classList.add('collected');
+                } else {
+                    badge.classList.remove('collected');
+                }
+            });
+        }
+        
+        function draw() {
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    if (maze[y][x] === 1) {
+                        ctx.fillStyle = '#7ec8e3';
+                        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                        ctx.strokeStyle = '#0a0a0a';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    }
+                }
+            }
+            
+            forms.forEach(form => {
+                if (!form.collected) {
+                    ctx.fillStyle = '#ffff00';
+                    ctx.font = `${CELL_SIZE * 0.8}px "Courier Prime"`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('F', form.x * CELL_SIZE + CELL_SIZE/2, form.y * CELL_SIZE + CELL_SIZE/2);
+                }
+            });
+            
+            npcs.forEach(npc => {
+                ctx.fillStyle = '#ff0000';
+                ctx.font = `${CELL_SIZE * 0.8}px "Courier Prime"`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('N', npc.x * CELL_SIZE + CELL_SIZE/2, npc.y * CELL_SIZE + CELL_SIZE/2);
+            });
+            
+            if (exit) {
+                ctx.fillStyle = '#00ff00';
+                ctx.font = `${CELL_SIZE * 0.8}px "Courier Prime"`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('E', exit.x * CELL_SIZE + CELL_SIZE/2, exit.y * CELL_SIZE + CELL_SIZE/2);
+            }
+            
+            ctx.fillStyle = '#00ffff';
+            ctx.font = `${CELL_SIZE * 0.8}px "Courier Prime"`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('@', player.x * CELL_SIZE + CELL_SIZE/2, player.y * CELL_SIZE + CELL_SIZE/2);
+        }
+        
+        function move(dx, dy) {
+            const newX = player.x + dx;
+            const newY = player.y + dy;
+            
+            if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE && maze[newY][newX] === 0) {
+                player.x = newX;
+                player.y = newY;
+                
+                const form = forms.find(f => f.x === player.x && f.y === player.y && !f.collected);
+                if (form) {
+                    form.collected = true;
+                    collectedForms.add(form.type);
+                    stats.formsCollected++;
+                    updateFormBadges();
+                    updateStats();
+                    
+                    if (collectedForms.size === 3) {
+                        showMessage(messages[14]);
+                        placeItems();
+                    } else {
+                        showMessage(messages[2]);
+                    }
+                }
+                
+                const npc = npcs.find(n => n.x === player.x && n.y === player.y);
+                if (npc) {
+                    stats.npcsEncountered++;
+                    updateStats();
+                    
+                    if (collectedForms.has(npc.wantsForm)) {
+                        showMessage(`Employee: "Ah yes, form ${npc.wantsForm}. You may pass. For now."`);
+                        npcs = npcs.filter(n => n !== npc);
+                    } else if (collectedForms.size > 0) {
+                        const wrongForm = Array.from(collectedForms)[0];
+                        showMessage(`Employee: "Form ${npc.wantsForm}? You gave me ${wrongForm}! BACK TO THE START!"`);
+                        setTimeout(() => resetGame(true), 2000);
+                    } else {
+                        showMessage(`Employee: "I need form ${npc.wantsForm}. Come back when you have it."`);
+                    }
+                }
+                
+                if (exit && exit.x === player.x && exit.y === player.y) {
+                    showMessage(messages[7]);
+                    collectedForms.clear();
+                    updateFormBadges();
+                    setTimeout(() => resetGame(false), 2000);
+                }
+                
+                draw();
+            }
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    move(0, -1);
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    move(0, 1);
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    move(-1, 0);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    move(1, 0);
+                    break;
+            }
+        });
+        
+        const mobileControls = document.querySelectorAll('.dpad-btn');
+        mobileControls.forEach(btn => {
+            const direction = btn.dataset.direction;
+            if (direction) {
+                const handleInput = () => {
+                    switch(direction) {
+                        case 'up':
+                            move(0, -1);
+                            break;
+                        case 'down':
+                            move(0, 1);
+                            break;
+                        case 'left':
+                            move(-1, 0);
+                            break;
+                        case 'right':
+                            move(1, 0);
+                            break;
+                    }
+                };
+                
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleInput();
+                }, { passive: false });
+                
+                btn.addEventListener('click', handleInput);
+            }
+        });
+        
+        setInterval(updateStats, 1000);
+        
+        init();
+    </script>
+</body>
+</html>

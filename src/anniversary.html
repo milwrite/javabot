@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zach & Cen's Surreal Anniversary</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier Prime', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            overflow-x: hidden;
+            overflow-y: auto;
+            line-height: 1.8;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* CRT Scanline effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 0, 0, 0.15),
+                    rgba(0, 0, 0, 0.15) 1px,
+                    transparent 1px,
+                    transparent 2px
+                );
+            pointer-events: none;
+            z-index: 9998;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.97; }
+        }
+
+        /* Page-specific home-link overrides removed to use shared theme */
+
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            padding: 80px 20px 50px;
+            background: linear-gradient(135deg, #1a0000 0%, #0a0a0a 50%, #1a0000 100%);
+            border-bottom: 3px solid #ff0000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(255, 0, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(126, 200, 227, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            animation: dreamShift 8s ease-in-out infinite;
+        }
+
+        @keyframes dreamShift {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            color: #ff0000;
+            text-shadow: 0 0 30px rgba(255, 0, 0, 0.8), 0 0 60px rgba(126, 200, 227, 0.3);
+            position: relative;
+            z-index: 1;
+            letter-spacing: 3px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            color: #00ffff;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .glitch {
+            position: relative;
+            display: inline-block;
+            animation: titleGlitch 0.4s ease-in-out infinite;
+        }
+
+        @keyframes titleGlitch {
+            0% { transform: translate(0, 0); color: #ff0000; }
+            20% { transform: translate(-2px, 2px); color: #7ec8e3; }
+            40% { transform: translate(2px, -2px); color: #ff0000; }
+            60% { transform: translate(-1px, 1px); color: #00ffff; }
+            80% { transform: translate(1px, -1px); color: #ff0000; }
+            100% { transform: translate(0, 0); color: #ff0000; }
+        }
+
+        .content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 50px 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .section {
+            background: rgba(26, 0, 0, 0.4);
+            border: 2px solid #ff0000;
+            padding: 35px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(126, 200, 227, 0.1), transparent);
+            animation: shimmer 4s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .section h2 {
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            color: #00ffff;
+            position: relative;
+            z-index: 1;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .timeline {
+            position: relative;
+            z-index: 1;
+        }
+
+        .event {
+            margin-bottom: 25px;
+            padding: 20px;
+            padding-left: 30px;
+            position: relative;
+            background: rgba(126, 200, 227, 0.05);
+            border-left: 4px solid #7ec8e3;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .event:hover {
+            background: rgba(126, 200, 227, 0.15);
+            transform: translateX(10px);
+            box-shadow: 0 0 20px rgba(126, 200, 227, 0.3);
+        }
+
+        .event:nth-child(1) { animation-delay: 0.1s; }
+        .event:nth-child(2) { animation-delay: 0.2s; }
+        .event:nth-child(3) { animation-delay: 0.3s; }
+        .event:nth-child(4) { animation-delay: 0.4s; }
+        .event:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .event-time {
+            font-size: 0.9em;
+            color: #ff0000;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .event-text {
+            color: #7ec8e3;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .visualization {
+            position: relative;
+            z-index: 1;
+            height: 350px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 3px solid #7ec8e3;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(126, 200, 227, 0.3);
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #7ec8e3;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            border-color: #00ffff;
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #00ffff;
+            margin-bottom: 8px;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #7ec8e3;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .memories {
+            position: relative;
+            z-index: 1;
+        }
+
+        .memory-card {
+            background: rgba(126, 200, 227, 0.05);
+            border-left: 4px solid #7ec8e3;
+            padding: 18px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .memory-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(126, 200, 227, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .memory-card:hover::before {
+            left: 100%;
+        }
+
+        .memory-card:hover {
+            transform: translateX(10px);
+            background: rgba(126, 200, 227, 0.15);
+            box-shadow: 0 0 20px rgba(126, 200, 227, 0.3);
+        }
+
+        .memory-title {
+            font-weight: bold;
+            color: #00ffff;
+            margin-bottom: 8px;
+            font-size: 1em;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .memory-text {
+            color: #7ec8e3;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: rgba(255, 0, 0, 0.7);
+            color: #7ec8e3;
+            border: 2px solid #7ec8e3;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-height: 44px;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+        }
+
+        button:hover {
+            background: rgba(255, 0, 0, 1);
+            transform: skew(-3deg);
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.7);
+        }
+
+        button:active {
+            transform: skew(-3deg) scale(0.98);
+        }
+
+        .dream-text {
+            color: #7ec8e3;
+            font-style: italic;
+            margin-top: 20px;
+            padding: 18px;
+            background: rgba(126, 200, 227, 0.1);
+            border-left: 4px solid #7ec8e3;
+            font-size: 0.9em;
+            line-height: 1.8;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #1a0000 0%, #0a0a0a 100%);
+            border-top: 2px solid #ff0000;
+            color: #00ffff;
+            letter-spacing: 1px;
+        }
+
+        .footer p {
+            color: #00ffff;
+        }
+
+        /* TABLET MEDIA QUERY - 768px and below */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 70px;
+            }
+
+            .home-link {
+                padding: 9px 18px;
+                font-size: 0.75em;
+                letter-spacing: 1px;
+            }
+
+            .header {
+                padding: 50px 20px 40px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+                letter-spacing: 2px;
+            }
+
+            .header p {
+                font-size: 0.95em;
+            }
+
+            .content {
+                grid-template-columns: 1fr;
+                padding: 30px 15px;
+                gap: 25px;
+            }
+
+            .section {
+                padding: 25px;
+            }
+
+            .section h2 {
+                font-size: 1.3em;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .stat-box {
+                padding: 15px;
+            }
+
+            .stat-number {
+                font-size: 1.8em;
+            }
+
+            .visualization {
+                height: 280px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .controls button {
+                width: 100%;
+            }
+
+            .event {
+                padding: 15px;
+                padding-left: 25px;
+            }
+
+            .memory-card {
+                padding: 15px;
+            }
+        }
+
+        /* MOBILE MEDIA QUERY - 480px and below */
+        @media (max-width: 480px) {
+            html, body {
+                overflow-x: hidden;
+                width: 100%;
+            }
+
+            body {
+                padding-top: 60px;
+            }
+
+            .home-link {
+                top: 12px;
+                left: 12px;
+                padding: 8px 12px;
+                font-size: 0.6em;
+                letter-spacing: 0.5px;
+            }
+
+            .header {
+                padding: 35px 15px 30px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+                letter-spacing: 1px;
+            }
+
+            .header p {
+                font-size: 0.8em;
+                letter-spacing: 1px;
+            }
+
+            .content {
+                padding: 20px 10px;
+                gap: 20px;
+            }
+
+            .section {
+                padding: 18px;
+            }
+
+            .section h2 {
+                font-size: 1.1em;
+                margin-bottom: 18px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .stat-box {
+                padding: 12px;
+            }
+
+            .stat-number {
+                font-size: 1.5em;
+            }
+
+            .stat-label {
+                font-size: 0.7em;
+            }
+
+            .visualization {
+                height: 220px;
+            }
+
+            .event {
+                padding: 12px;
+                padding-left: 20px;
+                margin-bottom: 15px;
+            }
+
+            .event-time {
+                font-size: 0.8em;
+            }
+
+            .event-text {
+                font-size: 0.8em;
+            }
+
+            .memory-card {
+                padding: 12px;
+                margin-bottom: 10px;
+            }
+
+            .memory-title {
+                font-size: 0.9em;
+            }
+
+            .memory-text {
+                font-size: 0.8em;
+            }
+
+            .dream-text {
+                padding: 12px;
+                font-size: 0.8em;
+            }
+
+            button {
+                padding: 10px 15px;
+                font-size: 0.75em;
+            }
+
+            .footer {
+                padding: 25px 15px;
+                font-size: 0.85em;
+            }
+        }
+
+        /* Extra small devices - 360px and below */
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 1.3em;
+            }
+
+            .header p {
+                font-size: 0.75em;
+            }
+
+            .section h2 {
+                font-size: 1em;
+            }
+
+            .stat-number {
+                font-size: 1.3em;
+            }
+
+            .stat-label {
+                font-size: 0.65em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">← HOME</a>
+
+    <div class="container">
+        <div class="header">
+            <h1><span class="glitch" data-text="ZACH & CEN'S ANNIVERSARY">ZACH & CEN'S ANNIVERSARY</span></h1>
+            <p>A SURREAL CHRONICLE AT LOVE'S CLUB</p>
+        </div>
+
+        <div class="content">
+            <!-- Left Column -->
+            <div>
+                <div class="section">
+                    <h2>THE TIMELINE</h2>
+                    <div class="timeline">
+                        <div class="event">
+                            <div class="event-time">YEAR 0</div>
+                            <div class="event-text">Two souls collide in the velvet darkness of Love's Club</div>
+                        </div>
+                        <div class="event">
+                            <div class="event-time">MONTH 3</div>
+                            <div class="event-text">Reality bends. Time becomes malleable in their presence</div>
+                        </div>
+                        <div class="event">
+                            <div class="event-time">MONTH 6</div>
+                            <div class="event-text">The club's mirrors begin reflecting moments yet to come</div>
+                        </div>
+                        <div class="event">
+                            <div class="event-time">MONTH 9</div>
+                            <div class="event-text">Dreams and waking hours become indistinguishable</div>
+                        </div>
+                        <div class="event">
+                            <div class="event-time">YEAR 1</div>
+                            <div class="event-text">Infinite loops of joy. They exist in all moments simultaneously</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" style="margin-top: 30px;">
+                    <h2>STATISTICS</h2>
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="stat-number" id="stat-days">365</div>
+                            <div class="stat-label">Days Together</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="stat-moments">&infin;</div>
+                            <div class="stat-label">Perfect Moments</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="stat-love">100%</div>
+                            <div class="stat-label">Love Capacity</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="stat-magic">999</div>
+                            <div class="stat-label">Magic Level</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div>
+                <div class="section">
+                    <h2>REALITY VISUALIZER</h2>
+                    <div class="visualization">
+                        <div id="canvas-container"></div>
+                    </div>
+                    <div class="controls">
+                        <button onclick="startVisualization()">START REALITY</button>
+                        <button onclick="resetVisualization()">RESET</button>
+                        <button onclick="toggleAnimation()">PAUSE/PLAY</button>
+                    </div>
+                </div>
+
+                <div class="section" style="margin-top: 30px;">
+                    <h2>MEMORIES & DREAMS</h2>
+                    <div class="memories">
+                        <div class="memory-card">
+                            <div class="memory-title">The First Dance</div>
+                            <div class="memory-text">Spinning endlessly in the neon glow, time stopped mattering</div>
+                        </div>
+                        <div class="memory-card">
+                            <div class="memory-title">Midnight Conversations</div>
+                            <div class="memory-text">Words became unnecessary. They spoke in frequencies only they could hear</div>
+                        </div>
+                        <div class="memory-card">
+                            <div class="memory-title">The Dreamscape</div>
+                            <div class="memory-text">Where they meet when sleeping. A place of infinite possibility</div>
+                        </div>
+                        <div class="memory-card">
+                            <div class="memory-title">Tomorrow's Echo</div>
+                            <div class="memory-text">They remember events that haven't happened yet</div>
+                        </div>
+                    </div>
+                    <div class="dream-text">
+                        "In this surreal dimension of Love's Club, past and future merge. Zach & Cen exist in a perpetual moment of bliss, forever dancing between what was and what will be."
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>MAY YOUR LOVE CONTINUE TO BEND THE FABRIC OF REALITY</p>
+            <p style="margin-top: 12px; font-size: 0.9em; opacity: 0.7;">Love's Club | The Surreal Dimension | Forever & Always</p>
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer, particles = [];
+        let animationRunning = true;
+        let particleGroup;
+
+        function initThreeScene() {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+
+            camera = new THREE.PerspectiveCamera(
+                75,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.z = 5;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            particleGroup = new THREE.Group();
+            scene.add(particleGroup);
+
+            createParticles();
+            animate();
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function createParticles() {
+            particleGroup.clear();
+            particles = [];
+
+            const geometry = new THREE.BufferGeometry();
+            const positions = [];
+            const colors = [];
+
+            for (let i = 0; i < 150; i++) {
+                const x = (Math.random() - 0.5) * 10;
+                const y = (Math.random() - 0.5) * 10;
+                const z = (Math.random() - 0.5) * 10;
+
+                positions.push(x, y, z);
+
+                // Terminal green/cyan/red color scheme
+                const colorChoice = Math.random();
+                let color;
+                if (colorChoice < 0.5) {
+                    // Terminal green
+                    color = new THREE.Color(0x00ff41);
+                } else if (colorChoice < 0.8) {
+                    // Cyan
+                    color = new THREE.Color(0x00ffff);
+                } else {
+                    // Red
+                    color = new THREE.Color(0xff0000);
+                }
+                colors.push(color.r, color.g, color.b);
+
+                particles.push({
+                    x: x,
+                    y: y,
+                    z: z,
+                    vx: (Math.random() - 0.5) * 0.02,
+                    vy: (Math.random() - 0.5) * 0.02,
+                    vz: (Math.random() - 0.5) * 0.02
+                });
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.12,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.9,
+                sizeAttenuation: true
+            });
+
+            const points = new THREE.Points(geometry, material);
+            particleGroup.add(points);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (animationRunning && particleGroup.children.length > 0) {
+                const positionAttribute = particleGroup.children[0].geometry.getAttribute('position');
+                const positions = positionAttribute.array;
+
+                particles.forEach((p, i) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.z += p.vz;
+
+                    if (Math.abs(p.x) > 5) p.vx *= -1;
+                    if (Math.abs(p.y) > 5) p.vy *= -1;
+                    if (Math.abs(p.z) > 5) p.vz *= -1;
+
+                    positions[i * 3] = p.x;
+                    positions[i * 3 + 1] = p.y;
+                    positions[i * 3 + 2] = p.z;
+                });
+
+                positionAttribute.needsUpdate = true;
+                particleGroup.rotation.x += 0.0002;
+                particleGroup.rotation.y += 0.0003;
+            }
+
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            if (!container || !camera || !renderer) return;
+
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        function startVisualization() {
+            createParticles();
+            animationRunning = true;
+        }
+
+        function resetVisualization() {
+            createParticles();
+        }
+
+        function toggleAnimation() {
+            animationRunning = !animationRunning;
+        }
+
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            initThreeScene();
+
+            // Animate stats on load
+            animateStats();
+
+            // Glitch effect on header
+            const glitchElements = document.querySelectorAll('.glitch');
+            glitchElements.forEach(el => {
+                el.setAttribute('data-text', el.textContent);
+            });
+
+            // Memory card click effects
+            const memoryCards = document.querySelectorAll('.memory-card');
+            memoryCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    this.style.transform = 'rotateY(360deg)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 600);
+                });
+            });
+        });
+
+        function animateStats() {
+            const statBoxes = document.querySelectorAll('.stat-box');
+            statBoxes.forEach((box, index) => {
+                gsap.from(box, {
+                    duration: 0.6,
+                    delay: index * 0.1,
+                    opacity: 0,
+                    y: 20
+                });
+            });
+        }
+    </script>
+</body>
+</html>

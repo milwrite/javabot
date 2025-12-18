@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cen's Day Planner - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        body {
+            padding: 60px 20px 20px 20px;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 60px 5px 20px 5px;
+            }
+        }
+
+        .planner-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .planner-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #7ec8e3;
+            padding-bottom: 20px;
+        }
+
+        .planner-header h1 {
+            color: #00ffff;
+            font-size: 2em;
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .planner-header .subtitle {
+            color: #7ec8e3;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+            margin: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #7ec8e3, #00ffff);
+        }
+
+        .timeline-node {
+            position: relative;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: rgba(126, 200, 227, 0.05);
+            border: 1px solid #7ec8e3;
+            border-radius: 4px;
+            opacity: 0.4;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-node.active {
+            opacity: 1;
+            background: rgba(126, 200, 227, 0.1);
+            box-shadow: 0 0 15px rgba(126, 200, 227, 0.3);
+        }
+
+        .timeline-node.completed {
+            opacity: 1;
+            background: rgba(0, 255, 255, 0.05);
+            border-color: #00ffff;
+        }
+
+        .timeline-node::before {
+            content: '';
+            position: absolute;
+            left: -29px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: #0a0a0a;
+            border: 2px solid #7ec8e3;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-node.active::before {
+            background: #ff0000;
+            border-color: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+        .timeline-node.completed::before {
+            background: #00ffff;
+            border-color: #00ffff;
+        }
+
+        .node-time {
+            color: #ff0000;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .node-title {
+            color: #00ffff;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .node-description {
+            color: #7ec8e3;
+            font-size: 0.9em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .choice-container {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .choice-container.show {
+            display: flex;
+        }
+
+        .choice-btn {
+            background: #0a0a0a;
+            border: 2px solid #7ec8e3;
+            color: #7ec8e3;
+            padding: 12px 20px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            border-radius: 4px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+        }
+
+        .choice-btn:hover {
+            background: rgba(126, 200, 227, 0.2);
+            border-color: #00ffff;
+            color: #00ffff;
+            transform: translateX(5px);
+        }
+
+        .choice-btn:active {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff0000;
+        }
+
+        .choice-btn::before {
+            content: '→ ';
+            color: #ff0000;
+            margin-right: 5px;
+        }
+
+        .chosen-path {
+            color: #00ffff;
+            font-size: 0.9em;
+            font-style: italic;
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(0, 255, 255, 0.05);
+            border-left: 3px solid #00ffff;
+        }
+
+        .reset-btn {
+            background: #ff0000;
+            border: 2px solid #ff0000;
+            color: #0a0a0a;
+            padding: 12px 30px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 30px auto;
+            display: block;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+        }
+
+        .reset-btn:hover {
+            background: #0a0a0a;
+            color: #ff0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+
+        .path-summary {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(0, 255, 255, 0.05);
+            border: 2px solid #00ffff;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .path-summary.show {
+            display: block;
+        }
+
+        .path-summary h3 {
+            color: #00ffff;
+            margin: 0 0 15px 0;
+            text-align: center;
+        }
+
+        .path-summary ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .path-summary li {
+            color: #7ec8e3;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(126, 200, 227, 0.2);
+        }
+
+        .path-summary li:last-child {
+            border-bottom: none;
+        }
+
+        .path-summary li::before {
+            content: '✓ ';
+            color: #00ffff;
+            margin-right: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .planner-header h1 {
+                font-size: 1.5em;
+            }
+
+            .timeline {
+                padding-left: 30px;
+            }
+
+            .timeline::before {
+                left: 10px;
+            }
+
+            .timeline-node::before {
+                left: -24px;
+            }
+
+            .choice-btn {
+                font-size: 0.85em;
+                padding: 10px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .planner-container {
+                padding: 10px;
+            }
+
+            .planner-header h1 {
+                font-size: 1.3em;
+            }
+
+            .node-title {
+                font-size: 1em;
+            }
+
+            .node-description {
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../index.html">← HOME</a>
+
+    <div class="planner-container">
+        <div class="planner-header">
+            <h1>CEN'S DAY PLANNER</h1>
+            <div class="subtitle">Navigate the branching paths of a productive day</div>
+        </div>
+
+        <div class="timeline" id="timeline"></div>
+
+        <button class="reset-btn" id="resetBtn">RESTART DAY</button>
+
+        <div class="path-summary" id="pathSummary">
+            <h3>YOUR DAY'S JOURNEY</h3>
+            <ul id="summaryList"></ul>
+        </div>
+    </div>
+
+    <script>
+        const scheduleData = [
+            {
+                id: 'workout',
+                time: '06:00',
+                title: 'Morning Workout',
+                description: 'The alarm rings. Time to start the day with movement.',
+                isChoice: true,
+                choices: [
+                    { text: 'Hit the gym for strength training', next: 'gym' },
+                    { text: 'Go for a morning run in the park', next: 'run' },
+                    { text: 'Quick yoga session at home', next: 'yoga' }
+                ]
+            },
+            {
+                id: 'gym',
+                time: '07:30',
+                title: 'Post-Gym Recovery',
+                description: 'Solid workout completed. Muscles activated, endorphins flowing.',
+                isChoice: true,
+                choices: [
+                    { text: 'Protein shake and quick shower', next: 'breakfast-quick' },
+                    { text: 'Full breakfast at the diner', next: 'breakfast-diner' }
+                ]
+            },
+            {
+                id: 'run',
+                time: '07:30',
+                title: 'Runner\'s High',
+                description: 'Fresh air, clear mind. The city is just waking up.',
+                isChoice: true,
+                choices: [
+                    { text: 'Grab coffee and pastry on the way home', next: 'breakfast-quick' },
+                    { text: 'Stop at favorite breakfast spot', next: 'breakfast-diner' }
+                ]
+            },
+            {
+                id: 'yoga',
+                time: '07:00',
+                title: 'Centered and Calm',
+                description: 'Mind-body connection established. Ready for the day.',
+                isChoice: true,
+                choices: [
+                    { text: 'Light breakfast at home', next: 'breakfast-quick' },
+                    { text: 'Treat yourself to brunch', next: 'breakfast-diner' }
+                ]
+            },
+            {
+                id: 'breakfast-quick',
+                time: '08:00',
+                title: 'Quick Fuel',
+                description: 'Efficient morning routine. Time to tackle the day.',
+                isChoice: true,
+                choices: [
+                    { text: 'Head to the office early', next: 'work-office' },
+                    { text: 'Work from home today', next: 'work-home' }
+                ]
+            },
+            {
+                id: 'breakfast-diner',
+                time: '08:30',
+                title: 'Leisurely Morning',
+                description: 'Good food, good vibes. The day can wait a few more minutes.',
+                isChoice: true,
+                choices: [
+                    { text: 'Rush to the office', next: 'work-office' },
+                    { text: 'Remote work setup', next: 'work-home' }
+                ]
+            },
+            {
+                id: 'work-office',
+                time: '09:00',
+                title: 'Office Environment',
+                description: 'Desk setup, coffee brewing, colleagues chatting.',
+                isChoice: true,
+                choices: [
+                    { text: 'Deep focus on priority project', next: 'work-focus' },
+                    { text: 'Team collaboration session', next: 'work-collab' }
+                ]
+            },
+            {
+                id: 'work-home',
+                time: '09:00',
+                title: 'Remote Setup',
+                description: 'Home office advantage: comfort and concentration.',
+                isChoice: true,
+                choices: [
+                    { text: 'Tackle the hardest task first', next: 'work-focus' },
+                    { text: 'Schedule video calls with team', next: 'work-collab' }
+                ]
+            },
+            {
+                id: 'work-focus',
+                time: '12:30',
+                title: 'Deep Work Complete',
+                description: 'Significant progress made. Brain needs a break.',
+                isChoice: true,
+                choices: [
+                    { text: 'Quick lunch at desk, keep momentum', next: 'lunch-desk' },
+                    { text: 'Proper lunch break away from work', next: 'lunch-break' }
+                ]
+            },
+            {
+                id: 'work-collab',
+                time: '12:30',
+                title: 'Team Synergy',
+                description: 'Ideas flowing, connections made. Social energy high.',
+                isChoice: true,
+                choices: [
+                    { text: 'Lunch with colleagues', next: 'lunch-social' },
+                    { text: 'Solo recharge time', next: 'lunch-break' }
+                ]
+            },
+            {
+                id: 'lunch-desk',
+                time: '14:00',
+                title: 'Afternoon Push',
+                description: 'Momentum maintained. Time for administrative tasks.',
+                isChoice: true,
+                choices: [
+                    { text: 'Power through emails and meetings', next: 'afternoon-admin' },
+                    { text: 'Creative project work', next: 'afternoon-creative' }
+                ]
+            },
+            {
+                id: 'lunch-break',
+                time: '14:00',
+                title: 'Refreshed and Ready',
+                description: 'Mental reset complete. Afternoon awaits.',
+                isChoice: true,
+                choices: [
+                    { text: 'Handle urgent communications', next: 'afternoon-admin' },
+                    { text: 'Dive into creative work', next: 'afternoon-creative' }
+                ]
+            },
+            {
+                id: 'lunch-social',
+                time: '14:00',
+                title: 'Energized by Connection',
+                description: 'Good conversation, good food. Back to business.',
+                isChoice: true,
+                choices: [
+                    { text: 'Catch up on messages', next: 'afternoon-admin' },
+                    { text: 'Brainstorm new ideas', next: 'afternoon-creative' }
+                ]
+            },
+            {
+                id: 'afternoon-admin',
+                time: '17:00',
+                title: 'Inbox Zero',
+                description: 'Communications handled. Systems organized.',
+                isChoice: true,
+                choices: [
+                    { text: 'Wrap up and head home', next: 'evening-home' },
+                    { text: 'Extra hour on passion project', next: 'evening-work' }
+                ]
+            },
+            {
+                id: 'afternoon-creative',
+                time: '17:00',
+                title: 'Creative Flow',
+                description: 'Made something new. Satisfaction earned.',
+                isChoice: true,
+                choices: [
+                    { text: 'Call it a productive day', next: 'evening-home' },
+                    { text: 'Keep the momentum going', next: 'evening-work' }
+                ]
+            },
+            {
+                id: 'evening-home',
+                time: '18:00',
+                title: 'Evening Transition',
+                description: 'Work mode off. Personal time activated.',
+                isChoice: true,
+                choices: [
+                    { text: 'Cook a healthy dinner', next: 'dinner-cook' },
+                    { text: 'Meet friends for dinner', next: 'dinner-social' },
+                    { text: 'Order in and relax', next: 'dinner-easy' }
+                ]
+            },
+            {
+                id: 'evening-work',
+                time: '18:30',
+                title: 'Extra Mile',
+                description: 'Dedication pays off. Progress made on passion project.',
+                isChoice: true,
+                choices: [
+                    { text: 'Quick meal prep at home', next: 'dinner-cook' },
+                    { text: 'Grab takeout on the way', next: 'dinner-easy' }
+                ]
+            },
+            {
+                id: 'dinner-cook',
+                time: '20:00',
+                title: 'Home Chef',
+                description: 'Nourishment prepared with care. Kitchen therapy complete.',
+                isChoice: true,
+                choices: [
+                    { text: 'Evening reading session', next: 'night-read' },
+                    { text: 'Watch a movie or show', next: 'night-screen' },
+                    { text: 'Early to bed', next: 'night-sleep' }
+                ]
+            },
+            {
+                id: 'dinner-social',
+                time: '20:30',
+                title: 'Good Company',
+                description: 'Laughter shared, stories told. Connection matters.',
+                isChoice: true,
+                choices: [
+                    { text: 'Continue the evening out', next: 'night-social' },
+                    { text: 'Head home for quiet time', next: 'night-read' }
+                ]
+            },
+            {
+                id: 'dinner-easy',
+                time: '19:30',
+                title: 'Convenience Win',
+                description: 'Sometimes easy is exactly right. No judgment.',
+                isChoice: true,
+                choices: [
+                    { text: 'Catch up on reading', next: 'night-read' },
+                    { text: 'Entertainment mode', next: 'night-screen' },
+                    { text: 'Wind down early', next: 'night-sleep' }
+                ]
+            },
+            {
+                id: 'night-read',
+                time: '22:00',
+                title: 'Mind Expansion',
+                description: 'Pages turned, knowledge gained. A day well spent.',
+                isChoice: false
+            },
+            {
+                id: 'night-screen',
+                time: '22:30',
+                title: 'Entertainment Unwind',
+                description: 'Stories consumed, brain relaxed. Tomorrow awaits.',
+                isChoice: false
+            },
+            {
+                id: 'night-social',
+                time: '23:00',
+                title: 'Night Owl',
+                description: 'Energy high, conversation flowing. Sleep when you\'re tired.',
+                isChoice: false
+            },
+            {
+                id: 'night-sleep',
+                time: '21:30',
+                title: 'Early Rest',
+                description: 'Prioritizing recovery. Tomorrow starts fresh.',
+                isChoice: false
+            }
+        ];
+
+        let currentPath = [];
+        let currentNodeId = 'workout';
+
+        function saveProgress() {
+            localStorage.setItem('cenSchedulePath', JSON.stringify(currentPath));
+            localStorage.setItem('cenScheduleCurrent', currentNodeId);
+        }
+
+        function loadProgress() {
+            const savedPath = localStorage.getItem('cenSchedulePath');
+            const savedCurrent = localStorage.getItem('cenScheduleCurrent');
+            
+            if (savedPath && savedCurrent) {
+                currentPath = JSON.parse(savedPath);
+                currentNodeId = savedCurrent;
+                return true;
+            }
+            return false;
+        }
+
+        function renderTimeline() {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+
+            const renderedNodes = new Set();
+            const nodesToRender = [];
+
+            nodesToRender.push(scheduleData.find(n => n.id === 'workout'));
+
+            currentPath.forEach(pathItem => {
+                const node = scheduleData.find(n => n.id === pathItem.nodeId);
+                if (node && !renderedNodes.has(node.id)) {
+                    nodesToRender.push(node);
+                }
+            });
+
+            const currentNode = scheduleData.find(n => n.id === currentNodeId);
+            if (currentNode && !renderedNodes.has(currentNode.id)) {
+                nodesToRender.push(currentNode);
+            }
+
+            nodesToRender.forEach((node, index) => {
+                if (renderedNodes.has(node.id)) return;
+                renderedNodes.add(node.id);
+
+                const nodeEl = document.createElement('div');
+                nodeEl.className = 'timeline-node';
+                nodeEl.id = `node-${node.id}`;
+
+                const isCompleted = currentPath.some(p => p.nodeId === node.id);
+                const isActive = node.id === currentNodeId;
+
+                if (isCompleted) nodeEl.classList.add('completed');
+                if (isActive) nodeEl.classList.add('active');
+
+                let html = `
+                    <div class="node-time">${node.time}</div>
+                    <div class="node-title">${node.title}</div>
+                    <div class="node-description">${node.description}</div>
+                `;
+
+                if (node.isChoice && isActive) {
+                    html += '<div class="choice-container show">';
+                    node.choices.forEach(choice => {
+                        html += `<button class="choice-btn" data-next="${choice.next}">${choice.text}</button>`;
+                    });
+                    html += '</div>';
+                } else if (isCompleted) {
+                    const pathItem = currentPath.find(p => p.nodeId === node.id);
+                    if (pathItem) {
+                        html += `<div class="chosen-path">Chose: ${pathItem.choiceText}</div>`;
+                    }
+                }
+
+                nodeEl.innerHTML = html;
+                timeline.appendChild(nodeEl);
+
+                if (isActive && node.isChoice) {
+                    nodeEl.querySelectorAll('.choice-btn').forEach(btn => {
+                        btn.addEventListener('click', () => handleChoice(node, btn.dataset.next, btn.textContent));
+                    });
+                }
+            });
+
+            if (!currentNode.isChoice) {
+                showSummary();
+            }
+        }
+
+        function handleChoice(node, nextId, choiceText) {
+            currentPath.push({
+                nodeId: node.id,
+                time: node.time,
+                title: node.title,
+                choiceText: choiceText
+            });
+
+            currentNodeId = nextId;
+            saveProgress();
+            renderTimeline();
+
+            setTimeout(() => {
+                const nextNode = document.getElementById(`node-${nextId}`);
+                if (nextNode) {
+                    nextNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        }
+
+        function showSummary() {
+            const summary = document.getElementById('pathSummary');
+            const summaryList = document.getElementById('summaryList');
+            
+            summaryList.innerHTML = '';
+            currentPath.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.time} - ${item.title}: ${item.choiceText}`;
+                summaryList.appendChild(li);
+            });
+
+            const finalNode = scheduleData.find(n => n.id === currentNodeId);
+            if (finalNode) {
+                const li = document.createElement('li');
+                li.textContent = `${finalNode.time} - ${finalNode.title}`;
+                summaryList.appendChild(li);
+            }
+
+            summary.classList.add('show');
+        }
+
+        function resetPlanner() {
+            if (confirm('Start a new day? Your current path will be lost.')) {
+                currentPath = [];
+                currentNodeId = 'workout';
+                localStorage.removeItem('cenSchedulePath');
+                localStorage.removeItem('cenScheduleCurrent');
+                
+                const summary = document.getElementById('pathSummary');
+                summary.classList.remove('show');
+                
+                renderTimeline();
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        document.getElementById('resetBtn').addEventListener('click', resetPlanner);
+
+        loadProgress();
+        renderTimeline();
+    </script>
+</body>
+</html>

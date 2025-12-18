@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bills QB Game</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            padding-top: 80px;
+            background: #0a0a0a;
+            overflow-x: hidden;
+            overflow-y: auto;
+            touch-action: pan-y;
+        }
+
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            max-width: 100%;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        canvas {
+            border: 3px solid #00ffff;
+            background: linear-gradient(to bottom, #1a3a52 0%, #0a1f2e 100%);
+            max-width: 100%;
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            box-sizing: border-box;
+            touch-action: none;
+        }
+
+        .touch-hint {
+            display: none;
+            color: #ffb81c;
+            text-align: center;
+            font-size: 14px;
+            margin-top: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .control-panel {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(26, 0, 0, 0.4);
+            border: 2px solid #7ec8e3;
+            border-radius: 8px;
+            padding: 20px;
+            display: grid;
+            gap: 15px;
+            box-sizing: border-box;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slider-group label {
+            color: #00ffff;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: #1a1a1a;
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #ff0000;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider-group input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: #ff0000;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            color: #7ec8e3;
+            font-size: 12px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: 2px solid #7ec8e3;
+            background: #1a1a1a;
+            color: #7ec8e3;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            min-height: 50px;
+            touch-action: manipulation;
+        }
+
+        .btn:hover, .btn:active {
+            background: #7ec8e3;
+            color: #0a0a0a;
+        }
+
+        .btn-primary {
+            background: #ff0000;
+            border-color: #ff0000;
+            color: #fff;
+        }
+
+        .btn-primary:hover, .btn-primary:active {
+            background: #cc0000;
+        }
+
+        .stats {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(26, 0, 0, 0.4);
+            border: 2px solid #7ec8e3;
+            border-radius: 8px;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            box-sizing: border-box;
+        }
+
+        .stat-box {
+            background: #1a1a1a;
+            border: 1px solid #00ffff;
+            border-radius: 5px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #00ffff;
+            font-size: 10px;
+            margin-bottom: 3px;
+        }
+
+        .stat-value {
+            color: #7ec8e3;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* Mobile touch controls - simplified big buttons */
+        .mobile-controls {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 10px;
+        }
+
+        .throw-button {
+            width: 100%;
+            min-height: 80px;
+            background: linear-gradient(180deg, #ff0000 0%, #cc0000 100%);
+            border: 3px solid #ffb81c;
+            color: white;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 28px;
+            font-family: 'Courier Prime', monospace;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+        }
+
+        .throw-button:active {
+            background: linear-gradient(180deg, #cc0000 0%, #990000 100%);
+            transform: scale(0.98);
+        }
+
+        .mobile-btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .mobile-btn {
+            min-height: 60px;
+            padding: 15px;
+            background: #003366;
+            border: 2px solid #7ec8e3;
+            color: #7ec8e3;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: 'Courier Prime', monospace;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mobile-btn:active {
+            background: #7ec8e3;
+            color: #003366;
+        }
+
+        .mobile-btn.reset-btn {
+            background: #1a1a1a;
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .mobile-btn.reset-btn:active {
+            background: #ff0000;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 70px;
+            }
+
+            .game-wrapper {
+                padding: 10px;
+                gap: 12px;
+            }
+
+            .touch-hint {
+                display: block;
+            }
+
+            .mobile-controls {
+                display: flex;
+            }
+
+            .control-panel {
+                display: none;
+            }
+
+            canvas {
+                max-width: 100%;
+                width: 100%;
+                height: auto;
+            }
+
+            .stats {
+                width: 100%;
+                max-width: 100%;
+                padding: 10px;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 5px;
+            }
+
+            .stat-box {
+                padding: 6px;
+            }
+
+            .stat-label {
+                font-size: 9px;
+            }
+
+            .stat-value {
+                font-size: 14px;
+            }
+
+            h1 {
+                font-size: 1.4em;
+                margin-bottom: 5px;
+            }
+
+            .subtitle {
+                font-size: 12px;
+                margin-bottom: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding-top: 60px;
+            }
+
+            h1 {
+                font-size: 1.2em;
+            }
+
+            .throw-button {
+                min-height: 70px;
+                font-size: 24px;
+            }
+
+            .mobile-btn {
+                min-height: 50px;
+                font-size: 12px;
+            }
+        }
+
+        /* Page-specific home-link overrides removed to use shared theme */
+
+        h1 {
+            color: #7ec8e3;
+            text-align: center;
+            margin-bottom: 10px;
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .subtitle {
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 15px;
+            font-family: 'Courier Prime', monospace;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">← HOME</a>
+
+    <div class="game-wrapper">
+        <h1>BUFFALO BILLS QB GAME</h1>
+        <p class="subtitle">Drag to aim, tap THROW!</p>
+
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="600" height="400"></canvas>
+        </div>
+
+        <p class="touch-hint">👆 Drag on field to aim • Tap THROW to pass</p>
+
+        <div class="mobile-controls" id="mobileControls">
+            <button class="throw-button" id="throwBtn">🏈 THROW</button>
+            <div class="mobile-btn-row">
+                <button class="mobile-btn" id="angleUpBtn">↑ ANGLE UP</button>
+                <button class="mobile-btn" id="powerUpBtn">↑ POWER UP</button>
+            </div>
+            <div class="mobile-btn-row">
+                <button class="mobile-btn" id="angleDownBtn">↓ ANGLE DOWN</button>
+                <button class="mobile-btn" id="powerDownBtn">↓ POWER DOWN</button>
+            </div>
+            <button class="mobile-btn reset-btn" id="resetBtn">↺ RESET GAME</button>
+        </div>
+
+        <div class="control-panel">
+            <div class="slider-group">
+                <label for="angleSlider">THROW ANGLE</label>
+                <input type="range" id="angleSlider" min="0" max="90" value="45">
+                <span class="slider-value" id="angleValue">45°</span>
+            </div>
+            <div class="slider-group">
+                <label for="powerSlider">THROW POWER</label>
+                <input type="range" id="powerSlider" min="1" max="100" value="50">
+                <span class="slider-value" id="powerValue">50%</span>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" id="throwButtonDesktop">🏈 THROW</button>
+                <button class="btn" id="resetButton">↺ RESET</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">SCORE</div>
+                <div class="stat-value" id="scoreDisplay">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">COMP</div>
+                <div class="stat-value" id="completionDisplay">0/0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">ACC</div>
+                <div class="stat-value" id="accuracyDisplay">0%</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">ATT</div>
+                <div class="stat-value" id="throwCountDisplay">0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // QB position (used for aiming calculations)
+        const QB_X = 50;
+        const QB_Y_OFFSET = 50; // from bottom
+
+        // Game state
+        let game = {
+            angle: 45,
+            power: 50,
+            score: 0,
+            completions: 0,
+            throwCount: 0,
+            ball: null,
+            receivers: [],
+            gameActive: true,
+            isAiming: false,
+            aimTarget: { x: 0, y: 0 }
+        };
+
+        // Get canvas coordinates from touch/mouse event
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        // Calculate angle and power from QB to target point
+        function calculateAimFromTarget(targetX, targetY) {
+            const qbX = QB_X;
+            const qbY = canvas.height - QB_Y_OFFSET;
+
+            const dx = targetX - qbX;
+            const dy = qbY - targetY; // Inverted because canvas Y is flipped
+
+            // Calculate angle (0-90 degrees, upward throw)
+            let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            angle = Math.max(5, Math.min(85, angle)); // Clamp to reasonable throwing angles
+
+            // Calculate power based on distance
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxDistance = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height);
+            let power = Math.round((distance / maxDistance) * 150); // Scale for good feel
+            power = Math.max(20, Math.min(100, power)); // Clamp power
+
+            return { angle: Math.round(angle), power };
+        }
+
+        // Touch/mouse handlers for canvas aiming
+        function handleAimStart(e) {
+            e.preventDefault();
+            game.isAiming = true;
+            const coords = getCanvasCoords(e);
+            game.aimTarget = coords;
+            const aim = calculateAimFromTarget(coords.x, coords.y);
+            game.angle = aim.angle;
+            game.power = aim.power;
+            updateDisplay();
+            updateSliders();
+        }
+
+        function handleAimMove(e) {
+            if (!game.isAiming) return;
+            e.preventDefault();
+            const coords = getCanvasCoords(e);
+            game.aimTarget = coords;
+            const aim = calculateAimFromTarget(coords.x, coords.y);
+            game.angle = aim.angle;
+            game.power = aim.power;
+            updateDisplay();
+            updateSliders();
+        }
+
+        function handleAimEnd(e) {
+            game.isAiming = false;
+        }
+
+        // Canvas touch events
+        canvas.addEventListener('touchstart', handleAimStart, { passive: false });
+        canvas.addEventListener('touchmove', handleAimMove, { passive: false });
+        canvas.addEventListener('touchend', handleAimEnd);
+        canvas.addEventListener('touchcancel', handleAimEnd);
+
+        // Canvas mouse events (for desktop testing)
+        canvas.addEventListener('mousedown', handleAimStart);
+        canvas.addEventListener('mousemove', handleAimMove);
+        canvas.addEventListener('mouseup', handleAimEnd);
+        canvas.addEventListener('mouseleave', handleAimEnd);
+
+        // Ball object
+        class Ball {
+            constructor(x, y, angle, power) {
+                this.x = x;
+                this.y = y;
+                // Increased velocity multiplier for better reach to receivers
+                this.vx = Math.cos(angle * Math.PI / 180) * power * 0.7;
+                this.vy = -Math.sin(angle * Math.PI / 180) * power * 0.7;
+                this.radius = 6;
+                this.active = true;
+                this.trail = [];
+            }
+
+            update() {
+                // Store trail position
+                this.trail.push({ x: this.x, y: this.y });
+                if (this.trail.length > 10) this.trail.shift();
+
+                this.vy += 0.4; // gravity
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Boundary check
+                if (this.y > canvas.height || this.x < 0 || this.x > canvas.width) {
+                    this.active = false;
+                }
+            }
+
+            draw() {
+                // Draw trail
+                for (let i = 0; i < this.trail.length; i++) {
+                    const alpha = (i / this.trail.length) * 0.5;
+                    ctx.fillStyle = `rgba(255, 184, 28, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(this.trail[i].x, this.trail[i].y, this.radius * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Draw ball
+                ctx.fillStyle = '#ffb81c';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Ball laces
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(this.x - 2, this.y - 2);
+                ctx.lineTo(this.x + 2, this.y + 2);
+                ctx.stroke();
+            }
+
+            checkCollision(receiver) {
+                const dx = this.x - receiver.x;
+                const dy = this.y - receiver.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < this.radius + receiver.radius;
+            }
+        }
+
+        // Receiver object
+        class Receiver {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 18;
+                this.vx = (Math.random() - 0.5) * 2.5;
+                this.caught = false;
+            }
+
+            update() {
+                this.x += this.vx;
+                if (this.x - this.radius < 100 || this.x + this.radius > canvas.width - 20) {
+                    this.vx *= -1;
+                }
+            }
+
+            draw() {
+                // Outer glow for visibility
+                if (!this.caught) {
+                    ctx.shadowColor = '#00ffff';
+                    ctx.shadowBlur = 10;
+                }
+
+                if (this.caught) {
+                    ctx.fillStyle = '#00ff00';
+                } else {
+                    ctx.fillStyle = '#003366';
+                }
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+
+                ctx.strokeStyle = '#ffb81c';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Jersey number
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 12px Courier Prime, monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('WR', this.x, this.y);
+            }
+        }
+
+        // Initialize receivers
+        function initReceivers() {
+            game.receivers = [
+                new Receiver(200, 80),
+                new Receiver(350, 100),
+                new Receiver(500, 70)
+            ];
+        }
+
+        // Update slider values to match game state
+        function updateSliders() {
+            document.getElementById('angleSlider').value = game.angle;
+            document.getElementById('powerSlider').value = game.power;
+        }
+
+        // Update display values
+        function updateDisplay() {
+            document.getElementById('angleValue').textContent = game.angle + '°';
+            document.getElementById('powerValue').textContent = game.power + '%';
+            document.getElementById('scoreDisplay').textContent = game.score;
+            document.getElementById('throwCountDisplay').textContent = game.throwCount;
+
+            const accuracy = game.throwCount > 0 ? Math.round((game.completions / game.throwCount) * 100) : 0;
+            document.getElementById('accuracyDisplay').textContent = accuracy + '%';
+            document.getElementById('completionDisplay').textContent = game.completions + '/' + game.throwCount;
+        }
+
+        // Throw function
+        function throwBall() {
+            if (game.ball === null || !game.ball.active) {
+                game.ball = new Ball(QB_X, canvas.height - QB_Y_OFFSET, game.angle, game.power);
+                game.throwCount++;
+                updateDisplay();
+            }
+        }
+
+        // Reset game
+        function resetGame() {
+            game.score = 0;
+            game.completions = 0;
+            game.throwCount = 0;
+            game.ball = null;
+            initReceivers();
+            updateDisplay();
+        }
+
+        // Event listeners for sliders
+        document.getElementById('angleSlider').addEventListener('input', (e) => {
+            game.angle = parseInt(e.target.value);
+            updateDisplay();
+        });
+
+        document.getElementById('powerSlider').addEventListener('input', (e) => {
+            game.power = parseInt(e.target.value);
+            updateDisplay();
+        });
+
+        // Desktop buttons
+        document.getElementById('throwButtonDesktop').addEventListener('click', throwBall);
+        document.getElementById('resetButton').addEventListener('click', resetGame);
+
+        // Mobile controls - with both touch and click for reliability
+        function addMobileHandler(id, handler) {
+            const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handler();
+            }, { passive: false });
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                handler();
+            });
+        }
+
+        addMobileHandler('angleUpBtn', () => {
+            game.angle = Math.min(85, game.angle + 5);
+            updateSliders();
+            updateDisplay();
+        });
+
+        addMobileHandler('angleDownBtn', () => {
+            game.angle = Math.max(5, game.angle - 5);
+            updateSliders();
+            updateDisplay();
+        });
+
+        addMobileHandler('powerUpBtn', () => {
+            game.power = Math.min(100, game.power + 10);
+            updateSliders();
+            updateDisplay();
+        });
+
+        addMobileHandler('powerDownBtn', () => {
+            game.power = Math.max(20, game.power - 10);
+            updateSliders();
+            updateDisplay();
+        });
+
+        addMobileHandler('throwBtn', throwBall);
+        addMobileHandler('resetBtn', resetGame);
+
+        // Draw aim trajectory preview
+        function drawAimPreview() {
+            if (game.ball && game.ball.active) return; // Don't show while ball in flight
+
+            const qbX = QB_X;
+            const qbY = canvas.height - QB_Y_OFFSET;
+
+            // Draw aim line
+            ctx.strokeStyle = 'rgba(255, 184, 28, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 8]);
+
+            const aimLength = game.power * 2;
+            const endX = qbX + Math.cos(game.angle * Math.PI / 180) * aimLength;
+            const endY = qbY - Math.sin(game.angle * Math.PI / 180) * aimLength;
+
+            ctx.beginPath();
+            ctx.moveTo(qbX, qbY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw power indicator arc
+            ctx.strokeStyle = `rgba(255, ${Math.round(255 - game.power * 2)}, 0, 0.8)`;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(qbX, qbY, 30, -Math.PI/2, -Math.PI/2 + (game.power / 100) * Math.PI * 2, false);
+            ctx.stroke();
+
+            // Draw aim target crosshair if actively aiming
+            if (game.isAiming) {
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 2;
+                const size = 15;
+                ctx.beginPath();
+                ctx.moveTo(game.aimTarget.x - size, game.aimTarget.y);
+                ctx.lineTo(game.aimTarget.x + size, game.aimTarget.y);
+                ctx.moveTo(game.aimTarget.x, game.aimTarget.y - size);
+                ctx.lineTo(game.aimTarget.x, game.aimTarget.y + size);
+                ctx.stroke();
+
+                // Circle around crosshair
+                ctx.beginPath();
+                ctx.arc(game.aimTarget.x, game.aimTarget.y, size, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+
+        // Game loop
+        function gameLoop() {
+            // Clear canvas
+            ctx.fillStyle = '#0a1f2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw field lines
+            ctx.strokeStyle = 'rgba(126, 200, 227, 0.3)';
+            ctx.lineWidth = 1;
+            for (let i = 1; i < 6; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * 100, 0);
+                ctx.lineTo(i * 100, canvas.height);
+                ctx.stroke();
+            }
+
+            // Line of scrimmage
+            ctx.strokeStyle = '#7ec8e3';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - 100);
+            ctx.lineTo(canvas.width, canvas.height - 100);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw QB
+            ctx.fillStyle = '#003366';
+            ctx.fillRect(QB_X - 15, canvas.height - QB_Y_OFFSET - 10, 30, 40);
+            ctx.fillStyle = '#ffb81c';
+            ctx.beginPath();
+            ctx.arc(QB_X, canvas.height - QB_Y_OFFSET - 20, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // QB label
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 10px Courier Prime, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('QB', QB_X, canvas.height - QB_Y_OFFSET + 15);
+
+            // Draw aim preview
+            drawAimPreview();
+
+            // Update and draw receivers
+            for (let receiver of game.receivers) {
+                receiver.update();
+                receiver.draw();
+            }
+
+            // Update and draw ball
+            if (game.ball && game.ball.active) {
+                game.ball.update();
+                game.ball.draw();
+
+                // Check collisions
+                for (let receiver of game.receivers) {
+                    if (game.ball.checkCollision(receiver) && !receiver.caught) {
+                        receiver.caught = true;
+                        game.ball.active = false;
+                        game.score += 7;
+                        game.completions++;
+                        updateDisplay();
+
+                        // Check if all receivers caught - spawn new ones
+                        if (game.receivers.every(r => r.caught)) {
+                            setTimeout(() => {
+                                initReceivers();
+                            }, 1000);
+                        }
+                    }
+                }
+            }
+
+            // Draw angle/power info on canvas for mobile
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(canvas.width - 100, 10, 90, 50);
+            ctx.fillStyle = '#00ffff';
+            ctx.font = '12px Courier Prime, monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(`ANG: ${game.angle}°`, canvas.width - 95, 30);
+            ctx.fillText(`PWR: ${game.power}%`, canvas.width - 95, 48);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize
+        initReceivers();
+        updateDisplay();
+        gameLoop();
+    </script>
+</body>
+</html>

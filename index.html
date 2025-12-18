@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Sportello's Arcade</title>
+    <link rel="preload" href="default.jpg" as="image">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Courier Prime', monospace;
+            background: radial-gradient(circle at top, rgba(0,100,150,0.08), transparent 60%), #050505;
+            color: #7ec8e3;
+            padding: 40px 20px 120px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .stars {
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: transparent;
+        }
+        .star {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 999px;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+        .star.blue { background: rgba(126, 200, 227, 0.8); }
+        .star.cyan { background: rgba(0, 255, 255, 0.8); }
+        .star.red { background: rgba(255, 0, 0, 0.8); }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.75); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+        .home-container {
+            width: min(1200px, 100%);
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        h1 {
+            margin: 0;
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            color: #ff0000;
+            text-shadow: 0 0 18px rgba(255, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .header-logo {
+            width: clamp(40px, 6vw, 64px);
+            height: clamp(40px, 6vw, 64px);
+            border-radius: 4px;
+            filter: brightness(0.85) contrast(1.1) hue-rotate(-10deg);
+            box-shadow: 0 0 12px rgba(255, 0, 0, 0.2), inset 0 0 8px rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(126, 200, 227, 0.3);
+            transition: all 0.3s ease;
+        }
+        .header-logo:hover {
+            filter: brightness(1) contrast(1.2) hue-rotate(0deg);
+            box-shadow: 0 0 18px rgba(255, 0, 0, 0.4), inset 0 0 12px rgba(0, 255, 255, 0.2);
+            border-color: rgba(255, 0, 0, 0.5);
+        }
+        .subtitle {
+            color: #00ffff;
+            letter-spacing: 1px;
+            font-size: 0.95rem;
+            margin: 10px 0 5px;
+        }
+        .sync-hint {
+            font-size: 0.85rem;
+            color: rgba(126, 200, 227, 0.85);
+            margin: 0;
+        }
+        .collection {
+            margin-bottom: 60px;
+        }
+        .collection-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 2px solid rgba(126,200,227,0.4);
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+        }
+        .collection-title {
+            font-size: 1.4rem;
+            color: #ff0000;
+            text-shadow: 0 0 12px rgba(255,0,0,0.25);
+        }
+        .collection-description {
+            font-size: 0.9rem;
+            color: rgba(126, 200, 227, 0.85);
+        }
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+        .collection-featured .projects-grid {
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        }
+        .project-card {
+            border: 1px solid rgba(126, 200, 227, 0.35);
+            background: rgba(10, 10, 10, 0.85);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+            min-height: 210px;
+        }
+        .collection-featured .project-card {
+            min-height: 240px;
+            border-width: 2px;
+            background: rgba(24, 0, 0, 0.75);
+        }
+        .project-card:hover {
+            transform: translateY(-6px);
+            border-color: #ff0000;
+            box-shadow: 0 20px 60px rgba(255, 0, 0, 0.18);
+        }
+        .project-name {
+            font-size: 1.1rem;
+            margin: 0;
+            color: #00ffff;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.35);
+        }
+        .project-description {
+            margin: 0;
+            font-size: 0.95rem;
+            color: rgba(126, 200, 227, 0.92);
+        }
+        .project-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: rgba(126, 200, 227, 0.8);
+        }
+        .project-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: auto;
+            padding: 12px 16px;
+            border: 1px solid #7ec8e3;
+            color: #7ec8e3;
+            text-decoration: none;
+            letter-spacing: 1px;
+            transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+        }
+        .project-link:hover {
+            background: #ff0000;
+            color: #050505;
+            transform: translateY(-2px);
+        }
+        .status-line {
+            text-align: center;
+            margin: 30px auto 10px;
+            font-size: 0.9rem;
+            color: rgba(126, 200, 227, 0.75);
+        }
+        .error-line {
+            color: #ff6b6b;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 24px 16px 90px;
+            }
+            .collection-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="home-container">
+        <div class="header-section">
+            <h1><img src="default.jpg" alt="Bot Sportello" class="header-logo"> Bot Sportello's Arcade</h1>
+            <p class="subtitle">Noir arcade experiments deployed live from Discord</p>
+            <p class="sync-hint">Add a new page, run <code>/sync-index</code>, and it shows up here automatically.</p>
+        </div>
+
+        <p class="status-line" id="status-line">Syncing latest project metadata…</p>
+        <div id="collections"></div>
+    </div>
+
+    <script src="stars.js" defer></script>
+    <script>
+        const statusLine = document.getElementById('status-line');
+        const collectionsContainer = document.getElementById('collections');
+
+        function formatLink(slug) {
+            return `src/${encodeURIComponent(slug)}.html`;
+        }
+
+        function createProjectCard(slug, project) {
+            const card = document.createElement('article');
+            card.className = 'project-card';
+
+            const title = document.createElement('h3');
+            title.className = 'project-name';
+            title.textContent = `${project.icon || '🌐'} ${project.title || slug}`;
+
+            const desc = document.createElement('p');
+            desc.className = 'project-description';
+            desc.textContent = project.description || 'Interactive web project';
+
+            const meta = document.createElement('div');
+            meta.className = 'project-meta';
+            meta.innerHTML = `<span>${slug}</span><span>${project.collection || 'unsorted'}</span>`;
+
+            const link = document.createElement('a');
+            link.className = 'project-link';
+            link.href = formatLink(slug);
+            link.textContent = 'OPEN →';
+
+            link.setAttribute('aria-label', `Open ${project.title || slug}`);
+
+            card.appendChild(title);
+            card.appendChild(desc);
+            card.appendChild(meta);
+            card.appendChild(link);
+            return card;
+        }
+
+        function renderCollections(data) {
+            const collections = data.collections || {};
+            const projects = data.projects || {};
+            const grouped = {};
+
+            Object.entries(projects).forEach(([slug, project]) => {
+                if (project.hidden) {
+                    return;
+                }
+                const collectionId = collections[project.collection] ? project.collection : 'unsorted';
+                if (!grouped[collectionId]) {
+                    grouped[collectionId] = [];
+                }
+                grouped[collectionId].push({ slug, ...project });
+            });
+
+            const orderedCollections = Object.entries(collections)
+                .sort(([, a], [, b]) => (a.order || 99) - (b.order || 99));
+
+            let totalProjects = 0;
+
+            orderedCollections.forEach(([id, meta]) => {
+                const items = grouped[id] || [];
+                if (!items.length) {
+                    return;
+                }
+                totalProjects += items.length;
+
+                const section = document.createElement('section');
+                section.className = `collection ${id === 'featured' ? 'collection-featured' : ''}`;
+                section.dataset.collection = id;
+
+                const header = document.createElement('div');
+                header.className = 'collection-header';
+
+                const title = document.createElement('h2');
+                title.className = 'collection-title';
+                title.textContent = meta.title || id;
+
+                const description = document.createElement('p');
+                description.className = 'collection-description';
+                description.textContent = meta.description || '';
+
+                header.appendChild(title);
+                header.appendChild(description);
+
+                const grid = document.createElement('div');
+                grid.className = 'projects-grid';
+
+                items
+                    .sort((a, b) => (a.title || a.slug).localeCompare(b.title || b.slug))
+                    .forEach(item => {
+                        grid.appendChild(createProjectCard(item.slug, item));
+                    });
+
+                section.appendChild(header);
+                section.appendChild(grid);
+                collectionsContainer.appendChild(section);
+            });
+
+            if (!totalProjects) {
+                statusLine.textContent = 'No projects found. Run /sync-index after shipping something new.';
+            } else {
+                statusLine.textContent = `Showing ${totalProjects} deployed projects.`;
+            }
+        }
+
+        async function loadProjects() {
+            try {
+                const response = await fetch(`projectmetadata.json?${Date.now()}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load metadata');
+                }
+                const data = await response.json();
+                renderCollections(data);
+            } catch (error) {
+                console.error(error);
+                statusLine.textContent = 'Could not load metadata. Run /sync-index after the next deploy.';
+                statusLine.classList.add('error-line');
+            }
+        }
+
+        loadProjects();
+    </script>
+</body>
+</html>

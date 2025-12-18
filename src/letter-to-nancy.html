@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letter to Nancy - Bot Sportello Noir Arcade</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            padding: 80px 20px 20px 20px;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 60px 10px 20px 10px;
+            }
+        }
+
+        .letter-container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: rgba(10, 10, 10, 0.95);
+            border: 2px solid #7ec8e3;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(126, 200, 227, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .letter-container {
+                padding: 20px 15px;
+            }
+        }
+
+        .letter-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #7ec8e3;
+            padding-bottom: 20px;
+        }
+
+        .letter-header h1 {
+            color: #ff0000;
+            font-size: 28px;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .letter-header h1 {
+                font-size: 22px;
+                letter-spacing: 1px;
+            }
+        }
+
+        .letter-date {
+            color: #7ec8e3;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .letter-salutation {
+            color: #00ffff;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .letter-paragraph {
+            color: #7ec8e3;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            font-size: 16px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .letter-paragraph {
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        }
+
+        .letter-paragraph.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-section {
+            background: rgba(255, 0, 0, 0.1);
+            border-left: 3px solid #ff0000;
+            padding: 15px;
+            margin: 20px 0;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.3s ease;
+        }
+
+        .reveal-section:hover {
+            background: rgba(255, 0, 0, 0.2);
+        }
+
+        .reveal-section:active {
+            background: rgba(255, 0, 0, 0.3);
+        }
+
+        .reveal-header {
+            color: #ff0000;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 44px;
+        }
+
+        .reveal-icon {
+            color: #00ffff;
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .reveal-section.expanded .reveal-icon {
+            transform: rotate(90deg);
+        }
+
+        .reveal-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+            color: #7ec8e3;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 768px) {
+            .reveal-content {
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        }
+
+        .reveal-section.expanded .reveal-content {
+            max-height: 1000px;
+            margin-top: 15px;
+        }
+
+        .letter-signature {
+            text-align: right;
+            margin-top: 40px;
+            color: #00ffff;
+            font-style: italic;
+        }
+
+        .signature-line {
+            margin: 5px 0;
+        }
+
+        .controls-panel {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            background: #ff0000;
+            color: #0a0a0a;
+            border: none;
+            padding: 12px 24px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 5px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+            min-width: 120px;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .control-btn {
+                font-size: 13px;
+                padding: 10px 18px;
+                min-width: 100px;
+            }
+        }
+
+        .control-btn:hover {
+            background: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .control-btn.active {
+            background: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .typewriter {
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typing 2s steps(40, end);
+            display: inline-block;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        .blink {
+            animation: blink-animation 1s steps(2, start) infinite;
+        }
+
+        @keyframes blink-animation {
+            to { visibility: hidden; }
+        }
+
+        .evidence-tag {
+            color: #ff0000;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .redacted {
+            background: #ff0000;
+            color: #ff0000;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            padding: 2px 4px;
+            transition: all 0.3s ease;
+        }
+
+        .redacted:hover,
+        .redacted.revealed {
+            background: transparent;
+            color: #7ec8e3;
+        }
+
+        .footer-note {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #7ec8e3;
+            text-align: center;
+            color: #7ec8e3;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .audio-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 0, 0, 0.8);
+            color: #0a0a0a;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .audio-indicator.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .audio-indicator {
+                bottom: 10px;
+                right: 10px;
+                font-size: 11px;
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">← HOME</a>
+
+    <div class="controls-panel">
+        <button class="control-btn" id="autoRevealBtn">Auto-Reveal Letter</button>
+        <button class="control-btn" id="audioBtn">Toggle Ambience</button>
+    </div>
+
+    <div class="letter-container">
+        <div class="letter-header">
+            <h1>Classified Communication</h1>
+            <div class="letter-date">Los Angeles, 2024 - Case File #7734</div>
+        </div>
+
+        <div class="letter-salutation typewriter">
+            Dear Nancy,<span class="blink">_</span>
+        </div>
+
+        <div class="letter-paragraph" data-delay="500">
+            I'm writing this from a booth in a dive bar on Sunset. The neon sign outside keeps flickering - ON, OFF, ON, OFF - like the truth in this city. You asked me to explain what happened that night at the Golden Palms. I owe you that much.
+        </div>
+
+        <div class="letter-paragraph" data-delay="1000">
+            You have to understand, Nancy, that some cases don't start with a client walking through your door. Some start with a phone call at 3 AM, a voice you haven't heard in fifteen years, and a name you swore you'd forgotten.
+        </div>
+
+        <div class="reveal-section" data-section="1">
+            <div class="reveal-header">
+                <span><span class="evidence-tag">[Evidence Log 1]</span> The Phone Call</span>
+                <span class="reveal-icon">▶</span>
+            </div>
+            <div class="reveal-content">
+                <p>"Is this Bot Sportello?" The voice was older, rougher, but unmistakable. Vincent Marlowe. The last time I'd seen him, he was being led away in handcuffs, swearing he'd been set up. That was 2009. The subprime mortgage scandal. The one that should have sent him away for twenty years.</p>
+                <p>Instead, he got three. Good lawyers, better connections. And now he was calling me.</p>
+                <p>"I need your help," he said. "Someone's trying to kill me, and I think it's connected to what happened back then. To <span class="redacted" data-reveal="the Palmdale Heights development">████████████████████</span>."</p>
+            </div>
+        </div>
+
+        <div class="letter-paragraph" data-delay="1500">
+            I should have hung up. Should have told him to call the cops, call anyone but me. But curiosity is a detective's curse, Nancy. You know that. And Vincent knew exactly which buttons to push.
+        </div>
+
+        <div class="letter-paragraph" data-delay="2000">
+            "There's someone else involved," he said. "Someone you care about."
+        </div>
+
+        <div class="reveal-section" data-section="2">
+            <div class="reveal-header">
+                <span><span class="evidence-tag">[Evidence Log 2]</span> The Golden Palms Meeting</span>
+                <span class="reveal-icon">▶</span>
+            </div>
+            <div class="reveal-content">
+                <p>The Golden Palms Hotel hasn't been golden in thirty years. Now it's just another relic, clinging to Wilshire Boulevard like a drunk to a lamppost. Vincent had booked room 714. Lucky seven, he said. Always his favorite number.</p>
+                <p>When I got there, the door was ajar. That should have been my first warning. The second was the smell - copper and cheap cologne. Vincent was on the floor, a dark pool spreading beneath him like spilled ink.</p>
+                <p>He was still breathing. Barely.</p>
+                <p>"The files," he gasped. "Under the... mattress. They'll explain... everything. About her. About <span class="redacted" data-reveal="your sister Sarah">████████████</span>."</p>
+            </div>
+        </div>
+
+        <div class="letter-paragraph" data-delay="2500">
+            That's when I heard the sirens, Nancy. That's when I knew I'd been played. Someone had called the cops before I even arrived. Someone wanted me found there, standing over Vincent Marlowe's dying body.
+        </div>
+
+        <div class="letter-paragraph" data-delay="3000">
+            I had maybe ninety seconds. I grabbed the files from under the mattress - a manila envelope, thick with documents. Then I did what any rational person would do: I climbed out the window onto the fire escape and ran.
+        </div>
+
+        <div class="reveal-section" data-section="3">
+            <div class="reveal-header">
+                <span><span class="evidence-tag">[Evidence Log 3]</span> The Documents</span>
+                <span class="reveal-icon">▶</span>
+            </div>
+            <div class="reveal-content">
+                <p>I didn't open the envelope until I was three neighborhoods away, sitting in my car under a broken streetlight. What I found inside changed everything.</p>
+                <p>Bank statements. Wire transfers. Property deeds. All dated 2008-2009. All connected to the Palmdale Heights development - the housing project that never got built, the one that swallowed $47 million in investor money.</p>
+                <p>But that wasn't the worst part.</p>
+                <p>The worst part was seeing <span class="redacted" data-reveal="Sarah Chen's signature">████████████████</span> on half the documents. Your sister wasn't just involved, Nancy. She was one of the architects.</p>
+            </div>
+        </div>
+
+        <div class="letter-paragraph" data-delay="3500">
+            I know what you're thinking. Sarah died in that car accident in 2010. The case was closed. But these documents suggest something else. They suggest she knew the scheme was about to collapse. They suggest she had an exit strategy.
+        </div>
+
+        <div class="letter-paragraph" data-delay="4000">
+            And they suggest she might still be alive.
+        </div>
+
+        <div class="reveal-section" data-section="4">
+            <div class="reveal-header">
+                <span><span class="evidence-tag">[Evidence Log 4]</span> The Final Piece</span>
+                <span class="reveal-icon">▶</span>
+            </div>
+            <div class="reveal-content">
+                <p>There was one more thing in that envelope. A photograph. Recent, by the looks of it - taken maybe six months ago. It shows a woman sitting at a café in what looks like Mexico or Central America. She's older, wearing sunglasses, her hair different. But I'd recognize that scar on her left hand anywhere.</p>
+                <p>It's Sarah, Nancy. Your sister is alive.</p>
+                <p>And someone - maybe Vincent, maybe someone else - has been tracking her. The question is: why now? Why reach out to me after all these years? What's changed?</p>
+                <p>Vincent died before he could tell me. The official report says heart attack, but I saw the needle mark on his neck. Someone made sure he wouldn't talk.</p>
+            </div>
+        </div>
+
+        <div class="letter-paragraph" data-delay="4500">
+            I'm leaving Los Angeles tomorrow, Nancy. I have to find her. I have to know the truth. And I need to know if you're with me on this.
+        </div>
+
+        <div class="letter-paragraph" data-delay="5000">
+            The files are in a safety deposit box at Union Bank, downtown. Box 2847. The key is taped under the third booth from the left at Musso & Frank's - our old spot. You'll know what to do with them.
+        </div>
+
+        <div class="letter-paragraph" data-delay="5500">
+            If you're reading this, it means I made it out of the city. If you don't hear from me in two weeks, assume the worst. Give the files to Detective Morrison. He's one of the good ones.
+        </div>
+
+        <div class="letter-paragraph" data-delay="6000">
+            I'm sorry I dragged you into this. I'm sorry about a lot of things. But mostly, I'm sorry I didn't tell you sooner what I suspected about Sarah. I thought I was protecting you. Turns out, I was just protecting myself from having to face the truth.
+        </div>
+
+        <div class="letter-signature">
+            <div class="signature-line">Stay safe,</div>
+            <div class="signature-line">- Bot</div>
+            <div class="signature-line" style="font-size: 12px; margin-top: 10px;">P.S. Burn this letter after reading.</div>
+        </div>
+
+        <div class="footer-note">
+            [End of transmission. Document classification: EYES ONLY]
+        </div>
+    </div>
+
+    <div class="audio-indicator" id="audioIndicator">
+        ♪ Ambient noir soundtrack playing
+    </div>
+
+    <script>
+        // Auto-reveal functionality
+        let autoRevealActive = false;
+        let revealTimeout;
+        const paragraphs = document.querySelectorAll('.letter-paragraph');
+        
+        function autoRevealLetter() {
+            if (autoRevealActive) return;
+            
+            autoRevealActive = true;
+            const btn = document.getElementById('autoRevealBtn');
+            btn.classList.add('active');
+            btn.textContent = 'Revealing...';
+            
+            paragraphs.forEach((p, index) => {
+                const delay = parseInt(p.dataset.delay) || 0;
+                setTimeout(() => {
+                    p.classList.add('visible');
+                    if (index === paragraphs.length - 1) {
+                        btn.textContent = 'Letter Revealed';
+                        setTimeout(() => {
+                            btn.classList.remove('active');
+                            btn.textContent = 'Auto-Reveal Letter';
+                            autoRevealActive = false;
+                        }, 2000);
+                    }
+                }, delay);
+            });
+        }
+
+        // Manual reveal on scroll
+        function checkScroll() {
+            if (autoRevealActive) return;
+            
+            paragraphs.forEach(p => {
+                const rect = p.getBoundingClientRect();
+                const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+                
+                if (rect.top <= windowHeight * 0.85) {
+                    p.classList.add('visible');
+                }
+            });
+        }
+
+        // Reveal sections
+        const revealSections = document.querySelectorAll('.reveal-section');
+        
+        revealSections.forEach(section => {
+            const handleReveal = (e) => {
+                e.preventDefault();
+                section.classList.toggle('expanded');
+            };
+            
+            section.addEventListener('touchstart', handleReveal, { passive: false });
+            section.addEventListener('click', handleReveal);
+        });
+
+        // Redacted text reveal
+        const redactedElements = document.querySelectorAll('.redacted');
+        
+        redactedElements.forEach(element => {
+            const handleRedaction = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                element.classList.add('revealed');
+                element.textContent = element.dataset.reveal;
+            };
+            
+            element.addEventListener('touchstart', handleRedaction, { passive: false });
+            element.addEventListener('click', handleRedaction);
+        });
+
+        // Audio toggle (simulated - no actual audio file)
+        let audioPlaying = false;
+        const audioBtn = document.getElementById('audioBtn');
+        const audioIndicator = document.getElementById('audioIndicator');
+
+        function toggleAudio() {
+            audioPlaying = !audioPlaying;
+            
+            if (audioPlaying) {
+                audioBtn.classList.add('active');
+                audioBtn.textContent = 'Stop Ambience';
+                audioIndicator.classList.add('active');
+            } else {
+                audioBtn.classList.remove('active');
+                audioBtn.textContent = 'Toggle Ambience';
+                audioIndicator.classList.remove('active');
+            }
+        }
+
+        audioBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            toggleAudio();
+        }, { passive: false });
+        
+        audioBtn.addEventListener('click', toggleAudio);
+
+        // Auto-reveal button
+        const autoRevealBtn = document.getElementById('autoRevealBtn');
+        
+        autoRevealBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            autoRevealLetter();
+        }, { passive: false });
+        
+        autoRevealBtn.addEventListener('click', autoRevealLetter);
+
+        // Scroll listener
+        window.addEventListener('scroll', checkScroll);
+        window.addEventListener('resize', checkScroll);
+
+        // Initial check
+        checkScroll();
+
+        // Show first paragraph immediately
+        if (paragraphs.length > 0) {
+            setTimeout(() => {
+                paragraphs[0].classList.add('visible');
+            }, 100);
+        }
+    </script>
+</body>
+</html>

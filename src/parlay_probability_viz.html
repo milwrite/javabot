@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parlay Probability Visualizer</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+</head>
+<body>
+    <a href="../index.html" class="home-link">← HOME</a>
+
+    <div class="container">
+        <header>
+            <h1>📊 Parlay Probability Visualizer</h1>
+            <p class="subtitle">Explore how parlay odds decrease exponentially with each additional leg</p>
+        </header>
+
+        <div class="main-content">
+            <div class="card controls-card">
+                <h2 style="color: #333; margin-bottom: 20px;">⚙️ Controls</h2>
+                
+                <div class="control-group">
+                    <label for="numPicks">
+                        Number of Picks (Legs)
+                        <span class="value-display" id="numPicksValue">3</span>
+                    </label>
+                    <input type="range" id="numPicks" min="1" max="10" value="3" step="1">
+                    <small style="color: #999; display: block; margin-top: 5px;">How many individual bets in your parlay</small>
+                </div>
+
+                <div class="control-group">
+                    <label for="winProb">
+                        Individual Win Probability
+                        <span class="value-display" id="winProbValue">55%</span>
+                    </label>
+                    <input type="range" id="winProb" min="5" max="95" value="55" step="1">
+                    <small style="color: #999; display: block; margin-top: 5px;">Probability of winning each individual bet</small>
+                </div>
+
+                <div class="control-group">
+                    <label for="customProb">
+                        Or Enter Custom Probability (0-100)
+                    </label>
+                    <input type="number" id="customProb" min="0" max="100" value="55" step="0.1">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="updateVisualization()">Update Visualization</button>
+                    <button class="btn-secondary" onclick="resetControls()">Reset</button>
+                </div>
+
+                <div id="message" style="margin-top: 15px;"></div>
+            </div>
+
+            <div class="card visualization-card">
+                <h2 style="color: #333; margin-bottom: 20px;">📈 Parlay Breakdown</h2>
+                <div id="visualization" class="visualization">
+                    <div class="loading">Loading visualization...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-title">Overall Parlay Probability</div>
+            <div class="summary-value" id="summaryProb">0%</div>
+            <div class="summary-odds" id="summaryOdds">Odds: 0.00</div>
+        </div>
+
+        <div class="documentation">
+            <h2 style="color: #667eea; margin-bottom: 20px;">📚 Understanding Parlays</h2>
+
+            <div class="doc-section">
+                <h3>What is a Parlay?</h3>
+                <p>A parlay is a single bet that links together multiple individual wagers. All legs of the parlay must win for you to receive a payout. If even one leg loses, the entire parlay loses.</p>
+            </div>
+
+            <div class="insight-box">
+                <strong>Key Insight:</strong> Parlay probabilities multiply together. With each additional leg, your overall winning probability decreases exponentially. This is why parlays offer higher payouts but are much riskier.
+            </div>
+
+            <div class="doc-section">
+                <h3>How Probability Calculation Works</h3>
+                <ul class="doc-list">
+                    <li><strong>Single Bet:</strong> If you have a 55% chance of winning one bet, that's your probability</li>
+                    <li><strong>Two-Leg Parlay:</strong> 55% × 55% = 30.25% chance of winning both</li>
+                    <li><strong>Three-Leg Parlay:</strong> 55% × 55% × 55% = 16.64% chance of winning all three</li>
+                    <li><strong>Formula:</strong> P(Parlay) = P(Leg 1) × P(Leg 2) × ... × P(Leg N)</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <strong>⚠️ Warning:</strong> Even with a 55% individual win rate, a 10-leg parlay has only a 0.24% chance of winning! This is why most sportsbooks heavily promote parlays.
+            </div>
+
+            <div class="doc-section">
+                <h3>Odds Conversion</h3>
+                <p>The visualizer also shows American odds format:</p>
+                <ul class="doc-list">
+                    <li><strong>Decimal Odds:</strong> The multiplier for your bet (e.g., 2.00 means double your money)</li>
+                    <li><strong>American Odds:</strong> Positive odds show profit on $100 bet; negative odds show bet needed to win $100</li>
+                    <li><strong>Relationship:</strong> Decimal Odds = 1 / Probability</li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h3>Interactive Features</h3>
+                <ul class="doc-list">
+                    <li>Adjust the number of picks to see how many legs you're including</li>
+                    <li>Change the individual win probability to see different scenarios</li>
+                    <li>Watch the probability bars shrink as you add more legs</li>
+                    <li>Compare decimal odds across different configurations</li>
+                    <li>See both percentage and American odds formats</li>
+                </ul>
+            </div>
+
+            <div class="insight-box">
+                <strong>💡 Pro Tip:</strong> Use this tool to understand why even slight changes in individual win probability have massive impacts on parlay outcomes. A 60% win rate vs 55% might seem small, but it dramatically improves your parlay chances!
+            </div>
+
+            <div class="doc-section">
+                <h3>Real-World Example</h3>
+                <p><strong>Scenario:</strong> You pick 4 NBA games, each with 55% confidence:</p>
+                <ul class="doc-list">
+                    <li>Individual probability per game: 55%</li>
+                    <li>4-leg parlay probability: 55% × 55% × 55% × 55% = 9.15%</li>
+                    <li>Your parlay is 10:1 underdog despite picking games you're favored in!</li>
+                    <li>A $100 parlay would need to pay approximately $1,093 to break even</li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h3>Bankroll Management</h3>
+                <ul class="doc-list">
+                    <li>Never risk more than 1-2% of your bankroll on a single parlay</li>
+                    <li>Limit parlays to 2-3 legs for reasonable winning probabilities</li>
+                    <li>Use parlays strategically, not as your primary betting method</li>
+                    <li>Consider hedge bets to lock in profits on longer parlays</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="parlay_probability_viz.js"></script>
+    <script>
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateVisualization();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            const numPicks = document.getElementById('numPicks');
+            const winProb = document.getElementById('winProb');
+            const customProb = document.getElementById('customProb');
+
+            // Update value displays
+            numPicks.addEventListener('input', function() {
+                document.getElementById('numPicksValue').textContent = this.value;
+                updateVisualization();
+            });
+
+            winProb.addEventListener('input', function() {
+                const percent = this.value + '%';
+                document.getElementById('winProbValue').textContent = percent;
+                customProb.value = this.value;
+                updateVisualization();
+            });
+
+            customProb.addEventListener('input', function() {
+                let value = parseFloat(this.value);
+                if (isNaN(value) || value < 0) value = 0;
+                if (value > 100) value = 100;
+                winProb.value = value;
+                document.getElementById('winProbValue').textContent = value + '%';
+                updateVisualization();
+            });
+        }
+
+        function updateVisualization() {
+            const numPicks = parseInt(document.getElementById('numPicks').value);
+            const winProb = parseFloat(document.getElementById('winProb').value) / 100;
+
+            // Validate inputs
+            if (numPicks < 1 || numPicks > 10) {
+                showMessage('Number of picks must be between 1 and 10', 'error');
+                return;
+            }
+
+            if (winProb < 0.05 || winProb > 0.95) {
+                showMessage('Win probability must be between 5% and 95%', 'error');
+                return;
+            }
+
+            // Generate visualization data
+            const legData = [];
+            let cumulativeProbability = 1;
+
+            for (let i = 1; i <= numPicks; i++) {
+                cumulativeProbability *= winProb;
+                const percentProb = cumulativeProbability * 100;
+                const decimalOdds = 1 / cumulativeProbability;
+                const americanOdds = calculateAmericanOdds(decimalOdds);
+
+                legData.push({
+                    legNumber: i,
+                    probability: cumulativeProbability,
+                    percentProb: percentProb,
+                    decimalOdds: decimalOdds,
+                    americanOdds: americanOdds
+                });
+            }
+
+            // Render visualization
+            renderVisualization(legData);
+
+            // Update summary
+            const finalProb = legData[legData.length - 1];
+            document.getElementById('summaryProb').textContent = 
+                finalProb.percentProb.toFixed(2) + '%';
+            document.getElementById('summaryOdds').textContent = 
+                `Decimal Odds: ${finalProb.decimalOdds.toFixed(2)} | American Odds: ${finalProb.americanOdds}`;
+
+            showMessage(`Calculated ${numPicks}-leg parlay with ${(winProb * 100).toFixed(1)}% individual win rate`, 'success');
+        }
+
+        function renderVisualization(legData) {
+            const container = document.getElementById('visualization');
+            let html = '';
+
+            legData.forEach((leg, index) => {
+                const barWidth = Math.max(leg.probability * 100, 5); // Minimum 5% for visibility
+                const displayProb = leg.probability * 100;
+
+                html += `
+                    <div class="parlay-leg">
+                        <div class="leg-number">Leg ${leg.legNumber}</div>
+                        <div class="probability-bar">
+                            <div class="probability-fill" style="width: ${barWidth}%;">
+                                ${displayProb.toFixed(2)}%
+                            </div>
+                        </div>
+                        <div class="stats">
+                            <div class="stat-item">
+                                <div class="stat-label">Probability</div>
+                                <div class="stat-value">${displayProb.toFixed(3)}%</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Decimal Odds</div>
+                                <div class="stat-value">${leg.decimalOdds.toFixed(2)}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">American Odds</div>
+                                <div class="stat-value">${leg.americanOdds}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">$100 Payout</div>
+                                <div class="stat-value">$${(leg.decimalOdds * 100).toFixed(0)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function calculateAmericanOdds(decimalOdds) {
+            if (decimalOdds < 2) {
+                // Negative odds (favorite)
+                return Math.round(-100 / (decimalOdds - 1));
+            } else {
+                // Positive odds (underdog)
+                return Math.round((decimalOdds - 1) * 100);
+            }
+        }
+
+        function resetControls() {
+            document.getElementById('numPicks').value = 3;
+            document.getElementById('winProb').value = 55;
+            document.getElementById('customProb').value = 55;
+            document.getElementById('numPicksValue').textContent = '3';
+            document.getElementById('winProbValue').textContent = '55%';
+            updateVisualization();
+            showMessage('Controls reset to defaults', 'success');
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = type;
+            messageDiv.textContent = text;
+            
+            if (type === 'success') {
+                messageDiv.className = 'success';
+            } else if (type === 'error') {
+                messageDiv.className = 'error';
+            }
+
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.className = '';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

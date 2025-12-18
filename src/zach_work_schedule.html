@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zach's Work Schedule - Manifold HTML Fixes</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier Prime', monospace;
+            background: #0a0a0a;
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #7ec8e3;
+        }
+
+        /* Page-specific home-link overrides removed to use shared theme */
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            margin-top: 60px;
+        }
+
+        .header {
+            text-align: center;
+            color: #00ff41;
+            margin-bottom: 40px;
+            animation: slideDown 0.6s ease;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .schedule-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .timeline-section {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            animation: slideUp 0.6s ease;
+            border: 2px solid #7ec8e3;
+        }
+
+        .tasks-section {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            animation: slideUp 0.6s ease 0.1s both;
+            border: 2px solid #7ec8e3;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            color: #00ff41;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            font-size: 1.3em;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, #00ff41 0%, #00ffff 100%);
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #7ec8e3;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -46px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            background: #00ff41;
+            border: 3px solid #0a0a0a;
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px #00ff41;
+        }
+
+        .timeline-item.active::before {
+            background: #00ffff;
+            box-shadow: 0 0 0 3px #00ffff, 0 0 15px rgba(0, 255, 255, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        .timeline-time {
+            font-weight: 700;
+            color: #ff0000;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .timeline-content {
+            color: #7ec8e3;
+            font-size: 0.95em;
+        }
+
+        .task-item {
+            background: rgba(0, 255, 65, 0.1);
+            border-left: 4px solid #00ff41;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .task-item:hover {
+            background: rgba(0, 255, 65, 0.2);
+            transform: translateX(5px);
+        }
+
+        .task-item.completed {
+            border-left-color: #00ff41;
+            background: rgba(0, 255, 65, 0.15);
+        }
+
+        .task-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #00ff41;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .task-item.completed .task-checkbox {
+            background: #00ff41;
+            border-color: #00ff41;
+            color: #0a0a0a;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #00ff41;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+        }
+
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: #7ec8e3;
+        }
+
+        .task-description {
+            font-size: 0.85em;
+            color: #7ec8e3;
+            margin-bottom: 8px;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8em;
+            color: #7ec8e3;
+        }
+
+        .task-duration {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .task-priority {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.75em;
+        }
+
+        .priority-high {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .priority-medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .progress-section {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            animation: slideUp 0.6s ease 0.2s both;
+            border: 2px solid #00ff41;
+        }
+
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s ease;
+            border: 1px solid #00ff41;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .progress-bar-container {
+            margin-bottom: 20px;
+        }
+
+        .progress-bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #00ff41;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(0, 255, 65, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff41 0%, #00ffff 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .time-breakdown {
+            background: rgba(0, 255, 65, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #7ec8e3;
+            font-size: 0.95em;
+        }
+
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .breakdown-label {
+            color: #7ec8e3;
+        }
+
+        .breakdown-value {
+            font-weight: 600;
+            color: #00ff41;
+        }
+
+        .current-task {
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            text-align: center;
+            animation: glow 2s infinite;
+            border: 2px solid #00ff41;
+        }
+
+        .current-task-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .current-task-name {
+            font-size: 1.3em;
+            font-weight: 700;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 3px #00ffff, 0 0 15px rgba(0, 255, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 0 3px #00ffff, 0 0 25px rgba(0, 255, 255, 0.8);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .schedule-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .progress-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .home-link {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+
+</head>
+<body>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(0,255,65,0.9);color:#0a0a0a;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← HOME</a>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-calendar-check"></i> Zach's Work Schedule</h1>
+            <p>Manifold HTML Article Fixes | 10:00 AM - 2:00 PM</p>
+        </div>
+
+        <div class="schedule-wrapper">
+            <div class="timeline-section">
+                <h2 class="section-title"><i class="fas fa-clock"></i> Work Timeline</h2>
+                <div class="timeline">
+                    <div class="timeline-item active">
+                        <div class="timeline-time">10:00 AM</div>
+                        <div class="timeline-content">Start work session - Setup & Review</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">10:15 AM</div>
+                        <div class="timeline-content">Article 1 & 2 - Fix semantic HTML</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">11:00 AM</div>
+                        <div class="timeline-content">Article 3 - Accessibility improvements</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">11:45 AM</div>
+                        <div class="timeline-content">Break & Progress Check</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">12:00 PM</div>
+                        <div class="timeline-content">Article 4 & 5 - Final fixes & validation</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">1:30 PM</div>
+                        <div class="timeline-content">Testing & Quality Assurance</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">2:00 PM</div>
+                        <div class="timeline-content">Session End - Wrap up & Documentation</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tasks-section">
+                <h2 class="section-title"><i class="fas fa-tasks"></i> Tasks</h2>
+                <div id="tasksList"></div>
+            </div>
+        </div>
+
+        <div class="progress-section">
+            <h2 class="section-title"><i class="fas fa-chart-pie"></i> Progress Tracking</h2>
+            
+            <div class="progress-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="completedCount">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalCount">5</div>
+                    <div class="stat-label">Total Tasks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="percentComplete">0%</div>
+                    <div class="stat-label">Progress</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="timeRemaining">4h</div>
+                    <div class="stat-label">Time Left</div>
+                </div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar-label">
+                    <span>Overall Progress</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="time-breakdown">
+                <h3 style="margin-bottom: 15px; color: #333;">Time Allocation</h3>
+                <div class="breakdown-item">
+                    <span class="breakdown-label"><i class="fas fa-code"></i> Article 1 - Fix semantic HTML</span>
+                    <span class="breakdown-value">15 min</span>
+                </div>
+                <div class="breakdown-item">
+                    <span class="breakdown-label"><i class="fas fa-code"></i> Article 2 - Fix semantic HTML</span>
+                    <span class="breakdown-value">15 min</span>
+                </div>
+                <div class="breakdown-item">
+                    <span class="breakdown-label"><i class="fas fa-code"></i> Article 3 - Accessibility improvements</span>
+                    <span class="breakdown-value">45 min</span>
+                </div>
+                <div class="breakdown-item">
+                    <span class="breakdown-label"><i class="fas fa-code"></i> Article 4 - Fix form validation</span>
+                    <span class="breakdown-value">20 min</span>
+                </div>
+                <div class="breakdown-item">
+                    <span class="breakdown-label"><i class="fas fa-code"></i> Article 5 - Meta tags & SEO</span>
+                    <span class="breakdown-value">20 min</span>
+                </div>
+                <div class="breakdown-item">
+                    <span class="breakdown-label"><i class="fas fa-flask"></i> Testing & Validation</span>
+                    <span class="breakdown-value">25 min</span>
+                </div>
+            </div>
+
+            <div class="current-task">
+                <div class="current-task-label">Currently Working On:</div>
+                <div class="current-task-name" id="currentTask">Article 1 - Fix semantic HTML</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tasks = [
+            {
+                id: 1,
+                title: "Article 1 - Fix semantic HTML",
+                description: "Update article structure with proper semantic tags (article, section, nav)",
+                duration: "15 min",
+                priority: "high",
+                completed: false
+            },
+            {
+                id: 2,
+                title: "Article 2 - Fix semantic HTML",
+                description: "Ensure proper heading hierarchy and semantic markup",
+                duration: "15 min",
+                priority: "high",
+                completed: false
+            },
+            {
+                id: 3,
+                title: "Article 3 - Accessibility improvements",
+                description: "Add ARIA labels, alt text for images, and improve keyboard navigation",
+                duration: "45 min",
+                priority: "high",
+                completed: false
+            },
+            {
+                id: 4,
+                title: "Article 4 - Fix form validation",
+                description: "Update form with proper HTML5 validation and error handling",
+                duration: "20 min",
+                priority: "medium",
+                completed: false
+            },
+            {
+                id: 5,
+                title: "Article 5 - Meta tags & SEO",
+                description: "Optimize meta tags, Open Graph, and structured data markup",
+                duration: "20 min",
+                priority: "medium",
+                completed: false
+            }
+        ];
+
+        function renderTasks() {
+            const tasksList = document.getElementById('tasksList');
+            tasksList.innerHTML = tasks.map(task => `
+                <div class="task-item ${task.completed ? 'completed' : ''}" data-id="${task.id}">
+                    <div class="task-checkbox">
+                        ${task.completed ? '<i class="fas fa-check"></i>' : ''}
+                    </div>
+                    <div class="task-content">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-description">${task.description}</div>
+                        <div class="task-meta">
+                            <div class="task-duration"><i class="fas fa-hourglass-half"></i> ${task.duration}</div>
+                            <div class="task-priority priority-${task.priority.toLowerCase()}">${task.priority.toUpperCase()}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.task-item').forEach(item => {
+                item.addEventListener('click', () => toggleTask(parseInt(item.dataset.id)));
+            });
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                renderTasks();
+                updateProgress();
+            }
+        }
+
+        function updateProgress() {
+            const completed = tasks.filter(t => t.completed).length;
+            const total = tasks.length;
+            const percentage = Math.round((completed / total) * 100);
+
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('percentComplete').textContent = percentage + '%';
+            document.getElementById('progressPercent').textContent = percentage + '%';
+            document.getElementById('progressFill').style.width = percentage + '%';
+
+            // Update current task
+            const nextTask = tasks.find(t => !t.completed);
+            if (nextTask) {
+                document.getElementById('currentTask').textContent = nextTask.title;
+            } else {
+                document.getElementById('currentTask').textContent = 'All Tasks Completed! 🎉';
+            }
+
+            // Update time remaining
+            const totalMinutes = tasks.reduce((sum, task) => {
+                const minutes = parseInt(task.duration);
+                return sum + (task.completed ? 0 : minutes);
+            }, 0);
+            const hours = Math.floor(totalMinutes / 60);
+            const mins = totalMinutes % 60;
+            document.getElementById('timeRemaining').textContent = 
+                hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+        }
+
+        // Initialize
+        renderTasks();
+        updateProgress();
+
+        // Simulate real-time updates
+        setInterval(() => {
+            const activeTimeline = document.querySelector('.timeline-item.active');
+            if (activeTimeline) {
+                activeTimeline.classList.remove('active');
+                const nextItem = activeTimeline.nextElementSibling;
+                if (nextItem && nextItem.classList.contains('timeline-item')) {
+                    nextItem.classList.add('active');
+                }
+            }
+        }, 30000); // Change every 30 seconds for demo
+    </script>
+</body>
+</html>

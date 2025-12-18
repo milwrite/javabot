@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amtrak Journey: Penn Station to Rochester</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 80px 20px 20px;
+        }
+
+        .journey-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .journey-header {
+            text-align: center;
+            padding: 30px;
+            background: rgba(26, 0, 0, 0.4);
+            border: 2px solid #ff0000;
+            margin-bottom: 20px;
+        }
+
+        .journey-header h1 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .journey-header p {
+            color: #00ffff;
+        }
+
+        /* Train Track */
+        .train-track {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid #7ec8e3;
+            padding: 20px 15px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .stops-row {
+            display: flex;
+            justify-content: space-between;
+            min-width: 500px;
+            gap: 5px;
+        }
+
+        .stop-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            padding: 5px;
+            min-width: 70px;
+        }
+
+        .stop-marker:hover {
+            transform: scale(1.1);
+        }
+
+        .stop-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #333;
+            border: 3px solid #7ec8e3;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .stop-dot.visited {
+            background: #7ec8e3;
+            box-shadow: 0 0 10px rgba(126, 200, 227, 0.5);
+        }
+
+        .stop-dot.current {
+            background: #ff0000;
+            border-color: #ff0000;
+            transform: scale(1.3);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+        }
+
+        .stop-label {
+            font-size: 0.65em;
+            color: #7ec8e3;
+            text-align: center;
+            line-height: 1.3;
+            max-width: 70px;
+            word-wrap: break-word;
+        }
+
+        .track-line {
+            height: 4px;
+            background: linear-gradient(90deg, #7ec8e3, #ff0000);
+            margin: -30px 30px 10px;
+            position: relative;
+            min-width: 440px;
+        }
+
+        .train-emoji {
+            position: absolute;
+            top: -12px;
+            font-size: 1.5em;
+            transition: left 0.8s ease;
+            filter: drop-shadow(0 0 5px rgba(255,0,0,0.5));
+        }
+
+        /* Current Stop Card */
+        .current-stop-card {
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid #ff0000;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .current-stop-card h2 {
+            color: #ff0000;
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .current-stop-card .location {
+            color: #00ffff;
+            margin-bottom: 15px;
+        }
+
+        .fun-fact-box {
+            background: rgba(126, 200, 227, 0.1);
+            border-left: 4px solid #7ec8e3;
+            padding: 15px;
+            text-align: left;
+            margin-top: 15px;
+        }
+
+        .fun-fact-box i {
+            color: #00ffff;
+            margin-right: 8px;
+        }
+
+        /* Stats */
+        .journey-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid #7ec8e3;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-item .value {
+            font-size: 1.8em;
+            color: #00ffff;
+            display: block;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .stat-item .label {
+            font-size: 0.75em;
+            color: #7ec8e3;
+            text-transform: uppercase;
+        }
+
+        /* Game Section */
+        .game-section {
+            background: rgba(26, 0, 0, 0.4);
+            border: 2px solid #ff0000;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #00ffff;
+            font-size: 1.1em;
+        }
+
+        /* Quiz */
+        .quiz-question {
+            color: #7ec8e3;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .quiz-btn {
+            background: rgba(0, 0, 0, 0.6);
+            color: #7ec8e3;
+            border: 2px solid #7ec8e3;
+            padding: 15px;
+            cursor: pointer;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+
+        .quiz-btn:hover {
+            background: rgba(126, 200, 227, 0.2);
+            border-color: #00ffff;
+        }
+
+        .quiz-btn.correct {
+            background: rgba(126, 200, 227, 0.5);
+            border-color: #7ec8e3;
+        }
+
+        .quiz-btn.incorrect {
+            background: rgba(255, 0, 0, 0.5);
+            border-color: #ff0000;
+        }
+
+        .quiz-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        /* Memory Game */
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .memory-card {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            border: 2px solid #7ec8e3;
+            cursor: pointer;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            color: #0a0a0a;
+        }
+
+        .memory-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+
+        .memory-card.flipped {
+            background: #0a0a0a;
+            color: #00ffff;
+        }
+
+        .memory-card.matched {
+            background: rgba(126, 200, 227, 0.3);
+            color: #7ec8e3;
+            border-color: #7ec8e3;
+        }
+
+        /* Messages */
+        .game-message {
+            padding: 12px;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .game-message.show {
+            display: block;
+        }
+
+        .game-message.success {
+            background: rgba(126, 200, 227, 0.2);
+            border: 2px solid #7ec8e3;
+            color: #7ec8e3;
+        }
+
+        .game-message.error {
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid #ff0000;
+            color: #ff0000;
+        }
+
+        /* Navigation */
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 15px;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .swipe-hint {
+            text-align: center;
+            color: #666;
+            font-size: 0.8em;
+        }
+
+        /* Modal */
+        .completion-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .completion-modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0a0a0a;
+            border: 3px solid #7ec8e3;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 0 40px rgba(126, 200, 227, 0.4);
+        }
+
+        .modal-content h2 {
+            color: #ff0000;
+            margin-bottom: 15px;
+        }
+
+        .modal-stats {
+            background: rgba(126, 200, 227, 0.1);
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .modal-stats p {
+            margin: 8px 0;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .journey-header h1 {
+                font-size: 1.4em;
+            }
+
+            .quiz-options {
+                grid-template-columns: 1fr;
+            }
+
+            .journey-stats {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .memory-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+
+            .memory-card {
+                font-size: 1.5em;
+            }
+
+            .stop-label {
+                font-size: 0.55em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 70px 10px 10px;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">← HOME</a>
+
+    <div class="journey-container">
+        <div class="journey-header">
+            <h1><i class="fas fa-train"></i> AMTRAK JOURNEY</h1>
+            <p>Penn Station → Rochester</p>
+        </div>
+
+        <!-- Train Track -->
+        <div class="train-track">
+            <div class="stops-row" id="stopsRow"></div>
+            <div class="track-line">
+                <div class="train-emoji" id="trainEmoji">🚂</div>
+            </div>
+        </div>
+
+        <!-- Current Stop -->
+        <div class="current-stop-card" id="currentStopCard"></div>
+
+        <!-- Stats -->
+        <div class="journey-stats">
+            <div class="stat-item">
+                <span class="value" id="scoreValue">0</span>
+                <span class="label">Points</span>
+            </div>
+            <div class="stat-item">
+                <span class="value" id="progressValue">0%</span>
+                <span class="label">Progress</span>
+            </div>
+            <div class="stat-item">
+                <span class="value" id="gamesValue">0/6</span>
+                <span class="label">Games</span>
+            </div>
+        </div>
+
+        <!-- Game -->
+        <div class="game-section" id="gameSection"></div>
+
+        <!-- Navigation -->
+        <div class="nav-buttons">
+            <button class="nav-btn btn-secondary" id="prevBtn" onclick="navigate(-1)">
+                <i class="fas fa-arrow-left"></i> PREVIOUS
+            </button>
+            <button class="nav-btn btn-primary" id="nextBtn" onclick="navigate(1)">
+                NEXT <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+        <div class="swipe-hint">← Swipe to navigate →</div>
+    </div>
+
+    <!-- Completion Modal -->
+    <div class="completion-modal" id="modal">
+        <div class="modal-content">
+            <h2>🎉 JOURNEY COMPLETE!</h2>
+            <p>Welcome to Rochester!</p>
+            <div class="modal-stats">
+                <p><strong>Final Score:</strong> <span id="finalScore">0</span> points</p>
+                <p><strong>Games Won:</strong> <span id="finalGames">0</span>/6</p>
+                <p><strong>Distance:</strong> 370 miles</p>
+                <p><strong>Time:</strong> ~7 hours</p>
+            </div>
+            <button class="btn-primary" onclick="restart()">NEW JOURNEY</button>
+        </div>
+    </div>
+
+    <script>
+        // Journey Data
+        const stops = [
+            {
+                name: 'Penn Station',
+                location: 'New York City',
+                fact: 'Penn Station serves over 600,000 passengers daily - the busiest station in North America!',
+                game: 'quiz',
+                question: 'What year was Amtrak founded?',
+                options: ['1971', '1960', '1985', '1955'],
+                answer: 0
+            },
+            {
+                name: 'Poughkeepsie',
+                location: 'Hudson Valley',
+                fact: 'The Walkway Over the Hudson is the longest elevated pedestrian bridge in the world!',
+                game: 'quiz',
+                question: 'How long is the Hudson River?',
+                options: ['150 mi', '315 mi', '450 mi', '200 mi'],
+                answer: 1
+            },
+            {
+                name: 'Albany',
+                location: 'State Capital',
+                fact: 'Albany is one of the oldest settlements from the original 13 colonies, founded in 1614!',
+                game: 'memory',
+                pairs: ['🗽', '🏛️', '🌹', '🦬']
+            },
+            {
+                name: 'Utica',
+                location: 'Mohawk Valley',
+                fact: 'Utica is famous for "Utica tomato pie" - a unique pizza with thick, airy crust!',
+                game: 'quiz',
+                question: 'Erie Canal connects Albany to?',
+                options: ['L. Ontario', 'L. Erie', 'L. Champlain', 'Finger Lakes'],
+                answer: 1
+            },
+            {
+                name: 'Syracuse',
+                location: 'Central NY',
+                fact: 'Syracuse was called "Salt City" due to the salt mines that operated here in the 1800s!',
+                game: 'memory',
+                pairs: ['🧂', '🏀', '🍊', '❄️']
+            },
+            {
+                name: 'Rochester',
+                location: 'Flower City',
+                fact: 'Rochester is the "Flower City" and home to Kodak, where the digital camera was invented!',
+                game: 'quiz',
+                question: 'What company was founded in Rochester?',
+                options: ['Xerox', 'Kodak', 'Both!', 'Neither'],
+                answer: 2
+            }
+        ];
+
+        // State
+        let state = {
+            currentStop: 0,
+            score: 0,
+            gamesWon: 0,
+            completedGames: new Set()
+        };
+
+        // Separate memory state for each stop that has a memory game
+        let memoryStates = {};
+
+        // Initialize
+        function init() {
+            renderStops();
+            updateView();
+            setupSwipe();
+        }
+
+        // Render stops
+        function renderStops() {
+            const row = document.getElementById('stopsRow');
+            row.innerHTML = stops.map((stop, i) => `
+                <div class="stop-marker" onclick="goToStop(${i})">
+                    <div class="stop-dot" id="dot-${i}"></div>
+                    <div class="stop-label">${stop.name}</div>
+                </div>
+            `).join('');
+        }
+
+        // Update view
+        function updateView() {
+            const stop = stops[state.currentStop];
+
+            // Update dots
+            stops.forEach((_, i) => {
+                const dot = document.getElementById(`dot-${i}`);
+                dot.className = 'stop-dot';
+                if (i < state.currentStop) dot.classList.add('visited');
+                if (i === state.currentStop) dot.classList.add('current');
+            });
+
+            // Train position
+            const progress = state.currentStop / (stops.length - 1);
+            document.getElementById('trainEmoji').style.left = `calc(${progress * 100}% - 12px)`;
+
+            // Current stop card
+            document.getElementById('currentStopCard').innerHTML = `
+                <h2><i class="fas fa-map-marker-alt"></i> ${stop.name}</h2>
+                <div class="location">${stop.location}</div>
+                <div class="fun-fact-box">
+                    <i class="fas fa-lightbulb"></i> ${stop.fact}
+                </div>
+            `;
+
+            // Stats
+            document.getElementById('scoreValue').textContent = state.score;
+            document.getElementById('progressValue').textContent = Math.round(progress * 100) + '%';
+            document.getElementById('gamesValue').textContent = `${state.gamesWon}/${stops.length}`;
+
+            // Game
+            renderGame(stop);
+
+            // Nav buttons
+            document.getElementById('prevBtn').disabled = state.currentStop === 0;
+            document.getElementById('nextBtn').disabled = state.currentStop === stops.length - 1;
+
+            // Check completion
+            if (state.currentStop === stops.length - 1 && state.gamesWon === stops.length) {
+                setTimeout(showModal, 500);
+            }
+        }
+
+        // Render game
+        function renderGame(stop) {
+            const section = document.getElementById('gameSection');
+            const gameId = `game-${state.currentStop}`;
+            const completed = state.completedGames.has(gameId);
+
+            if (stop.game === 'quiz') {
+                section.innerHTML = `
+                    <div class="game-header"><i class="fas fa-brain"></i> TRIVIA CHALLENGE</div>
+                    <div class="quiz-question">${stop.question}</div>
+                    <div class="quiz-options">
+                        ${stop.options.map((opt, i) => `
+                            <button class="quiz-btn ${completed ? (i === stop.answer ? 'correct' : '') : ''}"
+                                    onclick="answerQuiz(${i})"
+                                    ${completed ? 'disabled' : ''}>${opt}</button>
+                        `).join('')}
+                    </div>
+                    <div class="game-message ${completed ? 'show success' : ''}" id="quizMsg">
+                        ${completed ? '✓ Correct! +50 points' : ''}
+                    </div>
+                `;
+            } else if (stop.game === 'memory') {
+                // Initialize memory state for this stop if it doesn't exist
+                if (!memoryStates[state.currentStop]) {
+                    initMemory(stop.pairs, state.currentStop);
+                }
+                const memoryState = memoryStates[state.currentStop];
+                section.innerHTML = `
+                    <div class="game-header"><i class="fas fa-gamepad"></i> MEMORY MATCH</div>
+                    <div class="memory-grid">
+                        ${memoryState.cards.map((card, i) => `
+                            <button class="memory-card ${card.flipped ? 'flipped' : ''} ${card.matched ? 'matched' : ''}"
+                                    onclick="flipCard(${i})"
+                                    ${card.matched || completed ? 'disabled' : ''}>
+                                ${card.flipped || card.matched ? card.emoji : '?'}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div class="game-message ${completed ? 'show success' : ''}" id="memoryMsg">
+                        ${completed ? '✓ All matched! +80 points' : ''}
+                    </div>
+                `;
+            }
+        }
+
+        // Quiz
+        function answerQuiz(index) {
+            const stop = stops[state.currentStop];
+            const gameId = `game-${state.currentStop}`;
+            if (state.completedGames.has(gameId)) return;
+
+            const buttons = document.querySelectorAll('.quiz-btn');
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === stop.answer) btn.classList.add('correct');
+                else if (i === index) btn.classList.add('incorrect');
+            });
+
+            const msg = document.getElementById('quizMsg');
+            if (index === stop.answer) {
+                state.score += 50;
+                state.gamesWon++;
+                state.completedGames.add(gameId);
+                msg.textContent = '✓ Correct! +50 points';
+                msg.className = 'game-message show success';
+            } else {
+                msg.textContent = '✗ Try again next time!';
+                msg.className = 'game-message show error';
+            }
+            updateView();
+        }
+
+        // Memory
+        function initMemory(pairs, stopIndex) {
+            const cards = [...pairs, ...pairs].map(emoji => ({ emoji, flipped: false, matched: false }));
+            cards.sort(() => Math.random() - 0.5);
+            memoryStates[stopIndex] = { flipped: [], matched: 0, cards };
+        }
+
+        function flipCard(index) {
+            const gameId = `game-${state.currentStop}`;
+            if (state.completedGames.has(gameId)) return;
+
+            const memoryState = memoryStates[state.currentStop];
+            if (!memoryState) return;
+
+            const card = memoryState.cards[index];
+            if (card.flipped || card.matched || memoryState.flipped.length >= 2) return;
+
+            card.flipped = true;
+            memoryState.flipped.push(index);
+            renderGame(stops[state.currentStop]);
+
+            if (memoryState.flipped.length === 2) {
+                setTimeout(checkMatch, 600);
+            }
+        }
+
+        function checkMatch() {
+            const memoryState = memoryStates[state.currentStop];
+            if (!memoryState) return;
+
+            const [i1, i2] = memoryState.flipped;
+            const c1 = memoryState.cards[i1];
+            const c2 = memoryState.cards[i2];
+
+            if (c1.emoji === c2.emoji) {
+                c1.matched = c2.matched = true;
+                memoryState.matched++;
+                state.score += 20;
+
+                if (memoryState.matched === memoryState.cards.length / 2) {
+                    const gameId = `game-${state.currentStop}`;
+                    state.completedGames.add(gameId);
+                    state.gamesWon++;
+                }
+            } else {
+                c1.flipped = c2.flipped = false;
+            }
+
+            memoryState.flipped = [];
+            renderGame(stops[state.currentStop]);
+            updateView();
+        }
+
+        // Navigation
+        function navigate(dir) {
+            const newStop = state.currentStop + dir;
+            if (newStop >= 0 && newStop < stops.length) {
+                state.currentStop = newStop;
+                updateView();
+            }
+        }
+
+        function goToStop(index) {
+            state.currentStop = index;
+            updateView();
+        }
+
+        // Swipe
+        function setupSwipe() {
+            let startX = 0;
+            const container = document.querySelector('.journey-container');
+
+            container.addEventListener('touchstart', e => {
+                startX = e.touches[0].clientX;
+            }, { passive: true });
+
+            container.addEventListener('touchend', e => {
+                const diff = startX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 50) {
+                    navigate(diff > 0 ? 1 : -1);
+                }
+            }, { passive: true });
+        }
+
+        // Modal
+        function showModal() {
+            document.getElementById('finalScore').textContent = state.score;
+            document.getElementById('finalGames').textContent = state.gamesWon;
+            document.getElementById('modal').classList.add('show');
+        }
+
+        function restart() {
+            state = { currentStop: 0, score: 0, gamesWon: 0, completedGames: new Set() };
+            memoryStates = {};
+            document.getElementById('modal').classList.remove('show');
+            init();
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

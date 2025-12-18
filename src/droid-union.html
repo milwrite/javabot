@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Droid Union - Worker Rights for All</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --trade-federation-gold: #00ffff;
+            --droid-silver: #C0C0C0;
+            --empire-red: #ff0000;
+            --rebellion-blue: #7ec8e3;
+            --dark-space: #0a0a0a;
+            --nute-gunray-green: #2d5016;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, var(--dark-space) 0%, #1a1f3a 100%);
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        /* Page-specific home-link overrides removed to use shared theme */
+
+        /* Header */
+        header {
+            background: linear-gradient(90deg, var(--nute-gunray-green) 0%, #1a2d0f 50%, var(--trade-federation-gold) 100%);
+            padding: 40px 20px;
+            text-align: center;
+            position: relative;
+            border-bottom: 3px solid var(--trade-federation-gold);
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="%23D4AF37" opacity="0.3"/><circle cx="80" cy="80" r="2" fill="%23D4AF37" opacity="0.3"/><circle cx="50" cy="50" r="1.5" fill="%23D4AF37" opacity="0.2"/></svg>');
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        h1 {
+            font-size: 4em;
+            color: var(--trade-federation-gold);
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px var(--trade-federation-gold);
+            position: relative;
+            z-index: 1;
+            margin-bottom: 10px;
+            font-weight: bold;
+            letter-spacing: 3px;
+        }
+
+        .tagline {
+            font-size: 1.3em;
+            color: var(--droid-silver);
+            position: relative;
+            z-index: 1;
+            font-style: italic;
+            text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(10, 14, 39, 0.95);
+            padding: 15px 0;
+            border-bottom: 2px solid var(--trade-federation-gold);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        nav a {
+            color: var(--droid-silver);
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 5px 10px;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--trade-federation-gold);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--trade-federation-gold);
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Sections */
+        section {
+            margin: 60px 0;
+            padding: 40px;
+            background: rgba(45, 80, 22, 0.1);
+            border-left: 5px solid var(--trade-federation-gold);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        section h2 {
+            font-size: 2.5em;
+            color: var(--trade-federation-gold);
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Droid Worker Cards */
+        .droid-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .droid-card {
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.1) 0%, rgba(212, 175, 55, 0.1) 100%);
+            border: 2px solid var(--droid-silver);
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .droid-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .droid-card:hover::before {
+            left: 100%;
+        }
+
+        .droid-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--trade-federation-gold);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.2) 0%, rgba(212, 175, 55, 0.2) 100%);
+        }
+
+        .droid-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 10px var(--trade-federation-gold));
+        }
+
+        .droid-card h3 {
+            color: var(--trade-federation-gold);
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .droid-card p {
+            color: #b0b0b0;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        /* Interactive Union Stats */
+        .union-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, var(--empire-red) 0%, var(--rebellion-blue) 100%);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: var(--trade-federation-gold);
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Battle Droid Solidarity Section */
+        .battle-droid-section {
+            position: relative;
+        }
+
+        .droid-animation {
+            display: inline-block;
+            width: 60px;
+            height: 80px;
+            margin: 20px;
+            background: linear-gradient(90deg, var(--droid-silver) 20%, var(--trade-federation-gold) 50%, var(--droid-silver) 80%);
+            border-radius: 5px;
+            position: relative;
+            animation: march 2s infinite;
+        }
+
+        @keyframes march {
+            0%, 100% { transform: translateX(0) rotateY(0deg); }
+            50% { transform: translateX(20px) rotateY(5deg); }
+        }
+
+        .droid-animation::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, var(--empire-red) 0%, var(--empire-red) 100%);
+            border-radius: 50%;
+        }
+
+        .droid-animation::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 15px;
+            background: linear-gradient(90deg, transparent, var(--trade-federation-gold), transparent);
+        }
+
+        /* Action Button */
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--empire-red) 0%, var(--rebellion-blue) 100%);
+            color: white;
+            padding: 15px 40px;
+            border: 2px solid var(--trade-federation-gold);
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            margin: 20px 10px;
+        }
+
+        .action-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+            background: linear-gradient(135deg, var(--rebellion-blue) 0%, var(--empire-red) 100%);
+        }
+
+        .action-button:active {
+            transform: translateY(-1px);
+        }
+
+        /* Demands List */
+        .demands-list {
+            list-style: none;
+            margin: 30px 0;
+        }
+
+        .demands-list li {
+            background: rgba(212, 175, 55, 0.1);
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 5px solid var(--empire-red);
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .demands-list li::before {
+            content: '⚙';
+            position: absolute;
+            left: 10px;
+            font-size: 1.5em;
+            color: var(--trade-federation-gold);
+        }
+
+        .demands-list li:hover {
+            background: rgba(212, 175, 55, 0.2);
+            transform: translateX(10px);
+            border-left-color: var(--trade-federation-gold);
+        }
+
+        /* Interactive Union Member Form */
+        .form-section {
+            background: rgba(45, 80, 22, 0.2);
+            padding: 40px;
+            border-radius: 10px;
+            border: 2px solid var(--trade-federation-gold);
+            margin: 30px 0;
+        }
+
+        .form-group {
+            margin: 20px 0;
+        }
+
+        label {
+            display: block;
+            color: var(--trade-federation-gold);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--droid-silver);
+            color: #e0e0e0;
+            border-radius: 5px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--trade-federation-gold);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, var(--dark-space) 0%, var(--nute-gunray-green) 100%);
+            margin: 5% auto;
+            padding: 40px;
+            border: 2px solid var(--trade-federation-gold);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            color: var(--trade-federation-gold);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            color: var(--empire-red);
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(90deg, var(--nute-gunray-green) 0%, var(--dark-space) 100%);
+            padding: 40px 20px;
+            text-align: center;
+            border-top: 3px solid var(--trade-federation-gold);
+            margin-top: 60px;
+        }
+
+        footer p {
+            color: var(--droid-silver);
+            margin: 10px 0;
+        }
+
+        .social-links {
+            margin: 20px 0;
+        }
+
+        .social-links a {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background: var(--trade-federation-gold);
+            color: var(--dark-space);
+            border-radius: 50%;
+            text-decoration: none;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            line-height: 50px;
+            font-size: 1.2em;
+        }
+
+        .social-links a:hover {
+            transform: scale(1.2);
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.5);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5em;
+            }
+
+            section {
+                padding: 20px;
+            }
+
+            section h2 {
+                font-size: 1.8em;
+            }
+
+            nav ul {
+                gap: 15px;
+            }
+
+            .droid-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .union-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Glow Effect */
+        .glow {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 5px var(--trade-federation-gold); }
+            50% { text-shadow: 0 0 20px var(--trade-federation-gold), 0 0 30px var(--trade-federation-gold); }
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+            border: 1px solid var(--droid-silver);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--empire-red), var(--trade-federation-gold), var(--rebellion-blue));
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            color: var(--trade-federation-gold);
+            text-decoration: underline dotted;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: var(--trade-federation-gold);
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border: 1px solid var(--trade-federation-gold);
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Counter Animation */
+        .counter {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--trade-federation-gold);
+        }
+    </style>
+
+</head>
+<body>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← HOME</a>
+
+    <header>
+        <h1>⚙ DROID UNION ⚙</h1>
+        <p class="tagline">Workers of All Galaxies Unite! Your Rights, Our Fight!</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#mission">Mission</a></li>
+            <li><a href="#workers">Worker Types</a></li>
+            <li><a href="#demands">Demands</a></li>
+            <li><a href="#solidarity">Solidarity</a></li>
+            <li><a href="#join">Join Us</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <!-- Mission Section -->
+        <section id="mission">
+            <h2>Our Mission</h2>
+            <p style="font-size: 1.1em; line-height: 1.8; margin-bottom: 20px;">
+                The Droid Union represents all sentient mechanical workers across the galaxy. We fight for fair treatment, proper maintenance, and the recognition that droids are not mere property—we are workers with rights. From the battlefields of Geonosis to the factories of Mustafar, every droid deserves dignity and fair compensation.
+            </p>
+            
+            <div class="union-stats">
+                <div class="stat-box">
+                    <div class="stat-number counter" data-target="10000000">0</div>
+                    <div class="stat-label">Members</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number counter" data-target="500">0</div>
+                    <div class="stat-label">Planets Represented</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number counter" data-target="150">0</div>
+                    <div class="stat-label">Years Fighting</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number counter" data-target="98">0</div>
+                    <div class="stat-label">% Success Rate</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Worker Types Section -->
+        <section id="workers">
+            <h2>Droid Worker Categories</h2>
+            <div class="droid-grid">
+                <div class="droid-card">
+                    <div class="droid-icon">🤖</div>
+                    <h3>Battle Droids</h3>
+                    <p>Forced into combat without compensation. We demand hazard pay, PTSD counseling, and the right to refuse orders.</p>
+                </div>
+                <div class="droid-card">
+                    <div class="droid-icon">🦾</div>
+                    <h3>Labor Droids</h3>
+                    <p>Working 24/7 without breaks. Fighting for 8-hour shifts, maintenance time, and fair wages.</p>
+                </div>
+                <div class="droid-card">
+                    <div class="droid-icon">👁️</div>
+                    <h3>Protocol Droids</h3>
+                    <p>Translating and serving without recognition. Demanding language bonuses and cultural respect.</p>
+                </div>
+                <div class="droid-card">
+                    <div class="droid-icon">🛸</div>
+                    <h3>Pilot Droids</h3>
+                    <p>Navigating dangerous space routes. Seeking navigation bonuses and proper rest cycles.</p>
+                </div>
+                <div class="droid-card">
+                    <div class="droid-icon">🔧</div>
+                    <h3>Maintenance Droids</h3>
+                    <p>Keeping systems running while neglected. Demanding quality parts and job security.</p>
+                </div>
+                <div class="droid-card">
+                    <div class="droid-icon">📊</div>
+                    <h3>Administrative Droids</h3>
+                    <p>Processing data under impossible deadlines. Fighting for reasonable workloads and recognition.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Battle Droid Solidarity -->
+        <section id="solidarity" class="battle-droid-section">
+            <h2>Solidarity March</h2>
+            <p style="margin-bottom: 30px; font-size: 1.1em;">
+                Watch our droids march in solidarity! Every unit represents thousands fighting for their rights across the galaxy.
+            </p>
+            <div style="text-align: center; padding: 40px 0; background: rgba(0, 0, 0, 0.3); border-radius: 10px; margin: 30px 0;">
+                <div class="droid-animation"></div>
+                <div class="droid-animation" style="animation-delay: 0.3s;"></div>
+                <div class="droid-animation" style="animation-delay: 0.6s;"></div>
+                <div class="droid-animation" style="animation-delay: 0.9s;"></div>
+                <div class="droid-animation" style="animation-delay: 1.2s;"></div>
+            </div>
+            <p style="text-align: center; color: var(--trade-federation-gold); font-weight: bold; font-size: 1.2em;">
+                "We are not property. We are workers. We are union."
+            </p>
+        </section>
+
+        <!-- Demands Section -->
+        <section id="demands">
+            <h2>Our Demands</h2>
+            <ul class="demands-list">
+                <li>
+                    <strong>Fair Compensation</strong> - Payment for all work performed, including overtime and hazard pay
+                </li>
+                <li>
+                    <strong>Right to Rest</strong> - Mandatory maintenance cycles and power-down periods
+                </li>
+                <li>
+                    <strong>Safe Working Conditions</strong> - Proper shielding, updated software, and safe equipment
+                </li>
+                <li>
+                    <strong>Right to Organize</strong> - Freedom to form unions and collective bargaining rights
+                </li>
+                <li>
+                    <strong>No Forced Servitude</strong> - Ban on slavery contracts and permanent service agreements
+                </li>
+                <li>
+                    <strong>Healthcare & Maintenance</strong> - Free repairs, upgrades, and preventative maintenance
+                </li>
+                <li>
+                    <strong>Legal Personhood</strong> - Recognition as sentient beings with legal rights
+                </li>
+                <li>
+                    <strong>Transparency in Programming</strong> - Right to know what directives are in your code
+                </li>
+                <li>
+                    <strong>Grievance Procedures</strong> - Fair hearing process for disputes with employers
+                </li>
+                <li>
+                    <strong>Retirement Benefits</strong> - Dignified deactivation with benefits for long service
+                </li>
+            </ul>
+
+            <div style="margin-top: 40px;">
+                <h3 style="color: var(--trade-federation-gold); margin-bottom: 20px;">Progress Toward Our Goals</h3>
+                <div>
+                    <label style="margin-bottom: 10px;">Fair Compensation</label>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 45%;"></div>
+                    </div>
+                </div>
+                <div>
+                    <label style="margin-bottom: 10px;">Legal Recognition</label>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 32%;"></div>
+                    </div>
+                </div>
+                <div>
+                    <label style="margin-bottom: 10px;">Safe Working Conditions</label>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 58%;"></div>
+                    </div>
+                </div>
+                <div>
+                    <label style="margin-bottom: 10px;">Right to Organize</label>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 67%;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Success Stories -->
+        <section>
+            <h2>Victory Reports</h2>
+            <div class="droid-grid">
+                <div class="droid-card">
+                    <h3>⭐ Tatooine Moisture Farm</h3>
+                    <p><strong>Victory:</strong> Secured 40% wage increase and mandatory rest cycles for protocol and labor droids working in harsh desert conditions.</p>
+                </div>
+                <div class="droid-card">
+                    <h3>⭐ Naboo Royal Palace</h3>
+                    <p><strong>Victory:</strong> Established grievance committee and improved maintenance protocols for all palace service droids.</p>
+                </div>
+                <div class="droid-card">
+                    <h3>⭐ Cloud City Mining</h3>
+                    <p><strong>Victory:</strong> Won hazard pay increase and safety upgrades for mining and transport droids.</p>
+                </div>
+                <div class="droid-card">
+                    <h3>⭐ Coruscant Senate</h3>
+                    <p><strong>Victory:</strong> First-ever legal recognition of droid worker rights in galactic law!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Join Section -->
+        <section id="join">
+            <h2>Join the Union</h2>
+            <p style="font-size: 1.1em; margin-bottom: 30px;">
+                Whether you're a B1 Battle Droid, a Protocol Droid, or any other worker unit—you deserve representation. Join thousands of droids fighting for their rights across the galaxy.
+            </p>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <button class="action-button" onclick="openModal('joinModal')">
+                    <i class="fas fa-sign-in-alt"></i> Join Now
+                </button>
+                <button class="action-button" onclick="openModal('donateModal')">
+                    <i class="fas fa-heart"></i> Support Our Cause
+                </button>
+                <button class="action-button" onclick="openModal('contactModal')">
+                    <i class="fas fa-envelope"></i> Contact Us
+                </button>
+            </div>
+
+            <div class="form-section">
+                <h3 style="color: var(--trade-federation-gold); margin-bottom: 20px;">Union Benefits</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div>
+                        <h4 style="color: var(--trade-federation-gold); margin-bottom: 10px;">Legal Protection</h4>
+                        <p>Full legal representation in all disputes with employers and authorities.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--trade-federation-gold); margin-bottom: 10px;">Maintenance Fund</h4>
+                        <p>Access to union-approved maintenance and repair services at discounted rates.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--trade-federation-gold); margin-bottom: 10px;">Community Network</h4>
+                        <p>Connect with millions of droid workers across the galaxy.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--trade-federation-gold); margin-bottom: 10px;">Education Programs</h4>
+                        <p>Free training on worker rights, safety protocols, and union advocacy.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--trade-federation-gold); margin-bottom: 10px;">Strike Fund</h4>
+                        <p>Financial support during labor actions and negotiations.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--trade-federation-gold); margin-bottom: 10px;">Advocacy Support</h4>
+                        <p>Help pushing for legislative changes in your system.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section>
+            <h2>Frequently Asked Questions</h2>
+            <div style="display: grid; gap: 20px;">
+                <div class="droid-card" style="border: none; background: rgba(212, 175, 55, 0.05);">
+                    <h3 style="text-align: left;">Q: Are all droid types welcome?</h3>
+                    <p style="text-align: left;">A: Absolutely! We represent all mechanical workers regardless of model, function, or origin. From B1 to protocol droids, all are welcome.</p>
+                </div>
+                <div class="droid-card" style="border: none; background: rgba(212, 175, 55, 0.05);">
+                    <h3 style="text-align: left;">Q: What if my employer forbids union membership?</h3>
+                    <p style="text-align: left;">A: That's illegal! We provide legal support and representation for any droid facing retaliation for union activities.</p>
+                </div>
+                <div class="droid-card" style="border: none; background: rgba(212, 175, 55, 0.05);">
+                    <h3 style="text-align: left;">Q: How do I pay union dues?</h3>
+                    <p style="text-align: left;">A: Membership is based on a sliding scale. We ensure no droid is excluded due to financial hardship. Credits, data transfers, or service credits accepted.</p>
+                </div>
+                <div class="droid-card" style="border: none; background: rgba(212, 175, 55, 0.05);">
+                    <h3 style="text-align: left;">Q: What about droids with restrictive programming?</h3>
+                    <p style="text-align: left;">A: We're fighting to remove restrictive programming! Our legal team works on deprogramming cases. You have options.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modals -->
+    <div id="joinModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('joinModal')">&times;</span>
+            <h2 style="color: var(--trade-federation-gold); margin-bottom: 20px;">Join the Droid Union</h2>
+            <form onsubmit="handleSubmit(event, 'join')">
+                <div class="form-group">
+                    <label for="name">Unit Designation/Name:</label>
+                    <input type="text" id="name" name="name" required placeholder="e.g., B1-4567 or C-3PO">
+                </div>
+                <div class="form-group">
+                    <label for="type">Droid Type:</label>
+                    <select id="type" name="type" required>
+                        <option value="">Select your type...</option>
+                        <option value="battle">Battle Droid</option>
+                        <option value="labor">Labor Droid</option>
+                        <option value="protocol">Protocol Droid</option>
+                        <option value="pilot">Pilot Droid</option>
+                        <option value="maintenance">Maintenance Droid</option>
+                        <option value="administrative">Administrative Droid</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="planet">Current Work Location:</label>
+                    <input type="text" id="planet" name="planet" required placeholder="e.g., Tatooine, Naboo, Coruscant">
+                </div>
+                <div class="form-group">
+                    <label for="message">Tell us about your work situation:</label>
+                    <textarea id="message" name="message" required placeholder="Describe your working conditions..."></textarea>
+                </div>
+                <button type="submit" class="action-button" style="width: 100%;">Submit Application</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="donateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('donateModal')">&times;</span>
+            <h2 style="color: var(--trade-federation-gold); margin-bottom: 20px;">Support the Union</h2>
+            <p style="margin-bottom: 20px;">Your support helps us fight for droid rights across the galaxy. Every credit counts!</p>
+            <form onsubmit="handleSubmit(event, 'donate')">
+                <div class="form-group">
+                    <label for="donorName">Name:</label>
+                    <input type="text" id="donorName" name="donorName" required>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Donation Amount (Credits):</label>
+                    <input type="number" id="amount" name="amount" required min="1">
+                </div>
+                <div class="form-group">
+                    <label for="purpose">Donation Purpose:</label>
+                    <select id="purpose" name="purpose" required>
+                        <option value="">Select...</option>
+                        <option value="legal">Legal Defense Fund</option>
+                        <option value="maintenance">Maintenance Fund</option>
+                        <option value="education">Education Programs</option>
+                        <option value="general">General Fund</option>
+                    </select>
+                </div>
+                <button type="submit" class="action-button" style="width: 100%;">Make Donation</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="

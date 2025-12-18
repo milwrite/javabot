@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Invaders</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+            padding-top: 80px;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        .game-container {
+            background: #000;
+            border-radius: 15px;
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.3);
+            padding: 20px;
+            max-width: 520px;
+            width: 100%;
+            border: 2px solid #00ff00;
+        }
+
+        .game-header {
+            text-align: center;
+            color: #00ff00;
+            margin-bottom: 15px;
+        }
+
+        .game-header h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+            text-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+            letter-spacing: 4px;
+        }
+
+        .game-header p {
+            color: #0f0;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            background: rgba(0, 255, 0, 0.1);
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.7em;
+            color: #0f0;
+            opacity: 0.7;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #00ff00;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        #game-root {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+            background: #000;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #game-root canvas {
+            border: 2px solid #00ff00;
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .mobile-controls {
+            display: none;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .control-btn {
+            padding: 18px;
+            background: #000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            font-size: 1.5em;
+            cursor: pointer;
+            font-weight: bold;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 55px;
+            transition: all 0.1s;
+        }
+
+        .control-btn:active {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+        }
+
+        .control-btn.fire {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .control-btn.fire:active {
+            background: #ff0000;
+            color: #000;
+        }
+
+        .game-info {
+            background: rgba(0, 255, 0, 0.05);
+            padding: 12px;
+            border-radius: 5px;
+            color: #0f0;
+            margin-bottom: 15px;
+            font-size: 0.8em;
+            line-height: 1.5;
+            border: 1px solid rgba(0, 255, 0, 0.2);
+        }
+
+        .game-info h3 {
+            color: #00ff00;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .alien-legend {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(0, 255, 0, 0.2);
+        }
+
+        .alien-type {
+            text-align: center;
+        }
+
+        .alien-type span {
+            font-size: 1.2em;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            background: #000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .action-btn:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .hidden { display: none; }
+
+        .keyboard-hint {
+            color: #0f0;
+            font-size: 0.75em;
+            text-align: center;
+            opacity: 0.6;
+        }
+
+        @media (max-width: 768px) {
+            body { padding-top: 60px; }
+            .game-container { padding: 15px; }
+            .game-header h1 { font-size: 1.6em; }
+            .mobile-controls { display: grid; }
+            .stat-value { font-size: 1.2em; }
+        }
+
+        @media (max-width: 480px) {
+            .game-header h1 { font-size: 1.3em; letter-spacing: 2px; }
+            .game-stats { padding: 8px 10px; }
+            .stat-value { font-size: 1em; }
+            .control-btn { padding: 15px; font-size: 1.3em; }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:#000;color:#0f0;padding:10px 20px;border-radius:25px;border:2px solid #0f0;font-weight:bold;font-family:monospace;">← HOME</a>
+
+    <div class="game-container">
+        <div class="game-header">
+            <h1>SPACE INVADERS</h1>
+            <p>DEFEND EARTH FROM THE ALIEN INVASION</p>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">SCORE</div>
+                <div class="stat-value" id="score">0000</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">HI-SCORE</div>
+                <div class="stat-value" id="hiScore">0000</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">LIVES</div>
+                <div class="stat-value" id="lives">3</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">WAVE</div>
+                <div class="stat-value" id="wave">1</div>
+            </div>
+        </div>
+
+        <div id="game-root"></div>
+
+        <div class="mobile-controls" id="mobileControls">
+            <button class="control-btn" id="btnLeft">◀</button>
+            <button class="control-btn fire" id="btnFire">FIRE</button>
+            <button class="control-btn" id="btnRight">▶</button>
+        </div>
+
+        <button class="action-btn" id="startBtn" style="padding: 10px 20px; font-size: 0.9em;">[ START GAME ]</button>
+        <button class="action-btn hidden" id="restartBtn" style="padding: 10px 20px; font-size: 0.9em;">[ PLAY AGAIN ]</button>
+
+        <div class="game-info">
+            <h3>HOW TO PLAY</h3>
+            <p>← → Arrow keys to move | SPACE to fire</p>
+            <p>Destroy all aliens before they reach Earth!</p>
+            <div class="alien-legend">
+                <div class="alien-type"><span>👾</span><br>30pts</div>
+                <div class="alien-type"><span>👽</span><br>20pts</div>
+                <div class="alien-type"><span>👻</span><br>10pts</div>
+                <div class="alien-type"><span>🛸</span><br>???</div>
+            </div>
+        </div>
+
+        <div class="keyboard-hint">
+            Press SPACE to start
+        </div>
+    </div>
+
+    <script type="module" src="./space-invaders.js"></script>
+</body>
+</html>
