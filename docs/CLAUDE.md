@@ -94,7 +94,7 @@ Example broken process documentation:
 
 ## 🚀 COMMIT PROCEDURES
 
-**CRITICAL**: When working on this codebase, follow these exact commit steps to avoid authentication issues:
+**CRITICAL**: When working on this codebase, follow these exact commit steps to avoid authentication issues.
 
 ### Quick Commit Guide
 
@@ -105,22 +105,35 @@ Example broken process documentation:
    git add .
    ```
 
-2. **Commit with message**:
+2. **Commit with message** (lowercase, detailed, max 100 chars, no Claude Code attribution):
    ```bash
-   git commit -m "your commit message here"
+   git commit -m "fix: your commit message here"
    ```
 
-3. **Push using token authentication**:
+3. **Push using token authentication** (ALWAYS use this exact command):
    ```bash
-   git push origin main
+   source .env && git remote set-url origin https://milwrite:$GITHUB_TOKEN@github.com/milwrite/javabot.git && git push origin main && git remote set-url origin https://github.com/milwrite/javabot.git
    ```
-   
-   **If push fails with authentication error**, use this format:
-   ```bash
-   git remote set-url origin https://milwrite:GITHUB_TOKEN@github.com/milwrite/javabot.git
-   git push
-   git remote set-url origin https://github.com/milwrite/javabot.git  # clean up afterward
-   ```
+
+### Push Command Breakdown
+
+The push command MUST:
+1. **Source .env first** - Token is not in shell environment by default
+2. **Set remote URL with token** - GitHub requires token auth, not password
+3. **Push to origin main** - Always push to main branch
+4. **Clean up remote URL** - Remove token from .git/config immediately after push
+
+**NEVER use**:
+- `git push` alone (will fail with permission denied)
+- `git push origin main` without token (same failure)
+- SSH URLs like `git@github.com:...` (no SSH keys configured)
+
+### One-Liner for Commit + Push
+
+For convenience, stage, commit, and push in one command:
+```bash
+git add . && git commit -m "your message" && source .env && git remote set-url origin https://milwrite:$GITHUB_TOKEN@github.com/milwrite/javabot.git && git push origin main && git remote set-url origin https://github.com/milwrite/javabot.git
+```
 
 ### Bot Auto-Commit Behavior
 
