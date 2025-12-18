@@ -150,7 +150,17 @@ class BotGUIServer {
     }
     
     start() {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
+            this.server.on('error', (err) => {
+                if (err.code === 'EADDRINUSE') {
+                    console.error(`❌ GUI server port ${this.port} is already in use`);
+                    reject(new Error(`Port ${this.port} is already in use`));
+                } else {
+                    console.error(`❌ GUI server error:`, err.message);
+                    reject(err);
+                }
+            });
+
             this.server.listen(this.port, () => {
                 this.isRunning = true;
                 this.startTime = new Date().toISOString();

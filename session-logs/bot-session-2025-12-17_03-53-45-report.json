@@ -1,0 +1,33 @@
+{
+  "session": {
+    "id": "bot-session-2025-12-17_03-53-45",
+    "startTime": "2025-12-17T03:53:45.650Z",
+    "endTime": "2025-12-17T04:04:46.238Z",
+    "duration": "11m 0s",
+    "exitCode": 0,
+    "exitReason": "SIGINT"
+  },
+  "activity": {
+    "totalEvents": 70,
+    "lastActivity": "2025-12-17T04:03:47.621Z",
+    "eventsPerMinute": 6
+  },
+  "mentions": {
+    "total": 0,
+    "events": []
+  },
+  "toolCalls": {
+    "total": 0,
+    "events": []
+  },
+  "errors": {
+    "total": 0,
+    "byCategory": {},
+    "events": []
+  },
+  "warnings": {
+    "total": 0,
+    "events": []
+  },
+  "summary": "SUCCESS: Bot session lasted 11m 0s"
+}

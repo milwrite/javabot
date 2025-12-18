@@ -389,3 +389,190 @@ node test-search.js       # ✅ Search functionality working
 
 ### Conclusion
 Bot is **production-ready** with high confidence after fixing the content detection bug. The iCloud directory issue was the primary cause of reported startup problems. System-V1 architecture appears well-designed and all core functionality is operational.
+
+---
+
+## 2025-12-15 - Real-time Observability & GUI Dashboard System
+
+### Overview
+Added comprehensive real-time monitoring dashboard with WebSocket-based event streaming, file change tracking, and agent workflow visualization.
+
+### Components Added
+
+**1. GUI Server (gui-server.js)**
+- Express server on port 3000 (configurable)
+- WebSocket streaming with Socket.io
+- Real-time event broadcasting to connected clients
+- Automatic GUI startup during bot initialization
+
+**2. Logging Infrastructure**
+Added system-wide logging functions:
+- `logToGUI(level, message, data)` - General events (error/warn/info/debug)
+- `logToolCall(tool, args, result, error)` - AI tool executions
+- `logFileChange(action, path, content, old)` - File system operations
+- `startAgentLoop(name)` / `updateAgentLoop()` / `endAgentLoop()` - Workflow tracking
+
+**3. Dashboard Features**
+- **System Logs Panel**: Colored severity levels with searchable entries
+- **Tool Calls Panel**: AI function executions with args/results/timing
+- **File Changes Panel**: Create/edit/delete operations with content diffs
+- **Agent Loops Panel**: Multi-step workflow progress visualization
+
+### Files Added
+- `gui-server.js` - WebSocket + Express server
+- `gui-run-logs/` - Directory for session-specific run logs
+
+### Testing
+✅ GUI server starts on port 3000
+✅ WebSocket connections established
+✅ Real-time events streamed to dashboard
+✅ Can be disabled with `--no-gui` flag
+
+### Known Limitations
+- Logs capped at 1000 entries per panel
+- Content truncated for display efficiency
+- Panel-specific clear functionality (no global clear yet)
+
+---
+
+## 2025-12-15 - Log Preservation System & Session Tracking
+
+### Issue: Missing Activity Logging
+**Problem:** Without bot session logs, it was impossible to:
+- Troubleshoot failed builds
+- Track which operations succeeded/failed
+- Analyze patterns of errors
+- Review complete activity history
+
+### Solution: Log Preservation System
+
+**Files Added**:
+- `run-bot.sh` - Shell script for launching bot with logging
+- `log-preserv.js` - Log parsing and report generation
+- `session-logs/` - Directory for session-specific JSON and markdown reports
+
+**Features**:
+1. **Raw Log Capture**: All stdout/stderr captured to session log
+2. **Activity Extraction**: Parses bot logs for:
+   - Mentions processed
+   - Tool calls executed
+   - Errors encountered
+   - Health metrics
+3. **Report Generation**: Creates JSON and Markdown summaries:
+   - Session duration
+   - Success/failure counts
+   - Error categorization
+   - Last activity timestamp
+4. **Process Monitoring**: Detects:
+   - Hanging processes
+   - Memory issues
+   - Authentication failures
+   - Incomplete sessions
+
+**Usage**:
+```bash
+./run-bot.sh              # Runs bot with logging
+./run-bot.sh --gui-port 3001  # Custom GUI port
+./run-bot.sh --no-gui     # Disable GUI dashboard
+```
+
+**Log Structure**:
+```
+session-logs/
+├── bot-session-YYYY-MM-DD_HH-mm-ss-raw.log      # Raw capture
+├── bot-session-YYYY-MM-DD_HH-mm-ss-report.json  # Structured data
+└── bot-session-YYYY-MM-DD_HH-mm-ss-summary.md   # Human-readable
+```
+
+### Files Modified
+- `index.js` - Integration with logging system
+- `package.json` - Dependencies for log processing
+
+---
+
+## 2025-12-16 - Mention Handler Improvements & Message Deduplication
+
+### Issue: Duplicate Responses to @Mentions
+**Problem:** Discord API occasionally fires `messageCreate` event twice for same message, causing bot to respond twice.
+
+**Impact:**
+- User sees duplicate bot responses
+- Confusing conversation flow
+- Wasted API calls
+
+### Solution: Message Deduplication
+
+**Changes to Mention Handler** (index.js):
+1. Added `processedMentionIds` Set to track seen messages
+2. Check message ID before processing:
+```javascript
+if (processedMentionIds.has(message.id)) {
+    console.log('[DEDUPE] Skipping already-processed mention');
+    return;
+}
+processedMentionIds.add(message.id);
+```
+3. Cleanup old IDs (keep last 100) to prevent memory leaks
+
+**Result**:
+- ✅ Duplicate responses eliminated
+- ✅ Proper mention deduplication
+- ✅ Memory-efficient tracking
+
+### Additional Improvements
+- Fixed mention routing to normal LLM flow (not game pipeline)
+- Enhanced error handling for failed tool calls during mentions
+- Better logging of mention processing with channel filter info
+
+### Files Modified
+- `index.js` - Mention handler improvements
+
+---
+
+## 2025-12-17 - Documentation Consolidation & Architecture Review Update
+
+### Actions Taken
+
+**1. Deleted Outdated Files**
+- ❌ `SYSTEM_V1.md` - Superseded by CLAUDE.md system documentation
+
+**2. Updated ARCHITECTURE_REVIEW.md**
+- Added status tracking (✅ RESOLVED, 🔄 IN PROGRESS, ⏳ PENDING)
+- Cross-referenced with current CLAUDE.md (Dec 17 version)
+- Marked 2 items as resolved (Classifier fallback, Mobile-first design)
+- Marked 4 items as in-progress (Discord ready event, OpenRouter models, Remote URL, Error tracking)
+- Prioritized 10 pending items for next sprint
+- Added summary with priority order for implementation
+
+**3. Enhanced DEVLOG.md**
+- Added recent entries for Dec 15-17 work
+- Documented GUI dashboard system
+- Documented log preservation system
+- Documented mention handler improvements
+- Linked to related documentation
+
+### Documentation System Status
+
+**Active Core Docs**:
+- `CLAUDE.md` - Master project instructions (actively maintained)
+- `README.md` - User-facing project documentation
+- `DEVLOG.md` - Development activity log (updated)
+- `agents.md` - Conversation history (auto-updated)
+
+**Reference Docs**:
+- `ARCHITECTURE_REVIEW.md` - Issues & improvements (updated with status)
+- `GUI_README.md` - GUI dashboard documentation
+- `LOG_PRESERVATION_README.md` - Log system documentation
+- `TEST_PLAN.md` - Testing procedures
+
+**Deprecated Docs**:
+- ❌ `SYSTEM_V1.md` - Deleted (content in CLAUDE.md)
+- `SYSTEM_V1_TEST_RESULTS.md` - Consider archiving (test info outdated)
+- `TESTING.md` - Superseded by TEST_PLAN.md
+- `TESTING_STATUS.md` - Superseded by newer test reports
+
+### Next Steps
+- Continue monitoring items in ARCHITECTURE_REVIEW.md
+- Add more entries to DEVLOG.md as work progresses
+- Consider archiving very old test documents (SYSTEM_V1_TEST_RESULTS.md, etc.)
+- Maintain CLAUDE.md as single source of truth for bot configuration

@@ -269,11 +269,15 @@ requestClassifier.js (LLM-based routing)
 - Token authentication configured at runtime
 
 **OpenRouter AI Integration**:
-- Swappable models via `MODEL_PRESETS` (2025 latest models)
+- **Zero Data Retention (ZDR) ENFORCED** - all requests use `provider.data_collection: 'deny'`
+- Only ZDR-compliant models allowed (no OpenAI - they don't support ZDR on OpenRouter)
+- Swappable models via `MODEL_PRESETS` (ZDR-compliant only)
 - Default: `anthropic/claude-haiku-4.5`
-- Available: Claude Haiku/Sonnet 4.5, Kimi K2, GPT-5 Nano, Gemini 2.5
+- Available: Claude Haiku/Sonnet 4.5, Kimi K2, Gemini 2.5, GLM 4.6
 - Function calling support (filesystem tools, web search)
 - 10,000 token output limit for detailed responses
+- Automatic 402 error recovery (reduces max_tokens when credits low)
+- Automatic 500 error fallback (switches to alternate ZDR model after 2 failures)
 - Conversation history from `agents.md` (100 messages max)
 
 **Noir Terminal Frontend Styling**:
@@ -565,12 +569,14 @@ The `MODEL` variable is mutable and can be changed at runtime:
 MODEL = MODEL_PRESETS[modelChoice];
 ```
 
-Available presets (2025 models):
+Available presets (ZDR-compliant only):
 - `haiku` - Claude Haiku 4.5 (fast, cheap)
 - `sonnet` - Claude Sonnet 4.5 (balanced)
 - `kimi` - Kimi K2 Thinking (reasoning)
-- `gpt5` - GPT-5 Nano (latest OpenAI)
-- `gemini` - Gemini 2.5 Flash Lite (Google)
+- `gemini` - Gemini 2.5 Pro (Google)
+- `glm` - GLM 4.6 (Z-AI)
+
+**Note**: OpenAI models removed - they don't support Zero Data Retention on OpenRouter.
 
 Changes apply immediately to all subsequent AI calls.
 

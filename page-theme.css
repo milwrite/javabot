@@ -185,7 +185,7 @@ a.home-link {
 }
 
 .home-link:hover,
-.home-link:focus-within,
+.home-link:focus,
 a.home-link:hover,
 a.home-link:focus {
     border-color: rgba(255, 0, 0, 0.6);

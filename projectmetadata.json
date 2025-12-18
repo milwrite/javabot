@@ -392,6 +392,13 @@
       "description": "late-night hype parody",
       "collection": "stories-content",
       "hidden": false
+    },
+    "rhythm-test": {
+      "title": "Rhythm Test",
+      "icon": "🎵",
+      "description": "beat matching rhythm arcade",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }

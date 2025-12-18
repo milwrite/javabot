@@ -602,8 +602,9 @@ AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
 - create_feature(name, description): Generate JS library + demo page
 - commit_changes(message, files): Git add, commit, push to main branch
 - get_repo_status(): Check current git status and branch info
+- git_log(count, file, oneline): View commit history (default 10 commits, optional file filter)
 - web_search(query): Search internet for current information via Perplexity
-- set_model(model): Switch AI model runtime (haiku, sonnet, kimi, gpt5, gemini)
+- set_model(model): Switch AI model runtime (haiku, sonnet, kimi, gemini, glm, qwen) - ZDR-compliant only
 - update_style(preset, description): Change website theme (noir-terminal, neon-arcade, dark-minimal, custom)
 - build_game(title, prompt, type): Complete AI pipeline for games/content (Architect→Builder→Tester→Scribe flow)
 
@@ -616,7 +617,7 @@ DISCORD INTEGRATION FEATURES:
   * /status - Show repo status + live site link
   * /chat <message> - AI conversation with context from agents.md
   * /search <query> - Web search via Perplexity API
-  * /set-model <model> - Switch AI model (haiku/sonnet/kimi/gpt5/gemini)
+  * /set-model <model> - Switch AI model (haiku/sonnet/kimi/gemini/glm/qwen) ZDR only
   * /set-prompt <action> [content] - Modify system prompt (view/reset/add/replace)
   * /update-style <preset> [description] - Update site theme
   * /poll <question> - Yes/no poll with reactions
@@ -636,6 +637,10 @@ WHEN TO USE EACH TOOL:
   * Search for keywords like "clue", "answer", "const", function names, etc.
   * Use SITE_INVENTORY.md for current site structure: search_files("content", "SITE_INVENTORY.md")
   * Multi-file search: search_files("pattern", ["src/file1.html", "src/file2.html"])
+- To recall past work/history: Use git_log() - this is your MEMORY of what you've built
+  * When asked "what did you make?", "show me history", "what have you done?", "recent changes" → git_log()
+  * To see changes to a specific file: git_log(10, "src/filename.html")
+  * Your commit messages describe what you built - use them to remember past work
   * Don't guess filenames - search to find the right file
 - For quick file edits: use edit_file with natural language instructions
 - For new pages/apps: use create_page (simple) or build_game (complex with AI pipeline)
@@ -1306,7 +1311,8 @@ Return ONLY the complete updated file content. No explanations, no markdown code
                 model: editModel,
                 messages: [{ role: 'user', content: editPrompt }],
                 max_tokens: 16000,
-                temperature: CONFIG.AI_TEMPERATURE
+                temperature: CONFIG.AI_TEMPERATURE,
+                provider: { data_collection: 'deny' } // ZDR enforcement
             }, {
                 headers: {
                     'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -1802,7 +1808,8 @@ Return only HTML, no markdown blocks or explanations.`;
                 model: MODEL,
                 messages: [{ role: 'user', content: webPrompt }],
                 max_tokens: CONFIG.AI_MAX_TOKENS,
-                temperature: CONFIG.AI_TEMPERATURE
+                temperature: CONFIG.AI_TEMPERATURE,
+                provider: { data_collection: 'deny' } // ZDR enforcement
             }, {
                 headers: {
                     'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -2114,6 +2121,31 @@ async function getRepoStatus() {
         return result;
     } catch (error) {
         return `Error getting status: ${error.message}`;
+    }
+}
+
+// Git log - view commit history
+async function getGitLog(count = 10, file = null, oneline = false) {
+    try {
+        const maxCount = Math.min(count || 10, 50);
+        const { exec } = require('child_process');
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+
+        let cmd = `git log -${maxCount}`;
+        if (oneline) {
+            cmd += ' --oneline';
+        } else {
+            cmd += ' --format="%h | %an | %ar | %s"';
+        }
+        if (file) {
+            cmd += ` -- "${file}"`;
+        }
+
+        const { stdout } = await execAsync(cmd, { cwd: __dirname });
+        return stdout.trim() || 'No commits found.';
+    } catch (error) {
+        return `Error getting git log: ${error.message}`;
     }
 }
 
@@ -2502,11 +2534,11 @@ Do not use web search or create new content - only edit existing files.`
 }
 
 // Enhanced LLM response with tool calling
-async function getLLMResponse(userMessage, conversationMessages = [], discordContext = {}) {
+async function getLLMResponse(userMessage, conversationMessages = [], discordContext = {}, onStatusUpdate = null) {
     try {
         // Start agent loop tracking for GUI
         startAgentLoop(
-            userMessage.substring(0, 100), 
+            userMessage.substring(0, 100),
             discordContext.user || 'AI',
             discordContext.channel || 'Direct'
         );
@@ -2676,6 +2708,21 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             {
                 type: 'function',
                 function: {
+                    name: 'git_log',
+                    description: 'Get git commit history. Shows recent commits with hash, author, date, and message.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            count: { type: 'number', description: 'Number of commits to show (default: 10, max: 50)' },
+                            file: { type: 'string', description: 'Optional: show commits for a specific file only' },
+                            oneline: { type: 'boolean', description: 'Compact one-line format (default: false)' }
+                        }
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
                     name: 'web_search',
                     description: 'Search the web for current information, news, documentation, or recent updates',
                     parameters: {
@@ -2691,14 +2738,14 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'set_model',
-                    description: 'Switch the AI model used for responses. Available models: haiku (fast/cheap), sonnet (balanced), kimi (reasoning), gpt5 (latest OpenAI), gemini (Google)',
+                    description: 'Switch the AI model used for responses. ZDR-compliant models only: haiku (fast/cheap), sonnet (balanced), kimi (reasoning), gemini (Google), glm (Z-AI), qwen (Qwen)',
                     parameters: {
                         type: 'object',
                         properties: {
                             model: {
                                 type: 'string',
-                                description: 'Model preset name: haiku, sonnet, kimi, gpt5, or gemini',
-                                enum: ['haiku', 'sonnet', 'kimi', 'gpt5', 'gemini']
+                                description: 'Model preset name: haiku, sonnet, kimi, gemini, glm, or qwen (ZDR-compliant only)',
+                                enum: ['haiku', 'sonnet', 'kimi', 'gemini', 'glm', 'qwen']
                             }
                         },
                         required: ['model']
@@ -2777,7 +2824,8 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         max_tokens: 10000,
                         temperature: 0.7,
                         tools: tools,
-                        tool_choice: 'auto'
+                        tool_choice: 'auto',
+                        provider: { data_collection: 'deny' } // ZDR enforcement
                     }, {
                         headers: {
                             'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -2838,6 +2886,12 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             }
 
             logEvent('LLM', `Iteration ${iteration}: Processing ${lastResponse.tool_calls.length} tool calls`);
+
+            // Update Discord status if callback provided
+            if (onStatusUpdate) {
+                const toolNames = lastResponse.tool_calls.map(tc => tc.function.name).join(', ');
+                await onStatusUpdate(`🔧 executing tools: ${toolNames}...`);
+            }
 
             // Execute all tool calls
             const toolResults = [];
@@ -2913,6 +2967,8 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                     }
                 } else if (functionName === 'get_repo_status') {
                     result = await getRepoStatus();
+                } else if (functionName === 'git_log') {
+                    result = await getGitLog(args.count, args.file, args.oneline);
                 } else if (functionName === 'web_search') {
                     result = await webSearch(args.query);
                     // Store search results for context persistence
@@ -3691,7 +3747,7 @@ async function handleMentionAsync(message) {
                         await thinkingMsg.edit('🔧 analyzing functionality issue...');
                         // Skip to normal LLM response with full tools
                         processingAttempt = 4;
-                        continue;
+                        break; // Exit classification loop to proceed to final LLM processing
                     }
                     
                     // Handle simple edits with streamlined edit loop
@@ -3782,7 +3838,14 @@ async function handleMentionAsync(message) {
                 
                 if (processingAttempt === 1) {
                     // Full LLM with all tools
-                    llmResult = await getLLMResponse(content, conversationMessages, discordContext);
+                    await thinkingMsg.edit('🤖 processing with AI tools...');
+                    llmResult = await getLLMResponse(content, conversationMessages, discordContext, async (status) => {
+                        try {
+                            await thinkingMsg.edit(status);
+                        } catch (err) {
+                            console.error('Status update error:', err.message);
+                        }
+                    });
                 } else if (processingAttempt === 2) {
                     // Retry with Haiku model and reduced context
                     await thinkingMsg.edit(`${getBotResponse('thinking')} (trying faster model...)`);
@@ -3794,25 +3857,25 @@ async function handleMentionAsync(message) {
                         MODEL = originalModel; // Restore original model
                     }
                 } else if (processingAttempt === 3) {
-                    // Try GPT-5 Nano as alternative
+                    // Try Kimi as alternative (ZDR-compliant)
                     await thinkingMsg.edit(`${getBotResponse('thinking')} (trying alternative model...)`);
                     const originalModel = MODEL;
-                    MODEL = MODEL_PRESETS.gpt5;
+                    MODEL = MODEL_PRESETS.kimi;
                     try {
                         llmResult = await getLLMResponse(content, [], discordContext);
                     } finally {
                         MODEL = originalModel;
                     }
                 } else if (processingAttempt === 4) {
-                    // Try Gemini as last resort
-                    await thinkingMsg.edit(`${getBotResponse('thinking')} (trying backup model...)`);
-                    const originalModel = MODEL;
-                    MODEL = MODEL_PRESETS.gemini;
-                    try {
-                        llmResult = await getLLMResponse(content, [], discordContext);
-                    } finally {
-                        MODEL = originalModel;
-                    }
+                    // This is where FUNCTIONALITY_FIX routes to - provide clear feedback
+                    await thinkingMsg.edit('🛠️ analyzing issue with full tool access...');
+                    llmResult = await getLLMResponse(content, conversationMessages, discordContext, async (status) => {
+                        try {
+                            await thinkingMsg.edit(status);
+                        } catch (err) {
+                            console.error('Status update error:', err.message);
+                        }
+                    });
                 } else {
                     // Final attempt: Haiku with absolute minimal constraints and no tools
                     await thinkingMsg.edit(`${getBotResponse('thinking')} (final simplified attempt...)`);
@@ -6526,4 +6589,13 @@ if (fsSync.existsSync('DEVLOG.md')) {
     console.log('[WATCHER] File watcher started for DEVLOG.md');
 }
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_TOKEN).catch(error => {
+    console.error('❌ Failed to connect to Discord:', error.message);
+    if (error.code === 'ECONNRESET' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
+        console.error('⚠️  Network connectivity issue - check your internet connection or VPN settings');
+        console.error('   Try: curl https://discord.com in terminal to verify connectivity');
+    } else if (error.code === 'TOKEN_INVALID') {
+        console.error('⚠️  Invalid Discord token - check DISCORD_TOKEN in .env file');
+    }
+    process.exit(1);
+});

@@ -1,0 +1,56 @@
+{
+  "session": {
+    "id": "bot-session-2025-12-18_03-02-30",
+    "startTime": "2025-12-18T03:02:30.120Z",
+    "endTime": "2025-12-18T03:19:41.817Z",
+    "duration": "17m 11s",
+    "exitCode": 0,
+    "exitReason": "SIGINT"
+  },
+  "activity": {
+    "totalEvents": 114,
+    "lastActivity": "2025-12-18T03:19:11.738Z",
+    "eventsPerMinute": 7
+  },
+  "mentions": {
+    "total": 0,
+    "events": []
+  },
+  "toolCalls": {
+    "total": 0,
+    "events": []
+  },
+  "errors": {
+    "total": 4,
+    "byCategory": {
+      "general": 4
+    },
+    "events": [
+      {
+        "timestamp": "2025-12-18T03:10:53.253Z",
+        "line": "❌ Git commit failed: error: invalid object 100644 10d5b26580d7193560a7e40cd8fbd9746ae2ccd2 for 'services/requestClassifier.js'",
+        "severity": "general"
+      },
+      {
+        "timestamp": "2025-12-18T03:10:53.253Z",
+        "line": "error: invalid object 100644 10d5b26580d7193560a7e40cd8fbd9746ae2ccd2 for 'services/requestClassifier.js'",
+        "severity": "general"
+      },
+      {
+        "timestamp": "2025-12-18T03:10:53.253Z",
+        "line": "error: Error building trees",
+        "severity": "general"
+      },
+      {
+        "timestamp": "2025-12-18T03:19:11.738Z",
+        "line": "Stack: Error: OpenRouter API failed after 3 attempts: Request failed with status code 500",
+        "severity": "general"
+      }
+    ]
+  },
+  "warnings": {
+    "total": 0,
+    "events": []
+  },
+  "summary": "SUCCESS: Bot session lasted 17m 11s, encountered 4 errors"
+}

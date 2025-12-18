@@ -1,11 +1,11 @@
 # Site Inventory
 
-*Auto-generated on 2025-12-15*
+*Auto-generated on 2025-12-17*
 
 ## Overview
-- **HTML Pages**: 53 files
+- **HTML Pages**: 58 files
 - **JavaScript Files**: 16 files  
-- **Total Size**: 1262KB
+- **Total Size**: 1335KB
 - **Live Site**: https://milwrite.github.io/javabot/
 
 ## HTML Pages by Collection
@@ -16,10 +16,10 @@
   - Size: 24KB | Modified: 2025-12-15
 - **anniversary.html** - Anniversary Chronicle
   - *Surreal relationship time capsule*
-  - Size: 27KB | Modified: 2025-12-15
+  - Size: 26KB | Modified: 2025-12-16
 - **double_dragon_beatem_up.html** - Double Dragon Beatdown
   - *Side-scroll co-op brawler*
-  - Size: 29KB | Modified: 2025-12-15
+  - Size: 29KB | Modified: 2025-12-16
 - **pigman.html** - Pigman Maze Run
   - *Pellet chase stealth raid*
   - Size: 9KB | Modified: 2025-12-15
@@ -28,18 +28,18 @@
   - Size: 68KB | Modified: 2025-12-15
 - **terminal-memory.html** - Terminal Memory
   - *CRT card match challenge*
-  - Size: 16KB | Modified: 2025-12-15
+  - Size: 17KB | Modified: 2025-12-16
 
-### arcade-games (16 pages)
+### arcade-games (18 pages)
 - **basket-jam.html** - Basket Jam
   - *Arcade hoops skills test*
   - Size: 27KB | Modified: 2025-12-15
 - **bills_qb_game.html** - Bills QB Challenge
   - *Pass timing skill drill*
-  - Size: 27KB | Modified: 2025-12-15
+  - Size: 27KB | Modified: 2025-12-16
 - **bubba_clicker.html** - Bubba Clicker
   - *Horse saga clicker loop*
-  - Size: 12KB | Modified: 2025-12-15
+  - Size: 12KB | Modified: 2025-12-16
 - **dermpath-tetris.html** - DermaPath Tetris
   - *histology block stacker*
   - Size: 24KB | Modified: 2025-12-15
@@ -51,7 +51,7 @@
   - Size: 19KB | Modified: 2025-12-15
 - **frog_whack_a_mole.html** - Frog Whack-a-Mole
   - *Tap frenzy reaction drill*
-  - Size: 25KB | Modified: 2025-12-15
+  - Size: 25KB | Modified: 2025-12-16
 - **frogger.html** - Frogger Redux
   - *Classic lane-hopping escape*
   - Size: 3KB | Modified: 2025-12-15
@@ -61,9 +61,15 @@
 - **jackson_biscuit_game.html** - Jackson Biscuit Catch
   - *Pet treat juggling mini*
   - Size: 22KB | Modified: 2025-12-15
+- **memory-cheer-cen.html** - Memory Cheer for Cen
+  - *cheerful card matching game*
+  - Size: 18KB | Modified: 2025-12-16
 - **pleasantville-crossword.html** - Pleasantville Crossword
   - *noir terminal crossword puzzle*
   - Size: 19KB | Modified: 2025-12-15
+- **sequence-recall.html** - Sequence Recall
+  - *memory pattern arcade challenge*
+  - Size: 15KB | Modified: 2025-12-16
 - **snake-retriever.html** - Snake Retriever
   - *Golden retriever snake variant*
   - Size: 24KB | Modified: 2025-12-15
@@ -78,9 +84,9 @@
   - Size: 6KB | Modified: 2025-12-15
 - **tictactoe-confetti.html** - Tic-Tac-Toe Confetti
   - *Two-player board with celebrations*
-  - Size: 23KB | Modified: 2025-12-15
+  - Size: 23KB | Modified: 2025-12-16
 
-### utilities-apps (15 pages)
+### utilities-apps (16 pages)
 - **cen-schedule.html** - Cen's Day Planner
   - *branching daily schedule explorer*
   - Size: 23KB | Modified: 2025-12-15
@@ -95,10 +101,10 @@
   - Size: 12KB | Modified: 2025-12-15
 - **index.html** - Legacy Index
   - *Old hub placeholder page*
-  - Size: 14KB | Modified: 2025-12-15
+  - Size: 14KB | Modified: 2025-12-16
 - **noodle_inventory.html** - Noodle Inventory
   - *Pantry noodle tracking grid*
-  - Size: 32KB | Modified: 2025-12-15
+  - Size: 32KB | Modified: 2025-12-16
 - **parlay_probability_viz.html** - Parlay Probability Viz
   - *Stacked odds visualizer*
   - Size: 14KB | Modified: 2025-12-15
@@ -108,6 +114,9 @@
 - **pleasantville-clues.html** - Pleasantville Clues & Answers
   - *searchable noir trivia database*
   - Size: 21KB | Modified: 2025-12-15
+- **site-inventory.html** - Site Inventory
+  - *repository scanner utility*
+  - Size: 18KB | Modified: 2025-12-15
 - **subway_sub_ratio.html** - Subway Sub Ratio
   - *Sandwich proportions tracker*
   - Size: 7KB | Modified: 2025-12-15
@@ -116,27 +125,27 @@
   - Size: 11KB | Modified: 2025-12-15
 - **tarot-reading.html** - Tarot Reading
   - *mystical three-card tarot spread*
-  - Size: 18KB | Modified: 2025-12-15
+  - Size: 13KB | Modified: 2025-12-16
 - **weekend planner.html** - Weekend Planner
   - *Two-day mission brief*
   - Size: 12KB | Modified: 2025-12-15
 - **zach_work_schedule.html** - Zach Work Schedule
   - *Shift tracking console grid*
-  - Size: 21KB | Modified: 2025-12-15
+  - Size: 21KB | Modified: 2025-12-16
 - **zach-errands.html** - Zach Errands
   - *Quick errand hit list*
   - Size: 26KB | Modified: 2025-12-15
 
-### stories-content (16 pages)
+### stories-content (18 pages)
 - **ai-agency-flier.html** - AI Agency Reality Check
   - *Touch flier myth busts*
-  - Size: 35KB | Modified: 2025-12-15
+  - Size: 34KB | Modified: 2025-12-16
 - **alex_dog_mess.html** - Alex's Dog Mess
   - *Humorous cleanup field report*
   - Size: 7KB | Modified: 2025-12-15
 - **bills-superbowl-infographic.html** - Bills Super Bowl Case
   - *Hype-heavy data infographic*
-  - Size: 28KB | Modified: 2025-12-15
+  - Size: 27KB | Modified: 2025-12-16
 - **borscht.html** - Borscht Recipe
   - *Step-by-step beet ritual*
   - Size: 17KB | Modified: 2025-12-15
@@ -154,7 +163,7 @@
   - Size: 19KB | Modified: 2025-12-15
 - **droid-union.html** - Droid Union Dispatch
   - *Robot labor rights zine*
-  - Size: 34KB | Modified: 2025-12-15
+  - Size: 34KB | Modified: 2025-12-16
 - **letter-to-nancy.html** - Letter to Nancy
   - *noir letter interactive reveal*
   - Size: 20KB | Modified: 2025-12-15
@@ -166,13 +175,19 @@
   - Size: 19KB | Modified: 2025-12-15
 - **rubi_infomercial.html** - Rubi Infomercial
   - *Late-night hype parody*
-  - Size: 25KB | Modified: 2025-12-15
+  - Size: 24KB | Modified: 2025-12-16
 - **sampson_deodorant.html** - Sampson Deodorant
   - *90s style product spoof*
-  - Size: 25KB | Modified: 2025-12-15
+  - Size: 24KB | Modified: 2025-12-16
 - **task-warning.html** - Task Warning Beacon
   - *Flashing caution beacon*
   - Size: 17KB | Modified: 2025-12-15
+- **tuesday-letter-cen.html** - Tuesday Letter for Cen
+  - *warm tuesday check-in letter*
+  - Size: 11KB | Modified: 2025-12-16
+- **tv-intervention-infomercial.html** - TV Intervention Infomercial
+  - *late-night hype parody*
+  - Size: 20KB | Modified: 2025-12-17
 - **zach-sleep-letter.html** - Zach Sleep Letter
   - *Wellness plea about rest*
   - Size: 21KB | Modified: 2025-12-15
@@ -213,7 +228,9 @@ javabot/
 │   ├── frogger.html              # Frogger Redux
 │   ├── hangman.html              # Hangman
 │   ├── jackson_biscuit_game.html # Jackson Biscuit Catch
+│   ├── memory-cheer-cen.html     # Memory Cheer for Cen
 │   ├── pleasantville-crossword.html # Pleasantville Crossword
+│   ├── sequence-recall.html      # Sequence Recall
 │   ├── snake-retriever.html      # Snake Retriever
 │   ├── snaker.html               # Snaker
 │   ├── space-invaders.html       # AI vs Human Invaders
@@ -240,6 +257,8 @@ javabot/
 │   ├── rubi_infomercial.html     # Rubi Infomercial
 │   ├── sampson_deodorant.html    # Sampson Deodorant
 │   ├── task-warning.html         # Task Warning Beacon
+│   ├── tuesday-letter-cen.html   # Tuesday Letter for Cen
+│   ├── tv-intervention-infomercial.html # TV Intervention Infomercial
 │   ├── zach-sleep-letter.html    # Zach Sleep Letter
 │   ├── cen-schedule.html         # Cen's Day Planner
 │   ├── cen-sunday-todo.html      # Cen Sunday Todo
@@ -250,6 +269,7 @@ javabot/
 │   ├── parlay_probability_viz.html # Parlay Probability Viz
 │   ├── planner.html              # Daily Planner
 │   ├── pleasantville-clues.html  # Pleasantville Clues & Answers
+│   ├── site-inventory.html       # Site Inventory
 │   ├── subway_sub_ratio.html     # Subway Sub Ratio
 │   ├── sunday-wheel.html         # Sunday Spin
 │   ├── tarot-reading.html        # Tarot Reading
@@ -299,7 +319,9 @@ javabot/
 - [Frogger Redux](https://milwrite.github.io/javabot/src/frogger.html)
 - [Hangman](https://milwrite.github.io/javabot/src/hangman.html)
 - [Jackson Biscuit Catch](https://milwrite.github.io/javabot/src/jackson_biscuit_game.html)
+- [Memory Cheer for Cen](https://milwrite.github.io/javabot/src/memory-cheer-cen.html)
 - [Pleasantville Crossword](https://milwrite.github.io/javabot/src/pleasantville-crossword.html)
+- [Sequence Recall](https://milwrite.github.io/javabot/src/sequence-recall.html)
 - [Snake Retriever](https://milwrite.github.io/javabot/src/snake-retriever.html)
 - [Snaker](https://milwrite.github.io/javabot/src/snaker.html)
 - [AI vs Human Invaders](https://milwrite.github.io/javabot/src/space-invaders.html)
@@ -316,6 +338,7 @@ javabot/
 - [Parlay Probability Viz](https://milwrite.github.io/javabot/src/parlay_probability_viz.html)
 - [Daily Planner](https://milwrite.github.io/javabot/src/planner.html)
 - [Pleasantville Clues & Answers](https://milwrite.github.io/javabot/src/pleasantville-clues.html)
+- [Site Inventory](https://milwrite.github.io/javabot/src/site-inventory.html)
 - [Subway Sub Ratio](https://milwrite.github.io/javabot/src/subway_sub_ratio.html)
 - [Sunday Spin](https://milwrite.github.io/javabot/src/sunday-wheel.html)
 - [Tarot Reading](https://milwrite.github.io/javabot/src/tarot-reading.html)

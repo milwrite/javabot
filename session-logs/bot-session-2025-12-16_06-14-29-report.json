@@ -1,0 +1,58 @@
+{
+  "session": {
+    "id": "bot-session-2025-12-16_06-14-29",
+    "startTime": "2025-12-16T06:14:29.519Z",
+    "endTime": "2025-12-16T07:01:42.053Z",
+    "duration": "47m 12s",
+    "exitCode": 0,
+    "exitReason": "SIGINT"
+  },
+  "activity": {
+    "totalEvents": 99,
+    "lastActivity": "2025-12-16T06:55:09.992Z",
+    "eventsPerMinute": 2
+  },
+  "mentions": {
+    "total": 0,
+    "events": []
+  },
+  "toolCalls": {
+    "total": 0,
+    "events": []
+  },
+  "errors": {
+    "total": 0,
+    "byCategory": {},
+    "events": []
+  },
+  "warnings": {
+    "total": 3,
+    "events": [
+      {
+        "timestamp": "2025-12-16T07:00:31.680Z",
+        "message": "Bot appears to be hanging",
+        "data": {
+          "timeSinceActivity": "322s",
+          "activityCount": 99
+        }
+      },
+      {
+        "timestamp": "2025-12-16T07:01:01.680Z",
+        "message": "Bot appears to be hanging",
+        "data": {
+          "timeSinceActivity": "352s",
+          "activityCount": 99
+        }
+      },
+      {
+        "timestamp": "2025-12-16T07:01:31.683Z",
+        "message": "Bot appears to be hanging",
+        "data": {
+          "timeSinceActivity": "382s",
+          "activityCount": 99
+        }
+      }
+    ]
+  },
+  "summary": "SUCCESS: Bot session lasted 47m 12s"
+}

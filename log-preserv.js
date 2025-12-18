@@ -83,10 +83,10 @@ class BotLogPreserver {
         this.botProcess = spawn('node', ['index.js'], {
             cwd: __dirname,
             stdio: ['pipe', 'pipe', 'pipe'],
-            env: { 
-                ...process.env, 
+            env: {
+                ...process.env,
                 GUI_PORT: this.guiPort.toString(),
-                SESSION_ID: this.sessionId 
+                SESSION_ID: this.sessionId
             }
         });
         
@@ -104,45 +104,49 @@ class BotLogPreserver {
         });
         
         return new Promise((resolve, reject) => {
+            let resolved = false;
+
             const timeout = setTimeout(() => {
-                this.logError('Bot startup timeout', new Error('Bot failed to start within 30 seconds'));
-                this.gracefulShutdown('startup-timeout');
-                reject(new Error('Startup timeout'));
-            }, 30000);
-            
+                if (!resolved) {
+                    this.logError('Bot startup timeout', new Error('Bot failed to start within 60 seconds'));
+                    this.gracefulShutdown('startup-timeout');
+                    reject(new Error('Startup timeout'));
+                }
+            }, 60000);
+
+            // Handle early exit (e.g., network failure, token error)
+            const handleEarlyExit = (code, signal) => {
+                if (!resolved) {
+                    clearTimeout(timeout);
+                    const reason = signal ? `signal ${signal}` : `code ${code}`;
+                    this.logError('Bot exited during startup', new Error(`Process exited with ${reason}`));
+                    reject(new Error(`Bot failed to start (exit ${reason})`));
+                }
+            };
+            this.botProcess.once('exit', handleEarlyExit);
+
             const readyPattern = /Bot is ready as Bot Sportello/;
             const checkReady = (data) => {
                 if (readyPattern.test(data)) {
+                    resolved = true;
                     clearTimeout(timeout);
+                    this.botProcess.removeListener('exit', handleEarlyExit);
                     console.log('✅ Bot is ready and logging activity\n');
                     console.log('📊 GUI Dashboard: http://localhost:' + this.guiPort);
                     console.log('📋 Use Ctrl+C to stop and generate session report\n');
                     resolve();
                 }
             };
-            
+
             this.botProcess.stdout.on('data', checkReady);
             this.botProcess.stderr.on('data', checkReady);
         });
     }
     
     async startGUIServer() {
-        const guiServerPath = path.join(__dirname, 'gui-server.js');
-        try {
-            await fs.access(guiServerPath);
-            console.log(`🖥️  Starting GUI dashboard on port ${this.guiPort}...`);
-            
-            this.guiProcess = spawn('node', ['test-gui.js'], {
-                cwd: __dirname,
-                stdio: ['pipe', 'pipe', 'pipe'],
-                env: { ...process.env, GUI_PORT: this.guiPort.toString() }
-            });
-            
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-        } catch (error) {
-            console.log('ℹ️  GUI dashboard not available (gui-server.js not found)');
-        }
+        // GUI server is now started by index.js directly
+        // This avoids port conflicts and fake test data from test-gui.js
+        console.log(`🖥️  GUI dashboard will be started by bot on port ${this.guiPort}...`);
     }
     
     setupOutputHandlers() {
@@ -226,7 +230,7 @@ class BotLogPreserver {
                 const lastActivityTime = this.lastActivity ? new Date(this.lastActivity).getTime() : this.sessionStart.getTime();
                 const timeSinceActivity = now - lastActivityTime;
                 
-                console.log(`\\n🔍 Health Check: ${this.activityCount} events, last activity ${Math.round(timeSinceActivity/1000)}s ago`);
+                console.log(`\n🔍 Health Check: ${this.activityCount} events, last activity ${Math.round(timeSinceActivity/1000)}s ago`);
                 
                 if (timeSinceActivity > 300000) {
                     this.logWarning('Bot appears to be hanging', {
@@ -243,9 +247,9 @@ class BotLogPreserver {
         
         try {
             const logFile = path.join(this.logDir, `${this.sessionId}-raw.log`);
-            const logText = this.logBuffer.map(entry => 
+            const logText = this.logBuffer.map(entry =>
                 `${entry.timestamp} [${entry.stream.toUpperCase()}] ${entry.line}`
-            ).join('\\n') + '\\n';
+            ).join('\n') + '\n';
             
             await fs.appendFile(logFile, logText);
             this.logBuffer = [];
@@ -264,7 +268,7 @@ class BotLogPreserver {
         };
         
         this.errors.push(errorEntry);
-        console.error(`\\n❌ [${timestamp}] ${message}:`, error.toString());
+        console.error(`\n❌ [${timestamp}] ${message}:`, error.toString());
     }
     
     logWarning(message, data = {}) {
@@ -272,7 +276,7 @@ class BotLogPreserver {
         const warningEntry = { timestamp, message, data };
         
         this.warnings.push(warningEntry);
-        console.warn(`\\n⚠️  [${timestamp}] ${message}`);
+        console.warn(`\n⚠️  [${timestamp}] ${message}`);
         if (Object.keys(data).length > 0) {
             console.warn('    Data:', data);
         }
@@ -282,7 +286,7 @@ class BotLogPreserver {
         const timestamp = new Date().toISOString();
         const exitReason = signal ? `signal ${signal}` : `code ${code}`;
         
-        console.log(`\\n🛑 [${timestamp}] Bot process exited with ${exitReason}`);
+        console.log(`\n🛑 [${timestamp}] Bot process exited with ${exitReason}`);
         
         if (!this.isShuttingDown) {
             if (code !== 0 || signal) {
@@ -295,7 +299,7 @@ class BotLogPreserver {
     }
     
     async handleCrash(type, errorOrReason) {
-        console.log(`\\n💥 [${new Date().toISOString()}] ${type}:`, errorOrReason);
+        console.log(`\n💥 [${new Date().toISOString()}] ${type}:`, errorOrReason);
         this.logError(`Process ${type}`, new Error(errorOrReason.toString()));
         await this.saveSessionReport(1, type);
         process.exit(1);
@@ -305,7 +309,7 @@ class BotLogPreserver {
         if (this.isShuttingDown) return;
         this.isShuttingDown = true;
         
-        console.log(`\\n🔄 [${new Date().toISOString()}] Graceful shutdown initiated (${reason})`);
+        console.log(`\n🔄 [${new Date().toISOString()}] Graceful shutdown initiated (${reason})`);
         
         await this.flushLogBuffer();
         
@@ -328,7 +332,7 @@ class BotLogPreserver {
         
         await this.saveSessionReport(0, reason);
         
-        console.log('✅ Shutdown complete\\n');
+        console.log('✅ Shutdown complete\n');
         process.exit(0);
     }
     
@@ -377,9 +381,9 @@ class BotLogPreserver {
             const summaryFile = path.join(this.logDir, `${this.sessionId}-summary.md`);
             await fs.writeFile(summaryFile, this.generateMarkdownSummary(report));
             
-            console.log(`\\n📊 Session report saved:`);
+            console.log(`\n📊 Session report saved:`);
             console.log(`   JSON: ${reportFile}`);
-            console.log(`   Summary: ${summaryFile}\\n`);
+            console.log(`   Summary: ${summaryFile}\n`);
             
         } catch (error) {
             console.error('Failed to save session report:', error);
@@ -439,21 +443,21 @@ class BotLogPreserver {
     generateMarkdownSummary(report) {
         const { session, activity, mentions, toolCalls, errors, warnings } = report;
         
-        const mentionList = mentions.events.slice(-10).map(m => 
+        const mentionList = mentions.events.slice(-10).map(m =>
             `- **${m.user}** in #${m.channel} at ${new Date(m.timestamp).toLocaleTimeString()}`
-        ).join('\\n') || '- None';
-        
-        const toolCallList = toolCalls.events.slice(-10).map(t => 
+        ).join('\n') || '- None';
+
+        const toolCallList = toolCalls.events.slice(-10).map(t =>
             `- ${new Date(t.timestamp).toLocaleTimeString()}: ${t.line.substring(0, 100)}...`
-        ).join('\\n') || '- None';
+        ).join('\n') || '- None';
         
-        const errorList = errors.events.slice(-5).map(e => 
-            `- **${e.severity}** at ${new Date(e.timestamp).toLocaleTimeString()}: ${e.message}`
-        ).join('\\n') || '- None';
+        const errorList = errors.events.slice(-5).map(e =>
+            `- **${e.severity}** at ${new Date(e.timestamp).toLocaleTimeString()}: ${e.line || e.message || 'unknown'}`
+        ).join('\n') || '- None';
         
-        const warningList = warnings.events.slice(-5).map(w => 
-            `- ${new Date(w.timestamp).toLocaleTimeString()}: ${w.message}`
-        ).join('\\n') || '- None';
+        const warningList = warnings.events.slice(-5).map(w =>
+            `- ${new Date(w.timestamp).toLocaleTimeString()}: ${w.line || w.message || 'unknown'}`
+        ).join('\n') || '- None';
         
         return `# Bot Sportello Session Report
 

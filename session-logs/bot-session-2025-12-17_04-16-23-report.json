@@ -1,0 +1,98 @@
+{
+  "session": {
+    "id": "bot-session-2025-12-17_04-16-23",
+    "startTime": "2025-12-17T04:16:23.691Z",
+    "endTime": "2025-12-17T04:24:49.405Z",
+    "duration": "8m 25s",
+    "exitCode": 0,
+    "exitReason": "SIGINT"
+  },
+  "activity": {
+    "totalEvents": 103,
+    "lastActivity": "2025-12-17T04:18:41.420Z",
+    "eventsPerMinute": 12
+  },
+  "mentions": {
+    "total": 0,
+    "events": []
+  },
+  "toolCalls": {
+    "total": 0,
+    "events": []
+  },
+  "errors": {
+    "total": 9,
+    "byCategory": {
+      "general": 9
+    },
+    "events": [
+      {
+        "timestamp": "2025-12-17T04:18:34.361Z",
+        "line": "OpenRouter API error: {",
+        "severity": "general"
+      },
+      {
+        "timestamp": "2025-12-17T04:18:34.361Z",
+        "line": "  error: {",
+        "severity": "general"
+      },
+      {
+        "timestamp": "2025-12-17T04:18:34.365Z",
+        "line": "Pipeline error: Error: LLM API call failed: Request failed with status code 402",
+        "severity": "general"
+      },
+      {
+        "timestamp": "2025-12-17T04:18:35.175Z",
+        "line": "OpenRouter API error: {",
+        "severity": "general"
+      },
+      {
+        "timestamp": "2025-12-17T04:18:35.175Z",
+        "line": "  error: {",
+        "severity": "general"
+      },
+      {
+        "timestamp": "2025-12-17T04:18:35.176Z",
+        "line": "Pipeline error: Error: LLM API call failed: Request failed with status code 402",
+        "severity": "general"
+      },
+      {
+        "timestamp": "2025-12-17T04:18:41.418Z",
+        "line": "OpenRouter API error: {",
+        "severity": "general"
+      },
+      {
+        "timestamp": "2025-12-17T04:18:41.418Z",
+        "line": "  error: {",
+        "severity": "general"
+      },
+      {
+        "timestamp": "2025-12-17T04:18:41.418Z",
+        "line": "Pipeline error: Error: LLM API call failed: Request failed with status code 402",
+        "severity": "general"
+      }
+    ]
+  },
+  "warnings": {
+    "total": 2,
+    "events": [
+      {
+        "timestamp": "2025-12-17T04:23:53.736Z",
+        "message": "Bot appears to be hanging",
+        "data": {
+          "timeSinceActivity": "312s",
+          "activityCount": 103
+        }
+      },
+      {
+        "timestamp": "2025-12-17T04:24:23.729Z",
+        "message": "Bot appears to be hanging",
+        "data": {
+          "timeSinceActivity": "342s",
+          "activityCount": 103
+        }
+      }
+    ]
+  },
+  "summary": "SUCCESS: Bot session lasted 8m 25s, encountered 9 errors"
+}
