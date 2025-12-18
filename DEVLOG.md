@@ -1,5 +1,56 @@
 # Development Log - Bot Sportello
 
+## 2025-12-15 - Riddle River: Interactive Scroll-Reveal Riddle with Web Audio
+
+### Features Implemented
+
+**1. Progressive Text Reveal via Scroll**
+- Riddle lines appear as user scrolls down the page
+- Staggered animation: scale + blur-in effect on each line
+- Responsive to both desktop and mobile viewports
+- Intersection Observer API for performance
+
+**2. Web Audio API Synthesis**
+- **Ambient pad:** C-E-G chord plays on scroll start, loops continuously
+- **Scroll tones:** Ascending beeps (C, D, E, F, G) trigger as each riddle line reveals
+- **Success arpeggio:** Three-note victory chord (C-E-G) on correct answer
+- **Error buzz:** Satisfying error tone on wrong guess
+- All synthesis generated in-browser, no external audio files
+
+**3. User Input & Answer Validation**
+- Input field appears after scrolling to bottom
+- Validates answer against "river" (case-insensitive)
+- Shows success/error feedback with visual styling
+- Allows multiple attempts
+
+**4. Audio Controls**
+- Toggle buttons (top right) for ambient music and sound effects
+- Independent control over background pad and interaction sounds
+- Persists user preferences
+
+**5. Responsive Design**
+- Mobile-first layout, works on all screen sizes
+- Touch-optimized buttons and input
+- Proper viewport scaling
+- Follows page-theme.css noir terminal aesthetic
+
+### Files Created
+- `src/riddle-river.html` - Main interactive riddle page
+
+### Technical Stack
+- Vanilla JavaScript (no external libraries)
+- Web Audio API for synthesis
+- Intersection Observer for scroll detection
+- CSS animations and transitions
+- Noir terminal color scheme (#7ec8e3, #ff0000, #0a0a0a)
+
+### Commits
+- `ed3653a` - add riddle-river.html (initial version)
+- `970e72b` - add riddle-river.html (musical overhaul)
+- `dabff21` - commit changes (audio fixes)
+
+---
+
 ## 2025-12-14 - File Search Feature & Edit Loop Fixes
 
 ### Issue: Bot failing to answer read-only queries
