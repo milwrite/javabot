@@ -25,6 +25,42 @@
             margin: 0 auto;
         }
 
+        /* AUDIO CONTROLS */
+        .audio-controls {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .audio-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(126, 200, 227, 0.2);
+            border: 2px solid #7ec8e3;
+            color: #7ec8e3;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .audio-btn:hover {
+            background: rgba(126, 200, 227, 0.4);
+            box-shadow: 0 0 15px rgba(126, 200, 227, 0.6);
+        }
+
+        .audio-btn.active {
+            background: rgba(0, 255, 255, 0.3);
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+        }
+
         /* INTRO SECTION */
         .intro-section {
             min-height: 100vh;
@@ -166,34 +202,34 @@
             min-height: 50px;
             transition: all 0.3s ease;
             margin-bottom: 1rem;
+            box-sizing: border-box;
         }
 
         .answer-input:focus {
             outline: none;
             border-color: #00ffff;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-            background: rgba(10, 10, 10, 0.95);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
         }
 
         .submit-btn {
             width: 100%;
+            padding: 15px 20px;
+            font-size: 1.1rem;
             background: #ff0000;
-            color: #0a0a0a;
             border: none;
-            padding: 15px;
-            font-size: 1.2rem;
+            color: #0a0a0a;
             font-family: 'Courier Prime', monospace;
-            cursor: pointer;
-            min-height: 50px;
             font-weight: bold;
+            cursor: pointer;
             transition: all 0.3s ease;
+            min-height: 50px;
+            text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .submit-btn:hover {
-            background: #00ffff;
-            transform: scale(1.02);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            background: #ff3333;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
         }
 
         .submit-btn:active {
@@ -201,389 +237,290 @@
         }
 
         .feedback {
-            text-align: center;
-            font-size: 1.3rem;
             margin-top: 1.5rem;
-            min-height: 40px;
-            font-weight: bold;
-        }
-
-        .feedback.correct {
-            color: #00ffff;
-            animation: correctPulse 0.6s ease-in-out;
-        }
-
-        .feedback.incorrect {
-            color: #ff0000;
-            animation: shake 0.4s ease-in-out;
-        }
-
-        @keyframes correctPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        /* COMPLETION SECTION */
-        .completion-section {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            opacity: 0;
-            transform: translateY(80px);
-            transition: opacity 1s ease, transform 1s ease;
-        }
-
-        .completion-section.revealed {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .completion-section h2 {
-            color: #00ffff;
-            font-size: clamp(1.8rem, 5vw, 3rem);
-            margin-bottom: 1.5rem;
-            text-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
-        }
-
-        .completion-section p {
-            color: #7ec8e3;
-            font-size: clamp(1rem, 2.5vw, 1.3rem);
-            line-height: 1.8;
-            max-width: 600px;
-            margin: 1rem auto;
-        }
-
-        .river-emoji {
-            font-size: 4rem;
-            margin: 2rem 0;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .reset-btn {
-            background: #7ec8e3;
-            color: #0a0a0a;
-            border: none;
-            padding: 15px 40px;
             font-size: 1.1rem;
-            font-family: 'Courier Prime', monospace;
-            cursor: pointer;
-            margin-top: 2rem;
-            min-width: 44px;
-            min-height: 44px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .reset-btn:hover {
-            background: #00ffff;
-            transform: scale(1.05);
-        }
-
-        /* AUDIO CONTROLS */
-        .audio-controls {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 200;
-            display: flex;
-            gap: 10px;
-        }
-
-        .audio-btn {
-            background: rgba(126, 200, 227, 0.2);
-            border: 2px solid #7ec8e3;
-            color: #7ec8e3;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.5rem;
+            text-align: center;
+            min-height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
         }
 
-        .audio-btn:hover {
-            background: rgba(0, 255, 255, 0.3);
-            border-color: #00ffff;
-            color: #00ffff;
+        .feedback.success {
+            color: #7ec8e3;
+            text-shadow: 0 0 15px rgba(126, 200, 227, 0.8);
         }
 
-        .audio-btn.active {
-            background: rgba(0, 255, 255, 0.5);
-            border-color: #ff0000;
+        .feedback.error {
             color: #ff0000;
+            text-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
         }
 
         /* PROGRESS BAR */
-        .progress-bar {
+        .progress-container {
             position: fixed;
             top: 0;
             left: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #7ec8e3, #00ffff, #ff0000);
-            z-index: 300;
-            transition: width 0.1s ease;
+            width: 100%;
+            height: 5px;
+            background: rgba(10, 10, 10, 0.8);
+            z-index: 99;
         }
 
-        /* RESPONSIVE */
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #7ec8e3, #00ffff);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+
         @media (max-width: 768px) {
-            body {
-                padding: 70px 15px 20px 15px;
-            }
-
-            .riddle-line {
-                font-size: clamp(1rem, 2.5vw, 1.8rem);
-            }
-
             .audio-controls {
-                bottom: 15px;
-                right: 15px;
+                top: 85px;
+                right: 10px;
+                gap: 8px;
             }
 
             .audio-btn {
                 width: 45px;
                 height: 45px;
+                font-size: 1rem;
+            }
+
+            .riddle-line {
+                font-size: clamp(1rem, 2.5vw, 1.5rem);
             }
         }
 
         @media (max-width: 480px) {
             body {
-                padding: 65px 12px 20px 12px;
+                padding: 70px 15px 15px 15px;
             }
 
-            .intro-section h1 {
-                font-size: 1.8rem;
+            .audio-controls {
+                top: 80px;
+                right: 8px;
             }
 
-            .riddle-line {
-                font-size: 1.1rem;
-                margin: 1rem auto;
+            .riddle-section {
+                margin-bottom: 80px;
             }
 
-            .answer-input,
-            .submit-btn {
-                font-size: 1rem;
+            .answer-section {
+                margin-bottom: 80px;
             }
         }
     </style>
 </head>
 <body>
-    <a href="../" class="home-link">← Home</a>
+    <div class="progress-container">
+        <div class="progress-bar"></div>
+    </div>
 
-    <div class="progress-bar"></div>
+    <div class="audio-controls">
+        <button class="audio-btn active" id="ambientBtn" title="Toggle Ambient">🎵</button>
+        <button class="audio-btn active" id="effectBtn" title="Toggle Effects">🔊</button>
+    </div>
 
     <div class="container">
         <!-- INTRO -->
         <div class="intro-section">
-            <h1>🌊 The River Riddle 🌊</h1>
-            <p>A journey through sound and mystery awaits below.</p>
-            <p style="color: #00ffff; margin-top: 2rem;">Scroll to reveal the riddle...</p>
+            <h1>The River Riddle</h1>
+            <p>A timeless puzzle awaits. Scroll to reveal the clues, then answer the question.</p>
             <div class="scroll-prompt">↓ Scroll Down ↓</div>
         </div>
 
         <!-- RIDDLE LINES -->
         <div class="riddle-section">
             <div class="riddle-line">This runs but does not walk.</div>
-        </div>
-
-        <div class="riddle-section">
             <div class="riddle-line">It has a mouth but never speaks.</div>
-        </div>
-
-        <div class="riddle-section">
             <div class="riddle-line">It has a head but never weeps.</div>
-        </div>
-
-        <div class="riddle-section">
             <div class="riddle-line">It has a bed but never sleeps.</div>
         </div>
 
-        <!-- QUESTION -->
-        <div class="riddle-section">
-            <div class="riddle-line" style="color: #ff0000; font-size: 1.8rem;">What is it?</div>
-        </div>
-
-        <!-- ANSWER INPUT -->
+        <!-- ANSWER SECTION -->
         <div class="answer-section">
-            <h2>🎵 Your Answer 🎵</h2>
+            <h2>What is it?</h2>
             <div class="input-wrapper">
-                <input 
-                    type="text" 
-                    class="answer-input" 
-                    id="answerInput" 
-                    placeholder="Type your answer..."
-                    autocomplete="off"
-                >
+                <input type="text" class="answer-input" id="answerInput" placeholder="Enter your answer..." autocomplete="off">
                 <button class="submit-btn" id="submitBtn">Submit Answer</button>
                 <div class="feedback" id="feedback"></div>
             </div>
         </div>
-
-        <!-- COMPLETION -->
-        <div class="completion-section">
-            <div class="river-emoji">🌊</div>
-            <h2>You've Found It!</h2>
-            <p>The answer flows eternal, ever moving, never resting.</p>
-            <p style="color: #ff0000; font-size: 1.2rem;">A River</p>
-            <button class="reset-btn" id="resetBtn">Journey Again</button>
-        </div>
-    </div>
-
-    <!-- AUDIO CONTROLS -->
-    <div class="audio-controls">
-        <button class="audio-btn active" id="ambientToggle" title="Ambient Sound">🔊</button>
-        <button class="audio-btn" id="musicToggle" title="Musical Cues">🎵</button>
     </div>
 
     <script>
-        // ========== AUDIO CONTEXT & SYNTHESIS ==========
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioContext = new AudioContext();
-
-        let ambientActive = true;
-        let musicActive = false;
+        // ==================== AUDIO ENGINE ====================
+        let audioContext = null;
         let ambientOscillators = [];
-        let currentGain = null;
+        let ambientGain = null;
+        let effectsEnabled = true;
+        let ambientEnabled = true;
 
-        // ========== SCROLL DETECTION ==========
-        const sections = document.querySelectorAll('.riddle-section, .answer-section, .completion-section');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('revealed');
-                    if (ambientActive) playScrollTone();
-                }
-            });
-        }, { threshold: 0.3 });
-
-        sections.forEach(section => observer.observe(section));
-
-        // ========== MUSICAL TONES ==========
-        function playScrollTone() {
-            if (audioContext.state === 'suspended') audioContext.resume();
-            
-            const now = audioContext.currentTime;
-            const osc = audioContext.createOscillator();
-            const gain = audioContext.createGain();
-            
-            osc.connect(gain);
-            gain.connect(audioContext.destination);
-            
-            osc.frequency.value = 400 + Math.random() * 200;
-            osc.type = 'sine';
-            
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-            
-            osc.start(now);
-            osc.stop(now + 0.3);
+        function initAudioContext() {
+            if (audioContext) return;
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
 
-        function playSuccessTone() {
-            if (audioContext.state === 'suspended') audioContext.resume();
-            
-            const now = audioContext.currentTime;
-            const notes = [523.25, 659.25, 783.99]; // C, E, G
-            
-            notes.forEach((freq, i) => {
-                const osc = audioContext.createOscillator();
-                const gain = audioContext.createGain();
-                
-                osc.connect(gain);
-                gain.connect(audioContext.destination);
-                
-                osc.frequency.value = freq;
-                osc.type = 'sine';
-                
-                const startTime = now + (i * 0.1);
-                gain.gain.setValueAtTime(0.15, startTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
-                
-                osc.start(startTime);
-                osc.stop(startTime + 0.5);
-            });
-        }
+        function playAmbientPad() {
+            if (!audioContext) initAudioContext();
+            if (!ambientEnabled) return;
 
-        function playErrorTone() {
-            if (audioContext.state === 'suspended') audioContext.resume();
-            
-            const now = audioContext.currentTime;
-            const osc = audioContext.createOscillator();
-            const gain = audioContext.createGain();
-            
-            osc.connect(gain);
-            gain.connect(audioContext.destination);
-            
-            osc.frequency.setValueAtTime(200, now);
-            osc.frequency.linearRampToValueAtTime(100, now + 0.2);
-            osc.type = 'square';
-            
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-            
-            osc.start(now);
-            osc.stop(now + 0.2);
-        }
-
-        function startAmbientSound() {
-            if (audioContext.state === 'suspended') audioContext.resume();
-            
-            const now = audioContext.currentTime;
-            
             // Stop existing oscillators
             ambientOscillators.forEach(osc => {
-                try { osc.stop(); } catch (e) {}
+                osc.stop();
+                osc.disconnect();
             });
             ambientOscillators = [];
-            
-            // Create ambient pad with multiple frequencies
-            const frequencies = [110, 165, 220]; // A2, E3, A3
-            
-            frequencies.forEach(freq => {
+
+            const now = audioContext.currentTime;
+            const frequencies = [130.81, 164.81, 196.00]; // C3, E3, G3 chord
+
+            frequencies.forEach((freq, index) => {
                 const osc = audioContext.createOscillator();
                 const gain = audioContext.createGain();
-                
+
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.linearRampToValueAtTime(0.15, now + 0.5);
+
                 osc.connect(gain);
                 gain.connect(audioContext.destination);
-                
-                osc.frequency.value = freq;
-                osc.type = 'sine';
-                gain.gain.setValueAtTime(0.05, now);
-                
+
                 osc.start(now);
+                osc.stop(now + 8);
+
                 ambientOscillators.push(osc);
             });
         }
 
-        function stopAmbientSound() {
-            ambientOscillators.forEach(osc => {
-                try { osc.stop(); } catch (e) {}
-            });
-            ambientOscillators = [];
+        function playScrollTone() {
+            if (!audioContext) initAudioContext();
+            if (!effectsEnabled) return;
+
+            const now = audioContext.currentTime;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.15);
         }
 
-        // ========== ANSWER HANDLING ==========
+        function playSuccessChord() {
+            if (!audioContext) initAudioContext();
+            if (!effectsEnabled) return;
+
+            const now = audioContext.currentTime;
+            const frequencies = [261.63, 329.63, 392.00]; // C4, E4, G4
+
+            frequencies.forEach((freq, index) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+
+                gain.gain.setValueAtTime(0, now + index * 0.1);
+                gain.gain.linearRampToValueAtTime(0.15, now + index * 0.1 + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+
+                osc.start(now + index * 0.1);
+                osc.stop(now + 0.6);
+            });
+        }
+
+        function playErrorBuzz() {
+            if (!audioContext) initAudioContext();
+            if (!effectsEnabled) return;
+
+            const now = audioContext.currentTime;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.setValueAtTime(100, now + 0.1);
+
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.2);
+        }
+
+        // ==================== SCROLL REVEAL ====================
+        const riddles = document.querySelectorAll('.riddle-section');
+        const answerSection = document.querySelector('.answer-section');
+        const progressBar = document.querySelector('.progress-bar');
+
+        let ambientPlaying = false;
+        let lastRevealedIndex = -1;
+
+        function updateScrollProgress() {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            progressBar.style.width = scrollPercent + '%';
+        }
+
+        function checkReveal() {
+            let revealedAny = false;
+
+            // Start ambient on first scroll
+            if (window.scrollY > 100 && !ambientPlaying) {
+                ambientPlaying = true;
+                playAmbientPad();
+            }
+
+            riddles.forEach((section, index) => {
+                const rect = section.getBoundingClientRect();
+                const isVisible = rect.top < window.innerHeight * 0.7;
+
+                if (isVisible && !section.classList.contains('revealed')) {
+                    section.classList.add('revealed');
+                    if (index > lastRevealedIndex) {
+                        lastRevealedIndex = index;
+                        playScrollTone();
+                        revealedAny = true;
+                    }
+                }
+            });
+
+            const answerRect = answerSection.getBoundingClientRect();
+            if (answerRect.top < window.innerHeight * 0.7 && !answerSection.classList.contains('revealed')) {
+                answerSection.classList.add('revealed');
+                playScrollTone();
+            }
+
+            updateScrollProgress();
+        }
+
+        window.addEventListener('scroll', checkReveal);
+        window.addEventListener('load', checkReveal);
+
+        // ==================== ANSWER SUBMISSION ====================
         const answerInput = document.getElementById('answerInput');
         const submitBtn = document.getElementById('submitBtn');
         const feedback = document.getElementById('feedback');
-        const completionSection = document.querySelector('.completion-section');
-        const resetBtn = document.getElementById('resetBtn');
 
         submitBtn.addEventListener('click', checkAnswer);
         answerInput.addEventListener('keypress', (e) => {
@@ -593,59 +530,40 @@
         function checkAnswer() {
             const userAnswer = answerInput.value.trim().toLowerCase();
             const correctAnswers = ['river', 'a river'];
-            
+
             if (correctAnswers.includes(userAnswer)) {
-                feedback.textContent = '✓ Correct! The answer flows eternal...';
-                feedback.classList.remove('incorrect');
-                feedback.classList.add('correct');
-                playSuccessTone();
-                
-                setTimeout(() => {
-                    completionSection.classList.add('revealed');
-                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-                }, 1000);
+                feedback.textContent = '✓ Correct! The answer is a river.';
+                feedback.className = 'feedback success';
+                playSuccessChord();
+                submitBtn.disabled = true;
+                answerInput.disabled = true;
             } else {
-                feedback.textContent = '✗ Not quite... Think again.';
-                feedback.classList.remove('correct');
-                feedback.classList.add('incorrect');
-                playErrorTone();
+                feedback.textContent = '✗ Not quite. Try again!';
+                feedback.className = 'feedback error';
+                playErrorBuzz();
+                answerInput.value = '';
             }
         }
 
-        resetBtn.addEventListener('click', () => {
-            location.reload();
-        });
+        // ==================== AUDIO CONTROLS ====================
+        const ambientBtn = document.getElementById('ambientBtn');
+        const effectBtn = document.getElementById('effectBtn');
 
-        // ========== AUDIO CONTROLS ==========
-        const ambientToggle = document.getElementById('ambientToggle');
-        const musicToggle = document.getElementById('musicToggle');
-
-        ambientToggle.addEventListener('click', () => {
-            ambientActive = !ambientActive;
-            ambientToggle.classList.toggle('active');
-            
-            if (ambientActive) {
-                startAmbientSound();
-            } else {
-                stopAmbientSound();
+        ambientBtn.addEventListener('click', () => {
+            ambientEnabled = !ambientEnabled;
+            ambientBtn.classList.toggle('active');
+            if (ambientEnabled && ambientPlaying) {
+                playAmbientPad();
             }
         });
 
-        musicToggle.addEventListener('click', () => {
-            musicActive = !musicActive;
-            musicToggle.classList.toggle('active');
+        effectBtn.addEventListener('click', () => {
+            effectsEnabled = !effectsEnabled;
+            effectBtn.classList.toggle('active');
         });
 
-        // ========== PROGRESS BAR ==========
-        const progressBar = document.querySelector('.progress-bar');
-        window.addEventListener('scroll', () => {
-            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const scrolled = (window.scrollY / scrollHeight) * 100;
-            progressBar.style.width = scrolled + '%';
-        });
-
-        // ========== INIT ==========
-        startAmbientSound();
+        // Initial check
+        checkReveal();
     </script>
 </body>
 </html>
