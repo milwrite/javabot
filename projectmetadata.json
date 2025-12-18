@@ -399,6 +399,13 @@
       "description": "beat matching rhythm arcade",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "riddle-river": {
+      "title": "The River Riddle",
+      "icon": "📜",
+      "description": "scroll-reveal riddle utility",
+      "collection": "utilities-apps",
+      "hidden": false
     }
   }
 }
