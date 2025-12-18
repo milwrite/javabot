@@ -8,6 +8,9 @@ dist/
 LOG.md
 .ssh/
 
+# Consolidated log directory
+logs/
+
 .gemini/
 gha-creds-*.json
 github-api-migration.md

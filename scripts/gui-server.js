@@ -26,7 +26,7 @@ class BotGUIServer {
         
         // Run-based persistence
         this.currentRunId = this.generateRunId();
-        this.runBasedLogsDir = path.join(__dirname, 'gui-run-logs');
+        this.runBasedLogsDir = path.join(__dirname, '..', 'logs', 'gui-run-logs');
         this.ensureRunLogsDirectory();
         
         this.setupRoutes();
@@ -35,20 +35,20 @@ class BotGUIServer {
     
     setupRoutes() {
         // Serve static files
-        this.app.use(express.static(path.join(__dirname, 'gui')));
+        this.app.use(express.static(path.join(__dirname, '..', 'gui')));
 
         // Serve root-level default images for dashboard branding
         this.app.get('/default.jpg', (req, res) => {
-            res.sendFile(path.join(__dirname, 'default.jpg'));
+            res.sendFile(path.join(__dirname, '..', 'default.jpg'));
         });
         this.app.get('/default.jpeg', (req, res) => {
-            res.sendFile(path.join(__dirname, 'default.jpeg'));
+            res.sendFile(path.join(__dirname, '..', 'default.jpeg'));
         });
         // Note: Default asset is a JPEG; no PNG route needed
-        
+
         // Main dashboard
         this.app.get('/', (req, res) => {
-            res.sendFile(path.join(__dirname, 'gui', 'dashboard.html'));
+            res.sendFile(path.join(__dirname, '..', 'gui', 'dashboard.html'));
         });
         
         // API endpoints

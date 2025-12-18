@@ -14,7 +14,7 @@ const { spawn, exec } = require('child_process');
 
 class BotLogPreserver {
     constructor() {
-        this.logDir = path.join(__dirname, 'session-logs');
+        this.logDir = path.join(__dirname, '..', 'logs', 'session-logs');
         this.sessionId = this.generateSessionId();
         this.sessionStart = new Date();
         this.botProcess = null;
@@ -81,7 +81,7 @@ class BotLogPreserver {
         await this.startGUIServer();
         
         this.botProcess = spawn('node', ['index.js'], {
-            cwd: __dirname,
+            cwd: path.join(__dirname, '..'),
             stdio: ['pipe', 'pipe', 'pipe'],
             env: {
                 ...process.env,

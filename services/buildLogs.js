@@ -4,7 +4,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-const LOG_DIR = path.join(__dirname, '..', 'build-logs');
+const LOG_DIR = path.join(__dirname, '..', 'logs', 'build-logs');
 
 /**
  * Ensure log directory exists

@@ -14,10 +14,10 @@ const { getRecentPatternsSummary } = require('./services/buildLogs');
 const { classifyRequest } = require('./services/requestClassifier');
 
 // Site inventory system
-const { generateSiteInventory } = require('./generateSiteInventory.js');
+const { generateSiteInventory } = require('./scripts/generateSiteInventory.js');
 
 // GUI Server for verbose logging
-const BotGUIServer = require('./gui-server.js');
+const BotGUIServer = require('./scripts/gui-server.js');
 let guiServer = null;
 
 // Validate required environment variables
@@ -1154,7 +1154,6 @@ function buildMessagesFromHistory(maxMessages = 50) {
 
 // Filesystem tools for the AI
 async function listFiles(dirPath = './src') {
-    logToolCall('list_files', { path: dirPath }, null, null);
     try {
         // Handle multiple directories (array input)
         if (Array.isArray(dirPath)) {
@@ -1208,7 +1207,12 @@ async function readFile(filePath) {
         }
 
         const content = await fs.readFile(filePath, 'utf8');
-        return content.substring(0, CONFIG.FILE_READ_LIMIT);
+        const truncatedContent = content.substring(0, CONFIG.FILE_READ_LIMIT);
+
+        // Log file read to GUI dashboard
+        logFileChange('read', filePath, truncatedContent);
+
+        return truncatedContent;
     } catch (error) {
         return `Error reading file: ${error.message}`;
     }
@@ -1223,6 +1227,9 @@ async function writeFile(filePath, content) {
         // Write the file
         await fs.writeFile(filePath, content, 'utf8');
         console.log(`[WRITE_FILE] Written: ${filePath} (${content.length} bytes)`);
+
+        // Log file creation to GUI dashboard
+        logFileChange('create', filePath, content);
 
         // Auto-commit and push so file is live before link is shared
         console.log(`[WRITE_FILE] Auto-pushing to remote...`);
@@ -1337,6 +1344,9 @@ Return ONLY the complete updated file content. No explanations, no markdown code
 
         // Write the updated content
         await fs.writeFile(filePath, updatedContent, 'utf8');
+
+        // Log file edit to GUI dashboard
+        logFileChange('edit', filePath, updatedContent, currentContent);
 
         // Auto-commit and push so changes are live before link is shared
         console.log(`[EDIT_FILE] Auto-pushing to remote...`);
@@ -2986,6 +2996,9 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                     }
                 }
 
+                // Log tool call to GUI dashboard
+                logToolCall(functionName, args, result);
+
                 toolResults.push({
                     role: 'tool',
                     tool_call_id: toolCall.id,
@@ -3963,9 +3976,9 @@ async function handleMentionAsync(message) {
         // Send response directly (no commit prompts in mentions)
         if (finalResponse.length > 2000) {
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const fileName = `responses/mention-${timestamp}.txt`;
+            const fileName = `logs/responses/mention-${timestamp}.txt`;
 
-            await fs.mkdir('responses', { recursive: true });
+            await fs.mkdir('logs/responses', { recursive: true });
             const fileContent = `User: ${username}\nMessage: ${content}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${finalResponse}`;
             await fs.writeFile(fileName, fileContent);
 
@@ -5380,10 +5393,10 @@ async function handleSearch(interaction) {
         // If response is longer than 2000 characters, save to file and truncate
         if (searchResult.length > 2000) {
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const fileName = `responses/search-${timestamp}.txt`;
+            const fileName = `logs/responses/search-${timestamp}.txt`;
 
             // Create responses directory if it doesn't exist
-            await fs.mkdir('responses', { recursive: true });
+            await fs.mkdir('logs/responses', { recursive: true });
 
             // Save full response to file
             const fileContent = `Search Query: ${query}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${searchResult}`;
@@ -6574,8 +6587,8 @@ Output ONLY the CSS code, no explanations.`;
 }
 
 // File watcher for DEVLOG.md to trigger site inventory updates
-if (fsSync.existsSync('DEVLOG.md')) {
-    fsSync.watchFile('DEVLOG.md', { interval: 5000 }, async (curr, prev) => {
+if (fsSync.existsSync('docs/DEVLOG.md')) {
+    fsSync.watchFile('docs/DEVLOG.md', { interval: 5000 }, async (curr, prev) => {
         if (curr.mtime !== prev.mtime) {
             console.log('[WATCHER] DEVLOG.md modified, updating site inventory...');
             try {

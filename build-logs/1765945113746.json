@@ -1,8 +1,0 @@
-[
-  {
-    "timestamp": "2025-12-17T04:18:34.363Z",
-    "stage": "error",
-    "error": "LLM API call failed: Request failed with status code 402",
-    "stack": "Error: LLM API call failed: Request failed with status code 402\n    at callSonnet (/Users/zacharymuhlbauer/Desktop/studio/projects/discord/javabot/services/llmClient.js:521:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async planGame (/Users/zacharymuhlbauer/Desktop/studio/projects/discord/javabot/agents/gameArchitect.js:31:22)\n    at async runGamePipeline (/Users/zacharymuhlbauer/Desktop/studio/projects/discord/javabot/services/gamePipeline.js:43:22)\n    at async handleMentionAsync (/Users/zacharymuhlbauer/Desktop/studio/projects/discord/javabot/index.js:3677:36)"
-  }
-]

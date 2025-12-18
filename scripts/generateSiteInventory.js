@@ -7,13 +7,13 @@ async function generateSiteInventory() {
         
         const htmlFiles = [];
         const jsFiles = [];
-        const metadata = JSON.parse(await fs.readFile('projectmetadata.json', 'utf8'));
-        
+        const metadata = JSON.parse(await fs.readFile('../projectmetadata.json', 'utf8'));
+
         // Scan src directory for files
-        const srcFiles = await fs.readdir('src/');
+        const srcFiles = await fs.readdir('../src/');
         
         for (const file of srcFiles) {
-            const filePath = `src/${file}`;
+            const filePath = `../src/${file}`;
             const stats = await fs.stat(filePath);
             
             if (stats.isFile()) {
@@ -118,8 +118,8 @@ ${htmlFiles.filter(f => f.collection === 'utilities-apps').map(f =>
 ---
 *This inventory is automatically updated when DEVLOG.md changes*
 `;
-        
-        await fs.writeFile('SITE_INVENTORY.md', inventory, 'utf8');
+
+        await fs.writeFile('../docs/SITE_INVENTORY.md', inventory, 'utf8');
         console.log('[INVENTORY] Site inventory updated successfully');
         return inventory;
         
