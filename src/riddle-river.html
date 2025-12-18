@@ -3,31 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The River Riddle - Bot Sportello</title>
+    <title>The River Riddle - Musical Journey</title>
     <link rel="stylesheet" href="../page-theme.css">
     <style>
+        * {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
             padding: 80px 20px 20px 20px;
             background: #0a0a0a;
             color: #7ec8e3;
             font-family: 'Courier Prime', monospace;
             overflow-x: hidden;
+            margin: 0;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
         }
 
+        /* INTRO SECTION */
+        .intro-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .intro-section h1 {
+            color: #00ffff;
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            letter-spacing: 2px;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .intro-section p {
+            color: #7ec8e3;
+            font-size: clamp(0.95rem, 2vw, 1.1rem);
+            line-height: 1.8;
+            max-width: 600px;
+            margin: 1rem auto;
+        }
+
+        .scroll-prompt {
+            margin-top: 3rem;
+            color: #ff0000;
+            font-size: 1rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        /* RIDDLE REVEAL SECTIONS */
         .riddle-section {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
             margin-bottom: 100px;
             opacity: 0;
-            transform: translateY(50px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
+            transform: translateY(80px);
+            transition: opacity 1s cubic-bezier(0.34, 1.56, 0.64, 1), transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .riddle-section.revealed {
@@ -35,138 +78,168 @@
             transform: translateY(0);
         }
 
-        .riddle-text {
-            font-size: 1.5rem;
-            line-height: 1.8;
-            margin-bottom: 2rem;
+        .riddle-line {
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            line-height: 2.2;
             text-align: center;
             color: #00ffff;
-        }
-
-        .answer-container {
-            margin-top: 2rem;
+            margin: 1.5rem auto;
+            max-width: 700px;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
             opacity: 0;
-            max-height: 0;
-            overflow: hidden;
-            transition: opacity 0.5s ease, max-height 0.5s ease;
+            transform: scale(0.9);
+            animation: revealLine 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
-        .answer-container.show {
+        .riddle-line:nth-child(1) { animation-delay: 0s; }
+        .riddle-line:nth-child(2) { animation-delay: 0.3s; }
+        .riddle-line:nth-child(3) { animation-delay: 0.6s; }
+        .riddle-line:nth-child(4) { animation-delay: 0.9s; }
+
+        @keyframes revealLine {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+                filter: blur(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            }
+            50% {
+                text-shadow: 0 0 40px rgba(0, 255, 255, 0.8);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* ANSWER SECTION */
+        .answer-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(80px);
+            transition: opacity 1s ease, transform 1s ease;
+            margin-bottom: 100px;
+        }
+
+        .answer-section.revealed {
             opacity: 1;
-            max-height: 500px;
+            transform: translateY(0);
+        }
+
+        .answer-section h2 {
+            color: #ff0000;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 2rem;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+
+        .input-wrapper {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
         }
 
         .answer-input {
             width: 100%;
-            max-width: 400px;
-            padding: 15px;
-            font-size: 1.1rem;
-            background: #0a0a0a;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            background: rgba(10, 10, 10, 0.8);
             border: 2px solid #7ec8e3;
             color: #00ffff;
             font-family: 'Courier Prime', monospace;
             text-align: center;
-            margin: 0 auto;
-            display: block;
-            min-height: 44px;
+            min-height: 50px;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
         }
 
         .answer-input:focus {
             outline: none;
             border-color: #00ffff;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            background: rgba(10, 10, 10, 0.95);
         }
 
         .submit-btn {
+            width: 100%;
             background: #ff0000;
             color: #0a0a0a;
             border: none;
-            padding: 15px 40px;
-            font-size: 1.1rem;
+            padding: 15px;
+            font-size: 1.2rem;
             font-family: 'Courier Prime', monospace;
             cursor: pointer;
-            margin: 20px auto;
-            display: block;
-            min-width: 44px;
-            min-height: 44px;
+            min-height: 50px;
+            font-weight: bold;
             transition: all 0.3s ease;
+            letter-spacing: 1px;
         }
 
         .submit-btn:hover {
             background: #00ffff;
-            transform: scale(1.05);
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
         }
 
         .submit-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.98);
         }
 
         .feedback {
             text-align: center;
-            font-size: 1.2rem;
-            margin-top: 1rem;
-            min-height: 30px;
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+            min-height: 40px;
+            font-weight: bold;
         }
 
         .feedback.correct {
             color: #00ffff;
-            animation: glow 0.5s ease-in-out;
+            animation: correctPulse 0.6s ease-in-out;
         }
 
         .feedback.incorrect {
             color: #ff0000;
-            animation: shake 0.5s ease-in-out;
+            animation: shake 0.4s ease-in-out;
         }
 
-        .river-flow {
-            text-align: center;
-            font-size: 2rem;
-            color: #7ec8e3;
-            margin: 2rem 0;
-            animation: flow 3s ease-in-out infinite;
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
-        .progress-indicator {
-            position: fixed;
-            top: 70px;
-            right: 20px;
-            font-size: 0.9rem;
-            color: #7ec8e3;
-            background: rgba(10, 10, 10, 0.9);
-            padding: 10px 15px;
-            border: 1px solid #7ec8e3;
-            z-index: 100;
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
         }
 
-        .intro-section {
-            text-align: center;
-            margin-bottom: 100px;
-            padding: 2rem 0;
-        }
-
-        .intro-section h1 {
-            color: #00ffff;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .intro-section p {
-            color: #7ec8e3;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
+        /* COMPLETION SECTION */
         .completion-section {
-            text-align: center;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
+            text-align: center;
             opacity: 0;
-            transform: translateY(50px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
+            transform: translateY(80px);
+            transition: opacity 1s ease, transform 1s ease;
         }
 
         .completion-section.revealed {
@@ -176,8 +249,28 @@
 
         .completion-section h2 {
             color: #00ffff;
-            font-size: 2rem;
-            margin-bottom: 1rem;
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+        }
+
+        .completion-section p {
+            color: #7ec8e3;
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            line-height: 1.8;
+            max-width: 600px;
+            margin: 1rem auto;
+        }
+
+        .river-emoji {
+            font-size: 4rem;
+            margin: 2rem 0;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
         }
 
         .reset-btn {
@@ -188,10 +281,10 @@
             font-size: 1.1rem;
             font-family: 'Courier Prime', monospace;
             cursor: pointer;
-            margin: 20px auto;
-            display: block;
+            margin-top: 2rem;
             min-width: 44px;
             min-height: 44px;
+            font-weight: bold;
             transition: all 0.3s ease;
         }
 
@@ -200,298 +293,359 @@
             transform: scale(1.05);
         }
 
-        @keyframes glow {
-            0%, 100% { text-shadow: 0 0 5px #00ffff; }
-            50% { text-shadow: 0 0 20px #00ffff; }
+        /* AUDIO CONTROLS */
+        .audio-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 200;
+            display: flex;
+            gap: 10px;
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
+        .audio-btn {
+            background: rgba(126, 200, 227, 0.2);
+            border: 2px solid #7ec8e3;
+            color: #7ec8e3;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
         }
 
-        @keyframes flow {
-            0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(10px); }
+        .audio-btn:hover {
+            background: rgba(0, 255, 255, 0.3);
+            border-color: #00ffff;
+            color: #00ffff;
         }
 
+        .audio-btn.active {
+            background: rgba(0, 255, 255, 0.5);
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        /* PROGRESS BAR */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #7ec8e3, #00ffff, #ff0000);
+            z-index: 300;
+            transition: width 0.1s ease;
+        }
+
+        /* RESPONSIVE */
         @media (max-width: 768px) {
-            .riddle-text {
-                font-size: 1.2rem;
+            body {
+                padding: 70px 15px 20px 15px;
             }
 
-            .intro-section h1 {
-                font-size: 2rem;
+            .riddle-line {
+                font-size: clamp(1rem, 2.5vw, 1.8rem);
             }
 
-            .intro-section p {
-                font-size: 1rem;
+            .audio-controls {
+                bottom: 15px;
+                right: 15px;
             }
 
-            .answer-input {
-                font-size: 1rem;
-                padding: 12px;
-            }
-
-            .submit-btn {
-                padding: 12px 30px;
-                font-size: 1rem;
-            }
-
-            .progress-indicator {
-                font-size: 0.8rem;
-                padding: 8px 12px;
+            .audio-btn {
+                width: 45px;
+                height: 45px;
             }
         }
 
         @media (max-width: 480px) {
             body {
-                padding: 80px 15px 15px 15px;
-            }
-
-            .riddle-text {
-                font-size: 1.1rem;
+                padding: 65px 12px 20px 12px;
             }
 
             .intro-section h1 {
-                font-size: 1.5rem;
+                font-size: 1.8rem;
             }
 
-            .river-flow {
-                font-size: 1.5rem;
+            .riddle-line {
+                font-size: 1.1rem;
+                margin: 1rem auto;
             }
 
-            .progress-indicator {
-                top: 65px;
-                right: 10px;
+            .answer-input,
+            .submit-btn {
+                font-size: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <nav class="home-link">
-        <a href="../index.html">← Back to Collection</a>
-    </nav>
+    <a href="../" class="home-link">← Home</a>
 
-    <div class="progress-indicator">
-        <span id="progress">Riddle 0/5</span>
-    </div>
+    <div class="progress-bar"></div>
 
     <div class="container">
+        <!-- INTRO -->
         <div class="intro-section">
-            <h1>The River Riddle</h1>
-            <p>A mysterious river flows through the city. To cross it, you must answer five riddles. Each answer unlocks the next passage. Scroll down to begin your journey.</p>
-            <div class="river-flow">~~~</div>
+            <h1>🌊 The River Riddle 🌊</h1>
+            <p>A journey through sound and mystery awaits below.</p>
+            <p style="color: #00ffff; margin-top: 2rem;">Scroll to reveal the riddle...</p>
+            <div class="scroll-prompt">↓ Scroll Down ↓</div>
         </div>
 
-        <div class="riddle-section" data-riddle="1">
-            <div class="riddle-text">
-                I speak without a mouth and hear without ears.<br>
-                I have no body, but I come alive with wind.<br>
-                What am I?
-            </div>
-            <div class="answer-container">
-                <input type="text" class="answer-input" placeholder="Type your answer..." data-answer="echo">
-                <button class="submit-btn">Submit Answer</button>
-                <div class="feedback"></div>
-            </div>
+        <!-- RIDDLE LINES -->
+        <div class="riddle-section">
+            <div class="riddle-line">This runs but does not walk.</div>
         </div>
 
-        <div class="river-flow">~~~</div>
-
-        <div class="riddle-section" data-riddle="2">
-            <div class="riddle-text">
-                The more you take, the more you leave behind.<br>
-                What are they?
-            </div>
-            <div class="answer-container">
-                <input type="text" class="answer-input" placeholder="Type your answer..." data-answer="footsteps">
-                <button class="submit-btn">Submit Answer</button>
-                <div class="feedback"></div>
-            </div>
+        <div class="riddle-section">
+            <div class="riddle-line">It has a mouth but never speaks.</div>
         </div>
 
-        <div class="river-flow">~~~</div>
+        <div class="riddle-section">
+            <div class="riddle-line">It has a head but never weeps.</div>
+        </div>
 
-        <div class="riddle-section" data-riddle="3">
-            <div class="riddle-text">
-                I have cities, but no houses.<br>
-                I have mountains, but no trees.<br>
-                I have water, but no fish.<br>
-                What am I?
-            </div>
-            <div class="answer-container">
-                <input type="text" class="answer-input" placeholder="Type your answer..." data-answer="map">
-                <button class="submit-btn">Submit Answer</button>
-                <div class="feedback"></div>
+        <div class="riddle-section">
+            <div class="riddle-line">It has a bed but never sleeps.</div>
+        </div>
+
+        <!-- QUESTION -->
+        <div class="riddle-section">
+            <div class="riddle-line" style="color: #ff0000; font-size: 1.8rem;">What is it?</div>
+        </div>
+
+        <!-- ANSWER INPUT -->
+        <div class="answer-section">
+            <h2>🎵 Your Answer 🎵</h2>
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    class="answer-input" 
+                    id="answerInput" 
+                    placeholder="Type your answer..."
+                    autocomplete="off"
+                >
+                <button class="submit-btn" id="submitBtn">Submit Answer</button>
+                <div class="feedback" id="feedback"></div>
             </div>
         </div>
 
-        <div class="river-flow">~~~</div>
-
-        <div class="riddle-section" data-riddle="4">
-            <div class="riddle-text">
-                What can travel around the world while staying in a corner?
-            </div>
-            <div class="answer-container">
-                <input type="text" class="answer-input" placeholder="Type your answer..." data-answer="stamp">
-                <button class="submit-btn">Submit Answer</button>
-                <div class="feedback"></div>
-            </div>
-        </div>
-
-        <div class="river-flow">~~~</div>
-
-        <div class="riddle-section" data-riddle="5">
-            <div class="riddle-text">
-                I am not alive, but I grow.<br>
-                I don't have lungs, but I need air.<br>
-                I don't have a mouth, but water kills me.<br>
-                What am I?
-            </div>
-            <div class="answer-container">
-                <input type="text" class="answer-input" placeholder="Type your answer..." data-answer="fire">
-                <button class="submit-btn">Submit Answer</button>
-                <div class="feedback"></div>
-            </div>
-        </div>
-
-        <div class="river-flow">~~~</div>
-
+        <!-- COMPLETION -->
         <div class="completion-section">
-            <h2>You have crossed the river.</h2>
-            <p style="color: #7ec8e3; font-size: 1.2rem; margin: 1rem 0;">
-                The waters part for those who seek truth.<br>
-                The journey continues on the other shore.
-            </p>
-            <button class="reset-btn">Cross Again</button>
+            <div class="river-emoji">🌊</div>
+            <h2>You've Found It!</h2>
+            <p>The answer flows eternal, ever moving, never resting.</p>
+            <p style="color: #ff0000; font-size: 1.2rem;">A River</p>
+            <button class="reset-btn" id="resetBtn">Journey Again</button>
         </div>
+    </div>
+
+    <!-- AUDIO CONTROLS -->
+    <div class="audio-controls">
+        <button class="audio-btn active" id="ambientToggle" title="Ambient Sound">🔊</button>
+        <button class="audio-btn" id="musicToggle" title="Musical Cues">🎵</button>
     </div>
 
     <script>
-        const riddleSections = document.querySelectorAll('.riddle-section');
-        const completionSection = document.querySelector('.completion-section');
-        const progressDisplay = document.getElementById('progress');
-        const resetBtn = document.querySelector('.reset-btn');
-        
-        let solvedCount = 0;
-        const totalRiddles = riddleSections.length;
+        // ========== AUDIO CONTEXT & SYNTHESIS ==========
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContext();
 
-        const observerOptions = {
-            threshold: 0.3,
-            rootMargin: '0px 0px -100px 0px'
-        };
+        let ambientActive = true;
+        let musicActive = false;
+        let ambientOscillators = [];
+        let currentGain = null;
 
+        // ========== SCROLL DETECTION ==========
+        const sections = document.querySelectorAll('.riddle-section, .answer-section, .completion-section');
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('revealed');
-                    
-                    const answerContainer = entry.target.querySelector('.answer-container');
-                    if (answerContainer && !answerContainer.classList.contains('show')) {
-                        setTimeout(() => {
-                            answerContainer.classList.add('show');
-                        }, 500);
-                    }
+                    if (ambientActive) playScrollTone();
                 }
             });
-        }, observerOptions);
+        }, { threshold: 0.3 });
 
-        riddleSections.forEach(section => {
-            observer.observe(section);
+        sections.forEach(section => observer.observe(section));
+
+        // ========== MUSICAL TONES ==========
+        function playScrollTone() {
+            if (audioContext.state === 'suspended') audioContext.resume();
             
-            const submitBtn = section.querySelector('.submit-btn');
-            const input = section.querySelector('.answer-input');
-            const feedback = section.querySelector('.feedback');
-            const correctAnswer = input.dataset.answer;
+            const now = audioContext.currentTime;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
             
-            const checkAnswer = () => {
-                const userAnswer = input.value.trim().toLowerCase();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            osc.frequency.value = 400 + Math.random() * 200;
+            osc.type = 'sine';
+            
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+
+        function playSuccessTone() {
+            if (audioContext.state === 'suspended') audioContext.resume();
+            
+            const now = audioContext.currentTime;
+            const notes = [523.25, 659.25, 783.99]; // C, E, G
+            
+            notes.forEach((freq, i) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
                 
-                if (!userAnswer) {
-                    feedback.textContent = 'Please enter an answer';
-                    feedback.className = 'feedback incorrect';
-                    return;
-                }
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
                 
-                if (userAnswer === correctAnswer) {
-                    feedback.textContent = '✓ Correct! The river flows onward...';
-                    feedback.className = 'feedback correct';
-                    input.disabled = true;
-                    submitBtn.disabled = true;
-                    submitBtn.style.opacity = '0.5';
-                    
-                    solvedCount++;
-                    updateProgress();
-                    
-                    setTimeout(() => {
-                        const nextSection = section.nextElementSibling;
-                        if (nextSection && nextSection.classList.contains('river-flow')) {
-                            const afterNext = nextSection.nextElementSibling;
-                            if (afterNext) {
-                                afterNext.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
-                        }
-                    }, 1500);
-                    
-                    if (solvedCount === totalRiddles) {
-                        setTimeout(() => {
-                            completionSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            observer.observe(completionSection);
-                        }, 2000);
-                    }
-                } else {
-                    feedback.textContent = '✗ Not quite. Try again...';
-                    feedback.className = 'feedback incorrect';
-                }
-            };
-            
-            submitBtn.addEventListener('click', checkAnswer);
-            
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    checkAnswer();
-                }
+                osc.frequency.value = freq;
+                osc.type = 'sine';
+                
+                const startTime = now + (i * 0.1);
+                gain.gain.setValueAtTime(0.15, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 0.5);
             });
+        }
+
+        function playErrorTone() {
+            if (audioContext.state === 'suspended') audioContext.resume();
+            
+            const now = audioContext.currentTime;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+            osc.type = 'square';
+            
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            
+            osc.start(now);
+            osc.stop(now + 0.2);
+        }
+
+        function startAmbientSound() {
+            if (audioContext.state === 'suspended') audioContext.resume();
+            
+            const now = audioContext.currentTime;
+            
+            // Stop existing oscillators
+            ambientOscillators.forEach(osc => {
+                try { osc.stop(); } catch (e) {}
+            });
+            ambientOscillators = [];
+            
+            // Create ambient pad with multiple frequencies
+            const frequencies = [110, 165, 220]; // A2, E3, A3
+            
+            frequencies.forEach(freq => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                
+                osc.frequency.value = freq;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.05, now);
+                
+                osc.start(now);
+                ambientOscillators.push(osc);
+            });
+        }
+
+        function stopAmbientSound() {
+            ambientOscillators.forEach(osc => {
+                try { osc.stop(); } catch (e) {}
+            });
+            ambientOscillators = [];
+        }
+
+        // ========== ANSWER HANDLING ==========
+        const answerInput = document.getElementById('answerInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const feedback = document.getElementById('feedback');
+        const completionSection = document.querySelector('.completion-section');
+        const resetBtn = document.getElementById('resetBtn');
+
+        submitBtn.addEventListener('click', checkAnswer);
+        answerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkAnswer();
         });
 
-        function updateProgress() {
-            progressDisplay.textContent = `Riddle ${solvedCount}/${totalRiddles}`;
+        function checkAnswer() {
+            const userAnswer = answerInput.value.trim().toLowerCase();
+            const correctAnswers = ['river', 'a river'];
             
-            if (solvedCount === totalRiddles) {
+            if (correctAnswers.includes(userAnswer)) {
+                feedback.textContent = '✓ Correct! The answer flows eternal...';
+                feedback.classList.remove('incorrect');
+                feedback.classList.add('correct');
+                playSuccessTone();
+                
                 setTimeout(() => {
-                    progressDisplay.textContent = 'Journey Complete';
-                }, 2000);
+                    completionSection.classList.add('revealed');
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }, 1000);
+            } else {
+                feedback.textContent = '✗ Not quite... Think again.';
+                feedback.classList.remove('correct');
+                feedback.classList.add('incorrect');
+                playErrorTone();
             }
         }
 
         resetBtn.addEventListener('click', () => {
-            solvedCount = 0;
-            updateProgress();
-            
-            riddleSections.forEach(section => {
-                section.classList.remove('revealed');
-                const answerContainer = section.querySelector('.answer-container');
-                const input = section.querySelector('.answer-input');
-                const submitBtn = section.querySelector('.submit-btn');
-                const feedback = section.querySelector('.feedback');
-                
-                answerContainer.classList.remove('show');
-                input.value = '';
-                input.disabled = false;
-                submitBtn.disabled = false;
-                submitBtn.style.opacity = '1';
-                feedback.textContent = '';
-                feedback.className = 'feedback';
-            });
-            
-            completionSection.classList.remove('revealed');
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            location.reload();
         });
 
-        updateProgress();
+        // ========== AUDIO CONTROLS ==========
+        const ambientToggle = document.getElementById('ambientToggle');
+        const musicToggle = document.getElementById('musicToggle');
+
+        ambientToggle.addEventListener('click', () => {
+            ambientActive = !ambientActive;
+            ambientToggle.classList.toggle('active');
+            
+            if (ambientActive) {
+                startAmbientSound();
+            } else {
+                stopAmbientSound();
+            }
+        });
+
+        musicToggle.addEventListener('click', () => {
+            musicActive = !musicActive;
+            musicToggle.classList.toggle('active');
+        });
+
+        // ========== PROGRESS BAR ==========
+        const progressBar = document.querySelector('.progress-bar');
+        window.addEventListener('scroll', () => {
+            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrolled = (window.scrollY / scrollHeight) * 100;
+            progressBar.style.width = scrolled + '%';
+        });
+
+        // ========== INIT ==========
+        startAmbientSound();
     </script>
 </body>
 </html>
