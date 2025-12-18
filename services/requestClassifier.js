@@ -4,24 +4,32 @@
 const axios = require('axios');
 
 /**
- * Use LLM to intelligently classify user requests
+ * Classify user requests - uses fast keyword matching by default
+ * LLM classification is optional (set useLLM: true in options)
  * @param {string} prompt - User's request message
  * @param {object} options - Classification options
  * @returns {object} Classification result with type and confidence
  */
 async function classifyRequest(prompt, options = {}) {
-    // Use a dedicated fast model and isolated HTTP client (no global retries)
-    const http = axios.create();
-
     const {
-        // Never leak global MODEL here. Allow override via options or env.
+        // Default to keyword-based classification (no API call)
+        useLLM = process.env.CLASSIFIER_USE_LLM === 'true',
         model = process.env.CLASSIFIER_MODEL || 'anthropic/claude-haiku-4.5',
         apiKey = process.env.OPENROUTER_API_KEY,
         timeoutMs = Number(process.env.CLASSIFIER_TIMEOUT_MS || 3500)
     } = options;
 
+    // Fast path: use keyword matching (no API call)
+    if (!useLLM) {
+        const result = fallbackClassification(prompt, { method: 'keyword' });
+        console.log(`[CLASSIFIER] "${prompt.substring(0, 50)}..." → ${result.type} (keyword)`);
+        return result;
+    }
+
+    // LLM path (optional - only when explicitly enabled)
+    const http = axios.create();
+
     try {
-        // If we don't have an API key, fail fast to fallback
         if (!apiKey) {
             return fallbackClassification(prompt, { method: 'no-api-key' });
         }
@@ -64,7 +72,7 @@ Respond with ONLY one of these exact words: SIMPLE_EDIT, FUNCTIONALITY_FIX, CREA
                     content: classificationPrompt
                 }
             ],
-            max_tokens: 4,
+            max_tokens: 10, // Increased to handle longest classification name (FUNCTIONALITY_FIX)
             temperature: 0.0 // Deterministic classification
         }, {
             headers: {

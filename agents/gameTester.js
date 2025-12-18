@@ -9,16 +9,21 @@ const { callSonnet, extractJSON } = require('../services/llmClient');
  * @param {object} options.plan - Original plan
  * @param {object} options.buildResult - Build result with generated files
  * @param {string} options.buildId - Build ID
+ * @param {boolean} options.useLLMValidation - Enable LLM validation (default: false for speed)
  * @returns {object} Test result { ok, issues, warnings, score }
  */
-async function testGame({ plan, buildResult, buildId }) {
+async function testGame({ plan, buildResult, buildId, useLLMValidation = false }) {
     console.log(`🧪 Tester validating code...`);
 
-    // First: run automated checks
+    // Run automated checks (fast, no API call)
     const autoChecks = runAutomatedChecks(buildResult.htmlContent, plan);
 
-    // Second: ask LLM to review (catches subtle issues)
-    const llmChecks = await runLLMValidation(buildResult.htmlContent, plan);
+    // LLM validation is optional - only run if enabled (saves API call)
+    let llmChecks = { issues: [], warnings: [] };
+    if (useLLMValidation) {
+        console.log('   Running LLM validation (optional)...');
+        llmChecks = await runLLMValidation(buildResult.htmlContent, plan);
+    }
 
     // Merge results
     const allIssues = [...autoChecks.issues, ...llmChecks.issues];
