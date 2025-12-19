@@ -8,7 +8,7 @@ Bot Sportello is a Discord bot with a laid-back Doc Sportello personality that m
 
 **Core Purpose**: Help users create, commit, and manage web pages and JavaScript libraries through Discord commands while maintaining a chill, slightly spacey but helpful personality. All generated projects use a noir terminal aesthetic with mobile-first responsive design.
 
-**Live Site**: https://milwrite.github.io/javabot/
+**Live Site**: https://bot.inference-arcade.com/
 **Repository**: https://github.com/milwrite/javabot/
 
 **Key Features**:
@@ -513,7 +513,7 @@ errorTracker.set(`${userId}-${commandName}`, {
 2. Add case to switch statement in `interactionCreate` handler
 3. Create `async function handle{CommandName}(interaction)`
 4. Use `getBotResponse()` for personality-consistent messages
-5. Include live site URL in embeds: `https://milwrite.github.io/javabot/`
+5. Include live site URL in embeds: `https://bot.inference-arcade.com/`
 6. Commands auto-register on bot restart (no manual deployment)
 
 ## Adding New AI Tools (for @mention parity)

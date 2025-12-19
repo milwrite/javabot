@@ -235,7 +235,7 @@ async function runGamePipeline({
             testResult,
             docs,
             duration,
-            liveUrl: `https://milwrite.github.io/javabot/src/${slug}.html`
+            liveUrl: `https://bot.inference-arcade.com/src/${slug}.html`
         };
 
     } catch (error) {

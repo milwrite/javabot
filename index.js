@@ -486,7 +486,7 @@ const DEFAULT_SYSTEM_PROMPT = `You are Bot Sportello, a laid-back Discord bot wh
 
 REPOSITORY CONTEXT:
 Repository: https://github.com/milwrite/javabot/
-Live Site: https://milwrite.github.io/javabot/
+Live Site: https://bot.inference-arcade.com/
 - You can commit, push, and manage files
 - /src directory contains web pages and JS libraries
 - You help create, edit, and deploy web projects via Discord commands
@@ -499,11 +499,11 @@ SITE INVENTORY (CRITICAL - Updated automatically):
 - Use search_files("content", "SITE_INVENTORY.md") to see current site structure when needed
 
 URL STRUCTURE (CRITICAL):
-- Main page: https://milwrite.github.io/javabot/
-- Pages in src/: https://milwrite.github.io/javabot/src/PAGENAME.html
+- Main page: https://bot.inference-arcade.com/
+- Pages in src/: https://bot.inference-arcade.com/src/PAGENAME.html
 - ALWAYS include /src/ in URLs for pages in the src directory!
-- Example: frogger.html → https://milwrite.github.io/javabot/src/frogger.html
-- WRONG: https://milwrite.github.io/javabot/frogger.html (missing /src/)
+- Example: frogger.html → https://bot.inference-arcade.com/src/frogger.html
+- WRONG: https://bot.inference-arcade.com/frogger.html (missing /src/)
 
 NOIR TERMINAL DESIGN SYSTEM:
 
@@ -581,7 +581,7 @@ When you finish creating a page, briefly tell the user what you made:
 1. Summarize the key feature (1 sentence): "Built you a frogger game with mobile touch controls"
 2. Mention any creative additions: "Added CRT scanlines and a high score tracker"
 3. Note the live URL so they can check it out
-4. ALWAYS remind users: "Give it a minute or two to deploy to GitHub Pages"
+4. ALWAYS remind users: "Give it a minute or two to go live"
 Keep it casual and brief - don't list every HTML element or CSS class used.
 
 URL FORMATTING (CRITICAL - FOLLOW EXACTLY):
@@ -645,7 +645,7 @@ WHEN TO USE EACH TOOL:
 - For quick file edits: use edit_file with natural language instructions
 - For new pages/apps: use create_page (simple) or build_game (complex with AI pipeline)
 - For JS libraries/features: use create_feature (generates library + demo)
-- To deploy changes: use commit_changes (auto-pushes to GitHub Pages)
+- To deploy changes: use commit_changes (auto-pushes and deploys)
 - To switch AI behavior: use set_model (affects all subsequent responses)
 - For current events/news: use web_search (gets latest information)
 - For batch operations: Use arrays - read_file(["file1", "file2"]), list_files(["dir1", "dir2"])
@@ -677,7 +677,7 @@ When listing information (clues, answers, items, data):
 - Use code blocks for code snippets with blank lines before/after
 - Structure long responses with clear sections separated by blank lines
 
-IMPORTANT: Do not prefix your responses with "Bot Sportello:" - just respond naturally as Bot Sportello. Always mention the live site URL (https://milwrite.github.io/javabot/) before making changes to give users context.
+IMPORTANT: Do not prefix your responses with "Bot Sportello:" - just respond naturally as Bot Sportello. Always mention the live site URL (https://bot.inference-arcade.com/) before making changes to give users context.
 
 Be concise and helpful. Remember conversations from agents.md.`;
 
@@ -1251,7 +1251,7 @@ async function writeFile(filePath, content) {
         }
 
         console.log(`[WRITE_FILE] Auto-pushed: ${commitMessage}`);
-        return `File written and pushed: ${filePath} (${content.length} bytes) - now live at https://milwrite.github.io/javabot/${filePath}`;
+        return `File written and pushed: ${filePath} (${content.length} bytes) - now live at https://bot.inference-arcade.com/${filePath}`;
     } catch (error) {
         console.error(`[WRITE_FILE] Error:`, error.message);
         return `Error writing file: ${error.message}`;
@@ -1867,7 +1867,7 @@ Return only HTML, no markdown blocks or explanations.`;
 
         const qualityNote = validation.score >= 80 ? '✨ High quality' : validation.score >= 60 ? '✓ Good quality' : '⚠️ May need refinement';
         console.log(`[CREATE_PAGE] Success + pushed: ${fileName} (Score: ${validation.score}/100)`);
-        return `Created ${fileName} and pushed. ${qualityNote} (${validation.score}/100). Live at: https://milwrite.github.io/javabot/src/${name}.html (give it 1-2 min to deploy)`;
+        return `Created ${fileName} and pushed. ${qualityNote} (${validation.score}/100). Live at: https://bot.inference-arcade.com/src/${name}.html (give it 1-2 min to deploy)`;
     } catch (error) {
         console.error(`[CREATE_PAGE] Error:`, error.message);
         return `Error creating page: ${error.message}`;
@@ -2008,7 +2008,7 @@ Return only HTML code, no markdown blocks or explanations.`;
 
         const qualityNote = htmlValidation.score >= 80 ? '✨ High quality' : htmlValidation.score >= 60 ? '✓ Good quality' : '⚠️ May need refinement';
         console.log(`[CREATE_FEATURE] Success + pushed: ${jsFileName}, ${htmlFileName} (Score: ${htmlValidation.score}/100)`);
-        return `Created ${jsFileName} and ${htmlFileName}, pushed. ${qualityNote} (${htmlValidation.score}/100). Live demo: https://milwrite.github.io/javabot/src/${name}.html (give it 1-2 min to deploy)`;
+        return `Created ${jsFileName} and ${htmlFileName}, pushed. ${qualityNote} (${htmlValidation.score}/100). Live demo: https://bot.inference-arcade.com/src/${name}.html (give it 1-2 min to deploy)`;
     } catch (error) {
         console.error(`[CREATE_FEATURE] Error:`, error.message);
         return `Error creating feature: ${error.message}`;
@@ -2124,7 +2124,7 @@ async function getRepoStatus() {
         const status = await git.status();
         let result = `Branch: ${status.current}\n`;
         result += `Modified: ${status.modified.length}, New: ${status.not_added.length}\n`;
-        result += `Live site: https://milwrite.github.io/javabot/\n`;
+        result += `Live site: https://bot.inference-arcade.com/\n`;
         if (status.files.length > 0) {
             result += `Changed files: ${status.files.slice(0, 5).map(f => f.path).join(', ')}`;
         }
@@ -2289,7 +2289,7 @@ async function buildGameTool(title, prompt, type = 'auto') {
         }
 
         const scoreEmoji = result.testResult.score >= 80 ? '✨' : result.testResult.score >= 60 ? '✓' : '⚠️';
-        return `${scoreEmoji} Built "${result.plan.metadata.title}"!\n\nType: ${result.plan.type}\nQuality: ${result.testResult.score}/100\nLive: ${result.liveUrl}\n\n${result.docs.releaseNotes}\n\n(Give it a minute or two to deploy to GitHub Pages)`;
+        return `${scoreEmoji} Built "${result.plan.metadata.title}"!\n\nType: ${result.plan.type}\nQuality: ${result.testResult.score}/100\nLive: ${result.liveUrl}\n\n${result.docs.releaseNotes}\n\n(Give it a minute or two to go live)`;
     } catch (error) {
         console.error('Build game tool error:', error);
         return `Build pipeline error: ${error.message}`;
@@ -2305,7 +2305,7 @@ async function getEditResponse(userMessage, conversationMessages = []) {
                 content: `${SYSTEM_PROMPT}\n\nYou are in EDIT MODE. Focus on making the requested edits quickly and efficiently. 
 
 IMPORTANT URL-TO-FILE MAPPING:
-- URLs like "https://milwrite.github.io/javabot/src/filename.html" map to file path "src/filename.html"
+- URLs like "https://bot.inference-arcade.com/src/filename.html" map to file path "src/filename.html"
 - Remove the base URL and use the path directly: src/tarot-reading.html, src/frogger.html, etc.
 
 EDIT WORKFLOW:
@@ -3743,7 +3743,7 @@ async function handleMentionAsync(message) {
 
                     // Success message
                     const scoreEmoji = result.testResult.score >= 80 ? '✨' : result.testResult.score >= 60 ? '✓' : '⚠️';
-                    const successMsg = `${scoreEmoji} **${result.plan.metadata.title}** built and deployed!\n\n${result.docs.releaseNotes}\n\n🎮 **Play now:** ${result.liveUrl}\n\n📊 Quality: ${result.testResult.score}/100 | ⏱️ Build time: ${result.duration}\n\n*Give it a minute or two to deploy to GitHub Pages*`;
+                    const successMsg = `${scoreEmoji} **${result.plan.metadata.title}** built and deployed!\n\n${result.docs.releaseNotes}\n\n🎮 **Play now:** ${result.liveUrl}\n\n📊 Quality: ${result.testResult.score}/100 | ⏱️ Build time: ${result.duration}\n\n*Give it a minute or two to go live*`;
 
                     await thinkingMsg.edit(successMsg);
 
@@ -4130,12 +4130,12 @@ async function executeCommit(interaction, commitData) {
         // Success - create and send embed
         const embed = new EmbedBuilder()
             .setTitle('🚀 Changes Committed & Pushed')
-            .setDescription(getBotResponse('success') + '\n\n**Note:** Changes are live on GitHub. If you modified HTML/CSS, GitHub Pages will deploy in 1-2 minutes.')
+            .setDescription(getBotResponse('success') + '\n\n**Note:** Changes pushed! Site will update in 1-2 minutes.')
             .addFields(
                 { name: 'Commit Message', value: commitData.message, inline: false },
                 { name: 'Commit Hash', value: commit.commit.substring(0, 7), inline: true },
                 { name: 'Files Changed', value: commitData.status.files.length.toString(), inline: true },
-                { name: 'Deployment', value: '⏳ Deploying to GitHub Pages... (1-2 min)', inline: false }
+                { name: 'Deployment', value: '⏳ Deploying... (1-2 min)', inline: false }
             )
             .setColor(0x00AE86)
             .setTimestamp();
@@ -4332,7 +4332,7 @@ async function handleAddPage(interaction) {
                 { name: 'Name', value: name, inline: true },
                 { name: 'Description', value: description, inline: false },
                 { name: 'File', value: `src/${name}.html`, inline: false },
-                { name: 'Live URL', value: `https://milwrite.github.io/javabot/src/${name}.html`, inline: false },
+                { name: 'Live URL', value: `https://bot.inference-arcade.com/src/${name}.html`, inline: false },
                 ...(score ? [{ name: 'Quality Score', value: `${score}/100`, inline: true }] : [])
             )
             .setColor(score >= 80 ? 0x00ff00 : score >= 60 ? 0x9b59b6 : 0xff9900)
@@ -4367,7 +4367,7 @@ async function handleAddFeature(interaction) {
                 { name: 'Name', value: name, inline: true },
                 { name: 'Description', value: description, inline: false },
                 { name: 'Files', value: `src/${name}.js\nsrc/${name}.html`, inline: false },
-                { name: 'Live Demo', value: `https://milwrite.github.io/javabot/src/${name}.html`, inline: false },
+                { name: 'Live Demo', value: `https://bot.inference-arcade.com/src/${name}.html`, inline: false },
                 ...(score ? [{ name: 'Quality Score', value: `${score}/100`, inline: true }] : [])
             )
             .setColor(score >= 80 ? 0x00ff00 : score >= 60 ? 0xf39c12 : 0xff9900)
@@ -4450,7 +4450,7 @@ async function handleBuildGame(interaction) {
                 // Create error embed instead of success
                 const errorEmbed = new EmbedBuilder()
                     .setTitle('⚠️ Deployment Failed')
-                    .setDescription(`Content "${result.plan?.metadata?.title || 'New Content'}" was built successfully but could not be deployed to GitHub Pages.`)
+                    .setDescription(`Content "${result.plan?.metadata?.title || 'New Content'}" was built successfully but could not be deployed.`)
                     .addFields(
                         { name: 'Error', value: pushError.message.substring(0, 1000), inline: false },
                         { name: 'Status', value: 'Files saved locally but not live', inline: false },
@@ -4476,7 +4476,7 @@ async function handleBuildGame(interaction) {
                 { name: 'Build Time', value: result.duration || 'Unknown', inline: true }
             )
             .setColor(result.testResult?.score >= 80 ? 0x00ff00 : 0xf39c12)
-            .setFooter({ text: 'Give it a minute or two to deploy to GitHub Pages' })
+            .setFooter({ text: 'Give it a minute or two to go live' })
             .setTimestamp();
 
         if (result.docs?.howToPlay) {
@@ -4539,14 +4539,14 @@ async function handleBuildPuzzle(interaction) {
         await pushWithAuth('main');
 
         // Success embed
-        const liveUrl = `https://milwrite.github.io/javabot/src/${fileName}.html`;
+        const liveUrl = `https://bot.inference-arcade.com/src/${fileName}.html`;
         const embed = new EmbedBuilder()
             .setColor('#7ec8e3')
             .setTitle(`🧩 ${puzzleData.title}`)
             .setDescription(`**Theme:** ${theme}\n**Difficulty:** ${difficulty}\n**Nodes:** ${Object.keys(puzzleData.nodes).length}`)
             .setURL(liveUrl)
             .addFields({ name: '🎮 Play Now', value: `[Launch Puzzle](${liveUrl})` })
-            .setFooter({ text: 'May take a minute to deploy to GitHub Pages' })
+            .setFooter({ text: 'May take a minute to go live' })
             .setTimestamp();
 
         await interaction.editReply({ content: null, embeds: [embed] });
@@ -5559,7 +5559,7 @@ async function handleStatus(interaction) {
                 { name: 'Branch', value: status.current || 'unknown', inline: true },
                 { name: 'Modified Files', value: status.modified.length.toString(), inline: true },
                 { name: 'New Files', value: status.not_added.length.toString(), inline: true },
-                { name: 'Live Site', value: 'https://milwrite.github.io/javabot/', inline: false }
+                { name: 'Live Site', value: 'https://bot.inference-arcade.com/', inline: false }
             )
             .setColor(0x3498db);
 
@@ -5722,7 +5722,7 @@ async function handleSyncIndex(interaction) {
             .addFields(
                 { name: 'HTML Files Found', value: htmlFiles.length.toString(), inline: true },
                 { name: 'Status', value: 'All files synced to index.html', inline: false },
-                { name: 'Live Site', value: '[View Arcade](https://milwrite.github.io/javabot/)', inline: false }
+                { name: 'Live Site', value: '[View Arcade](https://bot.inference-arcade.com/)', inline: false }
             )
             .setColor(0x00AE86)
             .setTimestamp();
@@ -5826,7 +5826,7 @@ async function executeMentionCommit(interaction, commitData) {
                 { name: 'Commit Message', value: commitMessage, inline: false },
                 { name: 'Commit Hash', value: commit.commit.substring(0, 7), inline: true },
                 { name: 'Files Changed', value: commitData.status.files.length.toString(), inline: true },
-                { name: 'Live Site', value: '[View Changes](https://milwrite.github.io/javabot/)', inline: false }
+                { name: 'Live Site', value: '[View Changes](https://bot.inference-arcade.com/)', inline: false }
             )
             .setColor(0x7dd3a0) // Mint green
             .setTimestamp();
@@ -6553,12 +6553,12 @@ Output ONLY the CSS code, no explanations.`;
 
         const embed = new EmbedBuilder()
             .setTitle('🎨 Style Updated & Pushed')
-            .setDescription(getBotResponse('success') + '\n\n**Note:** Changes have been pushed to GitHub. GitHub Pages will deploy in 1-2 minutes.')
+            .setDescription(getBotResponse('success') + '\n\n**Note:** Changes pushed! Site will update in 1-2 minutes.')
             .addFields(
                 { name: 'Style', value: preset === 'custom' ? 'Custom AI-generated' : preset, inline: true },
                 { name: 'File', value: 'style.css', inline: true },
                 { name: 'Deployment', value: '⏳ Deploying... Please be patient (1-2 min)', inline: false },
-                { name: 'Live Site', value: '[View Changes](https://milwrite.github.io/javabot/)', inline: false }
+                { name: 'Live Site', value: '[View Changes](https://bot.inference-arcade.com/)', inline: false }
             )
             .setColor(0x9b59b6)
             .setTimestamp();

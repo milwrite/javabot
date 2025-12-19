@@ -2,7 +2,7 @@
 
 A Discord-first, agentic web dev bot in Doc Sportello’s voice. It builds pages, features, and small apps into `src/`, pushes to GitHub Pages, and exposes an in-browser GUI to observe tool calls, file edits, and agent loops in real time.
 
-Live site: `https://milwrite.github.io/javabot/`
+Live site: `https://bot.inference-arcade.com/`
 Repo: `https://github.com/milwrite/javabot/`
 
 **What it does**
@@ -135,14 +135,14 @@ AI & utilities:
 ## Frontend Site
 
 - `index.html` renders collections and links from `projectmetadata.json`.
-- Pages live at `https://milwrite.github.io/javabot/src/<page>.html`.
+- Pages live at `https://bot.inference-arcade.com/src/<page>.html`.
 - Include the back/home link: `<a href="../index.html" class="home-link">← HOME</a>`.
 - Use `page-theme.css` classes/components; follow mobile‑first guidance.
 - `generateSiteInventory.js` writes `SITE_INVENTORY.md`; a watcher updates it whenever `DEVLOG.md` changes.
 
 ## URL ↔ File Mapping
 
-- URL `https://milwrite.github.io/javabot/src/filename.html` maps to file `src/filename.html`.
+- URL `https://bot.inference-arcade.com/src/filename.html` maps to file `src/filename.html`.
 - The edit loop extracts filenames from URLs and edits `src/` accordingly.
 
 ## Observability & Logs

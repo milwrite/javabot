@@ -42,7 +42,7 @@ const model500ErrorCount = new Map();
 
 // Condensed base context (~40% smaller token usage)
 const BASE_SYSTEM_CONTEXT = `
-REPO: https://milwrite.github.io/javabot/ | Files → /src/*.html | Theme: page-theme.css
+REPO: https://bot.inference-arcade.com/ | Files → /src/*.html | Theme: page-theme.css
 
 NOIR PALETTE: #7ec8e3 (accent), #ff0000 (buttons), #00ffff (headers), #0a0a0a (bg), Courier Prime
 
