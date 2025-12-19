@@ -52,45 +52,11 @@ npm start
 
 ## 📊 Log Preservation System
 
-**CRITICAL**: Use `./run-bot.sh` instead of `node index.js` for comprehensive activity tracking and failure documentation.
+**CRITICAL**: Use `./run-bot.sh` for comprehensive activity tracking and failure documentation.
 
-### Features
-- **Automatic Activity Preservation**: All bot operations, mentions, tool calls, errors captured
-- **Broken Process Documentation**: Failed sessions analyzed with detailed failure reports  
-- **Real-time GUI Dashboard**: WebSocket-based monitoring at http://localhost:3001
-- **Session Reports**: JSON and Markdown summaries for each bot session
-- **Health Monitoring**: Detects hanging processes, memory issues, authentication failures
-
-### Log Files Structure
-```
-session-logs/
-├── bot-session-2025-12-15_14-30-00-raw.log    # Raw stdout/stderr
-├── bot-session-2025-12-15_14-30-00-report.json # Detailed activity data
-└── bot-session-2025-12-15_14-30-00-summary.md  # Human-readable report
-```
-
-### Key Tracking Patterns
-- **Mentions**: User interactions, @ mention responses, channel activity
-- **Tool Calls**: AI function executions (list_files, edit_file, create_page, etc.)  
-- **Errors**: Categorized by type (auth, network, git, discord, critical)
-- **Health**: Process responsiveness, memory usage, activity frequency
-- **Broken Processes**: Crash analysis, exit codes, hanging detection
-
-### Troubleshooting Failed Sessions
-1. Check latest session report in `session-logs/`
-2. Look for patterns in error categorization
-3. Review tool call sequences before failures
-4. Analyze health check warnings for hanging processes
-
-Example broken process documentation:
-```markdown
-# Session Report: FAILURE
-- Duration: 12m 34s
-- Exit Reason: authentication-error
-- Mentions: 3 processed successfully
-- Tool Calls: 12 executed, last: commit_changes (failed)
-- Critical Errors: 1 (GitHub token expired)
-```
+**Features**: Activity preservation, session reports, GUI dashboard at http://localhost:3001, health monitoring
+**Log Files**: `session-logs/bot-session-{timestamp}-{raw.log|report.json|summary.md}`
+**Tracking**: Mentions, tool calls, errors, health metrics, crash analysis
 
 ## 🚀 COMMIT PROCEDURES
 
@@ -197,76 +163,19 @@ The entire bot is contained in `index.js` (~3700+ lines) with these key sections
 - `agents.md` - Conversation history (last 100 messages)
 - `index.html` - Main hub page with embedded CSS (no longer uses style.css)
 - `page-theme.css` - Shared arcade theme for all /src/ pages
-- `site-config.js` - **Site configuration system** (favicon, theme, paths - single source of truth)
 - `projectmetadata.json` - Project collections + metadata (title, icon, caption) loaded dynamically by index.html
-- `scripts/update-favicon.js` - Utility script for bulk favicon updates across all pages
 
 ### System-V1: Modular Content Pipeline
 
-**Branch**: `system-v1` adds modular AI-driven content creation.
+**Branch**: `system-v1` adds modular AI-driven content creation with `/services/` and `/agents/` directories.
 
-**New Components**:
-- `/services/` - Build logging, LLM client, pipeline orchestrator
-- `/agents/` - Architect, Builder, Tester, Scribe roles
-- `/build-logs/` - JSON logs for pattern analysis
+**Pipeline**: Architect → Builder → Tester → Scribe for content generation
+- **Architect**: Analyzes request, generates implementation plan
+- **Builder**: Creates HTML/JS from plan with mobile-first enforcement
+- **Tester**: Validates output with automated checks
+- **Scribe**: Generates documentation and updates metadata
 
-**Pipeline**: Architect → Builder → Tester → Scribe for 9 content types (games, letters, recipes, infographics, stories, logs, parodies, utilities, visualizations)
-
-**Features**:
-- Content-type-aware generation and validation
-- Mobile-first enforcement with responsive breakpoints
-- Iterative quality loop with Builder retries (3 attempts max)
-- Dual triggers: `/build-game` command or @mention detection
-- Build log pattern detection (learns from past failures)
-
-#### Multi-Agent Pipeline Flow
-
-**Request Entry**:
-```
-User request
-  ↓
-requestClassifier.js (keyword-based by default, no API call)
-  ├─ CREATE_NEW       → runGamePipeline() [System-V1]
-  ├─ SIMPLE_EDIT      → normal LLM loop with edit_file tool
-  ├─ FUNCTIONALITY_FIX → normal LLM loop with edit_file + search tools
-  ├─ READ_ONLY        → direct LLM answer (no tool access)
-  └─ CONVERSATION     → normal chat
-```
-Set `CLASSIFIER_USE_LLM=true` in .env to enable LLM-based classification (optional).
-
-**Pipeline Stages** (in gamePipeline.js → runGamePipeline):
-
-1. **Architect** (gameArchitect.js)
-   - Analyzes request, generates JSON implementation plan
-   - Plan includes: content type, slug, files, features, interaction pattern
-   - Integrates past failures summary from buildLogs (avoids repeating issues)
-   - Output: Structured JSON for Builder
-
-2. **Builder** (gameBuilder.js)
-   - Generates complete HTML/JS from plan
-   - Content-type-specific: games use canvas + controls; letters use typography focus; utilities use forms
-   - 3-attempt retry loop: test failures trigger Builder retry with issue feedback
-   - Enforces: mobile-first, noir colors, viewport meta, home link, responsive breakpoints
-   - Output: Complete self-contained HTML file
-
-3. **Tester** (gameTester.js)
-   - Automated regex checks by default (fast, no API call)
-   - Checks: DOCTYPE, viewport, CSS/script links, home-link, closing </html>, canvas/controls
-   - LLM validation optional: pass `useLLMValidation: true` for semantic review
-   - Produces quality score (0-100) and issues array
-   - Failure → Builder retry with feedback; after 3 attempts → halt with score
-
-4. **Scribe** (gameScribe.js)
-   - Generates documentation and metadata
-   - Produces: refined title/icon/description, release notes in Doc Sportello voice, optional How-to-Play
-   - Updates `projectmetadata.json` with new entry (auto-assigns collection)
-   - Output: Updated index, metadata file ready for commit
-
-**Build Log Pattern Detection** (buildLogs.js):
-- `getRecentPatternsSummary()` analyzes last 10 builds
-- Extracts top 5 recurring issues (e.g., "missing viewport tag", "no mobile controls")
-- Passed to Architect as "lessons learned" to inform planning
-- Prevents repeated failures across build attempts
+**Features**: Content-type-aware generation, iterative quality loop (3 attempts), build log pattern detection
 
 ### Key Integrations
 
@@ -760,44 +669,14 @@ const CONFIG = {
 };
 ```
 
-**Error Prevention & Performance**:
-- Error tracking prevents infinite loops (3 errors = 5min cooldown)
-- Automatic cleanup of error tracking entries every 5 minutes
-- All git operations wrapped with timeout protection (5-30 seconds depending on operation)
-- Graceful fallbacks for failed Discord interactions
-- Memory optimizations: aggressive message history pruning, garbage collection triggers
-- Efficient logging system with development-only details
-- Response deduplication prevents "Bot Sportello: Bot Sportello:" patterns
-- Message deduplication in mention handler prevents duplicate responses from Discord API glitches
+**Error Prevention**: Error tracking (3 errors = 5min cooldown), git timeout protection, graceful fallbacks, response deduplication
 
 ## Key Development Patterns
 
-**Discord.js Event Names**:
-- Use `client.once('clientReady', ...)` NOT `client.once('ready', ...)`
-- Discord.js v14 uses `'ready'` but shows deprecation warning that it will be renamed to `'clientReady'` in v15
-- Using `'ready'` works but triggers deprecation warnings
-- Use `'clientReady'` for forward compatibility and to avoid warnings
-
-**Git Remote URL Management**:
-- Never embed GITHUB_TOKEN in git remote URL permanently
-- Use token only during push operations, then remove: `git remote set-url origin https://github.com/...`
-- Embedded tokens in .git/config can cause authentication issues and security risks
-
-**Mention Handler Deduplication**:
-- Discord's messageCreate event can fire twice for same message (network issues, API quirks)
-- Always track processed message IDs in a Set to prevent duplicate AI responses
-- Clean up old IDs periodically to prevent memory leaks (keep last 100)
-
-**File Naming Conventions**:
-- Use hyphens for page names: `amtrak-journey.html` not `amtrak_journey.html`
-- When restoring files from git, always verify completeness (check file ends with `</html>`)
-- Avoid creating duplicate files with different naming conventions
-
-**Agentic Loop Edit Optimization**:
-- Edit operations are expensive (use another LLM call to transform files)
-- System tracks edited files in a Set and blocks redundant edits within same loop (line ~1510)
-- Files can only be edited once per conversation to prevent slow repeated edits
-- If intentional re-edit needed, requires explicit request/next conversation
+**Discord**: Use `client.once('clientReady', ...)` for v15 compatibility
+**Git**: Never embed GITHUB_TOKEN permanently, use only during push operations
+**Files**: Use hyphens for page names (`amtrak-journey.html`), verify completeness after git operations
+**Edits**: Files can only be edited once per conversation to prevent expensive repeated operations
 
 ## Important Dependencies
 
@@ -811,144 +690,19 @@ const CONFIG = {
 
 ## 🖥️ GUI Dashboard System
 
-**Real-time Monitoring**: WebSocket-based dashboard showing bot activity, tool calls, file changes, and agent workflows.
+**Real-time Monitoring**: WebSocket dashboard at http://localhost:3001 (starts with `./run-bot.sh`)
+**Panels**: System Logs, Tool Calls, File Changes, Agent Loops
+**Features**: 1000 entry cap per panel, real-time updates, auto-scroll
+**Disable**: Use `--no-gui` flag or `NO_GUI=true`
 
-### Starting the GUI
-The GUI automatically starts when using `./run-bot.sh` and is available at:
-- **URL**: http://localhost:3001 (or custom port with `--gui-port`)
-- **Disable**: Use `--no-gui` flag or set `NO_GUI=true` environment variable
+## Architecture Notes
 
-### Dashboard Panels
-1. **System Logs**: All bot events with color-coded severity (error/warn/info/debug)
-2. **Tool Calls**: AI function executions with args, results, success/failure status
-3. **File Changes**: Monitors create/edit/delete/read operations with before/after content
-4. **Agent Loops**: Multi-step AI workflows showing iteration progress and tool usage
+**Single-File Design**: `index.js` (~6,585 lines) contains all bot logic for simplicity and easy understanding
 
-### GUI Integration Points
-- `logToGUI(level, message, data)` - General event logging
-- `logToolCall(tool, args, result, error)` - Track AI tool executions  
-- `logFileChange(action, path, content, old)` - File system operations
-- `startAgentLoop/updateAgentLoop/endAgentLoop` - Workflow tracking
+**Known Issues**:
+- Tool API mismatches (camelCase vs snake_case)
+- Duplication across edit vs normal loops
+- No automated testing (uses runtime validation instead)
+- Unbounded growth in `responses/` directory
 
-### Performance Features
-- Logs capped at 1000 entries per panel
-- Tool results and content truncated for display
-- Auto-scroll with toggle
-- Clear functions per panel
-- Real-time WebSocket updates
-
-## Architectural Decisions & Technical Debt
-
-This section documents key architectural trade-offs and known issues. See `ARCHITECTURE_REVIEW.md` for detailed analysis.
-
-### ✅ Resolved Issues (Dec 2025)
-- **Classifier fallback behavior**: Added read-only verb detection to `isEditRequest()` and improved `isContentRequest()` routing
-- **Mobile-first design enforcement**: All 76 HTML pages unified to noir terminal aesthetic with mandatory responsive breakpoints
-- **API call optimization**: Reduced API calls per content creation from 4-10 to 2-4:
-  * Request classifier now keyword-based by default (no API call)
-  * Tester uses automated regex checks only (LLM validation optional)
-  * System prompts condensed ~75% (llmClient.js: 635→288 lines)
-
-### 🔄 In Progress / Working as Designed
-- **Discord ready event** (`clientReady`): Intentional for discord.js v15 forward compatibility; expected deprecation warning is normal
-- **OpenRouter model references**: 2025 models with varying availability; failures handled gracefully with user-facing messages
-- **Remote URL + token handling**: Uses `getEncodedRemoteUrl()` for secure ephemeral token formatting (never persists in .git/config)
-- **Error loop tracker**: 3 errors = 5-minute cooldown; working correctly to prevent spam loops
-
-### ⏳ Known Issues & Priorities for Future Work
-
-**High Priority** (affects all users):
-1. **Tool API mismatches** - `search_files` schema vs implementation (camelCase vs snake_case mismatch in tool definitions)
-2. **Duplication across edit vs normal loops** - Similar tool specs in `getEditResponse` and `getLLMResponse` create maintenance burden
-
-**Medium Priority** (quality/performance):
-3. **Testing & CI** - No automated unit tests for tool-calling layer (searchFiles, editFile, classifier routing)
-4. **Long response storage** - Unbounded growth in `responses/` directory (needs rotation or cleanup command)
-
-**Low Priority** (nice-to-have):
-- GUI server CORS: Currently unrestricted (`origin: "*"`), should restrict to localhost
-- Index sync improvements: `/sync-index --reflow` to re-balance collections by rules
-- Docs: Add `/where <url>` command to print local file path
-
-### Design Rationale: Single-File Architecture
-
-The monolithic `index.js` (6,585 lines) may seem large, but is intentional:
-- **Simplicity**: All bot logic visible in one place; easy to understand complete flow
-- **Hot-reload**: Services/agents in `/services` and `/agents` can be modified without restarting bot
-- **System-V1 modularity**: Architect/Builder/Tester/Scribe separation handles complexity at agent level
-- **Trade-off**: Maintainability prioritized over perfect separation of concerns
-
-### Design Rationale: No Build Steps or Tests
-
-Discord bot projects often skip formal testing/linting because:
-- **Rapid iteration**: Content generation is inherently exploratory; test suites slow feedback loops
-- **Runtime validation**: Built into pipeline (Tester agent validates all output)
-- **Observability over tests**: GUI dashboard + session logs provide better failure diagnosis than unit tests
-- **Acceptable for bot scale**: Single Discord bot for one repository; not a mission-critical system
-
-## 🎨 Site Configuration System
-
-**Single Source of Truth**: All site-wide settings are centralized in `site-config.js` for maintainability.
-
-### Core Configuration (`site-config.js`)
-
-```javascript
-const SITE_CONFIG = {
-    favicon: {
-        href: "default.jpg",
-        type: "image/jpeg",
-        getPath: function(isSubdirectory = false) {
-            return isSubdirectory ? "../" + this.href : this.href;
-        }
-    },
-    theme: {
-        name: "noir-terminal",
-        fontFamily: "Courier Prime",
-        colors: { primary: "#ff0000", secondary: "#00ffff", text: "#7ec8e3", background: "#0a0a0a" },
-        cssPath: { main: "page-theme.css", getPath: function(isSubdirectory = false) { return isSubdirectory ? "../" + this.main : this.main; } }
-    },
-    navigation: {
-        homeLink: { text: "← HOME", href: "index.html", getPath: function(isSubdirectory = false) { return isSubdirectory ? "../" + this.href : this.href; } }
-    }
-};
-```
-
-### Helper Functions
-
-- `SITE_CONFIG.getFaviconHTML(isSubdirectory)` - Generates favicon link tag with correct path
-- `SITE_CONFIG.getThemeCSSHTML(isSubdirectory)` - Generates CSS link tag with correct path
-- `SITE_CONFIG.getHomeLinkHTML(isSubdirectory)` - Generates home link with correct path
-
-### Integration with Bot Generation
-
-**Bot System Integration** (index.js):
-- `ensureStylesheetInHTML()` function now uses `SITE_CONFIG.getFaviconHTML(true)` and `SITE_CONFIG.getThemeCSSHTML(true)`
-- `ensureHomeLinkInHTML()` function now uses `SITE_CONFIG.getHomeLinkHTML(true)`
-- All new pages automatically include favicon, correct CSS links, and standardized home links
-
-### Bulk Update System
-
-**Update Script** (`scripts/update-favicon.js`):
-- Updates all existing HTML pages with favicon links
-- Intelligent detection of existing favicons to avoid duplicates
-- Reusable for future site-wide changes
-- Run with: `node scripts/update-favicon.js`
-
-**Current Implementation**:
-- ✅ **Favicon**: `default.jpg` applied to all 60+ pages
-- ✅ **Dynamic paths**: Automatically handles subdirectory vs root differences
-- ✅ **Bot integration**: New pages automatically include all site-wide elements
-- ✅ **Maintainability**: Single configuration file for all changes
-
-### Future Site-Wide Updates
-
-To update site-wide elements (favicon, theme, etc.):
-1. Modify `site-config.js` configuration
-2. Run appropriate update script from `/scripts/`
-3. Bot generation automatically uses new settings for future pages
-
-**Benefits**:
-- **Single source of truth** prevents inconsistencies
-- **Dynamic path resolution** handles complex directory structures
-- **Extensible system** ready for meta tags, analytics, etc.
-- **Automated maintenance** via reusable scripts
+**Design Rationale**: Prioritizes rapid iteration and observability over perfect separation of concerns
