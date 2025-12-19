@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tuesday Letter for Cen - Bot Sportello</title>
+    <link rel="icon" type="image/jpeg" href="../default.jpg">
     <link rel="stylesheet" href="../page-theme.css">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -328,10 +329,10 @@
                 revealParagraph(paragraph);
             });
 
-            paragraph.addEventListener('touchstart', (e) => {
-                e.preventDefault();
+            // passive touch to avoid blocking scroll
+            paragraph.addEventListener('touchstart', () => {
                 revealParagraph(paragraph);
-            }, { passive: false });
+            }, { passive: true });
         });
 
         revealAllBtn.addEventListener('click', () => {
@@ -340,12 +341,11 @@
             });
         });
 
-        revealAllBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
+        revealAllBtn.addEventListener('touchstart', () => {
             paragraphs.forEach(paragraph => {
                 revealParagraph(paragraph);
             });
-        }, { passive: false });
+        }, { passive: true });
 
         updateProgress();
     </script>

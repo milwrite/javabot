@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Site Inventory - Bot Sportello</title>
+    <link rel="icon" type="image/jpeg" href="../default.jpg">
     <link rel="stylesheet" href="../page-theme.css">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -55,118 +56,88 @@
         }
 
         .controls {
-            background: rgba(126, 200, 227, 0.1);
-            border: 1px solid #7ec8e3;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-
-        .control-row {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
             margin-bottom: 15px;
+            align-items: center;
         }
 
-        @media (min-width: 768px) {
-            .control-row {
-                flex-direction: row;
-                align-items: center;
-            }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 180px;
         }
 
-        .control-row:last-child {
-            margin-bottom: 0;
-        }
-
-        label {
+        .filter-group label {
             color: #00ffff;
-            font-size: 12px;
-            min-width: 120px;
-        }
-
-        @media (min-width: 768px) {
-            label {
-                font-size: 14px;
-            }
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0.8;
         }
 
         select, input[type="text"] {
             flex: 1;
             background: #0a0a0a;
-            border: 1px solid #7ec8e3;
+            border: 1px solid rgba(126, 200, 227, 0.5);
             color: #7ec8e3;
-            padding: 10px;
+            padding: 8px 10px;
             font-family: 'Courier Prime', monospace;
             font-size: 12px;
-            min-height: 44px;
-        }
-
-        @media (min-width: 768px) {
-            select, input[type="text"] {
-                font-size: 14px;
-            }
+            min-height: 36px;
+            min-width: 0;
         }
 
         select:focus, input[type="text"]:focus {
             outline: none;
             border-color: #00ffff;
-            box-shadow: 0 0 5px #00ffff;
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
         }
 
-        .button-group {
+        .action-btns {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        @media (min-width: 768px) {
-            .button-group {
-                flex-direction: row;
-            }
+            gap: 8px;
         }
 
         button {
-            background: #ff0000;
-            color: #fff;
-            border: 2px solid #ff0000;
-            padding: 12px 20px;
+            background: transparent;
+            color: #7ec8e3;
+            border: 1px solid rgba(126, 200, 227, 0.5);
+            padding: 8px 12px;
             font-family: 'Courier Prime', monospace;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
-            transition: all 0.3s;
-            min-height: 44px;
-            flex: 1;
-        }
-
-        @media (min-width: 768px) {
-            button {
-                font-size: 14px;
-            }
+            transition: all 0.2s;
+            min-height: 36px;
+            white-space: nowrap;
         }
 
         button:hover {
-            background: transparent;
-            color: #ff0000;
-            box-shadow: 0 0 10px #ff0000;
+            border-color: #00ffff;
+            color: #00ffff;
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
         }
 
         button:active {
             transform: scale(0.98);
         }
 
-        button.secondary {
-            background: transparent;
-            color: #7ec8e3;
-            border-color: #7ec8e3;
-        }
-
-        button.secondary:hover {
-            background: #7ec8e3;
-            color: #0a0a0a;
-            box-shadow: 0 0 10px #7ec8e3;
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-group {
+                min-width: 100%;
+            }
+            .action-btns {
+                justify-content: stretch;
+            }
+            .action-btns button {
+                flex: 1;
+            }
         }
 
         .stats {
@@ -285,6 +256,19 @@
             color: #00ffff;
         }
 
+        .icon {
+            margin-right: 6px;
+        }
+
+        .desc {
+            color: rgba(126, 200, 227, 0.7);
+            font-size: 11px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .no-results {
             text-align: center;
             padding: 40px;
@@ -335,12 +319,12 @@
 
     <div class="container">
         <h1>SITE INVENTORY</h1>
-        <p class="subtitle">Repository Structure Scanner v1.0</p>
+        <p class="subtitle">All pages from projectmetadata.json</p>
 
         <div class="stats">
             <div class="stat-box">
                 <div class="stat-number" id="totalFiles">0</div>
-                <div class="stat-label">Total Files</div>
+                <div class="stat-label">Total Pages</div>
             </div>
             <div class="stat-box">
                 <div class="stat-number" id="totalCollections">0</div>
@@ -348,35 +332,28 @@
             </div>
             <div class="stat-box">
                 <div class="stat-number" id="totalTypes">0</div>
-                <div class="stat-label">Content Types</div>
+                <div class="stat-label">Featured</div>
             </div>
             <div class="stat-box">
                 <div class="stat-number" id="filteredCount">0</div>
-                <div class="stat-label">Filtered Results</div>
+                <div class="stat-label">Showing</div>
             </div>
         </div>
 
         <div class="controls">
-            <div class="control-row">
-                <label for="collectionFilter">Collection:</label>
+            <div class="filter-group">
+                <label for="collectionFilter">Collection</label>
                 <select id="collectionFilter">
-                    <option value="">All Collections</option>
+                    <option value="">All</option>
                 </select>
             </div>
-            <div class="control-row">
-                <label for="typeFilter">Content Type:</label>
-                <select id="typeFilter">
-                    <option value="">All Types</option>
-                </select>
+            <div class="filter-group">
+                <label for="searchFilter">Search</label>
+                <input type="text" id="searchFilter" placeholder="Filter...">
             </div>
-            <div class="control-row">
-                <label for="searchFilter">Search:</label>
-                <input type="text" id="searchFilter" placeholder="Filter by filename or path...">
-            </div>
-            <div class="button-group">
-                <button id="scanBtn">🔄 Scan Repository</button>
-                <button class="secondary" id="exportBtn">📋 Export to Clipboard</button>
-                <button class="secondary" id="resetBtn">↺ Reset Filters</button>
+            <div class="action-btns">
+                <button id="exportBtn">📋 Export</button>
+                <button id="resetBtn">↺ Reset</button>
             </div>
         </div>
 
@@ -384,11 +361,11 @@
             <table id="inventoryTable">
                 <thead>
                     <tr>
-                        <th>Filename</th>
-                        <th>Path</th>
+                        <th>Title</th>
+                        <th>Slug</th>
                         <th>Collection</th>
-                        <th>Type</th>
-                        <th>URL</th>
+                        <th>Description</th>
+                        <th>Link</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -403,18 +380,17 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        const BASE_URL = 'https://milwrite.github.io/javabot/';
-        const REPO_API = 'https://api.github.com/repos/milwrite/javabot/contents/src';
-        
+        const BASE_URL = 'https://bot.inference-arcade.com/';
+        const METADATA_URL = '../projectmetadata.json';
+
         let inventory = [];
         let filteredInventory = [];
+        let collections = {};
 
         const elements = {
             tableBody: document.getElementById('tableBody'),
             collectionFilter: document.getElementById('collectionFilter'),
-            typeFilter: document.getElementById('typeFilter'),
             searchFilter: document.getElementById('searchFilter'),
-            scanBtn: document.getElementById('scanBtn'),
             exportBtn: document.getElementById('exportBtn'),
             resetBtn: document.getElementById('resetBtn'),
             toast: document.getElementById('toast'),
@@ -424,111 +400,81 @@
             filteredCount: document.getElementById('filteredCount')
         };
 
-        const contentTypePatterns = {
-            'arcade-game': /game|arcade|play|puzzle/i,
-            'letter': /letter|note|message/i,
-            'recipe': /recipe|cook|ingredient/i,
-            'infographic': /infographic|chart|data/i,
-            'story': /story|tale|narrative/i,
-            'log': /log|journal|field-guide/i,
-            'parody': /parody|mock|satire/i,
-            'utility': /utility|tool|calculator|inventory/i,
-            'visualization': /viz|visual|graph/i
-        };
-
-        const collectionPatterns = {
-            'arcade-games': /game|arcade|play/i,
-            'letters-notes': /letter|note/i,
-            'recipes': /recipe/i,
-            'infographics': /infographic/i,
-            'stories': /story/i,
-            'logs-guides': /log|guide/i,
-            'parodies': /parody/i,
-            'utilities-apps': /utility|tool|inventory/i,
-            'visualizations': /viz|visual/i
-        };
-
-        function detectContentType(filename) {
-            for (const [type, pattern] of Object.entries(contentTypePatterns)) {
-                if (pattern.test(filename)) return type;
-            }
-            return 'unknown';
-        }
-
-        function detectCollection(filename) {
-            for (const [collection, pattern] of Object.entries(collectionPatterns)) {
-                if (pattern.test(filename)) return collection;
-            }
-            return 'uncategorized';
-        }
-
-        async function scanRepository() {
-            showToast('Scanning repository...');
-            elements.tableBody.innerHTML = '<tr><td colspan="5" class="loading">Fetching files from GitHub</td></tr>';
+        async function loadInventory() {
+            elements.tableBody.innerHTML = '<tr><td colspan="5" class="loading">Loading inventory</td></tr>';
 
             try {
-                const response = await fetch(REPO_API);
-                if (!response.ok) throw new Error('Failed to fetch repository data');
-                
-                const files = await response.json();
-                inventory = files
-                    .filter(file => file.name.endsWith('.html'))
-                    .map(file => {
-                        const filename = file.name;
-                        const path = file.path;
-                        const type = detectContentType(filename);
-                        const collection = detectCollection(filename);
+                const response = await fetch(METADATA_URL);
+                if (!response.ok) throw new Error('Failed to load metadata');
+
+                const metadata = await response.json();
+                collections = metadata.collections || {};
+
+                inventory = Object.entries(metadata.projects || {})
+                    .filter(([slug, data]) => !data.hidden)
+                    .map(([slug, data]) => {
+                        const filename = `${slug}.html`;
+                        const path = `src/${filename}`;
+                        const collection = data.collection || 'unsorted';
+                        const collectionTitle = collections[collection]?.title || collection;
                         const url = `${BASE_URL}${path}`;
-                        
-                        return { filename, path, collection, type, url };
-                    });
+
+                        return {
+                            slug,
+                            filename,
+                            path,
+                            collection,
+                            collectionTitle,
+                            title: data.title || slug,
+                            icon: data.icon || '📄',
+                            description: data.description || '',
+                            url
+                        };
+                    })
+                    .sort((a, b) => a.title.localeCompare(b.title));
 
                 filteredInventory = [...inventory];
                 updateFilters();
                 updateStats();
                 renderTable();
-                showToast(`✓ Scanned ${inventory.length} files`);
             } catch (error) {
-                console.error('Scan error:', error);
-                elements.tableBody.innerHTML = `<tr><td colspan="5" class="no-results">Error: ${error.message}<br>Check console for details</td></tr>`;
-                showToast('✗ Scan failed');
+                console.error('Load error:', error);
+                elements.tableBody.innerHTML = `<tr><td colspan="5" class="no-results">Error: ${error.message}</td></tr>`;
+                showToast('✗ Load failed');
             }
         }
 
         function updateFilters() {
-            const collections = [...new Set(inventory.map(item => item.collection))].sort();
-            const types = [...new Set(inventory.map(item => item.type))].sort();
+            const collectionList = Object.entries(collections)
+                .sort((a, b) => (a[1].order || 99) - (b[1].order || 99))
+                .map(([key, data]) => ({ key, title: data.title }));
 
-            elements.collectionFilter.innerHTML = '<option value="">All Collections</option>' +
-                collections.map(c => `<option value="${c}">${c}</option>`).join('');
-
-            elements.typeFilter.innerHTML = '<option value="">All Types</option>' +
-                types.map(t => `<option value="${t}">${t}</option>`).join('');
+            elements.collectionFilter.innerHTML = '<option value="">All</option>' +
+                collectionList.map(c => `<option value="${c.key}">${c.title}</option>`).join('');
         }
 
         function updateStats() {
-            const collections = new Set(inventory.map(item => item.collection));
-            const types = new Set(inventory.map(item => item.type));
+            const collectionSet = new Set(inventory.map(item => item.collection));
+            const featured = inventory.filter(item => item.collection === 'featured').length;
 
             elements.totalFiles.textContent = inventory.length;
-            elements.totalCollections.textContent = collections.size;
-            elements.totalTypes.textContent = types.size;
+            elements.totalCollections.textContent = collectionSet.size;
+            elements.totalTypes.textContent = featured;
             elements.filteredCount.textContent = filteredInventory.length;
         }
 
         function applyFilters() {
-            const collectionValue = elements.collectionFilter.value.toLowerCase();
-            const typeValue = elements.typeFilter.value.toLowerCase();
+            const collectionValue = elements.collectionFilter.value;
             const searchValue = elements.searchFilter.value.toLowerCase();
 
             filteredInventory = inventory.filter(item => {
-                const matchesCollection = !collectionValue || item.collection.toLowerCase() === collectionValue;
-                const matchesType = !typeValue || item.type.toLowerCase() === typeValue;
-                const matchesSearch = !searchValue || 
-                    item.filename.toLowerCase().includes(searchValue) ||
-                    item.path.toLowerCase().includes(searchValue);
+                const matchesCollection = !collectionValue || item.collection === collectionValue;
+                const matchesSearch = !searchValue ||
+                    item.title.toLowerCase().includes(searchValue) ||
+                    item.slug.toLowerCase().includes(searchValue) ||
+                    item.description.toLowerCase().includes(searchValue);
 
-                return matchesCollection && matchesType && matchesSearch;
+                return matchesCollection && matchesSearch;
             });
 
             updateStats();
@@ -537,31 +483,29 @@
 
         function renderTable() {
             if (filteredInventory.length === 0) {
-                elements.tableBody.innerHTML = '<tr><td colspan="5" class="no-results">No files match the current filters</td></tr>';
+                elements.tableBody.innerHTML = '<tr><td colspan="5" class="no-results">No pages match filters</td></tr>';
                 return;
             }
 
             elements.tableBody.innerHTML = filteredInventory.map(item => `
                 <tr>
-                    <td><strong>${item.filename}</strong></td>
-                    <td><code>${item.path}</code></td>
-                    <td><span class="badge collection">${item.collection}</span></td>
-                    <td><span class="badge">${item.type}</span></td>
+                    <td><span class="icon">${item.icon}</span> <strong>${item.title}</strong></td>
+                    <td><code>${item.slug}</code></td>
+                    <td><span class="badge collection">${item.collectionTitle}</span></td>
+                    <td class="desc">${item.description}</td>
                     <td><a href="${item.url}" class="file-link" target="_blank">View →</a></td>
                 </tr>
             `).join('');
         }
 
         function exportToClipboard() {
-            const data = filteredInventory.map(item => 
-                `${item.filename}\t${item.path}\t${item.collection}\t${item.type}\t${item.url}`
+            const data = filteredInventory.map(item =>
+                `${item.title}\t${item.slug}\t${item.collectionTitle}\t${item.description}\t${item.url}`
             ).join('\n');
 
-            const header = 'Filename\tPath\tCollection\tType\tURL\n';
-            const exportText = header + data;
-
-            navigator.clipboard.writeText(exportText).then(() => {
-                showToast(`✓ Exported ${filteredInventory.length} items to clipboard`);
+            const header = 'Title\tSlug\tCollection\tDescription\tURL\n';
+            navigator.clipboard.writeText(header + data).then(() => {
+                showToast(`✓ Exported ${filteredInventory.length} items`);
             }).catch(err => {
                 console.error('Export error:', err);
                 showToast('✗ Export failed');
@@ -570,28 +514,22 @@
 
         function resetFilters() {
             elements.collectionFilter.value = '';
-            elements.typeFilter.value = '';
             elements.searchFilter.value = '';
             applyFilters();
-            showToast('✓ Filters reset');
         }
 
         function showToast(message) {
             elements.toast.textContent = message;
             elements.toast.classList.add('show');
-            setTimeout(() => {
-                elements.toast.classList.remove('show');
-            }, 3000);
+            setTimeout(() => elements.toast.classList.remove('show'), 2000);
         }
 
-        elements.scanBtn.addEventListener('click', scanRepository);
         elements.exportBtn.addEventListener('click', exportToClipboard);
         elements.resetBtn.addEventListener('click', resetFilters);
         elements.collectionFilter.addEventListener('change', applyFilters);
-        elements.typeFilter.addEventListener('change', applyFilters);
         elements.searchFilter.addEventListener('input', applyFilters);
 
-        scanRepository();
+        loadInventory();
     </script>
 </body>
 </html>

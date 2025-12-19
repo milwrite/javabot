@@ -16,6 +16,9 @@ const { classifyRequest } = require('./services/requestClassifier');
 // Site inventory system
 const { generateSiteInventory } = require('./scripts/generateSiteInventory.js');
 
+// Site configuration - Single source of truth
+const SITE_CONFIG = require('./site-config.js');
+
 // GUI Server for verbose logging
 const BotGUIServer = require('./scripts/gui-server.js');
 let guiServer = null;
@@ -833,7 +836,7 @@ function cleanMarkdownCodeBlocks(content, type = 'html') {
 
 function ensureHomeLinkInHTML(htmlContent) {
     if (!htmlContent.includes('index.html') && !htmlContent.includes('Home</a>')) {
-        const homeLink = `<a href="../index.html" class="home-link">←</a>`;
+        const homeLink = SITE_CONFIG.getHomeLinkHTML(true); // true for subdirectory
         return htmlContent.replace(/<body([^>]*)>/, `<body$1>\n    ${homeLink}`);
     }
     return htmlContent;
@@ -843,8 +846,9 @@ function ensureStylesheetInHTML(htmlContent) {
     // Check if page-theme.css is already linked
     if (!htmlContent.includes('page-theme.css')) {
         const stylesheetLinks = `
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../page-theme.css">`;
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    ${SITE_CONFIG.getThemeCSSHTML(true)}
+    ${SITE_CONFIG.getFaviconHTML(true)}`;
 
         // Insert before closing </head> tag
         if (htmlContent.includes('</head>')) {

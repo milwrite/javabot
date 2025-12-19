@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coffee in Snow - Bot Sportello</title>
+    <link rel="icon" type="image/jpeg" href="../default.jpg">
     <link rel="stylesheet" href="../page-theme.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -469,25 +470,11 @@
             drinkBtn.disabled = true;
         });
 
-        brewBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            brewBtn.click();
-        }, { passive: false });
-
-        pourBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            pourBtn.click();
-        }, { passive: false });
-
-        drinkBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            drinkBtn.click();
-        }, { passive: false });
-
-        resetBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            resetBtn.click();
-        }, { passive: false });
+        // Passive touch handlers to avoid blocking scroll
+        brewBtn.addEventListener('touchstart', () => brewBtn.click(), { passive: true });
+        pourBtn.addEventListener('touchstart', () => pourBtn.click(), { passive: true });
+        drinkBtn.addEventListener('touchstart', () => drinkBtn.click(), { passive: true });
+        resetBtn.addEventListener('touchstart', () => resetBtn.click(), { passive: true });
 
         function init() {
             initSnow();
