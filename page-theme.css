@@ -161,23 +161,31 @@ body::before {
     border-radius: 6px;
     border: 1px solid rgba(126, 200, 227, 0.35);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    white-space: nowrap;
 }
 
 /* Wrapper variant with inner anchor: show text normally */
 .home-link a {
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: auto;
     height: auto;
     text-indent: 0;
-    white-space: normal;
+    white-space: nowrap;
     overflow: visible;
     color: inherit;
 }
 
 /* Anchor-as-home-link: show text, size to content */
 a.home-link {
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-indent: 0;
     white-space: nowrap;
     overflow: visible;
@@ -2549,8 +2557,8 @@ canvas {
     .home-link {
         top: 14px;
         left: 14px;
-        width: 36px;
-        height: 36px;
+        min-height: 36px;
+        min-width: 36px;
     }
 
     .main-content {
@@ -2836,8 +2844,8 @@ canvas {
     .home-link {
         top: 12px;
         left: 12px;
-        width: 32px;
-        height: 32px;
+        min-height: 32px;
+        min-width: 32px;
     }
 
     .header {
@@ -3020,8 +3028,8 @@ canvas {
     }
 
     .home-link {
-        width: 30px;
-        height: 30px;
+        min-height: 30px;
+        min-width: 30px;
     }
 
     .footer {
