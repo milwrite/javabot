@@ -12,7 +12,7 @@
     <style>
         body {
             margin: 0;
-            padding-top: 80px;
+            padding-top: 50px;
             overflow-x: auto;
             overflow-y: auto;
             background-color: #0a0a0a;
@@ -28,33 +28,33 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
-            padding: 20px;
+            gap: 8px;
+            padding: 10px;
             max-width: 600px;
             width: 100%;
         }
 
         .game-header {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         .game-header h1 {
             color: #00ffff;
-            font-size: 2em;
-            margin: 0 0 10px 0;
+            font-size: 1.5em;
+            margin: 0 0 5px 0;
             text-shadow: 0 0 10px #00ffff;
         }
 
         .game-header p {
             color: #7ec8e3;
-            margin: 5px 0;
-            font-size: 0.9em;
+            margin: 0;
+            font-size: 0.8em;
         }
 
         .game-area {
             display: flex;
-            gap: 20px;
+            gap: 10px;
             justify-content: center;
             align-items: flex-start;
             flex-wrap: wrap;
@@ -72,27 +72,27 @@
         .side-panel {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 8px;
             min-width: 150px;
         }
 
         .info-box {
             background-color: #1a1a1a;
             border: 2px solid #7ec8e3;
-            padding: 15px;
+            padding: 8px;
             border-radius: 4px;
         }
 
         .info-box h3 {
             color: #00ffff;
-            margin: 0 0 10px 0;
-            font-size: 1.1em;
+            margin: 0 0 5px 0;
+            font-size: 0.9em;
             text-transform: uppercase;
         }
 
         .info-box .value {
             color: #ff0000;
-            font-size: 1.5em;
+            font-size: 1.2em;
             font-weight: bold;
             text-align: center;
         }
@@ -101,26 +101,26 @@
             border: 1px solid #7ec8e3;
             background-color: #0a0a0a;
             display: block;
-            margin: 10px auto 0;
+            margin: 5px auto 0;
         }
 
         .controls-info {
             background-color: #1a1a1a;
             border: 2px solid #7ec8e3;
-            padding: 15px;
+            padding: 8px;
             border-radius: 4px;
-            margin-top: 10px;
+            margin-top: 5px;
         }
 
         .controls-info h3 {
             color: #00ffff;
-            margin: 0 0 10px 0;
-            font-size: 1em;
+            margin: 0 0 5px 0;
+            font-size: 0.8em;
         }
 
         .controls-info p {
-            margin: 5px 0;
-            font-size: 0.85em;
+            margin: 2px 0;
+            font-size: 0.7em;
             color: #7ec8e3;
         }
 
@@ -128,7 +128,7 @@
             display: flex;
             gap: 10px;
             justify-content: center;
-            margin-top: 20px;
+            margin-top: 8px;
             flex-wrap: wrap;
         }
 
@@ -163,7 +163,7 @@
             display: none;
             width: 100%;
             max-width: 400px;
-            margin: 20px auto;
+            margin: 8px auto;
         }
 
         .controls-grid {
@@ -310,22 +310,53 @@
         }
 
         @media (max-width: 480px) {
+            body {
+                padding-top: 40px;
+            }
+
             .game-container {
-                padding: 10px;
+                padding: 5px;
+                gap: 5px;
             }
 
             .game-header h1 {
-                font-size: 1.3em;
+                font-size: 1.2em;
+                margin-bottom: 2px;
+            }
+
+            .game-header p {
+                font-size: 0.75em;
             }
 
             .info-box {
-                padding: 10px;
+                padding: 6px;
+            }
+
+            .info-box h3 {
+                font-size: 0.8em;
+                margin-bottom: 3px;
+            }
+
+            .info-box .value {
+                font-size: 1.1em;
             }
 
             .game-button {
-                padding: 8px 14px;
-                font-size: 0.8em;
-                min-width: 90px;
+                padding: 6px 12px;
+                font-size: 0.75em;
+                min-width: 80px;
+            }
+
+            .game-area {
+                gap: 8px;
+            }
+
+            .side-panel {
+                gap: 6px;
+            }
+
+            #gameCanvas {
+                max-width: 90vw;
             }
         }
     </style>
