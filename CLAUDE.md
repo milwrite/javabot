@@ -197,7 +197,9 @@ The entire bot is contained in `index.js` (~3700+ lines) with these key sections
 - `agents.md` - Conversation history (last 100 messages)
 - `index.html` - Main hub page with embedded CSS (no longer uses style.css)
 - `page-theme.css` - Shared arcade theme for all /src/ pages
+- `site-config.js` - **Site configuration system** (favicon, theme, paths - single source of truth)
 - `projectmetadata.json` - Project collections + metadata (title, icon, caption) loaded dynamically by index.html
+- `scripts/update-favicon.js` - Utility script for bulk favicon updates across all pages
 
 ### System-V1: Modular Content Pipeline
 
@@ -883,3 +885,70 @@ Discord bot projects often skip formal testing/linting because:
 - **Runtime validation**: Built into pipeline (Tester agent validates all output)
 - **Observability over tests**: GUI dashboard + session logs provide better failure diagnosis than unit tests
 - **Acceptable for bot scale**: Single Discord bot for one repository; not a mission-critical system
+
+## 🎨 Site Configuration System
+
+**Single Source of Truth**: All site-wide settings are centralized in `site-config.js` for maintainability.
+
+### Core Configuration (`site-config.js`)
+
+```javascript
+const SITE_CONFIG = {
+    favicon: {
+        href: "default.jpg",
+        type: "image/jpeg",
+        getPath: function(isSubdirectory = false) {
+            return isSubdirectory ? "../" + this.href : this.href;
+        }
+    },
+    theme: {
+        name: "noir-terminal",
+        fontFamily: "Courier Prime",
+        colors: { primary: "#ff0000", secondary: "#00ffff", text: "#7ec8e3", background: "#0a0a0a" },
+        cssPath: { main: "page-theme.css", getPath: function(isSubdirectory = false) { return isSubdirectory ? "../" + this.main : this.main; } }
+    },
+    navigation: {
+        homeLink: { text: "← HOME", href: "index.html", getPath: function(isSubdirectory = false) { return isSubdirectory ? "../" + this.href : this.href; } }
+    }
+};
+```
+
+### Helper Functions
+
+- `SITE_CONFIG.getFaviconHTML(isSubdirectory)` - Generates favicon link tag with correct path
+- `SITE_CONFIG.getThemeCSSHTML(isSubdirectory)` - Generates CSS link tag with correct path
+- `SITE_CONFIG.getHomeLinkHTML(isSubdirectory)` - Generates home link with correct path
+
+### Integration with Bot Generation
+
+**Bot System Integration** (index.js):
+- `ensureStylesheetInHTML()` function now uses `SITE_CONFIG.getFaviconHTML(true)` and `SITE_CONFIG.getThemeCSSHTML(true)`
+- `ensureHomeLinkInHTML()` function now uses `SITE_CONFIG.getHomeLinkHTML(true)`
+- All new pages automatically include favicon, correct CSS links, and standardized home links
+
+### Bulk Update System
+
+**Update Script** (`scripts/update-favicon.js`):
+- Updates all existing HTML pages with favicon links
+- Intelligent detection of existing favicons to avoid duplicates
+- Reusable for future site-wide changes
+- Run with: `node scripts/update-favicon.js`
+
+**Current Implementation**:
+- ✅ **Favicon**: `default.jpg` applied to all 60+ pages
+- ✅ **Dynamic paths**: Automatically handles subdirectory vs root differences
+- ✅ **Bot integration**: New pages automatically include all site-wide elements
+- ✅ **Maintainability**: Single configuration file for all changes
+
+### Future Site-Wide Updates
+
+To update site-wide elements (favicon, theme, etc.):
+1. Modify `site-config.js` configuration
+2. Run appropriate update script from `/scripts/`
+3. Bot generation automatically uses new settings for future pages
+
+**Benefits**:
+- **Single source of truth** prevents inconsistencies
+- **Dynamic path resolution** handles complex directory structures
+- **Extensible system** ready for meta tags, analytics, etc.
+- **Automated maintenance** via reusable scripts

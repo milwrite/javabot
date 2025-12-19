@@ -151,21 +151,25 @@ body::before {
     100% { opacity: 0.97; }
 }
 
-/* Home link (top-left) - text-based, no image */
+/* Home link (top-left) - back arrow only, centered */
 .home-link {
     position: fixed;
     top: 16px;
     left: 16px;
     z-index: 9999;
-    padding: 6px 10px;
-    border-radius: 6px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 22px;
     border: 1px solid rgba(126, 200, 227, 0.35);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 32px;
+    min-height: 44px;
     white-space: nowrap;
+    background: rgba(0, 0, 0, 0.4);
+    color: #7ec8e3; /* lock arrow color */
 }
 
 /* Wrapper variant with inner anchor: show text normally */
@@ -181,15 +185,18 @@ body::before {
     color: inherit;
 }
 
-/* Anchor-as-home-link: show text, size to content */
+/* Anchor-as-home-link: fixed size circle with centered arrow */
 a.home-link {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 44px;
+    height: 44px;
     text-indent: 0;
     white-space: nowrap;
-    overflow: visible;
-    color: inherit;
+    overflow: hidden;
+    color: #7ec8e3; /* lock arrow color */
+    background: rgba(0, 0, 0, 0.4);
 }
 
 .home-link:hover,
@@ -199,6 +206,13 @@ a.home-link:focus {
     border-color: rgba(255, 0, 0, 0.6);
     box-shadow: 0 10px 26px rgba(255, 0, 0, 0.25), 0 0 0 2px rgba(0, 255, 255, 0.12) inset;
     transform: translateY(-1px);
+}
+
+/* Ensure only the single arrow character is visible and centered */
+.home-link,
+a.home-link {
+    font-size: 20px;
+    line-height: 1;
 }
 
 /* Container for page content */
