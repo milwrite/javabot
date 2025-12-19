@@ -96,7 +96,30 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
-        
+
+        .nav-link {
+            color: #00ffff;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid #00ffff;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+        .nav-link:hover {
+            background: rgba(0, 255, 255, 0.15);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 12px; padding: 12px; }
+            .title { font-size: 1.1em; }
+            .status { flex-wrap: wrap; justify-content: center; gap: 8px; }
+            .status-item { font-size: 0.8em; }
+            .nav-link { font-size: 0.75em; padding: 6px 10px; }
+            .tabs { overflow-x: auto; }
+            .tab { padding: 8px 12px; font-size: 0.8em; white-space: nowrap; }
+        }
+
         /* Tab Navigation */
         .tabs {
             display: flex;
@@ -650,6 +673,7 @@
             <div class="status-item">
                 <span id="file-count">0</span> Files
             </div>
+            <a href="/src/site-inventory.html" class="nav-link">Site Inventory →</a>
         </div>
     </div>
     

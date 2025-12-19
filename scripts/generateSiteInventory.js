@@ -57,7 +57,7 @@ async function generateSiteInventory() {
 - **HTML Pages**: ${htmlFiles.length} files
 - **JavaScript Files**: ${jsFiles.length} files  
 - **Total Size**: ${Math.round((htmlFiles.reduce((sum, f) => sum + parseInt(f.size), 0) + jsFiles.reduce((sum, f) => sum + parseInt(f.size), 0)))}KB
-- **Live Site**: https://milwrite.github.io/javabot/
+- **Live Site**: https://bot.inference-arcade.com/
 
 ## HTML Pages by Collection
 
@@ -102,17 +102,17 @@ ${jsFiles.map(f => `│   ├── ${f.name.padEnd(25)} # JavaScript library`).
 
 ### Featured Content
 ${htmlFiles.filter(f => f.collection === 'featured').map(f => 
-    `- [${f.title}](https://milwrite.github.io/javabot/src/${f.name})`
+    `- [${f.title}](https://bot.inference-arcade.com/src/${f.name})`
 ).join('\n') || '- No featured content'}
 
 ### Games  
 ${htmlFiles.filter(f => f.collection === 'arcade-games').map(f => 
-    `- [${f.title}](https://milwrite.github.io/javabot/src/${f.name})`
+    `- [${f.title}](https://bot.inference-arcade.com/src/${f.name})`
 ).join('\n') || '- No games'}
 
 ### Utilities
 ${htmlFiles.filter(f => f.collection === 'utilities-apps').map(f => 
-    `- [${f.title}](https://milwrite.github.io/javabot/src/${f.name})`
+    `- [${f.title}](https://bot.inference-arcade.com/src/${f.name})`
 ).join('\n') || '- No utilities'}
 
 ---
