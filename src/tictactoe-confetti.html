@@ -478,7 +478,7 @@
     <link rel="stylesheet" href="../page-theme.css">
 </head>
 <body>
-    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← HOME</a>
+    <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">←</a>
 
     <div class="container">
         <div class="header">
@@ -571,27 +571,32 @@
 
         // Initialize game
         cells.forEach(cell => {
-            cell.addEventListener('touchstart', handleCellClick, { passive: false });
             cell.addEventListener('click', handleCellClick);
+            cell.addEventListener('touchstart', handleCellClick, { passive: false });
         });
 
         function handleCellClick(e) {
-            e.preventDefault();
-            const index = e.target.getAttribute('data-index');
-            
-            if (gameBoard[index] !== '' || !gameActive) {
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+            }
+
+            // Get the cell element
+            const cell = e.currentTarget;
+            const index = parseInt(cell.getAttribute('data-index'), 10);
+
+            if (isNaN(index) || gameBoard[index] !== '' || !gameActive) {
                 return;
             }
 
             gameBoard[index] = currentPlayer;
-            e.target.textContent = currentPlayer;
-            e.target.classList.add(currentPlayer.toLowerCase());
-            e.target.disabled = true;
+            cell.textContent = currentPlayer;
+            cell.classList.add(currentPlayer.toLowerCase());
+            cell.disabled = true;
 
             // Add animation
-            e.target.style.animation = 'none';
+            cell.style.animation = 'none';
             setTimeout(() => {
-                e.target.style.animation = 'pulse 0.3s ease';
+                cell.style.animation = 'pulse 0.3s ease';
             }, 10);
 
             checkGameStatus();
@@ -781,13 +786,13 @@
             resetGame();
         }
 
-        // Prevent default touch behaviors on buttons
-        document.querySelectorAll('.mobile-controls').forEach(el => {
-            el.addEventListener('touchstart', function(e) {
-                if (this.tagName === 'BUTTON' && !this.classList.contains('cell')) {
-                    e.preventDefault();
+        // Prevent default zoom on button touch
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('touchstart', function(e) {
+                if (this.classList.contains('cell') || this.id === 'reset-btn' || this.id === 'new-match-btn') {
+                    // Already handled
                 }
-            }, { passive: false });
+            }, { passive: true });
         });
 
         // Initialize display

@@ -362,7 +362,7 @@
       "title": "Site Inventory",
       "icon": "🗂️",
       "description": "repository scanner utility",
-      "collection": "utilities-apps",
+      "collection": "featured",
       "hidden": false
     },
     "memory-cheer-cen": {
@@ -390,7 +390,7 @@
       "title": "TV Intervention Infomercial",
       "icon": "📺",
       "description": "late-night hype parody",
-      "collection": "stories-content",
+      "collection": "featured",
       "hidden": false
     },
     "rhythm-test": {

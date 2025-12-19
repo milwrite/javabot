@@ -833,7 +833,7 @@ function cleanMarkdownCodeBlocks(content, type = 'html') {
 
 function ensureHomeLinkInHTML(htmlContent) {
     if (!htmlContent.includes('index.html') && !htmlContent.includes('Home</a>')) {
-        const homeLink = `<a href="../index.html" class="home-link">← HOME</a>`;
+        const homeLink = `<a href="../index.html" class="home-link">←</a>`;
         return htmlContent.replace(/<body([^>]*)>/, `<body$1>\n    ${homeLink}`);
     }
     return htmlContent;
@@ -5026,7 +5026,7 @@ function generatePuzzleHTML(puzzleData, theme) {
     </style>
 </head>
 <body>
-    <a class="home-link" href="../index.html">← HOME</a>
+    <a class="home-link" href="../index.html">←</a>
 
     <div class="container">
         <div class="puzzle-header">
