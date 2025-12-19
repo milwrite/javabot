@@ -34,21 +34,20 @@ class BotGUIServer {
     }
     
     setupRoutes() {
-        // Serve static files
-        this.app.use(express.static(path.join(__dirname, '..', 'gui')));
+        // Serve dashboard assets from /gui
+        this.app.use('/gui', express.static(path.join(__dirname, '..', 'gui')));
 
-        // Serve root-level default images for dashboard branding
-        this.app.get('/default.jpg', (req, res) => {
-            res.sendFile(path.join(__dirname, '..', 'default.jpg'));
-        });
-        this.app.get('/default.jpeg', (req, res) => {
-            res.sendFile(path.join(__dirname, '..', 'default.jpeg'));
-        });
-        // Note: Default asset is a JPEG; no PNG route needed
+        // Serve main project files (index.html, src/, page-theme.css, etc.)
+        this.app.use(express.static(path.join(__dirname, '..')));
 
-        // Main dashboard
-        this.app.get('/', (req, res) => {
+        // Dashboard route
+        this.app.get('/dashboard', (req, res) => {
             res.sendFile(path.join(__dirname, '..', 'gui', 'dashboard.html'));
+        });
+
+        // Main site at root
+        this.app.get('/', (req, res) => {
+            res.sendFile(path.join(__dirname, '..', 'index.html'));
         });
         
         // API endpoints
@@ -164,8 +163,9 @@ class BotGUIServer {
             this.server.listen(this.port, () => {
                 this.isRunning = true;
                 this.startTime = new Date().toISOString();
-                console.log(`\n🖥️  Bot Sportello GUI Dashboard`);
-                console.log(`📊 Open http://localhost:${this.port} to view verbose logging`);
+                console.log(`\n🖥️  Bot Sportello Server`);
+                console.log(`🎮 Main site: http://localhost:${this.port}`);
+                console.log(`📊 Dashboard: http://localhost:${this.port}/dashboard`);
                 console.log(`✨ Real-time updates via WebSocket`);
                 console.log(`🆕 Current run: ${this.currentRunId}\n`);
                 resolve();
