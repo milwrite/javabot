@@ -182,6 +182,51 @@
         .error-line {
             color: #ff6b6b;
         }
+        .dashboard-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 16px;
+            padding: 12px 24px;
+            background: rgba(10, 10, 10, 0.9);
+            border: 2px solid rgba(126, 200, 227, 0.5);
+            color: #00ffff;
+            text-decoration: none;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .dashboard-btn:hover {
+            border-color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff4444;
+            box-shadow: 0 0 8px #ff4444;
+            transition: all 0.3s ease;
+        }
+        .status-dot.connected {
+            background: #00ff41;
+            box-shadow: 0 0 8px #00ff41, 0 0 16px rgba(0, 255, 65, 0.4);
+            animation: pulse-green 2s infinite;
+        }
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 8px #00ff41, 0 0 16px rgba(0, 255, 65, 0.4); }
+            50% { box-shadow: 0 0 12px #00ff41, 0 0 24px rgba(0, 255, 65, 0.6); }
+        }
+        .status-text {
+            font-size: 0.75rem;
+            color: rgba(126, 200, 227, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
         @media (max-width: 768px) {
             body {
                 padding: 24px 16px 90px;
@@ -200,7 +245,11 @@
             <h1><img src="default.jpg" alt="Bot Sportello" class="header-logo"> Bot Sportello's Arcade</h1>
             <p class="subtitle">Noir arcade experiments deployed live from Discord</p>
             <p class="sync-hint">Add a new page, run <code>/sync-index</code>, and it shows up here automatically.</p>
-            <p class="sync-hint"><a href="/dashboard" style="color: #00ffff; text-decoration: none;">📊 Bot Dashboard</a></p>
+            <a href="/dashboard" class="dashboard-btn" id="dashboard-btn">
+                <span class="status-dot" id="status-dot"></span>
+                <span>AGENT DASHBOARD</span>
+                <span class="status-text" id="status-text">checking...</span>
+            </a>
         </div>
 
         <p class="status-line" id="status-line">Syncing latest project metadata…</p>
@@ -329,6 +378,32 @@
         }
 
         loadProjects();
+
+        // Bot status checker
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+
+        async function checkBotStatus() {
+            try {
+                const response = await fetch('/api/status', {
+                    method: 'GET',
+                    cache: 'no-store'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDot.classList.add('connected');
+                    statusText.textContent = data.running ? 'online' : 'idle';
+                } else {
+                    throw new Error('Not available');
+                }
+            } catch (e) {
+                statusDot.classList.remove('connected');
+                statusText.textContent = 'offline';
+            }
+        }
+
+        checkBotStatus();
+        setInterval(checkBotStatus, 10000);
     </script>
 </body>
 </html>
