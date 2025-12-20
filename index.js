@@ -627,7 +627,8 @@ const MODEL_PRESETS = {
     'kimi-thinking': 'moonshotai/kimi-k2-thinking',  // With interleaved reasoning
     'qwen': 'qwen/qwen3-coder',
     'gemini': 'google/gemini-2.5-pro',
-    'glm': 'z-ai/glm-4.6:exacto'
+    'glm': 'z-ai/glm-4.6:exacto',
+    'minimax': 'minimax/minimax-m2'
 };
 
 // Reasoning configuration per model (interleaved thinking support)
@@ -769,8 +770,8 @@ async function checkAPIHealth() {
     }
 }
 
-// Start health checks every 2 minutes
-setInterval(checkAPIHealth, 120000);
+// Start health checks 4 times per day (every 6 hours)
+setInterval(checkAPIHealth, 6 * 60 * 60 * 1000);
 // Run initial check after 10 seconds
 setTimeout(checkAPIHealth, 10000);
 
@@ -895,14 +896,14 @@ AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
 - get_repo_status(): Check current git status and branch info
 - git_log(count, file, oneline): View commit history (default 10 commits, optional file filter)
 - web_search(query): Search internet for current information via Perplexity
-- set_model(model): Switch AI model runtime (haiku, sonnet, kimi, gemini, glm, qwen) - ZDR-compliant only
+- set_model(model): Switch AI model runtime (haiku, sonnet, kimi, gemini, glm, qwen, minimax) - ZDR-compliant only
 
 DISCORD INTEGRATION FEATURES:
 - Slash Commands (5 available):
   * /commit <message> [files] - Git commit & push to main
   * /status - Show repo status + live site link
   * /search <query> - Web search via Perplexity API
-  * /set-model <model> - Switch AI model (haiku/sonnet/kimi/gemini/glm/qwen) ZDR only
+  * /set-model <model> - Switch AI model (haiku/sonnet/kimi/gemini/glm/qwen/minimax) ZDR only
   * /poll <question> - Yes/no poll with reactions
 - @ Mention Support: Full AI conversation with tool access (all capabilities available)
 - Multi-Channel Monitoring: Responds in 7 configured channels, fetches context from Discord API
@@ -2640,12 +2641,36 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                             return status < 500; // Don't throw on client errors, only server errors
                         }
                     });
-                    
+
+                    // Handle 4xx errors BEFORE checking response structure
+                    // (4xx responses have { error: {...} } not { choices: [...] })
+                    if (response.status >= 400 && response.status < 500) {
+                        const errorMsg = response.data?.error?.message || `HTTP ${response.status}`;
+                        logEvent('LLM', `Client error ${response.status}: ${errorMsg}`);
+
+                        // 429 rate limit - retry with backoff
+                        if (response.status === 429) {
+                            throw new Error(`Rate limited: ${errorMsg}`);
+                        }
+                        // 402 payment required - reduce tokens and retry
+                        if (response.status === 402) {
+                            throw new Error(`Payment required: ${errorMsg}`);
+                        }
+                        // Other 4xx - don't retry, exit with graceful message
+                        lastResponse = {
+                            content: "I encountered an issue processing that request. Let me try a simpler approach.",
+                            tool_calls: null
+                        };
+                        break;
+                    }
+
                     // Check if response has expected structure
                     if (!response.data || !response.data.choices || !response.data.choices[0]) {
+                        // Log the actual response for debugging
+                        logEvent('LLM', `Unexpected response structure: ${JSON.stringify(response.data).slice(0, 200)}`);
                         throw new Error('Invalid response structure from OpenRouter');
                     }
-                    
+
                     break; // Success, exit retry loop
                     
                 } catch (error) {
@@ -2668,17 +2693,6 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         throw new Error(`OpenRouter API failed after ${maxRetries} attempts: ${error.message}`);
                     }
                 }
-            }
-
-            // Handle 4xx errors gracefully
-            if (response.status >= 400 && response.status < 500) {
-                logEvent('LLM', `Client error ${response.status}: ${response.data?.error?.message || 'Unknown error'}`);
-                // Return a simple text response without tools
-                lastResponse = {
-                    content: "I encountered an issue processing that request. Let me try a simpler approach.",
-                    tool_calls: null
-                };
-                break;
             }
 
             lastResponse = response.data.choices[0].message;
@@ -2908,6 +2922,7 @@ const commands = [
                     { name: 'Qwen 3 Coder (Alibaba)', value: 'qwen' },
                     { name: 'Gemini 2.5 Pro (Google)', value: 'gemini' },
                     { name: 'GLM-4.6 Exacto (Z-AI)', value: 'glm' },
+                    { name: 'Minimax M2 (MiniMax)', value: 'minimax' },
                     { name: 'Custom Model (enter name)', value: 'custom' }
                 ))
         .addStringOption(option =>
@@ -3992,6 +4007,7 @@ async function handleSetModel(interaction) {
             'qwen': 'Qwen 3 Coder',
             'gemini': 'Gemini 2.5 Pro',
             'glm': 'GLM-4.6 Exacto',
+            'minimax': 'Minimax M2',
             'custom': customModel || 'Custom Model'
         };
 
