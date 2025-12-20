@@ -564,6 +564,9 @@ td {
     line-height: 1.6;
     text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
     letter-spacing: 1px;
+    max-width: none;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .date-display {

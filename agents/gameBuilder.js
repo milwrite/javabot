@@ -32,9 +32,10 @@ function cleanMarkdownCodeBlocks(content, type = 'html') {
  * @param {number} options.attempt - Attempt number (1-3)
  * @param {Array} options.lastIssues - Issues from previous attempt
  * @param {string} options.buildId - Unique build ID
+ * @param {Function} options.onStatusUpdate - Optional callback for progress updates
  * @returns {object} Build result with generated files
  */
-async function buildGame({ plan, attempt, lastIssues = [], buildId }) {
+async function buildGame({ plan, attempt, lastIssues = [], buildId, onStatusUpdate = null }) {
     console.log(`🔨 Builder working (attempt ${attempt}/3)...`);
 
     // Prepare prompt based on content type
@@ -77,7 +78,8 @@ Generate the HTML file content now.`;
         messages,
         model: 'sonnet',
         temperature: 0.7,
-        maxTokens: 12000 // More tokens for complete code generation
+        maxTokens: 12000, // More tokens for complete code generation
+        onHeartbeat: onStatusUpdate
     });
 
     // Extract and clean HTML

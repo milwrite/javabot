@@ -65,16 +65,16 @@ for arg in "$@"; do
 done
 
 # Check if log preservation script exists
-if [[ -f "log-preserv.js" ]]; then
+if [[ -f "scripts/log-preserv.js" ]]; then
     echo "📊 Starting with comprehensive log preservation..."
     echo "   Activity will be tracked in session-logs/ directory"
     echo "   Press Ctrl+C to stop and generate session report"
     echo ""
-    
+
     # Use log preservation wrapper
-    node log-preserv.js $GUI_ARGS
+    node scripts/log-preserv.js $GUI_ARGS
 else
-    echo "ℹ️  Log preservation not available (log-preserv.js not found)"
+    echo "ℹ️  Log preservation not available (scripts/log-preserv.js not found)"
     echo "   Starting bot directly..."
     echo ""
     

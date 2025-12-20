@@ -129,6 +129,7 @@ RELEASE NOTES: "yeah built you [thing] with [feature] - [interaction], classic n
  * @param {string} options.model - Model to use (default: sonnet)
  * @param {number} options.maxTokens - Max output tokens (default: 10000)
  * @param {number} options.temperature - Temperature (default: 0.7)
+ * @param {Function} options.onHeartbeat - Optional callback for progress updates during long calls
  * @returns {object} API response with content and tool_calls
  */
 async function callSonnet({
@@ -138,7 +139,8 @@ async function callSonnet({
     tools = [],
     model = 'sonnet',
     maxTokens = 10000,
-    temperature = 0.7
+    temperature = 0.7,
+    onHeartbeat = null
 }) {
     // Use role-specific prompt if no custom prompt provided
     const finalSystemPrompt = systemPrompt || ROLE_PROMPTS[role] || BASE_SYSTEM_CONTEXT;
@@ -165,6 +167,21 @@ async function callSonnet({
         payload.tools = tools;
     }
 
+    // Set up heartbeat for long-running calls
+    let heartbeatInterval = null;
+    if (onHeartbeat) {
+        let heartbeatCount = 0;
+        heartbeatInterval = setInterval(() => {
+            heartbeatCount++;
+            const message = heartbeatCount === 1
+                ? '🔄 still working on this...'
+                : `🔄 still processing... (${heartbeatCount * 15}s)`;
+            onHeartbeat(message).catch(err => {
+                console.warn('Heartbeat callback error:', err.message);
+            });
+        }, 15000); // Every 15 seconds
+    }
+
     try {
         const response = await axios.post(OPENROUTER_URL, payload, {
             headers: {
@@ -175,6 +192,11 @@ async function callSonnet({
             },
             timeout: 60000
         });
+
+        // Clear heartbeat on success
+        if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+        }
 
         const choice = response.data.choices[0];
 
@@ -188,6 +210,10 @@ async function callSonnet({
             usage: response.data.usage
         };
     } catch (error) {
+        // Clear heartbeat on error
+        if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+        }
         const status = error.response?.status;
         const errorData = error.response?.data;
 

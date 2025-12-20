@@ -12,9 +12,10 @@ const path = require('path');
  * @param {object} options.buildResult - Build result
  * @param {object} options.testResult - Test result
  * @param {string} options.buildId - Build ID
+ * @param {Function} options.onStatusUpdate - Optional callback for progress updates
  * @returns {object} Documentation { metadata, releaseNotes, howToPlay }
  */
-async function documentGame({ plan, buildResult, testResult, buildId }) {
+async function documentGame({ plan, buildResult, testResult, buildId, onStatusUpdate = null }) {
     console.log(`📝 Scribe generating docs...`);
 
     const messages = [
@@ -40,7 +41,8 @@ Return as JSON.`
         role: 'scribe',
         messages,
         model: 'sonnet',
-        temperature: 0.8 // Slightly higher for creative captions
+        temperature: 0.8, // Slightly higher for creative captions
+        onHeartbeat: onStatusUpdate
     });
 
     try {

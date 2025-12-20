@@ -9,9 +9,10 @@ const { callSonnet, extractJSON } = require('../services/llmClient');
  * @param {string} options.userPrompt - User's game request
  * @param {string} options.recentPatternsSummary - Summary of recent build issues
  * @param {string} options.preferredType - Optional type hint ('arcade', 'if', 'infographic', 'auto')
+ * @param {Function} options.onStatusUpdate - Optional callback for progress updates
  * @returns {object} Game plan
  */
-async function planGame({ userPrompt, recentPatternsSummary, preferredType = 'auto' }) {
+async function planGame({ userPrompt, recentPatternsSummary, preferredType = 'auto', onStatusUpdate = null }) {
     console.log('🏗️  Architect analyzing request...');
 
     const messages = [
@@ -32,7 +33,8 @@ Plan a simple, mobile-first game/page that satisfies this request. Return a comp
         role: 'architect',
         messages,
         model: 'sonnet',
-        temperature: 0.7
+        temperature: 0.7,
+        onHeartbeat: onStatusUpdate
     });
 
     try {

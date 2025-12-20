@@ -28,9 +28,13 @@
             margin: 0 auto;
         }
 
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
         h1 {
             color: #00ffff;
-            text-align: center;
             font-size: 24px;
             margin-bottom: 10px;
             text-shadow: 0 0 10px #00ffff;
@@ -43,10 +47,10 @@
         }
 
         .subtitle {
-            text-align: center;
             color: #7ec8e3;
             font-size: 12px;
-            margin-bottom: 30px;
+            max-width: none;
+            margin: 0 auto;
         }
 
         @media (min-width: 768px) {
@@ -318,8 +322,10 @@
     <a href="../index.html" class="home-link">←</a>
 
     <div class="container">
-        <h1>SITE INVENTORY</h1>
-        <p class="subtitle">All pages from projectmetadata.json</p>
+        <header>
+            <h1>SITE INVENTORY</h1>
+            <p class="subtitle">All pages from projectmetadata.json</p>
+        </header>
 
         <div class="stats">
             <div class="stat-box">

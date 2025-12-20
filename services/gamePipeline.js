@@ -43,7 +43,8 @@ async function runGamePipeline({
         const plan = await planGame({
             userPrompt,
             recentPatternsSummary: recentPatterns,
-            preferredType
+            preferredType,
+            onStatusUpdate
         });
 
         // Log plan completion to GUI
@@ -83,7 +84,8 @@ async function runGamePipeline({
                 plan,
                 attempt,
                 lastIssues,
-                buildId
+                buildId,
+                onStatusUpdate
             });
 
             // Log build completion to GUI
@@ -120,7 +122,8 @@ async function runGamePipeline({
             testResult = await testGame({
                 plan,
                 buildResult,
-                buildId
+                buildId,
+                onStatusUpdate
             });
 
             // Log test results to GUI
@@ -184,7 +187,8 @@ async function runGamePipeline({
             plan,
             buildResult,
             testResult,
-            buildId
+            buildId,
+            onStatusUpdate
         });
 
         // Log doc completion to GUI

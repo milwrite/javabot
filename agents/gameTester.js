@@ -10,9 +10,10 @@ const { callSonnet, extractJSON } = require('../services/llmClient');
  * @param {object} options.buildResult - Build result with generated files
  * @param {string} options.buildId - Build ID
  * @param {boolean} options.useLLMValidation - Enable LLM validation (default: false for speed)
+ * @param {Function} options.onStatusUpdate - Optional callback for progress updates
  * @returns {object} Test result { ok, issues, warnings, score }
  */
-async function testGame({ plan, buildResult, buildId, useLLMValidation = false }) {
+async function testGame({ plan, buildResult, buildId, useLLMValidation = false, onStatusUpdate = null }) {
     console.log(`🧪 Tester validating code...`);
 
     // Run automated checks (fast, no API call)
@@ -22,7 +23,7 @@ async function testGame({ plan, buildResult, buildId, useLLMValidation = false }
     let llmChecks = { issues: [], warnings: [] };
     if (useLLMValidation) {
         console.log('   Running LLM validation (optional)...');
-        llmChecks = await runLLMValidation(buildResult.htmlContent, plan);
+        llmChecks = await runLLMValidation(buildResult.htmlContent, plan, onStatusUpdate);
     }
 
     // Merge results
@@ -232,7 +233,7 @@ function runAutomatedChecks(html, plan) {
  * @param {object} plan - Game plan
  * @returns {object} { issues, warnings }
  */
-async function runLLMValidation(html, plan) {
+async function runLLMValidation(html, plan, onStatusUpdate = null) {
     try {
         const contentType = plan.contentType || plan.type;
         const features = plan.features || plan.mechanics || [];
@@ -260,7 +261,8 @@ Return a JSON validation report.`
             role: 'tester',
             messages,
             model: 'sonnet',
-            temperature: 0.3 // Lower temp for more consistent validation
+            temperature: 0.3, // Lower temp for more consistent validation
+            onHeartbeat: onStatusUpdate
         });
 
         const report = extractJSON(response.content);

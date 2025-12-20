@@ -23,7 +23,7 @@ const PLAYER_SPEED = 200;
 const PLAYER_WIDTH = 40;
 const PLAYER_HEIGHT = 20;
 const PLAYER_Y = CANVAS_HEIGHT - 50;
-const PLAYER_SHOOT_COOLDOWN = 0.5; // seconds between shots
+const PLAYER_SHOOT_COOLDOWN = 0.25; // seconds between shots (faster for easier gameplay)
 
 // Alien settings
 const ALIEN_ROWS = 5;
@@ -38,7 +38,7 @@ const ALIEN_DROP_DISTANCE = 20;
 
 // Bullet settings
 const PLAYER_BULLET_SPEED = 400;
-const ALIEN_BULLET_SPEED = 200;
+const ALIEN_BULLET_SPEED = 150; // slower alien bullets for easier dodging
 
 // Shield settings
 const SHIELD_COUNT = 4;
@@ -96,7 +96,7 @@ const gameState = {
     running: false,
     gameOver: false,
     alienDirection: 1, // 1 = right, -1 = left
-    alienSpeed: 0.5,   // seconds between moves
+    alienSpeed: 0.7,   // seconds between moves (slower start for easier level 1)
     alienMoveTimer: 0,
     shootCooldown: 0,
     ufoTimer: 0,
@@ -393,7 +393,7 @@ function alienShoot() {
         bottomAliens.push(alien);
     });
 
-    if (bottomAliens.length > 0 && Math.random() < 0.02 * gameState.wave) {
+    if (bottomAliens.length > 0 && Math.random() < 0.01 * gameState.wave) {
         const shooter = bottomAliens[Math.floor(Math.random() * bottomAliens.length)];
         createAlienBullet(shooter);
     }
@@ -441,8 +441,8 @@ function checkCollisions() {
                     gameState.score += alien.points;
                     gameState.aliensAlive--;
 
-                    // Speed up remaining aliens
-                    gameState.alienSpeed = Math.max(0.1, 0.5 - (ALIEN_ROWS * ALIEN_COLS - gameState.aliensAlive) * 0.008);
+                    // Speed up remaining aliens (reduced acceleration for easier gameplay)
+                    gameState.alienSpeed = Math.max(0.2, 0.7 - (ALIEN_ROWS * ALIEN_COLS - gameState.aliensAlive) * 0.005);
 
                     // Create explosion effect
                     createExplosion(alien.pos.x, alien.pos.y);
@@ -619,7 +619,7 @@ function showUFOScore(x, y, points) {
  */
 function nextWave() {
     gameState.wave++;
-    gameState.alienSpeed = Math.max(0.2, 0.5 - gameState.wave * 0.05);
+    gameState.alienSpeed = Math.max(0.3, 0.7 - gameState.wave * 0.05);
 
     // Clear bullets
     if (playerBullet) {
@@ -725,7 +725,7 @@ function startGame() {
     gameState.running = true;
     gameState.gameOver = false;
     gameState.alienDirection = 1;
-    gameState.alienSpeed = 0.5;
+    gameState.alienSpeed = 0.7;
     gameState.alienMoveTimer = 0;
     gameState.shootCooldown = 0;
     gameState.ufoTimer = 0;

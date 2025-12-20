@@ -152,8 +152,6 @@
             color: rgba(126, 200, 227, 0.92);
         }
         .project-meta {
-            display: flex;
-            justify-content: space-between;
             font-size: 0.85rem;
             color: rgba(126, 200, 227, 0.8);
         }
@@ -281,7 +279,7 @@
 
             const meta = document.createElement('div');
             meta.className = 'project-meta';
-            meta.innerHTML = `<span>${slug}</span><span>${project.collection || 'unsorted'}</span>`;
+            meta.innerHTML = `<span>${project.collection || 'unsorted'}</span>`;
 
             const link = document.createElement('a');
             link.className = 'project-link';

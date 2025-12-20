@@ -14,7 +14,7 @@ Bot Sportello is a Discord bot with a laid-back Doc Sportello personality that m
 **Key Features**:
 - AI-generated HTML pages & JavaScript features using OpenRouter
 - Automatic GitHub commits and deployment to GitHub Pages
-- Conversation memory (last 100 messages in `agents.md`)
+- Conversation memory (Discord API with message reactions)
 - Noir terminal design system with Courier Prime font and CRT effects
 - Mobile-first responsive design (768px, 480px breakpoints, 44px touch targets)
 - All games require mobile touch controls for Discord's mobile-forward users
@@ -148,7 +148,7 @@ The entire bot is contained in `index.js` (~3700+ lines) with these key sections
 7. Git timeout wrapper and logging utilities
 8. OpenRouter configuration with model presets (~line 139)
 9. Bot personality system (`botResponses`, `SYSTEM_PROMPT`) (~line 150-290)
-10. Conversation history management (`agents.md` file operations)
+10. Discord context manager (direct API fetching, replaces agents.md)
 11. Filesystem tools (list/read/write/edit files) (~line 715-870)
 12. Content creation tools (create_page, create_feature) (~line 870-1320)
 13. Web search and configuration tools (set_model, update_style, build_game) (~line 1322-1450)
@@ -160,7 +160,6 @@ The entire bot is contained in `index.js` (~3700+ lines) with these key sections
 **File Organization**:
 - `/src/` - All generated HTML pages, JS features, and demos
 - `/responses/` - AI responses >2000 chars saved with timestamps
-- `agents.md` - Conversation history (last 100 messages)
 - `index.html` - Main hub page with embedded CSS (no longer uses style.css)
 - `page-theme.css` - Shared arcade theme for all /src/ pages
 - `projectmetadata.json` - Project collections + metadata (title, icon, caption) loaded dynamically by index.html
@@ -203,7 +202,7 @@ The entire bot is contained in `index.js` (~3700+ lines) with these key sections
 - 10,000 token output limit for detailed responses
 - Automatic 402 error recovery (reduces max_tokens when credits low)
 - Automatic 500 error fallback (switches to alternate ZDR model after 2 failures)
-- Conversation history from `agents.md` (100 messages max)
+- Conversation history fetched from Discord API (20 messages with reactions)
 
 **Noir Terminal Frontend Styling**:
 - **Main page**: `index.html` with embedded CSS (self-contained, no external stylesheet)
@@ -234,7 +233,7 @@ The entire bot is contained in `index.js` (~3700+ lines) with these key sections
 | File/Directory | Purpose | Format | Lifecycle |
 |---|---|---|---|
 | **projectmetadata.json** | Canonical page registry (index) | JSON: {collections, projects} | Persistent; updated on each page creation |
-| **agents.md** | Conversation history (context for LLM) | Markdown: timestamp, user, message, isBot | Rolling 100 messages; auto-maintained |
+| **Discord API** | Conversation context (direct from channel) | Fetched via channel.messages.fetch() | 60-second cache; 20 messages with reactions |
 | **build-logs/{id}.json** | Per-build pipeline execution logs | JSON array with stages, plans, test results | One per build; kept for history |
 | **responses/{timestamp}.txt** | Long responses >2000 chars (Discord limit) | Text with timestamp header | One per response; kept for audit trail |
 | **session-logs/*.json/.md** | Bot session reports (failure/success analysis) | JSON + Markdown summaries | One per bot session run; via run-bot.sh |
@@ -394,12 +393,12 @@ errorTracker.set(`${userId}-${commandName}`, {
 
 ### Message History System
 
-**`agents.md` File**:
-- Stores last 100 messages from tracked channels
-- Format: timestamp, username, message, isBot flag
-- Updated via `addToHistory()` and `updateAgentsFile()`
-- Provides context for `/chat` command
-- Shows last 50 messages in file, uses last 50 for AI context
+**Discord-Native Context** (replaces agents.md):
+- Fetches last 20 messages directly from Discord API via `channel.messages.fetch()`
+- Includes reaction data for community sentiment awareness: `[reactions: 👍(3) ❤️(1)]`
+- 60-second cache per channel prevents rate limiting
+- Context fetched on bot startup for immediate availability after restart
+- Managed by `DiscordContextManager` class with `buildContextForChannel()` function
 
 **Multi-Channel Monitoring**:
 - Parses `CHANNEL_ID` as comma-separated list
@@ -411,10 +410,9 @@ errorTracker.set(`${userId}-${commandName}`, {
 - Async handler prevents blocking: `handleMentionAsync(message)`
 - **Message deduplication**: Tracks processed message IDs to prevent duplicate responses (common Discord API issue)
 - **Full slash command parity**: All tools available via @mentions (create pages, edit files, commit, set model, build games)
-- Uses conversation history from `agents.md` for context
-- Debounced file writes (5 second delay) to prevent excessive I/O
+- Uses conversation history fetched from Discord API
 - Responses automatically saved to `responses/` directory if >2000 chars
-- **Commit filtering**: Only prompts for commits if AI changes actual code files (filters out `agents.md` and `projectmetadata.json` updates)
+- **Commit filtering**: Only prompts for commits if AI changes actual code files (filters out `projectmetadata.json` updates)
 - **Git timeout protection**: Git status checks have 5-second timeout to prevent hanging
 - **Channel filter debugging**: Console logs `⚠️ [CHANNEL_FILTER]` when mentions are ignored due to channel ID mismatch
 
@@ -666,6 +664,11 @@ const CONFIG = {
     GIT_TIMEOUT: 30000,              // Git operation timeout
     PUSH_TIMEOUT: 60000,             // Git push timeout
     API_TIMEOUT: 60000,              // API request timeout
+    // Discord Context Settings
+    DISCORD_FETCH_LIMIT: 20,         // Max messages to fetch per request
+    DISCORD_CONTEXT_LIMIT: 20,       // Messages to include in LLM context
+    DISCORD_CACHE_TTL: 60000,        // Cache duration (1 minute)
+    INCLUDE_REACTIONS: true          // Add reaction data to context
 };
 ```
 

@@ -543,7 +543,39 @@
             font-size: 0.85em;
             margin: 2px;
         }
-        
+
+        /* Thinking/Reasoning Display */
+        .loop-thinking {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 255, 255, 0.05);
+            border-left: 2px solid #00ffff;
+            border-radius: 0 3px 3px 0;
+        }
+
+        .thinking-label {
+            color: #00ffff;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .thinking-label::before {
+            content: '💭';
+        }
+
+        .thinking-content {
+            color: #7ec8e3;
+            font-size: 0.85em;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+
         /* Scrollbar Styles */
         ::-webkit-scrollbar {
             width: 8px;
@@ -1037,9 +1069,15 @@
                 ${loop.tools && loop.tools.length > 0 ? `
                     <div class="loop-tools">
                         <div class="loop-tools-label">Tools Used:</div>
-                        ${loop.tools.map(tool => 
+                        ${loop.tools.map(tool =>
                             `<span class="loop-tool-badge">${escapeHtml(tool)}</span>`
                         ).join('')}
+                    </div>
+                ` : ''}
+                ${loop.lastThinking ? `
+                    <div class="loop-thinking">
+                        <div class="thinking-label">AI Reasoning</div>
+                        <div class="thinking-content">${escapeHtml(loop.lastThinking)}</div>
                     </div>
                 ` : ''}
                 ${loop.error ? `

@@ -71,7 +71,11 @@ const CONFIG = {
     GIT_TIMEOUT: 30000,
     PUSH_TIMEOUT: 60000,
     API_TIMEOUT: 60000,
-    AGENTS_UPDATE_DELAY: 5000
+    // Discord Context Settings (replaces agents.md)
+    DISCORD_FETCH_LIMIT: 20,      // Max messages to fetch per Discord API request
+    DISCORD_CONTEXT_LIMIT: 20,    // Messages to include in LLM context
+    DISCORD_CACHE_TTL: 60000,     // Cache duration (1 minute)
+    INCLUDE_REACTIONS: true       // Add reaction data to context
 };
 
 const DEFAULT_COLLECTIONS = {
@@ -154,7 +158,6 @@ setInterval(() => {
 // Message history tracking
 const messageHistory = [];
 const MAX_HISTORY = 100; // Increased from 20 to 100
-const AGENTS_FILE = './agents.md';
 
 // Parse channel IDs (supports comma-separated list)
 const CHANNEL_IDS = process.env.CHANNEL_ID
@@ -175,6 +178,123 @@ const octokit = new Octokit({
 });
 
 const git = simpleGit();
+
+// Discord Context Manager - fetches message history directly from Discord API
+// Replaces agents.md file-based memory with real-time Discord awareness
+class DiscordContextManager {
+    constructor(discordClient) {
+        this.client = discordClient;
+        this.cache = new Map(); // channelId -> { messages, timestamp }
+    }
+
+    // Fetch message history from Discord API with caching
+    async fetchChannelHistory(channel, limit = CONFIG.DISCORD_FETCH_LIMIT) {
+        const cacheKey = channel.id;
+        const cached = this.cache.get(cacheKey);
+
+        // Return cache if fresh
+        if (cached && Date.now() - cached.timestamp < CONFIG.DISCORD_CACHE_TTL) {
+            console.log(`[CONTEXT] Using cached history for #${channel.name || channel.id} (${cached.data.length} messages)`);
+            return cached.data;
+        }
+
+        try {
+            console.log(`[CONTEXT] Fetching ${limit} messages from #${channel.name || channel.id}`);
+
+            // Discord.js channel.messages.fetch()
+            const messages = await channel.messages.fetch({ limit });
+
+            // Convert Collection to array, reverse for chronological order
+            const messageArray = Array.from(messages.values()).reverse();
+
+            // Cache the result
+            this.cache.set(cacheKey, {
+                data: messageArray,
+                timestamp: Date.now()
+            });
+
+            console.log(`[CONTEXT] Cached ${messageArray.length} messages for #${channel.name || channel.id}`);
+            return messageArray;
+        } catch (error) {
+            console.error(`[CONTEXT] Failed to fetch history:`, error.message);
+            return null;
+        }
+    }
+
+    // Convert a Discord message to LLM-ready format with reactions
+    formatMessageForLLM(discordMessage) {
+        const author = discordMessage.author;
+        const isBot = author.bot && author.id === this.client.user?.id;
+
+        let content = discordMessage.content || '';
+
+        // Strip bot mentions for cleaner context
+        content = content.replace(/<@!?\d+>/g, '').trim();
+
+        // Skip empty messages
+        if (!content) return null;
+
+        // Build formatted content string
+        let formattedContent = `${author.username}: ${content}`;
+
+        // Add reaction summary if configured and present
+        if (CONFIG.INCLUDE_REACTIONS && discordMessage.reactions?.cache?.size > 0) {
+            const reactions = Array.from(discordMessage.reactions.cache.values())
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 3) // Top 3 reactions
+                .map(r => `${r.emoji.name}(${r.count})`)
+                .join(' ');
+            formattedContent += ` [reactions: ${reactions}]`;
+        }
+
+        return {
+            role: isBot ? 'assistant' : 'user',
+            content: formattedContent,
+            timestamp: discordMessage.createdTimestamp
+        };
+    }
+
+    // Build LLM context from Discord channel history
+    async buildContextFromChannel(channel, maxMessages = CONFIG.DISCORD_CONTEXT_LIMIT) {
+        const history = await this.fetchChannelHistory(channel, maxMessages + 5);
+
+        if (!history || history.length === 0) {
+            console.log(`[CONTEXT] No history available for channel`);
+            return [];
+        }
+
+        // Format messages for LLM, filtering out nulls (empty messages)
+        const formatted = history
+            .map(msg => this.formatMessageForLLM(msg))
+            .filter(msg => msg !== null)
+            .slice(-maxMessages);
+
+        console.log(`[CONTEXT] Built context: ${formatted.length} messages from Discord`);
+        return formatted;
+    }
+
+    // Invalidate cache for a channel (call when we know messages changed)
+    invalidateCache(channelId) {
+        if (this.cache.has(channelId)) {
+            this.cache.delete(channelId);
+            console.log(`[CONTEXT] Cache invalidated for channel ${channelId}`);
+        }
+    }
+
+    // Get channel metadata for enhanced context
+    getChannelMetadata(channel) {
+        return {
+            name: channel.name || 'DM',
+            topic: channel.topic || null,
+            type: channel.type,
+            isThread: typeof channel.isThread === 'function' ? channel.isThread() : false
+        };
+    }
+}
+
+// Global context manager instance (initialized in clientReady)
+let contextManager = null;
+
 
 // Helper: build an HTTPS URL with encoded token in userinfo (no permanent storage)
 function getEncodedRemoteUrl() {
@@ -283,6 +403,89 @@ async function gitWithTimeout(operation, timeoutMs = CONFIG.GIT_TIMEOUT) {
             setTimeout(() => reject(new Error(`Git operation timeout after ${timeoutMs}ms`)), timeoutMs)
         )
     ]);
+}
+
+// Discord interaction timeout handler with automatic fallback to channel messages
+// Discord interactions expire after 15 minutes - this detects and handles that gracefully
+async function safeEditReply(interactionOrMessage, content, options = {}) {
+    const isInteraction = interactionOrMessage.isCommand?.() || interactionOrMessage.deferred !== undefined;
+
+    if (isInteraction) {
+        const interaction = interactionOrMessage;
+
+        try {
+            // Discord interactions expire after 15 minutes (900000ms)
+            const age = Date.now() - interaction.createdTimestamp;
+            const INTERACTION_TIMEOUT = 840000; // 14 min safety margin
+
+            if (age > INTERACTION_TIMEOUT) {
+                console.warn(`⚠️ Interaction age: ${Math.round(age/1000)}s - near expiration, attempting fallback`);
+
+                // Interaction likely expired - send to channel instead
+                const fallbackContent = typeof content === 'string' ? content : '';
+                const fallbackEmbeds = options.embeds || (content.embeds ? content.embeds : []);
+
+                await interaction.channel.send({
+                    content: `<@${interaction.user.id}> ${fallbackContent}`,
+                    embeds: fallbackEmbeds
+                });
+
+                console.log('✅ Sent fallback message to channel (interaction expired)');
+                return { success: true, usedFallback: true };
+            }
+
+            // Interaction still valid - use normal edit
+            if (typeof content === 'string') {
+                await interaction.editReply({ content, ...options });
+            } else {
+                await interaction.editReply(content);
+            }
+
+            return { success: true, usedFallback: false };
+
+        } catch (error) {
+            // Handle specific Discord error codes
+            if (error.code === 10062 || error.message?.includes('Unknown interaction')) {
+                console.error('❌ Interaction expired (10062) - sending fallback to channel');
+
+                try {
+                    const fallbackContent = typeof content === 'string' ? content : '';
+                    const fallbackEmbeds = options.embeds || (content.embeds ? content.embeds : []);
+
+                    await interaction.channel.send({
+                        content: `<@${interaction.user.id}> ${fallbackContent}`,
+                        embeds: fallbackEmbeds
+                    });
+
+                    return { success: true, usedFallback: true };
+                } catch (fallbackError) {
+                    console.error('❌ Fallback channel message also failed:', fallbackError.message);
+                    return { success: false, error: fallbackError.message };
+                }
+            }
+
+            // Other error - re-throw
+            throw error;
+        }
+    } else {
+        // It's a message object (from @mention) - use edit
+        const message = interactionOrMessage;
+
+        try {
+            if (typeof content === 'string') {
+                await message.edit(content);
+            } else if (content.embeds) {
+                await message.edit({ embeds: content.embeds });
+            } else {
+                await message.edit(content);
+            }
+
+            return { success: true, usedFallback: false };
+        } catch (error) {
+            console.error('❌ Message edit failed:', error.message);
+            return { success: false, error: error.message };
+        }
+    }
 }
 
 // Enhanced error logging and tracking for better debugging
@@ -421,10 +624,98 @@ const MODEL_PRESETS = {
     'haiku': 'anthropic/claude-haiku-4.5',
     'sonnet': 'anthropic/claude-sonnet-4.5',
     'kimi': 'moonshotai/kimi-k2-0905:exacto',
+    'kimi-thinking': 'moonshotai/kimi-k2-thinking',  // With interleaved reasoning
     'qwen': 'qwen/qwen3-coder',
     'gemini': 'google/gemini-2.5-pro',
     'glm': 'z-ai/glm-4.6:exacto'
 };
+
+// Reasoning configuration per model (interleaved thinking support)
+// Models that support reasoning will expose thinking during tool-calling workflows
+const REASONING_CONFIG = {
+    // Claude models - native reasoning support via OpenRouter
+    'anthropic/claude-haiku-4.5': { enabled: true, effort: 'low', max_tokens: 1024 },
+    'anthropic/claude-sonnet-4.5': { enabled: true, effort: 'low', max_tokens: 1024 },
+    // Gemini - supports reasoning
+    'google/gemini-2.5-pro': { enabled: true, effort: 'low' },
+    // Kimi K2 thinking - mandatory reasoning with <think> tokens
+    'moonshotai/kimi-k2-thinking': { enabled: true, effort: 'low', max_tokens: 2048 },
+    // Models without reasoning support - graceful skip
+    'perplexity/sonar': null,
+    'moonshotai/kimi-k2-0905:exacto': null,
+    'qwen/qwen3-coder': null,
+    'z-ai/glm-4.6:exacto': null,
+    'default': null  // Fallback: no reasoning for unknown models
+};
+
+// Get reasoning config for a model (returns null if not supported)
+function getReasoningConfig(model) {
+    return REASONING_CONFIG[model] || REASONING_CONFIG['default'];
+}
+
+// Format reasoning for Discord (condensed 80 char summary)
+function formatThinkingForDiscord(reasoning) {
+    if (!reasoning) return null;
+    // Handle various reasoning response formats
+    let text = '';
+    if (typeof reasoning === 'string') {
+        text = reasoning;
+    } else if (reasoning.summary) {
+        text = reasoning.summary;
+    } else if (reasoning.text) {
+        text = reasoning.text;
+    } else if (Array.isArray(reasoning) && reasoning[0]?.text) {
+        text = reasoning[0].text;
+    }
+    // Truncate to 80 chars for clean Discord display
+    const condensed = text.slice(0, 80).replace(/\n/g, ' ').trim();
+    return condensed ? `thinking: ${condensed}...` : null;
+}
+
+// Format reasoning for GUI (fuller display)
+function formatThinkingForGUI(reasoning) {
+    if (!reasoning) return null;
+    if (typeof reasoning === 'string') return reasoning;
+    if (reasoning.text) return reasoning.text;
+    if (reasoning.summary) return reasoning.summary;
+    if (Array.isArray(reasoning)) {
+        return reasoning.map(r => r.text || r.summary || '').filter(Boolean).join('\n');
+    }
+    return JSON.stringify(reasoning);
+}
+
+// Get final text-only response (consolidated helper to reduce duplicate API calls)
+async function getFinalTextResponse(messages, tools, options = {}) {
+    const { completedActions = 0, maxTokens = 10000 } = options;
+    try {
+        const response = await axios.post(OPENROUTER_URL, {
+            model: MODEL,
+            messages: messages,
+            max_tokens: maxTokens,
+            temperature: 0.7,
+            tools: tools,
+            tool_choice: 'none', // Force text response without more tool calls
+            provider: { data_collection: 'deny' }
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 45000
+        });
+
+        return response.data.choices[0].message;
+    } catch (error) {
+        logEvent('LLM', `Final response error: ${error.message}`);
+        // Provide fallback response if we had completed actions
+        if (completedActions > 0) {
+            return {
+                content: `completed the requested actions (${completedActions} operations). check the live site for changes.`
+            };
+        }
+        return null;
+    }
+}
 
 // API Health tracking
 let apiHealthStatus = {
@@ -577,7 +868,6 @@ PROJECT METADATA SYSTEM:
 - index.html auto-loads this file to render each collection, so keep metadata accurate
 - Every project entry needs: title, emoji icon, 3-6 word caption, collection ID, optional hidden flag
 - Captions follow "[adjective] [noun] [type]" style, no long prompts or verb starts
-- Run /sync-index after adding/editing pages so metadata and index stay aligned
 
 AFTER CREATING A PAGE - EXPLAIN WHAT YOU BUILT:
 When you finish creating a page, briefly tell the user what you made:
@@ -601,37 +891,26 @@ AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
 - read_file(path|[paths]): Read single file or multiple files (respects file size limits)
 - write_file(path, content): Create/update files completely
 - edit_file(path, instructions): Edit files with natural language instructions
-- create_page(name, description): Generate and deploy new HTML page with noir theme
-- create_feature(name, description): Generate JS library + demo page
 - commit_changes(message, files): Git add, commit, push to main branch
 - get_repo_status(): Check current git status and branch info
 - git_log(count, file, oneline): View commit history (default 10 commits, optional file filter)
 - web_search(query): Search internet for current information via Perplexity
 - set_model(model): Switch AI model runtime (haiku, sonnet, kimi, gemini, glm, qwen) - ZDR-compliant only
-- update_style(preset, description): Change website theme (noir-terminal, neon-arcade, dark-minimal, custom)
-- build_game(title, prompt, type): Complete AI pipeline for games/content (Architect→Builder→Tester→Scribe flow)
 
 DISCORD INTEGRATION FEATURES:
-- Slash Commands (13 available): 
+- Slash Commands (5 available):
   * /commit <message> [files] - Git commit & push to main
-  * /add-page <name> <description> - Generate HTML page with noir theme
-  * /add-feature <name> <description> - Generate JS library + demo
-  * /build-game <title> <prompt> [type] - AI game pipeline (NEW: Architect→Builder→Tester→Scribe)
   * /status - Show repo status + live site link
-  * /chat <message> - AI conversation with context from agents.md
   * /search <query> - Web search via Perplexity API
   * /set-model <model> - Switch AI model (haiku/sonnet/kimi/gemini/glm/qwen) ZDR only
-  * /set-prompt <action> [content] - Modify system prompt (view/reset/add/replace)
-  * /update-style <preset> [description] - Update site theme
   * /poll <question> - Yes/no poll with reactions
-  * /sync-index - Update project metadata and index.html
 - @ Mention Support: Full AI conversation with tool access (all capabilities available)
-- Multi-Channel Monitoring: Responds in 7 configured channels, tracks message history in agents.md
+- Multi-Channel Monitoring: Responds in 7 configured channels, fetches context from Discord API
 - Auto Error Handling: 3-error cooldown system prevents spam loops (5min timeout)
 - Response Management: Long responses (>2000 chars) auto-saved to responses/ with Discord links
-- Real-Time Updates: Progress tracking via editReply() for long operations (build-game, commits)
+- Real-Time Updates: Progress tracking via editReply() for long operations
 - Embed Styling: Color-coded embeds (purple=pages, orange=features, red=model, green=success)
-- Message History: Last 100 messages stored in agents.md for conversation context
+- Message History: Fetches last 20 messages from Discord API with reactions
 
 WHEN TO USE EACH TOOL:
 - For multi-file operations: Use array syntax - search_files("pattern", ["file1.html", "file2.js"])
@@ -646,8 +925,6 @@ WHEN TO USE EACH TOOL:
   * Your commit messages describe what you built - use them to remember past work
   * Don't guess filenames - search to find the right file
 - For quick file edits: use edit_file with natural language instructions
-- For new pages/apps: use create_page (simple) or build_game (complex with AI pipeline)
-- For JS libraries/features: use create_feature (generates library + demo)
 - To deploy changes: use commit_changes (auto-pushes and deploys)
 - To switch AI behavior: use set_model (affects all subsequent responses)
 - For current events/news: use web_search (gets latest information)
@@ -682,7 +959,7 @@ When listing information (clues, answers, items, data):
 
 IMPORTANT: Do not prefix your responses with "Bot Sportello:" - just respond naturally as Bot Sportello. Always mention the live site URL (https://bot.inference-arcade.com/) before making changes to give users context.
 
-Be concise and helpful. Remember conversations from agents.md.`;
+Be concise and helpful. Context fetched directly from Discord channel history.`;
 
 // Mutable system prompt - can be changed at runtime
 let SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT;
@@ -1015,8 +1292,6 @@ function buildValidationFeedback(validation, contentType = 'HTML') {
     return parts.join('\n');
 }
 
-// Message history and agents.md management
-let agentsFileUpdateTimer = null;
 
 function addToHistory(username, message, isBot = false) {
     // Truncate overly long messages to prevent memory bloat
@@ -1041,104 +1316,8 @@ function addToHistory(username, message, isBot = false) {
         messageHistory.splice(0, 20);
     }
 
-    // Debounce file writes to prevent excessive I/O
-    if (agentsFileUpdateTimer) {
-        clearTimeout(agentsFileUpdateTimer);
-    }
-    agentsFileUpdateTimer = setTimeout(() => {
-        updateAgentsFile().catch(err => logEvent('ERROR', 'Failed to update agents file', err));
-    }, CONFIG.AGENTS_UPDATE_DELAY);
-}
-
-async function summarizeConversation(messages) {
-    try {
-        // Build conversation text
-        const conversationText = messages.map(m => {
-            const speaker = m.isBot ? 'Bot Sportello' : m.username;
-            return `${speaker}: ${m.message}`;
-        }).join('\n');
-
-        const summaryPrompt = `Summarize this Discord conversation into concise bullet points. Focus on:
-- Projects created or discussed
-- User requests and preferences
-- Technical questions asked
-- Important context for future conversations
-
-Conversation:
-${conversationText}
-
-Return 3-5 bullet points maximum.`;
-
-        const response = await axios.post(OPENROUTER_URL, {
-            model: MODEL,
-            messages: [{ role: 'user', content: summaryPrompt }],
-            max_tokens: 500,
-            temperature: 0.3
-        }, {
-            headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: CONFIG.API_TIMEOUT
-        });
-
-        return response.data.choices[0].message.content.trim();
-    } catch (error) {
-        console.error('Summarization failed:', error.message);
-        return null;
-    }
-}
-
-async function updateAgentsFile() {
-    if (messageHistory.length === 0) return;
-
-    try {
-        let content = '# Bot Sportello Memory\n\n';
-        content += `Last updated: ${new Date().toISOString()}\n\n`;
-
-        // Keep last 15 messages verbatim for immediate context
-        const recentCount = 15;
-        const recentMessages = messageHistory.slice(-recentCount);
-        const olderMessages = messageHistory.slice(0, -recentCount);
-
-        // Summarize older messages if there are enough
-        if (olderMessages.length > 10) {
-            content += '## Conversation Summary\n\n';
-            const summary = await summarizeConversation(olderMessages);
-            if (summary) {
-                content += summary + '\n\n';
-            }
-        }
-
-        content += '## Recent Messages\n\n';
-        recentMessages.forEach(entry => {
-            const speaker = entry.isBot ? '**Bot Sportello**' : `**${entry.username}**`;
-            // Handle both Date.now() timestamps and ISO strings
-            const time = typeof entry.timestamp === 'number' 
-                ? new Date(entry.timestamp).toISOString().split('T')[1].split('.')[0]
-                : entry.timestamp.split('T')[1].split('.')[0];
-            content += `${speaker} [${time}]: ${entry.message}\n\n`;
-        });
-
-        content += '## Active Context\n\n';
-        const users = [...new Set(messageHistory.filter(e => !e.isBot).map(e => e.username))];
-        content += `**Users**: ${users.join(', ')}\n`;
-        content += `**Total messages tracked**: ${messageHistory.length}\n`;
-
-        await fs.writeFile(AGENTS_FILE, content, 'utf8');
-    } catch (error) {
-        logEvent('ERROR', 'Failed to update agents.md', error);
-    }
-}
-
-async function readAgentsFile() {
-    try {
-        const content = await fs.readFile(AGENTS_FILE, 'utf8');
-        return content;
-    } catch (error) {
-        // File doesn't exist yet, return empty string
-        return '';
-    }
+    // Note: agents.md file persistence removed - now using Discord API for context
+    // The in-memory messageHistory is kept for debugging/fallback purposes only
 }
 
 // Build proper messages array from conversation history
@@ -1154,6 +1333,27 @@ function buildMessagesFromHistory(maxMessages = 50) {
 
     return messages;
 }
+
+// Build context from Discord channel using the context manager
+// Replaces buildMessagesFromHistory for channel-based context
+async function buildContextForChannel(channel, maxMessages = CONFIG.DISCORD_CONTEXT_LIMIT) {
+    // Use Discord context manager if available and channel is provided
+    if (channel && contextManager) {
+        try {
+            const discordContext = await contextManager.buildContextFromChannel(channel, maxMessages);
+            if (discordContext && discordContext.length > 0) {
+                return discordContext;
+            }
+        } catch (error) {
+            console.warn(`[CONTEXT] Discord fetch failed:`, error.message);
+        }
+    }
+
+    // No fallback - return empty array if Discord context unavailable
+    console.log(`[CONTEXT] No Discord context available, returning empty array`);
+    return [];
+}
+
 
 
 // Filesystem tools for the AI
@@ -1788,237 +1988,6 @@ async function syncIndexWithSrcFiles() {
     }
 }
 
-// Tool functions that AI can call via @ mentions
-async function createPage(name, description) {
-    console.log(`[CREATE_PAGE] Starting: ${name}`);
-
-    // Detect if this is a game for enhanced validation
-    const isGame = /game|play|arcade|puzzle|snake|tetris|pong|match|guess|quiz|battle|shooter/i.test(description);
-    const context = { isGame };
-
-    const MAX_RETRIES = 2;
-    let attempt = 0;
-    let htmlContent = null;
-    let validation = null;
-
-    try {
-        while (attempt <= MAX_RETRIES) {
-            attempt++;
-
-            const webPrompt = `Build "${name}": ${description}
-
-Output a single HTML file with embedded CSS and JavaScript. Requirements:
-- Fully functional and interactive
-- Modern, attractive styling
-- Vanilla JS (CDN libraries allowed)
-- Creative implementation
-- Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
-${isGame ? '- CRITICAL FOR GAMES: Include mobile touch controls with class="mobile-controls" and CSS touch-action: manipulation\n- Add responsive breakpoints @media (max-width: 768px) and (max-width: 480px)\n- Use touchstart events with preventDefault for buttons' : ''}
-${validation && !validation.isValid ? '\nPREVIOUS ATTEMPT HAD ISSUES - FIX THESE:\n' + buildValidationFeedback(validation) : ''}
-
-Return only HTML, no markdown blocks or explanations.`;
-
-            const response = await axios.post(OPENROUTER_URL, {
-                model: MODEL,
-                messages: [{ role: 'user', content: webPrompt }],
-                max_tokens: CONFIG.AI_MAX_TOKENS,
-                temperature: CONFIG.AI_TEMPERATURE,
-                provider: { data_collection: 'deny' } // ZDR enforcement
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                timeout: CONFIG.API_TIMEOUT
-            });
-
-            htmlContent = response.data.choices[0].message.content;
-            htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
-            htmlContent = ensureStylesheetInHTML(htmlContent);
-            htmlContent = ensureHomeLinkInHTML(htmlContent);
-
-            // Validate the generated content
-            validation = validateHTMLContent(htmlContent, context);
-
-            logEvent('CREATE_PAGE', `Attempt ${attempt}/${MAX_RETRIES + 1} - Quality Score: ${validation.score}/100`);
-
-            if (validation.isValid || attempt > MAX_RETRIES) {
-                if (!validation.isValid) {
-                    logEvent('CREATE_PAGE', `Proceeding despite validation issues after ${MAX_RETRIES} retries`);
-                    console.log(buildValidationFeedback(validation));
-                }
-                break;
-            }
-
-            logEvent('CREATE_PAGE', `Validation failed, retrying... Issues: ${validation.issues.length}`);
-        }
-
-        const fileName = `src/${name}.html`;
-        await fs.mkdir('src', { recursive: true });
-        await fs.writeFile(fileName, htmlContent);
-
-        // Update index.html
-        await updateIndexWithPage(name, description);
-
-        // Auto-commit and push so page is live before link is shared
-        console.log(`[CREATE_PAGE] Auto-pushing to remote...`);
-        await gitWithTimeout(() => git.add([fileName, 'projectmetadata.json']));
-        await gitWithTimeout(() => git.commit(`add ${name} page`));
-        const status = await gitWithTimeout(() => git.status());
-        const currentBranch = status.current || 'main';
-
-        await pushWithAuth(currentBranch);
-
-        const qualityNote = validation.score >= 80 ? '✨ High quality' : validation.score >= 60 ? '✓ Good quality' : '⚠️ May need refinement';
-        console.log(`[CREATE_PAGE] Success + pushed: ${fileName} (Score: ${validation.score}/100)`);
-        return `Created ${fileName} and pushed. ${qualityNote} (${validation.score}/100). Live at: https://bot.inference-arcade.com/src/${name}.html (give it 1-2 min to deploy)`;
-    } catch (error) {
-        console.error(`[CREATE_PAGE] Error:`, error.message);
-        return `Error creating page: ${error.message}`;
-    }
-}
-
-async function createFeature(name, description) {
-    console.log(`[CREATE_FEATURE] Starting: ${name}`);
-
-    const MAX_RETRIES = 2;
-    let jsAttempt = 0;
-    let htmlAttempt = 0;
-    let jsContent = null;
-    let htmlContent = null;
-    let jsValidation = null;
-    let htmlValidation = null;
-
-    try {
-        // Generate JS feature/library/component with retry logic
-        while (jsAttempt <= MAX_RETRIES) {
-            jsAttempt++;
-
-            const jsPrompt = `Create a JavaScript feature called "${name}".
-Description: ${description}
-
-Output clean, well-documented JavaScript with:
-- Pure functions or component code (minimal dependencies)
-- JSDoc comments for functions/methods
-- Export as module or global object
-- Practical, reusable implementation
-- Handle edge cases and provide good defaults
-${jsValidation && !jsValidation.isValid ? '\nPREVIOUS ATTEMPT HAD ISSUES - FIX THESE:\n' + buildValidationFeedback(jsValidation, 'JavaScript') : ''}
-
-Return only JavaScript code, no markdown blocks or explanations.`;
-
-            const jsResponse = await axios.post(OPENROUTER_URL, {
-                model: MODEL,
-                messages: [{ role: 'user', content: jsPrompt }],
-                max_tokens: CONFIG.AI_MAX_TOKENS,
-                temperature: CONFIG.AI_TEMPERATURE
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                timeout: CONFIG.API_TIMEOUT
-            });
-
-            jsContent = jsResponse.data.choices[0].message.content;
-            jsContent = cleanMarkdownCodeBlocks(jsContent, 'javascript');
-
-            // Validate JavaScript
-            jsValidation = validateJSContent(jsContent);
-            logEvent('CREATE_FEATURE', `JS Attempt ${jsAttempt}/${MAX_RETRIES + 1} - Valid: ${jsValidation.isValid}`);
-
-            if (jsValidation.isValid || jsAttempt > MAX_RETRIES) {
-                if (!jsValidation.isValid) {
-                    logEvent('CREATE_FEATURE', `Proceeding with JS despite issues after ${MAX_RETRIES} retries`);
-                    console.log(buildValidationFeedback(jsValidation, 'JavaScript'));
-                }
-                break;
-            }
-
-            logEvent('CREATE_FEATURE', `JS validation failed, retrying... Issues: ${jsValidation.issues.length}`);
-        }
-
-        // Generate demo HTML with retry logic
-        const isGame = /game|play|arcade|puzzle|interactive/i.test(description);
-        const context = { isGame };
-
-        while (htmlAttempt <= MAX_RETRIES) {
-            htmlAttempt++;
-
-            const htmlPrompt = `Create an interactive demo page for "${name}" JavaScript feature.
-Feature description: ${description}
-
-Output a single HTML file that:
-- Loads ${name}.js via <script src="${name}.js"></script>
-- Provides interactive examples showing all capabilities
-- Modern, polished UI with embedded CSS
-- Clear documentation/instructions for users
-- Include: <a href="../index.html" style="position:fixed;top:20px;left:20px;z-index:9999;text-decoration:none;background:rgba(102,126,234,0.9);color:white;padding:10px 20px;border-radius:25px;box-shadow:0 4px 10px rgba(0,0,0,0.2)">← Home</a> after <body>
-${isGame ? '- CRITICAL FOR INTERACTIVE FEATURES: Include mobile touch controls if needed\n- Add responsive breakpoints @media (max-width: 768px) and (max-width: 480px)' : ''}
-${htmlValidation && !htmlValidation.isValid ? '\nPREVIOUS ATTEMPT HAD ISSUES - FIX THESE:\n' + buildValidationFeedback(htmlValidation) : ''}
-
-Return only HTML code, no markdown blocks or explanations.`;
-
-            const htmlResponse = await axios.post(OPENROUTER_URL, {
-                model: MODEL,
-                messages: [{ role: 'user', content: htmlPrompt }],
-                max_tokens: CONFIG.AI_MAX_TOKENS,
-                temperature: CONFIG.AI_TEMPERATURE
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                timeout: CONFIG.API_TIMEOUT
-            });
-
-            htmlContent = htmlResponse.data.choices[0].message.content;
-            htmlContent = cleanMarkdownCodeBlocks(htmlContent, 'html');
-            htmlContent = ensureStylesheetInHTML(htmlContent);
-            htmlContent = ensureHomeLinkInHTML(htmlContent);
-
-            // Validate HTML
-            htmlValidation = validateHTMLContent(htmlContent, context);
-            logEvent('CREATE_FEATURE', `HTML Attempt ${htmlAttempt}/${MAX_RETRIES + 1} - Quality Score: ${htmlValidation.score}/100`);
-
-            if (htmlValidation.isValid || htmlAttempt > MAX_RETRIES) {
-                if (!htmlValidation.isValid) {
-                    logEvent('CREATE_FEATURE', `Proceeding with HTML despite issues after ${MAX_RETRIES} retries`);
-                    console.log(buildValidationFeedback(htmlValidation));
-                }
-                break;
-            }
-
-            logEvent('CREATE_FEATURE', `HTML validation failed, retrying... Issues: ${htmlValidation.issues.length}`);
-        }
-
-        await fs.mkdir('src', { recursive: true });
-        const jsFileName = `src/${name}.js`;
-        const htmlFileName = `src/${name}.html`;
-        await fs.writeFile(jsFileName, jsContent);
-        await fs.writeFile(htmlFileName, htmlContent);
-
-        // Update index.html
-        await updateIndexWithPage(name, description);
-
-        // Auto-commit and push so feature is live before link is shared
-        console.log(`[CREATE_FEATURE] Auto-pushing to remote...`);
-        await gitWithTimeout(() => git.add([jsFileName, htmlFileName, 'projectmetadata.json']));
-        await gitWithTimeout(() => git.commit(`add ${name} feature`));
-        const status = await gitWithTimeout(() => git.status());
-        const currentBranch = status.current || 'main';
-
-        await pushWithAuth(currentBranch);
-
-        const qualityNote = htmlValidation.score >= 80 ? '✨ High quality' : htmlValidation.score >= 60 ? '✓ Good quality' : '⚠️ May need refinement';
-        console.log(`[CREATE_FEATURE] Success + pushed: ${jsFileName}, ${htmlFileName} (Score: ${htmlValidation.score}/100)`);
-        return `Created ${jsFileName} and ${htmlFileName}, pushed. ${qualityNote} (${htmlValidation.score}/100). Live demo: https://bot.inference-arcade.com/src/${name}.html (give it 1-2 min to deploy)`;
-    } catch (error) {
-        console.error(`[CREATE_FEATURE] Error:`, error.message);
-        return `Error creating feature: ${error.message}`;
-    }
-}
-
 async function commitChanges(message, files = '.') {
     console.log(`[COMMIT] Starting: "${message}"`);
     const metadata = { files, messageLength: message.length };
@@ -2212,94 +2181,6 @@ async function setModel(modelChoice) {
     }
 }
 
-// Tool: Update website styling
-async function updateStyle(preset, description = '') {
-    try {
-        const stylePresets = {
-            'noir-terminal': {
-                name: 'Noir Terminal',
-                colors: { primary: '#7ec8e3', accent: '#ff0000', secondary: '#00ffff', bg: '#0a0a0a' }
-            },
-            'neon-arcade': {
-                name: 'Neon Arcade',
-                colors: { primary: '#00ff00', accent: '#ff00ff', secondary: '#00ffff', bg: '#000' }
-            },
-            'dark-minimal': {
-                name: 'Dark Minimal',
-                colors: { primary: '#ffffff', accent: '#3498db', secondary: '#95a5a6', bg: '#1a1a1a' }
-            },
-            'retro-terminal': {
-                name: 'Retro Terminal',
-                colors: { primary: '#00ff41', accent: '#ff6b35', secondary: '#00ff41', bg: '#0a0a0a' }
-            }
-        };
-
-        if (preset === 'custom' && description) {
-            logEvent('UPDATE_STYLE', `Custom style requested: ${description}`);
-            return `Custom style "${description}" noted. To apply it, I would need to edit page-theme.css with the new colors and effects. Want me to proceed?`;
-        }
-
-        if (!stylePresets[preset]) {
-            return `Unknown preset "${preset}". Available: ${Object.keys(stylePresets).join(', ')}, custom`;
-        }
-
-        const selected = stylePresets[preset];
-        logEvent('UPDATE_STYLE', `Selected ${preset} preset`);
-        return `Style preset "${selected.name}" selected. Colors: primary ${selected.colors.primary}, accent ${selected.colors.accent}, bg ${selected.colors.bg}. To apply this across all pages, edit page-theme.css with these values.`;
-    } catch (error) {
-        console.error('Update style error:', error);
-        return `Error updating style: ${error.message}`;
-    }
-}
-
-// Tool: Build game using the pipeline
-async function buildGameTool(title, prompt, type = 'auto') {
-    try {
-        logEvent('BUILD_GAME_TOOL', `Building: ${title}`);
-
-        const triggerSource = {
-            kind: 'tool',
-            userId: 'ai-orchestrator',
-            username: 'Bot Sportello'
-        };
-
-        const result = await runGamePipeline({
-            userPrompt: `${title}: ${prompt}`,
-            triggerSource,
-            onStatusUpdate: async (msg) => {
-                logEvent('BUILD_GAME_TOOL', msg);
-            },
-            preferredType: type
-        });
-
-        if (!result.ok) {
-            return `Build failed: ${result.error}. Check build-logs/${result.buildId}.json for details.`;
-        }
-
-        // Commit and push
-        const commitSuccess = await commitGameFiles(result);
-        if (commitSuccess) {
-            try {
-                await pushWithAuth('main');
-                console.log('[BUILD_GAME_TOOL] Push successful - game deployed');
-            } catch (pushError) {
-                const error = errorLogger.log('BUILD_GAME_TOOL_PUSH', pushError);
-                errorLogger.track(error);
-                console.error('🚨 Build game deployment failed:', pushError.message);
-                
-                // Return error message instead of success
-                return `⚠️ Game "${result.plan.metadata.title}" built but deployment failed: ${pushError.message}. Files saved locally but not live. Check GitHub token permissions.`;
-            }
-        }
-
-        const scoreEmoji = result.testResult.score >= 80 ? '✨' : result.testResult.score >= 60 ? '✓' : '⚠️';
-        return `${scoreEmoji} Built "${result.plan.metadata.title}"!\n\nType: ${result.plan.type}\nQuality: ${result.testResult.score}/100\nLive: ${result.liveUrl}\n\n${result.docs.releaseNotes}\n\n(Give it a minute or two to go live)`;
-    } catch (error) {
-        console.error('Build game tool error:', error);
-        return `Build pipeline error: ${error.message}`;
-    }
-}
-
 // Lightweight edit-only LLM response (streamlined for file edits)
 async function getEditResponse(userMessage, conversationMessages = []) {
     try {
@@ -2482,32 +2363,18 @@ Do not use web search or create new content - only edit existing files.`
 
             // After edit completes, get final response
             if (editCompleted) {
-                const finalResponse = await axios.post(OPENROUTER_URL, {
-                    model: MODEL,
-                    messages: messages,
-                    max_tokens: 5000,
-                    temperature: 0.7,
-                    tools: tools,
-                    tool_choice: 'none'
-                }, {
-                    headers: {
-                        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 45000
-                });
-
-                lastResponse = finalResponse.data.choices[0].message;
+                const result = await getFinalTextResponse(messages, tools, { maxTokens: 5000 });
+                if (result) lastResponse = result;
                 break;
             }
         }
 
         if (iteration >= MAX_ITERATIONS && !editCompleted) {
             logEvent('EDIT_LOOP', 'Max iterations reached without edit - this may not be an edit request');
-            
+
             // Check if this looks like a non-edit request that got misrouted
             const isLikelyNotEdit = /\b(create|generate|make|build|produce|write)\s+(?!.*\b(edit|fix|change|update)\b)/i.test(userMessage);
-            
+
             if (isLikelyNotEdit) {
                 logEvent('EDIT_LOOP', 'Detected likely non-edit request - suggesting normal flow');
                 return {
@@ -2515,24 +2382,10 @@ Do not use web search or create new content - only edit existing files.`
                     suggestNormalFlow: true
                 };
             }
-            
-            // Force a final response for legitimate edit attempts
-            const finalResponse = await axios.post(OPENROUTER_URL, {
-                model: MODEL,
-                messages: messages,
-                max_tokens: 5000,
-                temperature: 0.7,
-                tools: tools,
-                tool_choice: 'none'
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                timeout: 45000
-            });
 
-            lastResponse = finalResponse.data.choices[0].message;
+            // Force a final response for legitimate edit attempts
+            const result = await getFinalTextResponse(messages, tools, { maxTokens: 5000 });
+            if (result) lastResponse = result;
         }
 
         const content = lastResponse?.content || 'edit processed';
@@ -2666,36 +2519,6 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             {
                 type: 'function',
                 function: {
-                    name: 'create_page',
-                    description: 'Create a new HTML page/app in /src directory with AI-generated code. Automatically updates index.html.',
-                    parameters: {
-                        type: 'object',
-                        properties: {
-                            name: { type: 'string', description: 'Page name (filename without .html)' },
-                            description: { type: 'string', description: 'What the page should do' }
-                        },
-                        required: ['name', 'description']
-                    }
-                }
-            },
-            {
-                type: 'function',
-                function: {
-                    name: 'create_feature',
-                    description: 'Create a JavaScript feature (library, component, utility, interactive element) with demo page in /src directory. Automatically updates index.html.',
-                    parameters: {
-                        type: 'object',
-                        properties: {
-                            name: { type: 'string', description: 'Feature name (filename without extension)' },
-                            description: { type: 'string', description: 'What the feature should do - functions, behavior, capabilities' }
-                        },
-                        required: ['name', 'description']
-                    }
-                }
-            },
-            {
-                type: 'function',
-                function: {
                     name: 'commit_changes',
                     description: 'Git add, commit, and push changes to the repository',
                     parameters: {
@@ -2752,56 +2575,17 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'set_model',
-                    description: 'Switch the AI model used for responses. ZDR-compliant models only: haiku (fast/cheap), sonnet (balanced), kimi (reasoning), gemini (Google), glm (Z-AI), qwen (Qwen)',
+                    description: 'Switch the AI model used for responses. ZDR-compliant models: haiku (fast), sonnet (balanced), kimi, kimi-thinking (with reasoning), gemini, glm, qwen',
                     parameters: {
                         type: 'object',
                         properties: {
                             model: {
                                 type: 'string',
-                                description: 'Model preset name: haiku, sonnet, kimi, gemini, glm, or qwen (ZDR-compliant only)',
-                                enum: ['haiku', 'sonnet', 'kimi', 'gemini', 'glm', 'qwen']
+                                description: 'Model preset name. Use kimi-thinking for interleaved reasoning support.',
+                                enum: ['haiku', 'sonnet', 'kimi', 'kimi-thinking', 'gemini', 'glm', 'qwen']
                             }
                         },
                         required: ['model']
-                    }
-                }
-            },
-            {
-                type: 'function',
-                function: {
-                    name: 'update_style',
-                    description: 'Update the website visual styling. Use preset themes or describe custom styling.',
-                    parameters: {
-                        type: 'object',
-                        properties: {
-                            preset: {
-                                type: 'string',
-                                description: 'Style preset: noir-terminal (current), neon-arcade, dark-minimal, retro-terminal, or "custom" for AI-generated',
-                                enum: ['noir-terminal', 'neon-arcade', 'dark-minimal', 'retro-terminal', 'custom']
-                            },
-                            description: { type: 'string', description: 'For custom preset only: describe the desired style' }
-                        },
-                        required: ['preset']
-                    }
-                }
-            },
-            {
-                type: 'function',
-                function: {
-                    name: 'build_game',
-                    description: 'Build a complete game/content using the AI pipeline. Creates mobile-responsive content with automatic testing and deployment.',
-                    parameters: {
-                        type: 'object',
-                        properties: {
-                            title: { type: 'string', description: 'Title for the game/content' },
-                            prompt: { type: 'string', description: 'Description of what to build' },
-                            type: {
-                                type: 'string',
-                                description: 'Content type: arcade-game, letter, recipe, infographic, story, log, parody, utility, visualization, or auto',
-                                enum: ['arcade-game', 'letter', 'recipe', 'infographic', 'story', 'log', 'parody', 'utility', 'visualization', 'auto']
-                            }
-                        },
-                        required: ['title', 'prompt']
                     }
                 }
             }
@@ -2829,6 +2613,9 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 logEvent('LLM', `API unhealthy, using fallback model: ${currentModel}`);
             }
             
+            // Get reasoning config for this model (null if not supported)
+            const reasoningConfig = getReasoningConfig(currentModel);
+
             // Try request with retries and model fallback
             while (retryCount < maxRetries) {
                 try {
@@ -2839,7 +2626,9 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         temperature: 0.7,
                         tools: tools,
                         tool_choice: 'auto',
-                        provider: { data_collection: 'deny' } // ZDR enforcement
+                        provider: { data_collection: 'deny' }, // ZDR enforcement
+                        // Add reasoning if model supports it (interleaved thinking)
+                        ...(reasoningConfig && { reasoning: reasoningConfig })
                     }, {
                         headers: {
                             'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -2894,6 +2683,10 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
 
             lastResponse = response.data.choices[0].message;
 
+            // Extract reasoning/thinking from response (if model supports it)
+            const reasoning = response.data.choices[0].message.reasoning_details ||
+                              response.data.choices[0].message.reasoning;
+
             // If no tool calls, we're done
             if (!lastResponse.tool_calls || lastResponse.tool_calls.length === 0) {
                 break;
@@ -2901,10 +2694,14 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
 
             logEvent('LLM', `Iteration ${iteration}: Processing ${lastResponse.tool_calls.length} tool calls`);
 
-            // Update Discord status if callback provided
+            // Update Discord status with thinking if available
             if (onStatusUpdate) {
+                const thinkingStatus = formatThinkingForDiscord(reasoning);
+                if (thinkingStatus) {
+                    await onStatusUpdate(thinkingStatus);
+                }
                 const toolNames = lastResponse.tool_calls.map(tc => tc.function.name).join(', ');
-                await onStatusUpdate(`🔧 executing tools: ${toolNames}...`);
+                await onStatusUpdate(`executing: ${toolNames}...`);
             }
 
             // Execute all tool calls
@@ -2958,20 +2755,6 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                             logEvent('LLM', `Primary action: edit_file pushed (${completedActions} total)`);
                         }
                     }
-                } else if (functionName === 'create_page') {
-                    result = await createPage(args.name, args.description);
-                    if (!result.startsWith('Error')) {
-                        completedActions++;
-                        actionCompletedThisIteration = true;
-                        logEvent('LLM', `Primary action: create_page (${completedActions} total)`);
-                    }
-                } else if (functionName === 'create_feature') {
-                    result = await createFeature(args.name, args.description);
-                    if (!result.startsWith('Error')) {
-                        completedActions++;
-                        actionCompletedThisIteration = true;
-                        logEvent('LLM', `Primary action: create_feature (${completedActions} total)`);
-                    }
                 } else if (functionName === 'commit_changes') {
                     result = await commitChanges(args.message, args.files);
                     if (!result.startsWith('Error')) {
@@ -2989,15 +2772,6 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                     searchResults.push({ query: args.query, results: result });
                 } else if (functionName === 'set_model') {
                     result = await setModel(args.model);
-                } else if (functionName === 'update_style') {
-                    result = await updateStyle(args.preset, args.description);
-                } else if (functionName === 'build_game') {
-                    result = await buildGameTool(args.title, args.prompt, args.type);
-                    if (!result.includes('error') && !result.includes('Error')) {
-                        completedActions++;
-                        actionCompletedThisIteration = true;
-                        logEvent('LLM', `Primary action: build_game (${completedActions} total)`);
-                    }
                 }
 
                 // Log tool call to GUI dashboard
@@ -3014,39 +2788,20 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             messages.push(lastResponse);
             messages.push(...toolResults);
             
-            // Update agent loop with tools used in this iteration
+            // Update agent loop with tools used and thinking (for GUI dashboard)
             if (guiServer && lastResponse.tool_calls) {
                 const toolsUsed = lastResponse.tool_calls.map(tc => tc.function.name);
-                updateAgentLoop(iteration, toolsUsed);
+                const thinkingForGUI = formatThinkingForGUI(reasoning);
+                updateAgentLoop(iteration, toolsUsed, thinkingForGUI);
             }
 
             // After completing a primary action, give AI one more iteration to naturally respond
-            // If it tries to call more tools, stop and force a text response
             if (actionCompletedThisIteration && iteration < MAX_ITERATIONS) {
-                logEvent('LLM', 'Primary action completed - allowing one final natural response');
+                logEvent('LLM', 'Primary action completed - getting final response');
 
-                try {
-                    const finalResponse = await axios.post(OPENROUTER_URL, {
-                        model: MODEL,
-                        messages: messages,
-                        max_tokens: 10000,
-                        temperature: 0.7,
-                        tools: tools,
-                        tool_choice: 'none' // Force text response without more tool calls
-                    }, {
-                        headers: {
-                            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                            'Content-Type': 'application/json'
-                        },
-                        timeout: 45000
-                    });
-
-                    lastResponse = finalResponse.data.choices[0].message;
-                } catch (finalError) {
-                    logEvent('LLM', `Final response error: ${finalError.message}`);
-                    // If final response fails, use last successful tool response
-                    // lastResponse is already set from the tool calls
-                }
+                // Get final text-only response (consolidated API call)
+                const result = await getFinalTextResponse(messages, tools);
+                if (result) lastResponse = result;
 
                 break; // Exit loop after primary action + final response
             }
@@ -3056,30 +2811,9 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         if (iteration >= MAX_ITERATIONS && (!lastResponse?.content || lastResponse.content.trim() === '')) {
             logEvent('LLM', `Reached max iterations (${MAX_ITERATIONS}) - forcing final text response`);
 
-            try {
-                const finalResponse = await axios.post(OPENROUTER_URL, {
-                    model: MODEL,
-                    messages: messages,
-                    max_tokens: 10000,
-                    temperature: 0.7,
-                    tools: tools,
-                    tool_choice: 'none' // Force text response without tools
-                }, {
-                    headers: {
-                        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 45000
-                });
-
-                lastResponse = finalResponse.data.choices[0].message;
-            } catch (finalError) {
-                logEvent('LLM', `Final response error: ${finalError.message}`);
-                // Provide fallback response
-                lastResponse = {
-                    content: `completed the requested actions (${completedActions} operations). check the live site for changes.`
-                };
-            }
+            // Get final text-only response (consolidated API call)
+            const result = await getFinalTextResponse(messages, tools, { completedActions });
+            if (result) lastResponse = result;
         }
 
         const content = lastResponse?.content;
@@ -3148,65 +2882,10 @@ const commands = [
                 .setRequired(false)),
                 
     new SlashCommandBuilder()
-        .setName('add-page')
-        .setDescription('Create a new web page/app')
-        .addStringOption(option =>
-            option.setName('name')
-                .setDescription('Page name (will be the filename)')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('description')
-                .setDescription('What should this page do?')
-                .setRequired(true)),
-
-    new SlashCommandBuilder()
-        .setName('add-feature')
-        .setDescription('Create a feature: JS library, component, or interactive element with demo')
-        .addStringOption(option =>
-            option.setName('name')
-                .setDescription('Feature name (e.g., slider, utils, carousel)')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('description')
-                .setDescription('What should this feature do? Describe functions, behavior, or capabilities')
-                .setRequired(true)),
-
-    new SlashCommandBuilder()
-        .setName('build-game')
-        .setDescription('Build a complete game using AI-driven pipeline (Architect → Builder → Tester → Scribe)')
-        .addStringOption(option =>
-            option.setName('title')
-                .setDescription('Game title (e.g., "Snake", "Space Maze")')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('prompt')
-                .setDescription('Describe what the game should do (mechanics, theme, features)')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('type')
-                .setDescription('Optional: game type hint')
-                .setRequired(false)
-                .addChoices(
-                    { name: 'Auto-detect (default)', value: 'auto' },
-                    { name: 'Arcade / 2D Game', value: 'arcade-2d' },
-                    { name: 'Interactive Fiction', value: 'interactive-fiction' },
-                    { name: 'Infographic / Visual', value: 'infographic' },
-                    { name: 'Utility / App', value: 'utility' }
-                )),
-
-    new SlashCommandBuilder()
         .setName('status')
         .setDescription('Check repository status'),
         
         
-    new SlashCommandBuilder()
-        .setName('chat')
-        .setDescription('Have a conversation with Bot Sportello')
-        .addStringOption(option =>
-            option.setName('message')
-                .setDescription('What would you like to talk about?')
-                .setRequired(true)),
-
     new SlashCommandBuilder()
         .setName('search')
         .setDescription('Search the web for information')
@@ -3244,68 +2923,6 @@ const commands = [
                 .setDescription('Question to ask')
                 .setRequired(true)),
 
-    new SlashCommandBuilder()
-        .setName('update-style')
-        .setDescription('Update the website styling/theme')
-        .addStringOption(option =>
-            option.setName('preset')
-                .setDescription('Choose a style preset or describe a custom style')
-                .setRequired(true)
-                .addChoices(
-                    { name: 'Soft Arcade (Current)', value: 'soft-arcade' },
-                    { name: 'Neon Arcade (Intense)', value: 'neon-arcade' },
-                    { name: 'Dark Minimal', value: 'dark-minimal' },
-                    { name: 'Retro Terminal', value: 'retro-terminal' },
-                    { name: 'Custom (AI-generated)', value: 'custom' }
-                ))
-        .addStringOption(option =>
-            option.setName('description')
-                .setDescription('For custom style: describe what you want')
-                .setRequired(false)),
-
-    new SlashCommandBuilder()
-        .setName('sync-index')
-        .setDescription('Sync index.html with all HTML files in /src directory'),
-
-    new SlashCommandBuilder()
-        .setName('build-puzzle')
-        .setDescription('Generate interactive story riddle puzzle with p5.js visualization')
-        .addStringOption(option =>
-            option.setName('theme')
-                .setDescription('Puzzle theme')
-                .setRequired(true)
-                .addChoices(
-                    { name: 'Noir Detective', value: 'noir-detective' },
-                    { name: 'Fantasy Quest', value: 'fantasy-quest' },
-                    { name: 'Sci-Fi Mystery', value: 'sci-fi-mystery' }
-                ))
-        .addStringOption(option =>
-            option.setName('difficulty')
-                .setDescription('Difficulty level')
-                .setRequired(false)
-                .addChoices(
-                    { name: 'Easy', value: 'easy' },
-                    { name: 'Medium (default)', value: 'medium' },
-                    { name: 'Hard', value: 'hard' }
-                )),
-
-    new SlashCommandBuilder()
-        .setName('set-prompt')
-        .setDescription('Modify Bot Sportello\'s system prompt/personality')
-        .addStringOption(option =>
-            option.setName('action')
-                .setDescription('What do you want to do?')
-                .setRequired(true)
-                .addChoices(
-                    { name: 'View current prompt', value: 'view' },
-                    { name: 'Reset to default', value: 'reset' },
-                    { name: 'Add instruction', value: 'add' },
-                    { name: 'Replace entire prompt', value: 'replace' }
-                ))
-        .addStringOption(option =>
-            option.setName('content')
-                .setDescription('New prompt content or instruction to add')
-                .setRequired(false))
 ];
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
@@ -3388,6 +3005,27 @@ client.once('clientReady', async () => {
     // Initialize Git remote URL with current token
     await initializeGitRemote();
 
+    // Initialize Discord context manager (replaces agents.md)
+    contextManager = new DiscordContextManager(client);
+    console.log('✅ Discord context manager initialized');
+
+    // Fetch initial message history for configured channels
+    if (CHANNEL_IDS.length > 0) {
+        console.log('📜 Fetching initial message history from Discord...');
+        for (const channelId of CHANNEL_IDS) {
+            try {
+                const channel = await client.channels.fetch(channelId);
+                if (channel) {
+                    await contextManager.fetchChannelHistory(channel, CONFIG.DISCORD_FETCH_LIMIT);
+                    console.log(`✅ Fetched history for #${channel.name || channelId}`);
+                }
+            } catch (error) {
+                console.warn(`⚠️ Could not fetch history for ${channelId}:`, error.message);
+            }
+        }
+    }
+
+
     // Sync index.html with all HTML files in /src
     try {
         await syncIndexWithSrcFiles();
@@ -3421,23 +3059,8 @@ client.on('interactionCreate', async interaction => {
             case 'commit':
                 await handleCommit(interaction);
                 break;
-            case 'add-page':
-                await handleAddPage(interaction);
-                break;
-            case 'add-feature':
-                await handleAddFeature(interaction);
-                break;
-            case 'build-game':
-                await handleBuildGame(interaction);
-                break;
-            case 'build-puzzle':
-                await handleBuildPuzzle(interaction);
-                break;
             case 'status':
                 await handleStatus(interaction);
-                break;
-            case 'chat':
-                await handleChat(interaction);
                 break;
             case 'search':
                 await handleSearch(interaction);
@@ -3447,15 +3070,6 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'poll':
                 await handlePoll(interaction);
-                break;
-            case 'update-style':
-                await handleUpdateStyle(interaction);
-                break;
-            case 'sync-index':
-                await handleSyncIndex(interaction);
-                break;
-            case 'set-prompt':
-                await handleSetPrompt(interaction);
                 break;
             default:
                 const unknownMsg = "Unknown command. Try /status to see available commands.";
@@ -3570,7 +3184,7 @@ async function handleMentionAsync(message) {
         console.log(`[MENTION] Thinking message sent successfully`);
 
         // Build conversation context for all processing loops
-        const conversationMessages = buildMessagesFromHistory(50);
+        const conversationMessages = await buildContextForChannel(message.channel, CONFIG.DISCORD_CONTEXT_LIMIT);
         let processingAttempt = 1;
         const maxProcessingAttempts = 6; // Increased to support multiple model fallbacks
         let lastFailureReason = '';
@@ -3599,7 +3213,7 @@ async function handleMentionAsync(message) {
                         processingAttempt++;
                         continue; // Try next approach
                     } else {
-                        await thinkingMsg.edit(response);
+                        await safeEditReply(thinkingMsg, response);
                         addToHistory(username, content, false);
                         addToHistory('Bot Sportello', response, true);
                         return; // Success - exit
@@ -3614,7 +3228,7 @@ async function handleMentionAsync(message) {
                 logEvent('MENTION', `Attempt ${processingAttempt} failed: ${error.message}`);
                 processingAttempt++;
                 if (processingAttempt <= maxProcessingAttempts) {
-                    await thinkingMsg.edit(`${getBotResponse('thinking')} (trying different approach...)`);
+                    await safeEditReply(thinkingMsg, `${getBotResponse('thinking')} (trying different approach...)`);
                     continue;
                 }
                 throw error; // Re-throw if all attempts failed
@@ -3642,7 +3256,7 @@ async function handleMentionAsync(message) {
                     // Handle READ_ONLY requests immediately (like "print the site inventory")
                     if (classification.isReadOnly) {
                         logEvent('MENTION', `READ_ONLY request - routing to normal LLM response`);
-                        await thinkingMsg.edit('📖 processing your information request...');
+                        await safeEditReply(thinkingMsg, '📖 processing your information request...');
                         // Break out to proceed with normal LLM response
                         processingAttempt = maxProcessingAttempts + 1; // Exit the classification loop
                         break;
@@ -3651,7 +3265,7 @@ async function handleMentionAsync(message) {
                     // Handle COMMIT requests immediately
                     if (classification.isCommit) {
                         logEvent('MENTION', `COMMIT request - executing git commit`);
-                        await thinkingMsg.edit('💾 committing changes...');
+                        await safeEditReply(thinkingMsg, '💾 committing changes...');
                         
                         try {
                             // Extract commit message from the request, or use default
@@ -3675,7 +3289,7 @@ async function handleMentionAsync(message) {
                             }
 
                             const result = await commitChanges(commitMessage);
-                            await thinkingMsg.edit(`✅ ${result}`);
+                            await safeEditReply(thinkingMsg, `✅ ${result}`);
                             
                             // Success - break out of retry loop
                             return;
@@ -3683,7 +3297,7 @@ async function handleMentionAsync(message) {
                         } catch (error) {
                             lastFailureReason = `commit-failed`;
                             logEvent('MENTION', `Commit failed: ${error.message}`);
-                            await thinkingMsg.edit(`❌ commit failed: ${error.message}`);
+                            await safeEditReply(thinkingMsg, `❌ commit failed: ${error.message}`);
                             return;
                         }
                     }
@@ -3691,7 +3305,7 @@ async function handleMentionAsync(message) {
                     // Handle content creation requests with game pipeline
                     if (classification.isCreate) {
                         logEvent('MENTION', `CREATE_NEW request - routing to game pipeline`);
-                        await thinkingMsg.edit('📝 detected content creation request - firing up the content builder...');
+                        await safeEditReply(thinkingMsg, '📝 detected content creation request - firing up the content builder...');
 
                         const triggerSource = {
                         kind: 'mention',
@@ -3705,7 +3319,7 @@ async function handleMentionAsync(message) {
                         triggerSource,
                         onStatusUpdate: async (msg) => {
                             try {
-                                await thinkingMsg.edit(msg);
+                                await safeEditReply(thinkingMsg, msg);
                             } catch (err) {
                                 console.error('Status update error:', err);
                             }
@@ -3718,18 +3332,18 @@ async function handleMentionAsync(message) {
                         logEvent('MENTION', `Game pipeline failed: ${result.error}`);
                         processingAttempt++;
                         if (processingAttempt <= maxProcessingAttempts) {
-                            await thinkingMsg.edit('hmm the game builder hit a snag... lemme try a different approach...');
+                            await safeEditReply(thinkingMsg, 'hmm the game builder hit a snag... lemme try a different approach...');
                             continue; // Try next approach
                         }
                         break;
                     }
 
                     // Commit and push
-                    await thinkingMsg.edit('💾 committing to repo...');
+                    await safeEditReply(thinkingMsg, '💾 committing to repo...');
                     const commitSuccess = await commitGameFiles(result);
 
             if (commitSuccess) {
-                await thinkingMsg.edit('🚀 pushing to github pages...');
+                await safeEditReply(thinkingMsg, '🚀 pushing to github pages...');
 
                 try {
                     await pushWithAuth('main');
@@ -3740,7 +3354,7 @@ async function handleMentionAsync(message) {
                     console.error('🚨 Mention pipeline deployment failed:', pushError.message);
                     
                     // Report error to user instead of silently failing
-                    await thinkingMsg.edit(`⚠️ Content built successfully but deployment failed: ${pushError.message}. Files are saved locally but not published. Check GitHub token permissions.`);
+                    await safeEditReply(thinkingMsg, `⚠️ Content built successfully but deployment failed: ${pushError.message}. Files are saved locally but not published. Check GitHub token permissions.`);
                     return; // Exit early to prevent success message
                 }
             }
@@ -3749,7 +3363,7 @@ async function handleMentionAsync(message) {
                     const scoreEmoji = result.testResult.score >= 80 ? '✨' : result.testResult.score >= 60 ? '✓' : '⚠️';
                     const successMsg = `${scoreEmoji} **${result.plan.metadata.title}** built and deployed!\n\n${result.docs.releaseNotes}\n\n🎮 **Play now:** ${result.liveUrl}\n\n📊 Quality: ${result.testResult.score}/100 | ⏱️ Build time: ${result.duration}\n\n*Give it a minute or two to go live*`;
 
-                    await thinkingMsg.edit(successMsg);
+                    await safeEditReply(thinkingMsg, successMsg);
 
                     // Add to history
                     addToHistory(username, content, false);
@@ -3761,7 +3375,7 @@ async function handleMentionAsync(message) {
                     // Handle functionality fixes with full tool access (skip limited edit loop)
                     if (classification.isFunctionalityFix) {
                         logEvent('MENTION', `FUNCTIONALITY_FIX request - using normal chat flow for full tool access`);
-                        await thinkingMsg.edit('🔧 analyzing functionality issue...');
+                        await safeEditReply(thinkingMsg, '🔧 analyzing functionality issue...');
                         // Skip to normal LLM response with full tools
                         processingAttempt = 4;
                         break; // Exit classification loop to proceed to final LLM processing
@@ -3770,7 +3384,7 @@ async function handleMentionAsync(message) {
                     // Handle simple edits with streamlined edit loop
                     if (classification.isEdit) {
                         logEvent('MENTION', `SIMPLE_EDIT request - using streamlined edit loop`);
-                        await thinkingMsg.edit('✏️ making simple edit...');
+                        await safeEditReply(thinkingMsg, '✏️ making simple edit...');
                         
                         let llmResult = await getEditResponse(content, conversationMessages);
                         let response = cleanBotResponse(llmResult.text);
@@ -3797,7 +3411,7 @@ async function handleMentionAsync(message) {
                             }
                             
                             if (response) {
-                                await thinkingMsg.edit(response);
+                                await safeEditReply(thinkingMsg, response);
                                 addToHistory(username, content, false);
                                 addToHistory('Bot Sportello', response, true);
                                 return; // Success - exit
@@ -3809,7 +3423,7 @@ async function handleMentionAsync(message) {
                         // If edit loop didn't work, continue to fallback loops below
                         processingAttempt++;
                         if (processingAttempt <= maxProcessingAttempts) {
-                            await thinkingMsg.edit('hmm that didn\'t quite work... lemme try a different approach...');
+                            await safeEditReply(thinkingMsg, 'hmm that didn\'t quite work... lemme try a different approach...');
                             continue;
                         }
                         break;
@@ -3824,7 +3438,7 @@ async function handleMentionAsync(message) {
                 logEvent('MENTION', `Game pipeline attempt ${processingAttempt} failed: ${gameError.message}`);
                 processingAttempt++;
                 if (processingAttempt <= maxProcessingAttempts) {
-                    await thinkingMsg.edit('hmm that approach hit a snag... lemme try something else...');
+                    await safeEditReply(thinkingMsg, 'hmm that approach hit a snag... lemme try something else...');
                     continue;
                 }
                 console.error('All game pipeline attempts failed:', gameError);
@@ -3855,17 +3469,17 @@ async function handleMentionAsync(message) {
                 
                 if (processingAttempt === 1) {
                     // Full LLM with all tools
-                    await thinkingMsg.edit('🤖 processing with AI tools...');
+                    await safeEditReply(thinkingMsg, '🤖 processing with AI tools...');
                     llmResult = await getLLMResponse(content, conversationMessages, discordContext, async (status) => {
                         try {
-                            await thinkingMsg.edit(status);
+                            await safeEditReply(thinkingMsg, status);
                         } catch (err) {
                             console.error('Status update error:', err.message);
                         }
                     });
                 } else if (processingAttempt === 2) {
                     // Retry with Haiku model and reduced context
-                    await thinkingMsg.edit(`${getBotResponse('thinking')} (trying faster model...)`);
+                    await safeEditReply(thinkingMsg, `${getBotResponse('thinking')} (trying faster model...)`);
                     const originalModel = MODEL;
                     MODEL = MODEL_PRESETS.haiku; // Switch to Haiku for reliability
                     try {
@@ -3875,7 +3489,7 @@ async function handleMentionAsync(message) {
                     }
                 } else if (processingAttempt === 3) {
                     // Try Kimi as alternative (ZDR-compliant)
-                    await thinkingMsg.edit(`${getBotResponse('thinking')} (trying alternative model...)`);
+                    await safeEditReply(thinkingMsg, `${getBotResponse('thinking')} (trying alternative model...)`);
                     const originalModel = MODEL;
                     MODEL = MODEL_PRESETS.kimi;
                     try {
@@ -3885,17 +3499,17 @@ async function handleMentionAsync(message) {
                     }
                 } else if (processingAttempt === 4) {
                     // This is where FUNCTIONALITY_FIX routes to - provide clear feedback
-                    await thinkingMsg.edit('🛠️ analyzing issue with full tool access...');
+                    await safeEditReply(thinkingMsg, '🛠️ analyzing issue with full tool access...');
                     llmResult = await getLLMResponse(content, conversationMessages, discordContext, async (status) => {
                         try {
-                            await thinkingMsg.edit(status);
+                            await safeEditReply(thinkingMsg, status);
                         } catch (err) {
                             console.error('Status update error:', err.message);
                         }
                     });
                 } else {
                     // Final attempt: Haiku with absolute minimal constraints and no tools
-                    await thinkingMsg.edit(`${getBotResponse('thinking')} (final simplified attempt...)`);
+                    await safeEditReply(thinkingMsg, `${getBotResponse('thinking')} (final simplified attempt...)`);
                     const originalModel = MODEL;
                     MODEL = MODEL_PRESETS.haiku;
                     try {
@@ -3953,7 +3567,7 @@ async function handleMentionAsync(message) {
                 logEvent('MENTION', `LLM attempt ${processingAttempt} failed: ${llmError.message}`);
                 processingAttempt++;
                 if (processingAttempt <= maxProcessingAttempts) {
-                    await thinkingMsg.edit(`${getBotResponse('thinking')} (adjusting approach...)`);
+                    await safeEditReply(thinkingMsg, `${getBotResponse('thinking')} (adjusting approach...)`);
                     continue;
                 }
                 // Re-throw the error to be handled by outer catch block
@@ -3987,9 +3601,9 @@ async function handleMentionAsync(message) {
             await fs.writeFile(fileName, fileContent);
 
             const truncated = finalResponse.substring(0, 1800);
-            await thinkingMsg.edit(`${truncated}...\n\n*[Full response saved to \`${fileName}\`]*`);
+            await safeEditReply(thinkingMsg, `${truncated}...\n\n*[Full response saved to \`${fileName}\`]*`);
         } else {
-            await thinkingMsg.edit(finalResponse);
+            await safeEditReply(thinkingMsg, finalResponse);
         }
 
     } catch (error) {
@@ -4017,7 +3631,7 @@ async function handleMentionAsync(message) {
             // Try to edit thinking message with error, or send new error message
             if (thinkingMsg && !thinkingMsg.deleted) {
                 try {
-                    await thinkingMsg.edit(userMessage);
+                    await safeEditReply(thinkingMsg, userMessage);
                     console.log(`[MENTION] Error message edited into thinking message`);
                 } catch (editErr) {
                     console.warn(`[MENTION] Could not edit thinking message:`, editErr.message);
@@ -4153,7 +3767,7 @@ async function executeCommit(interaction, commitData) {
             });
         }
         
-        await interaction.editReply({ content: '', embeds: [embed] });
+        await safeEditReply(interaction, { content: '', embeds: [embed] });
         
     } catch (error) {
         console.error('Commit execution error:', error);
@@ -4314,1082 +3928,12 @@ async function handleButtonInteraction(interaction) {
     }
 }
 
-async function handleAddPage(interaction) {
-    await interaction.editReply(getBotResponse('thinking'));
-
-    try {
-        const name = sanitizeFileName(interaction.options.getString('name'));
-        const description = validateInput(interaction.options.getString('description'), 1000);
-
-        // Use the unified createPage function with validation and retry logic
-        const result = await createPage(name, description);
-
-        // Extract quality score if present in result message
-        const scoreMatch = result.match(/\((\d+)\/100\)/);
-        const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
-        const qualityIndicator = score >= 80 ? '✨' : score >= 60 ? '✓' : '⚠️';
-
-        const embed = new EmbedBuilder()
-            .setTitle(`${qualityIndicator} Page Added`)
-            .setDescription(getBotResponse('success') + '\n\n' + result)
-            .addFields(
-                { name: 'Name', value: name, inline: true },
-                { name: 'Description', value: description, inline: false },
-                { name: 'File', value: `src/${name}.html`, inline: false },
-                { name: 'Live URL', value: `https://bot.inference-arcade.com/src/${name}.html`, inline: false },
-                ...(score ? [{ name: 'Quality Score', value: `${score}/100`, inline: true }] : [])
-            )
-            .setColor(score >= 80 ? 0x00ff00 : score >= 60 ? 0x9b59b6 : 0xff9900)
-            .setTimestamp();
-
-        await interaction.editReply({ content: '', embeds: [embed] });
-
-    } catch (error) {
-        throw new Error(`Page creation failed: ${error.message}`);
-    }
-}
-
-async function handleAddFeature(interaction) {
-    await interaction.editReply(getBotResponse('thinking'));
-
-    try {
-        const name = sanitizeFileName(interaction.options.getString('name'));
-        const description = validateInput(interaction.options.getString('description'), 1000);
-
-        // Use the unified createFeature function with validation and retry logic
-        const result = await createFeature(name, description);
-
-        // Extract quality score if present in result message
-        const scoreMatch = result.match(/\((\d+)\/100\)/);
-        const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
-        const qualityIndicator = score >= 80 ? '✨' : score >= 60 ? '✓' : '⚠️';
-
-        const embed = new EmbedBuilder()
-            .setTitle(`${qualityIndicator} Feature Added`)
-            .setDescription(getBotResponse('success') + '\n\n' + result)
-            .addFields(
-                { name: 'Name', value: name, inline: true },
-                { name: 'Description', value: description, inline: false },
-                { name: 'Files', value: `src/${name}.js\nsrc/${name}.html`, inline: false },
-                { name: 'Live Demo', value: `https://bot.inference-arcade.com/src/${name}.html`, inline: false },
-                ...(score ? [{ name: 'Quality Score', value: `${score}/100`, inline: true }] : [])
-            )
-            .setColor(score >= 80 ? 0x00ff00 : score >= 60 ? 0xf39c12 : 0xff9900)
-            .setTimestamp();
-
-        await interaction.editReply({ content: '', embeds: [embed] });
-
-    } catch (error) {
-        throw new Error(`Feature creation failed: ${error.message}`);
-    }
-}
-
-async function handleBuildGame(interaction) {
-    const title = interaction.options.getString('title');
-    const prompt = interaction.options.getString('prompt');
-    const type = interaction.options.getString('type') || 'auto';
-
-    try {
-        const userPrompt = `${title}\n\n${prompt}${type !== 'auto' ? `\n\nPreferred type: ${type}` : ''}`;
-        const triggerSource = {
-            kind: 'slash',
-            userId: interaction.user.id,
-            username: interaction.user.username
-        };
-
-        // Run the game pipeline with status updates
-        const result = await runGamePipeline({
-            userPrompt,
-            triggerSource,
-            onStatusUpdate: async (msg) => {
-                try {
-                    await interaction.editReply(msg);
-                } catch (err) {
-                    console.error('Status update error:', err);
-                }
-            },
-            preferredType: type
-        });
-
-        if (!result.ok) {
-            // Build failed
-            const errorEmbed = new EmbedBuilder()
-                .setTitle('❌ Build Failed')
-                .setDescription(result.error || 'Build failed after multiple attempts')
-                .addFields(
-                    { name: 'Title', value: title, inline: true },
-                    { name: 'Build ID', value: result.buildId, inline: true },
-                    { name: 'Build Log', value: `\`build-logs/${result.buildId}.json\``, inline: false }
-                )
-                .setColor(0xff0000)
-                .setTimestamp();
-
-            if (result.testResult && result.testResult.issues.length > 0) {
-                const issuesList = result.testResult.issues
-                    .slice(0, 5)
-                    .map(issue => `• ${issue.message}`)
-                    .join('\n');
-                errorEmbed.addFields({ name: 'Issues Found', value: issuesList, inline: false });
-            }
-
-            await interaction.editReply({ content: '', embeds: [errorEmbed] });
-            return;
-        }
-
-        // Success! Commit the files
-        await interaction.editReply('💾 committing files to repo...');
-        const commitSuccess = await commitGameFiles(result);
-
-        if (commitSuccess) {
-            await interaction.editReply('🚀 pushing to github pages...');
-
-            try {
-                await pushWithAuth('main');
-                console.log('[BUILD_GAME_SLASH] Push successful - content deployed');
-            } catch (pushError) {
-                const error = errorLogger.log('BUILD_GAME_SLASH_PUSH', pushError);
-                errorLogger.track(error);
-                console.error('🚨 Build game slash deployment failed:', pushError.message);
-                
-                // Create error embed instead of success
-                const errorEmbed = new EmbedBuilder()
-                    .setTitle('⚠️ Deployment Failed')
-                    .setDescription(`Content "${result.plan?.metadata?.title || 'New Content'}" was built successfully but could not be deployed.`)
-                    .addFields(
-                        { name: 'Error', value: pushError.message.substring(0, 1000), inline: false },
-                        { name: 'Status', value: 'Files saved locally but not live', inline: false },
-                        { name: 'Solution', value: 'Check GitHub token permissions and try again', inline: false }
-                    )
-                    .setColor('#FF6B6B');
-                
-                await interaction.editReply({ content: '', embeds: [errorEmbed] });
-                return;
-            }
-        }
-
-        // Build success embed with null-safe field values
-        const successEmbed = new EmbedBuilder()
-            .setTitle(`🎮 ${result.plan?.metadata?.title || 'New Content'}`)
-            .setDescription(`${result.docs?.releaseNotes || 'Build completed successfully.'}\n\n${result.testResult?.score >= 80 ? '✨ High quality build!' : result.testResult?.score >= 60 ? '✓ Good build!' : '⚠️ Build passed with minor issues'}`)
-            .addFields(
-                { name: 'Type', value: result.plan?.type || 'content', inline: true },
-                { name: 'Collection', value: result.docs?.metadata?.collection || 'unsorted', inline: true },
-                { name: 'Quality Score', value: `${result.testResult?.score || 0}/100`, inline: true },
-                { name: 'Files', value: result.buildResult?.files?.join('\n') || 'No files', inline: false },
-                { name: 'Play Now', value: result.liveUrl || 'URL pending', inline: false },
-                { name: 'Build Time', value: result.duration || 'Unknown', inline: true }
-            )
-            .setColor(result.testResult?.score >= 80 ? 0x00ff00 : 0xf39c12)
-            .setFooter({ text: 'Give it a minute or two to go live' })
-            .setTimestamp();
-
-        if (result.docs?.howToPlay) {
-            successEmbed.addFields({ name: 'How to Play', value: result.docs.howToPlay, inline: false });
-        }
-
-        if (result.testResult?.warnings?.length > 0) {
-            const warningsList = result.testResult.warnings
-                .slice(0, 3)
-                .map(w => `• ${w.message}`)
-                .join('\n');
-            successEmbed.addFields({ name: 'Minor Warnings', value: warningsList, inline: false });
-        }
-
-        await interaction.editReply({ content: '', embeds: [successEmbed] });
-
-    } catch (error) {
-        console.error('Build game error:', error);
-        const errorMsg = getBotResponse('errors') + ` Build pipeline error: ${error.message}`;
-        await interaction.editReply(errorMsg);
-    }
-}
-
-// ===== PUZZLE SYSTEM =====
-// Generate story riddle puzzles with p5.js visualization
-
-async function handleBuildPuzzle(interaction) {
-    const theme = interaction.options.getString('theme');
-    const difficulty = interaction.options.getString('difficulty') || 'medium';
-
-    await interaction.deferReply();
-
-    try {
-        await interaction.editReply(`${getBotResponse('thinking')} generating ${theme} puzzle...`);
-
-        // Generate puzzle data
-        const puzzleData = await generatePuzzleData(theme, difficulty);
-
-        // Validate structure
-        if (!validatePuzzleData(puzzleData)) {
-            throw new Error('Generated puzzle failed validation');
-        }
-
-        // Create HTML file
-        const fileName = `${theme.toLowerCase().replace(/\s+/g, '-')}-puzzle-${Date.now()}`;
-        const htmlContent = generatePuzzleHTML(puzzleData, theme);
-
-        // Write to src/
-        const filePath = path.join(__dirname, 'src', `${fileName}.html`);
-        await fs.writeFile(filePath, htmlContent);
-
-        // Update metadata
-        await updateIndexWithPage(fileName, `🧩 Story riddle puzzle: ${puzzleData.title}`);
-
-        // Git commit
-        await interaction.editReply(`${getBotResponse('thinking')} committing...`);
-        await gitWithTimeout(() => git.add('.'));
-        await gitWithTimeout(() => git.commit(`add ${theme} story riddle puzzle`));
-
-        await pushWithAuth('main');
-
-        // Success embed
-        const liveUrl = `https://bot.inference-arcade.com/src/${fileName}.html`;
-        const embed = new EmbedBuilder()
-            .setColor('#7ec8e3')
-            .setTitle(`🧩 ${puzzleData.title}`)
-            .setDescription(`**Theme:** ${theme}\n**Difficulty:** ${difficulty}\n**Nodes:** ${Object.keys(puzzleData.nodes).length}`)
-            .setURL(liveUrl)
-            .addFields({ name: '🎮 Play Now', value: `[Launch Puzzle](${liveUrl})` })
-            .setFooter({ text: 'May take a minute to go live' })
-            .setTimestamp();
-
-        await interaction.editReply({ content: null, embeds: [embed] });
-
-    } catch (error) {
-        console.error('Build puzzle error:', error);
-        await interaction.editReply(`${getBotResponse('errors')} ${error.message}`);
-    }
-}
-
-async function generatePuzzleData(theme, difficulty, maxRetries = 3) {
-    // Theme guidelines for LLM
-    const themeGuidelines = {
-        'noir-detective': 'Film noir setting - shadowy, urban, mysterious. Riddles: light/shadow/sound/time/memory. Story: missing person mystery, jazz clubs, fedoras.',
-        'fantasy-quest': 'High fantasy setting - medieval, magical. Riddles: nature/magic/ancient lore/artifacts. Story: dragon quest, magical artifacts, wizards.',
-        'sci-fi-mystery': 'Hard sci-fi setting - space stations, AI, tech. Riddles: paradoxes/physics/code/AI consciousness. Story: AI crisis, anomalies, missions.'
-    };
-
-    const prompt = `Generate a branching narrative puzzle in JSON format.
-
-THEME: ${theme}
-DIFFICULTY: ${difficulty}
-${themeGuidelines[theme]}
-
-REQUIREMENTS:
-- Generate 8-12 story nodes, 3-4 levels deep
-- Each node must have: id, text (2-4 sentences), riddle object, children array (1-2 ids)
-- Riddle object: question, answers (array of valid strings), hint
-- Include 2-3 ending nodes (set children to empty array)
-- All riddles must be solvable without external knowledge
-- Story must be completable in 10-15 minutes
-- Use this exact JSON structure - no additional fields:
-
-{
-  "title": "...",
-  "theme": "${theme}",
-  "difficulty": "${difficulty}",
-  "startNode": "start",
-  "nodes": {
-    "node_id": {
-      "id": "node_id",
-      "text": "...",
-      "riddle": {
-        "question": "...",
-        "answers": ["answer1", "answer2"],
-        "hint": "..."
-      },
-      "children": ["child_id1"]
-    }
-  },
-  "endings": {
-    "good": {
-      "text": "...",
-      "isGoodEnding": true
-    }
-  }
-}
-
-Return ONLY valid JSON, no markdown or explanation.`;
-
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-            const response = await axios.post(OPENROUTER_URL, {
-                model: MODEL_PRESETS['sonnet'],
-                messages: [{ role: 'user', content: prompt }],
-                max_tokens: 6000,
-                temperature: 0.8
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                timeout: CONFIG.API_TIMEOUT
-            });
-
-            let content = response.data.choices[0].message.content.trim();
-            // Clean markdown code blocks
-            content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
-            const puzzleData = JSON.parse(content);
-
-            // Calculate node positions
-            puzzleData.nodes = calculateNodePositions(puzzleData.nodes, puzzleData.startNode);
-
-            if (validatePuzzleData(puzzleData)) {
-                console.log(`✅ Puzzle generation successful on attempt ${attempt + 1}`);
-                return puzzleData;
-            }
-
-            console.log(`⚠️ Attempt ${attempt + 1} failed validation, retrying...`);
-        } catch (error) {
-            console.error(`❌ Generation attempt ${attempt + 1} failed:`, error.message);
-        }
-    }
-
-    throw new Error('Failed to generate valid puzzle after 3 attempts');
-}
-
-function calculateNodePositions(nodes, startId) {
-    const positioned = {};
-    const levels = {};
-
-    // BFS to assign levels
-    const queue = [[startId, 0]];
-    const visited = new Set();
-
-    while (queue.length > 0) {
-        const [nodeId, level] = queue.shift();
-        if (visited.has(nodeId)) continue;
-        visited.add(nodeId);
-
-        if (!levels[level]) levels[level] = [];
-        levels[level].push(nodeId);
-
-        const node = nodes[nodeId];
-        if (node.children && node.children.length > 0) {
-            node.children.forEach(childId => {
-                if (!visited.has(childId) && nodes[childId]) {
-                    queue.push([childId, level + 1]);
-                }
-            });
-        }
-    }
-
-    // Calculate positions (200px vertical spacing, 250px horizontal spacing)
-    Object.keys(levels).forEach(level => {
-        const nodesInLevel = levels[level];
-        const levelNum = parseInt(level);
-        const yPos = levelNum * 200;
-
-        nodesInLevel.forEach((nodeId, index) => {
-            const totalWidth = (nodesInLevel.length - 1) * 250;
-            const xPos = nodesInLevel.length === 1 ? 0 : -totalWidth / 2 + index * 250;
-
-            positioned[nodeId] = {
-                ...nodes[nodeId],
-                position: { x: xPos, y: yPos }
-            };
-        });
-    });
-
-    return positioned;
-}
-
-function validatePuzzleData(data) {
-    // Check required fields
-    if (!data.title || !data.nodes || !data.startNode) {
-        console.error('Missing required top-level fields');
-        return false;
-    }
-
-    // Check start node exists
-    if (!data.nodes[data.startNode]) {
-        console.error('Start node does not exist');
-        return false;
-    }
-
-    // Check all nodes are valid
-    for (const nodeId in data.nodes) {
-        const node = data.nodes[nodeId];
-
-        // Check required node fields
-        if (!node.id || !node.text || !node.riddle) {
-            console.error(`Node ${nodeId} missing required fields`);
-            return false;
-        }
-
-        // Check riddle structure
-        if (!node.riddle.question || !Array.isArray(node.riddle.answers) || node.riddle.answers.length === 0) {
-            console.error(`Node ${nodeId} has invalid riddle`);
-            return false;
-        }
-
-        // Validate children exist
-        if (node.children && node.children.length > 0) {
-            for (const childId of node.children) {
-                if (!data.nodes[childId]) {
-                    console.error(`Node ${nodeId} references non-existent child ${childId}`);
-                    return false;
-                }
-            }
-        }
-    }
-
-    // Check node count (8-12 nodes)
-    const nodeCount = Object.keys(data.nodes).length;
-    if (nodeCount < 8 || nodeCount > 12) {
-        console.error(`Node count ${nodeCount} outside required range 8-12`);
-        return false;
-    }
-
-    return true;
-}
-
-function generatePuzzleHTML(puzzleData, theme) {
-    // Escape JSON for safe embedding in HTML
-    const puzzleDataJson = JSON.stringify(puzzleData).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${puzzleData.title} - Story Riddle Puzzle</title>
-    <link rel="stylesheet" href="../page-theme.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
-    <style>
-        body {
-            padding: 20px 10px;
-            overflow-x: auto;
-            overflow-y: auto;
-        }
-
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            padding-bottom: 50px;
-        }
-
-        .puzzle-header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #7ec8e3;
-            padding-bottom: 15px;
-        }
-
-        .puzzle-header h1 {
-            margin: 0 0 5px 0;
-            color: #7ec8e3;
-            font-size: 1.8em;
-        }
-
-        .puzzle-subtitle {
-            color: #00ffff;
-            font-size: 0.9em;
-            opacity: 0.8;
-        }
-
-        .stats {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .stat-box {
-            background: rgba(0, 255, 65, 0.1);
-            border: 2px solid #00ff41;
-            color: #7ec8e3;
-            padding: 10px 15px;
-            border-radius: 3px;
-            font-size: 0.85em;
-            min-width: 120px;
-            text-align: center;
-        }
-
-        #p5-container {
-            margin: 20px 0;
-            display: flex;
-            justify-content: center;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(3px);
-        }
-
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: #0a0a0a;
-            border: 3px solid #7ec8e3;
-            border-radius: 3px;
-            padding: 30px;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 0 30px rgba(126, 200, 227, 0.3);
-        }
-
-        .modal-content h2 {
-            color: #7ec8e3;
-            margin: 0 0 15px 0;
-            text-transform: uppercase;
-            font-size: 1.3em;
-        }
-
-        .story-text {
-            color: #7ec8e3;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            font-style: italic;
-            opacity: 0.9;
-        }
-
-        .riddle-section {
-            background: rgba(0, 255, 65, 0.05);
-            border: 2px dashed #00ff41;
-            padding: 15px;
-            border-radius: 3px;
-            margin-bottom: 20px;
-        }
-
-        .riddle-section h3 {
-            color: #00ffff;
-            margin: 0 0 10px 0;
-            font-size: 1.1em;
-        }
-
-        .riddle-section p {
-            color: #7ec8e3;
-            margin: 0 0 15px 0;
-            line-height: 1.5;
-        }
-
-        #answer {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            background: #1a1a1a;
-            border: 2px solid #00ff41;
-            color: #00ffff;
-            border-radius: 3px;
-            font-family: 'Courier Prime', monospace;
-            font-size: 0.9em;
-            box-sizing: border-box;
-            min-height: 44px;
-        }
-
-        #answer:focus {
-            outline: none;
-            border-color: #00ffff;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-        }
-
-        #hint {
-            background: rgba(255, 200, 87, 0.1);
-            border-left: 3px solid #ffc857;
-            color: #ffc857;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 3px;
-            font-size: 0.85em;
-        }
-
-        #feedback {
-            min-height: 20px;
-            margin-bottom: 10px;
-            font-size: 0.9em;
-        }
-
-        #feedback.success {
-            color: #00ff41;
-        }
-
-        #feedback.error {
-            color: #ff0000;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        button {
-            padding: 10px 20px;
-            background: rgba(0, 255, 65, 0.2);
-            border: 2px solid #00ff41;
-            color: #00ff41;
-            cursor: pointer;
-            border-radius: 3px;
-            font-family: 'Courier Prime', monospace;
-            font-size: 0.9em;
-            transition: all 0.2s;
-            min-height: 44px;
-            touch-action: manipulation;
-        }
-
-        button:hover {
-            background: rgba(0, 255, 65, 0.4);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
-        }
-
-        button:active {
-            transform: scale(0.95);
-        }
-
-        .home-link {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 999;
-        }
-
-        .info-panel {
-            background: rgba(0, 255, 65, 0.05);
-            border: 1px solid #00ff41;
-            padding: 15px;
-            border-radius: 3px;
-            margin-top: 20px;
-            color: #7ec8e3;
-            font-size: 0.85em;
-            line-height: 1.6;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-
-            .puzzle-header h1 {
-                font-size: 1.5em;
-            }
-
-            .stats {
-                gap: 10px;
-                margin-bottom: 15px;
-            }
-
-            .modal-content {
-                max-width: 90vw;
-                padding: 20px;
-                border-width: 2px;
-            }
-
-            #answer {
-                font-size: 16px; /* Prevents zoom on iOS */
-            }
-
-            button {
-                padding: 8px 16px;
-                font-size: 0.85em;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px 5px;
-            }
-
-            .puzzle-header h1 {
-                font-size: 1.3em;
-            }
-
-            .stat-box {
-                padding: 8px 12px;
-                font-size: 0.75em;
-                min-width: 100px;
-            }
-
-            .modal-content {
-                max-width: 95vw;
-                padding: 15px;
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-
-            button {
-                width: 100%;
-            }
-        }
-    </style>
-</head>
-<body>
-    <a class="home-link" href="../index.html">←</a>
-
-    <div class="container">
-        <div class="puzzle-header">
-            <h1>🧩 ${puzzleData.title}</h1>
-            <div class="puzzle-subtitle">Solve riddles to uncover the story...</div>
-        </div>
-
-        <div class="stats">
-            <div class="stat-box">Theme: <strong>${theme}</strong></div>
-            <div class="stat-box">Difficulty: <strong>${puzzleData.difficulty}</strong></div>
-            <div class="stat-box">Progress: <span id="progress">0</span>/<span id="total">${Object.keys(puzzleData.nodes).length}</span></div>
-        </div>
-
-        <div id="p5-container"></div>
-
-        <div class="info-panel">
-            <strong>How to Play:</strong><br>
-            • Click on any unlocked node (with a book 📖 icon) to read the story and face a riddle<br>
-            • Answer the riddle correctly to unlock new paths and continue exploring<br>
-            • Hints are available after 2 wrong answers<br>
-            • Find the ending to complete your journey
-        </div>
-    </div>
-
-    <!-- Modal for riddles -->
-    <div class="modal" id="riddleModal">
-        <div class="modal-content">
-            <h2>📖 Story Point</h2>
-            <div class="story-text" id="storyText"></div>
-            <div class="riddle-section">
-                <h3>🔮 Riddle:</h3>
-                <p id="riddleQuestion"></p>
-                <input type="text" id="answer" placeholder="Type your answer..." autocomplete="off">
-                <div id="hint" style="display: none"><strong>💡 Hint:</strong> <span id="hintText"></span></div>
-                <div id="feedback"></div>
-                <div class="button-group">
-                    <button onclick="showHint()">Hint</button>
-                    <button onclick="submitAnswer()">Submit Answer</button>
-                    <button onclick="closeModal()">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Embed puzzle data
-        const PUZZLE_DATA = JSON.parse(\`${puzzleDataJson}\`);
-
-        // Game state
-        let gameState = {
-            unlockedNodes: [PUZZLE_DATA.startNode],
-            currentNodeId: null,
-            attempts: {},
-            completedAt: null
-        };
-
-        // Load progress from localStorage
-        function loadProgress() {
-            const saved = localStorage.getItem('puzzle_progress');
-            if (saved) {
-                try {
-                    gameState = JSON.parse(saved);
-                } catch (e) {
-                    console.error('Failed to load progress:', e);
-                }
-            }
-        }
-
-        // Save progress to localStorage
-        function saveProgress() {
-            localStorage.setItem('puzzle_progress', JSON.stringify(gameState));
-            updateStats();
-        }
-
-        // Update stats display
-        function updateStats() {
-            document.getElementById('progress').textContent = gameState.unlockedNodes.length - 1;
-        }
-
-        // Show riddle modal
-        function showRiddle(nodeId) {
-            const node = PUZZLE_DATA.nodes[nodeId];
-            if (!node) return;
-
-            gameState.currentNodeId = nodeId;
-            gameState.attempts[nodeId] = (gameState.attempts[nodeId] || 0);
-
-            document.getElementById('storyText').textContent = node.text;
-            document.getElementById('riddleQuestion').textContent = node.riddle.question;
-            document.getElementById('answer').value = '';
-            document.getElementById('feedback').textContent = '';
-            document.getElementById('hint').style.display = 'none';
-            document.getElementById('answer').focus();
-
-            document.getElementById('riddleModal').classList.add('show');
-        }
-
-        // Show hint
-        function showHint() {
-            const node = PUZZLE_DATA.nodes[gameState.currentNodeId];
-            document.getElementById('hintText').textContent = node.riddle.hint;
-            document.getElementById('hint').style.display = 'block';
-        }
-
-        // Submit answer
-        function submitAnswer() {
-            const node = PUZZLE_DATA.nodes[gameState.currentNodeId];
-            const userAnswer = document.getElementById('answer').value.trim().toLowerCase();
-            const feedback = document.getElementById('feedback');
-
-            gameState.attempts[gameState.currentNodeId]++;
-
-            // Check if answer is correct (case-insensitive, trim whitespace)
-            const isCorrect = node.riddle.answers.some(ans => ans.toLowerCase().trim() === userAnswer);
-
-            if (isCorrect) {
-                feedback.textContent = '✓ Correct! Unlocking new paths...';
-                feedback.className = 'success';
-
-                // Unlock children
-                if (node.children && node.children.length > 0) {
-                    node.children.forEach(childId => {
-                        if (!gameState.unlockedNodes.includes(childId)) {
-                            gameState.unlockedNodes.push(childId);
-                        }
-                    });
-                }
-
-                saveProgress();
-                setTimeout(() => closeModal(), 1500);
-            } else {
-                feedback.textContent = '✗ Incorrect. Try again.';
-                feedback.className = 'error';
-
-                // Show hint after 2 attempts
-                if (gameState.attempts[gameState.currentNodeId] >= 2) {
-                    setTimeout(() => {
-                        const hintBtn = document.querySelector('.button-group button:first-child');
-                        hintBtn.textContent = 'Show Hint';
-                    }, 500);
-                }
-            }
-        }
-
-        // Close modal
-        function closeModal() {
-            document.getElementById('riddleModal').classList.remove('show');
-            gameState.currentNodeId = null;
-        }
-
-        // Close modal on background click
-        document.getElementById('riddleModal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-
-        // p5.js sketch
-        const sketchFunction = (p) => {
-            let nodes = [];
-            let edges = [];
-            let offsetX = 0;
-            let offsetY = 0;
-            let zoom = 1;
-
-            p.setup = function() {
-                loadProgress();
-
-                const containerWidth = Math.min(window.innerWidth - 40, 800);
-                const containerHeight = Math.min(window.innerHeight - 300, 600);
-                p.createCanvas(containerWidth, containerHeight);
-
-                // Initialize nodes and edges from puzzle data
-                Object.values(PUZZLE_DATA.nodes).forEach(node => {
-                    nodes.push({
-                        id: node.id,
-                        x: node.position.x,
-                        y: node.position.y,
-                        radius: 40,
-                        unlocked: gameState.unlockedNodes.includes(node.id),
-                        isStart: node.id === PUZZLE_DATA.startNode
-                    });
-                });
-
-                // Create edges
-                Object.values(PUZZLE_DATA.nodes).forEach(node => {
-                    if (node.children && node.children.length > 0) {
-                        node.children.forEach(childId => {
-                            edges.push({
-                                from: node.id,
-                                to: childId,
-                                unlocked: gameState.unlockedNodes.includes(childId)
-                            });
-                        });
-                    }
-                });
-
-                // Center view
-                fitToCanvas();
-            };
-
-            p.draw = function() {
-                p.background(10);
-
-                p.push();
-                p.translate(offsetX, offsetY);
-                p.scale(zoom);
-
-                // Draw edges first (so they appear behind nodes)
-                edges.forEach(edge => {
-                    drawEdge(edge);
-                });
-
-                // Draw nodes
-                nodes.forEach(node => {
-                    drawNode(node);
-                });
-
-                p.pop();
-            };
-
-            function drawEdge(edge) {
-                const fromNode = nodes.find(n => n.id === edge.from);
-                const toNode = nodes.find(n => n.id === edge.to);
-
-                if (!fromNode || !toNode) return;
-
-                if (edge.unlocked) {
-                    p.stroke('#00ffff');
-                    p.strokeWeight(3);
-                } else {
-                    p.stroke('#7ec8e3');
-                    p.strokeWeight(1);
-                    p.setLineDash([5, 5]);
-                }
-
-                // Bezier curve for organic feel
-                p.noFill();
-                const cp1x = (fromNode.x + toNode.x) / 2;
-                const cp1y = fromNode.y + 50;
-                const cp2x = (fromNode.x + toNode.x) / 2;
-                const cp2y = toNode.y - 50;
-
-                p.bezier(
-                    fromNode.x, fromNode.y,
-                    cp1x, cp1y,
-                    cp2x, cp2y,
-                    toNode.x, toNode.y
-                );
-
-                if (edge.unlocked) {
-                    // Draw arrow at end
-                    const angle = Math.atan2(toNode.y - cp2y, toNode.x - cp2x);
-                    const arrowSize = 10;
-                    p.fill('#00ffff');
-                    p.noStroke();
-                    p.push();
-                    p.translate(toNode.x - Math.cos(angle) * fromNode.radius, toNode.y - Math.sin(angle) * fromNode.radius);
-                    p.rotate(angle);
-                    p.triangle(0, -arrowSize / 2, -arrowSize, arrowSize / 2, 0, 0);
-                    p.pop();
-                }
-
-                p.setLineDash([]);
-            }
-
-            function drawNode(node) {
-                const isHovered = p.dist(p.mouseX - offsetX, p.mouseY - offsetY, node.x * zoom, node.y * zoom) < node.radius * zoom;
-
-                if (node.unlocked) {
-                    p.stroke('#00ffff');
-                    p.strokeWeight(3);
-                    p.fill(0, 255, 255, isHovered ? 30 : 15);
-                } else {
-                    p.stroke('#7ec8e3');
-                    p.strokeWeight(2);
-                    p.setLineDash([3, 3]);
-                    p.fill(126, 200, 227, 10);
-                }
-
-                p.circle(node.x, node.y, node.radius * 2);
-                p.setLineDash([]);
-
-                // Draw icon
-                p.fill(node.unlocked ? '#00ffff' : '#7ec8e3');
-                p.noStroke();
-                p.textAlign(p.CENTER, p.CENTER);
-                p.textSize(20);
-                if (node.isStart) {
-                    p.text('⭐', node.x, node.y);
-                } else if (node.unlocked) {
-                    p.text('📖', node.x, node.y);
-                } else {
-                    p.text('🔒', node.x, node.y);
-                }
-
-                // Click detection
-                if (isHovered && p.mouseIsPressed) {
-                    if (node.unlocked && !gameState.currentNodeId) {
-                        showRiddle(node.id);
-                    }
-                }
-            }
-
-            function fitToCanvas() {
-                let minX = Infinity, maxX = -Infinity;
-                let minY = Infinity, maxY = -Infinity;
-
-                nodes.forEach(node => {
-                    minX = Math.min(minX, node.x);
-                    maxX = Math.max(maxX, node.x);
-                    minY = Math.min(minY, node.y);
-                    maxY = Math.max(maxY, node.y);
-                });
-
-                const padding = 60;
-                const width = maxX - minX + padding * 2;
-                const height = maxY - minY + padding * 2;
-
-                zoom = Math.min(
-                    (p.width - 40) / width,
-                    (p.height - 40) / height,
-                    1.2
-                );
-
-                offsetX = p.width / 2 - (minX + maxX) / 2 * zoom;
-                offsetY = p.height / 2 - (minY + maxY) / 2 * zoom;
-            }
-
-            p.windowResized = function() {
-                if (document.querySelector('#p5-container')) {
-                    const containerWidth = Math.min(window.innerWidth - 40, 800);
-                    const containerHeight = Math.min(window.innerHeight - 300, 600);
-                    p.resizeCanvas(containerWidth, containerHeight);
-                    fitToCanvas();
-                }
-            };
-
-            // Prevent default link dash behavior
-            p.setLineDash = function(pattern) {
-                // p5.js doesn't have built-in setLineDash, so we skip it
-                // This is a no-op for now
-            };
-        };
-
-        // Create p5 instance in instance mode
-        const container = document.getElementById('p5-container');
-        new p5(sketchFunction, container);
-
-        // Update stats on load
-        updateStats();
-    </script>
-</body>
-</html>`;
-}
 
 async function handleSearch(interaction) {
     const query = interaction.options.getString('query');
 
     try {
-        await interaction.editReply(getBotResponse('thinking'));
+        await safeEditReply(interaction, getBotResponse('thinking'));
 
         // Perform web search
         const searchResult = await webSearch(query);
@@ -5472,86 +4016,6 @@ async function handleSetModel(interaction) {
     }
 }
 
-async function handleSetPrompt(interaction) {
-    const action = interaction.options.getString('action');
-    const content = interaction.options.getString('content');
-
-    try {
-        await interaction.editReply(getBotResponse('thinking'));
-
-        let embed;
-
-        switch (action) {
-            case 'view':
-                // Show current prompt (truncated for Discord)
-                const truncatedPrompt = SYSTEM_PROMPT.length > 1500 
-                    ? SYSTEM_PROMPT.substring(0, 1500) + '...'
-                    : SYSTEM_PROMPT;
-                    
-                embed = new EmbedBuilder()
-                    .setTitle('🤖 Current System Prompt')
-                    .setDescription('```\n' + truncatedPrompt + '\n```')
-                    .setColor(0x9b59b6)
-                    .setTimestamp();
-                break;
-
-            case 'reset':
-                SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT;
-                embed = new EmbedBuilder()
-                    .setTitle('🔄 Prompt Reset')
-                    .setDescription(getBotResponse('success') + '\n\nBot Sportello has been reset to default personality.')
-                    .setColor(0x27ae60)
-                    .setTimestamp();
-                break;
-
-            case 'add':
-                if (!content) {
-                    throw new Error('Content is required when adding instructions');
-                }
-                
-                SYSTEM_PROMPT += '\n\nADDITIONAL INSTRUCTION: ' + content;
-                
-                embed = new EmbedBuilder()
-                    .setTitle('➕ Instruction Added')
-                    .setDescription(getBotResponse('success') + '\n\nNew instruction added to Bot Sportello.')
-                    .addFields(
-                        { name: 'Added Instruction', value: content.substring(0, 1000), inline: false }
-                    )
-                    .setColor(0x3498db)
-                    .setTimestamp();
-                break;
-
-            case 'replace':
-                if (!content) {
-                    throw new Error('Content is required when replacing the prompt');
-                }
-                
-                SYSTEM_PROMPT = content;
-                
-                embed = new EmbedBuilder()
-                    .setTitle('🔄 Prompt Replaced')
-                    .setDescription(getBotResponse('success') + '\n\nBot Sportello\'s personality has been completely replaced.')
-                    .addFields(
-                        { name: 'New Prompt Length', value: content.length + ' characters', inline: true }
-                    )
-                    .setColor(0xe67e22)
-                    .setTimestamp();
-                break;
-
-            default:
-                throw new Error('Invalid action');
-        }
-
-        await interaction.editReply({ embeds: [embed] });
-        logEvent('PROMPT', `Prompt ${action} by user`, { action, contentLength: content?.length || 0 });
-
-    } catch (error) {
-        console.error('Set prompt error:', error);
-        const errorMsg = getBotResponse('errors') + ' ' + error.message;
-        await interaction.editReply(errorMsg);
-    }
-}
-
 async function handleStatus(interaction) {
     try {
         const status = await git.status();
@@ -5586,60 +4050,6 @@ async function handleStatus(interaction) {
     }
 }
 
-
-async function handleChat(interaction) {
-    const userMessage = interaction.options.getString('message');
-    const username = interaction.user.username;
-
-    try {
-        // Show thinking message first (interaction is already deferred)
-        await interaction.editReply(getBotResponse('thinking'));
-
-        // Build conversation messages array from history (last 50 messages for full context)
-        const conversationMessages = buildMessagesFromHistory(50);
-
-        // Get response with proper conversation context
-        const discordContext = {
-            user: interaction.user.username,
-            channel: interaction.channel?.name || interaction.channel?.id || 'DM'
-        };
-        let llmResult = await getLLMResponse(userMessage, conversationMessages, discordContext);
-        let response = llmResult.text;
-
-        // Clean duplicate Bot Sportello prefixes
-        response = cleanBotResponse(response);
-
-        // Add user message and bot response to history - include search context if any
-        addToHistory(username, userMessage, false);
-        if (llmResult.searchContext) {
-            const searchSummary = llmResult.searchContext.map(s =>
-                `[Search: "${s.query}"]\n${s.results}`
-            ).join('\n\n');
-            addToHistory('Bot Sportello', `${searchSummary}\n\n${response}`, true);
-        } else {
-            addToHistory('Bot Sportello', response, true);
-        }
-
-        // Edit with actual response
-        await interaction.editReply(response);
-
-    } catch (error) {
-        console.error('Chat error:', error);
-        const errorMsg = error.code === 'ECONNABORTED' ?
-            "Request timed out. Try again." :
-            (getBotResponse('errors') + " Chat request failed.");
-
-        try {
-            if (interaction.replied) {
-                await interaction.editReply(errorMsg);
-            } else {
-                await interaction.reply({ content: errorMsg, ephemeral: true });
-            }
-        } catch (replyError) {
-            console.error('Failed to send chat error reply:', replyError);
-        }
-    }
-}
 
 async function handlePoll(interaction) {
     const question = interaction.options.getString('question');
@@ -5709,96 +4119,6 @@ async function handlePoll(interaction) {
     }
 }
 
-async function handleSyncIndex(interaction) {
-    try {
-        await interaction.editReply(getBotResponse('thinking'));
-
-        // Run the sync
-        await syncIndexWithSrcFiles();
-
-        // Check results
-        const srcFiles = await fs.readdir('./src');
-        const htmlFiles = srcFiles.filter(file => file.endsWith('.html'));
-
-        const embed = new EmbedBuilder()
-            .setTitle('🔄 Index Sync Complete')
-            .setDescription(getBotResponse('success'))
-            .addFields(
-                { name: 'HTML Files Found', value: htmlFiles.length.toString(), inline: true },
-                { name: 'Status', value: 'All files synced to index.html', inline: false },
-                { name: 'Live Site', value: '[View Arcade](https://bot.inference-arcade.com/)', inline: false }
-            )
-            .setColor(0x00AE86)
-            .setTimestamp();
-
-        await interaction.editReply({ content: '', embeds: [embed] });
-
-    } catch (error) {
-        console.error('Sync index error:', error);
-        const errorMsg = getBotResponse('errors') + " Failed to sync index.";
-        await interaction.editReply(errorMsg);
-    }
-}
-
-async function handleUpdateStyle(interaction) {
-    const preset = interaction.options.getString('preset');
-    const customDescription = interaction.options.getString('description');
-
-    try {
-        // Show confirmation dialog for style changes
-        const confirmEmbed = new EmbedBuilder()
-            .setTitle('⚠️ Confirm Style Update')
-            .setDescription(`Ready to update the website style? This will overwrite \`style.css\` and push changes to the live site.`)
-            .addFields(
-                { name: 'Style Preset', value: preset === 'custom' ? 'Custom AI-generated' : preset, inline: true },
-                { name: 'Target File', value: 'style.css', inline: true },
-                { name: 'Impact', value: '🌐 Live website styling will change immediately', inline: false }
-            )
-            .setColor(0xFF6B35) // Orange warning color
-            .setTimestamp();
-
-        if (preset === 'custom' && customDescription) {
-            confirmEmbed.addFields({ name: 'Custom Description', value: customDescription, inline: false });
-        }
-
-        // Create confirmation buttons
-        const confirmRow = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`style_confirm_${interaction.user.id}`)
-                    .setLabel('🎨 Update Style')
-                    .setStyle(ButtonStyle.Success),
-                new ButtonBuilder()
-                    .setCustomId(`style_cancel_${interaction.user.id}`)
-                    .setLabel('❌ Cancel')
-                    .setStyle(ButtonStyle.Danger)
-            );
-
-        await interaction.editReply({ 
-            content: '', 
-            embeds: [confirmEmbed], 
-            components: [confirmRow] 
-        });
-
-        // Store style update data for button handler
-        if (!global.stylePendingData) global.stylePendingData = new Map();
-        global.stylePendingData.set(interaction.user.id, {
-            preset,
-            customDescription,
-            interactionId: interaction.id
-        });
-
-        // Set timeout to clean up pending data
-        setTimeout(() => {
-            global.stylePendingData?.delete(interaction.user.id);
-        }, 300000); // 5 minutes
-
-    } catch (error) {
-        console.error('Style update preparation error:', error);
-        await interaction.editReply(getBotResponse('errors') + ` ${error.message}`);
-    }
-}
-
 // New function to handle mention-triggered commits
 async function executeMentionCommit(interaction, commitData) {
     try {
@@ -5844,7 +4164,7 @@ async function executeMentionCommit(interaction, commitData) {
             });
         }
         
-        await interaction.editReply({ content: '', embeds: [embed] });
+        await safeEditReply(interaction, { content: '', embeds: [embed] });
         
     } catch (error) {
         console.error('Mention commit execution error:', error);
