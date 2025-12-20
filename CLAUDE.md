@@ -238,6 +238,7 @@ The entire bot is contained in `index.js` (~3700+ lines) with these key sections
 | **responses/{timestamp}.txt** | Long responses >2000 chars (Discord limit) | Text with timestamp header | One per response; kept for audit trail |
 | **session-logs/*.json/.md** | Bot session reports (failure/success analysis) | JSON + Markdown summaries | One per bot session run; via run-bot.sh |
 | **gui-run-logs/*.json** | GUI dashboard history (real-time events) | Serialized panel state | Per-run; cleared on new session |
+| **issues/*.md** | Bug reports and fix documentation | Markdown with symptoms, root cause, fix | Per-issue; tracked in git for project history |
 | **index.html** | Main page (project hub) | HTML with embedded CSS | Persistent; manually edited theme |
 | **page-theme.css** | Shared noir styling (all pages) | CSS with color vars + mobile breakpoints | Persistent; theme source of truth |
 | **/src/*.html** | Generated pages (games, pages, features) | Self-contained HTML + inline CSS/JS | Created by `/add-page`, `/build-game`, etc. |
