@@ -27,40 +27,30 @@
     }
   },
   "projects": {
-    "double_dragon_beatem_up": {
-      "title": "Double Dragon Beatdown",
-      "description": "Side-scroll co-op brawler",
-      "icon": "👊",
-      "collection": "featured"
-    },
     "pigman": {
       "title": "Pigman Maze Run",
       "description": "Pellet chase stealth raid",
       "icon": "🐷",
       "collection": "featured"
     },
-    "terminal-memory": {
-      "title": "Terminal Memory",
-      "description": "CRT card match challenge",
-      "icon": "🧠",
-      "collection": "featured"
+    "tv-intervention-infomercial": {
+      "title": "TV Intervention Infomercial",
+      "icon": "📺",
+      "description": "late-night hype parody",
+      "collection": "featured",
+      "hidden": false
     },
-    "anniversary": {
-      "title": "Anniversary Chronicle",
-      "description": "Surreal relationship time capsule",
-      "icon": "💜",
-      "collection": "featured"
+    "site-inventory": {
+      "title": "Site Inventory",
+      "icon": "🗂️",
+      "description": "repository scanner utility",
+      "collection": "featured",
+      "hidden": false
     },
-    "radish_love": {
-      "title": "Radish Love Letter",
-      "description": "Playful ode to roots",
-      "icon": "❤️",
-      "collection": "stories-content"
-    },
-    "rat_bushwick": {
-      "title": "Rat Bushwick Log",
-      "description": "Underground survival brief",
-      "icon": "🐀",
+    "double_dragon_beatem_up": {
+      "title": "Double Dragon Beatdown",
+      "description": "Side-scroll co-op brawler",
+      "icon": "👊",
       "collection": "featured"
     },
     "amtrak-journey": {
@@ -69,41 +59,97 @@
       "icon": "🚂",
       "collection": "featured"
     },
-    "ai-agency-flier": {
-      "title": "AI Agency Reality Check",
-      "description": "Touch flier myth busts",
-      "icon": "📡",
-      "collection": "stories-content"
+    "anniversary": {
+      "title": "Anniversary Chronicle",
+      "description": "Surreal relationship time capsule",
+      "icon": "💜",
+      "collection": "featured"
     },
-    "alex_dog_mess": {
-      "title": "Alex's Dog Mess",
-      "description": "Humorous cleanup field report",
+    "terminal-memory": {
+      "title": "Terminal Memory",
+      "description": "CRT card match challenge",
+      "icon": "🧠",
+      "collection": "featured"
+    },
+    "rat_bushwick": {
+      "title": "Rat Bushwick Log",
+      "description": "Underground survival brief",
+      "icon": "🐀",
+      "collection": "featured"
+    },
+    "rhythm-test": {
+      "title": "Rhythm Test",
+      "icon": "🎵",
+      "description": "beat matching rhythm arcade",
+      "collection": "arcade-games",
+      "hidden": false
+    },
+    "sequence-recall": {
+      "title": "Sequence Recall",
+      "icon": "🧩",
+      "description": "memory pattern arcade challenge",
+      "collection": "arcade-games",
+      "hidden": false
+    },
+    "memory-cheer-cen": {
+      "title": "Memory Cheer for Cen",
+      "icon": "🎮",
+      "description": "cheerful card matching game",
+      "collection": "arcade-games",
+      "hidden": false
+    },
+    "pleasantville-crossword": {
+      "title": "Pleasantville Crossword",
+      "icon": "🧩",
+      "description": "noir terminal crossword puzzle",
+      "collection": "arcade-games",
+      "hidden": false
+    },
+    "foot-scratch-game": {
+      "title": "Foot Scratch Simulator",
+      "icon": "🦶",
+      "description": "absurd itch relief arcade",
+      "collection": "arcade-games",
+      "hidden": false
+    },
+    "hangman": {
+      "title": "Hangman",
+      "icon": "✏️",
+      "description": "two-player word guessing duel",
+      "collection": "arcade-games",
+      "hidden": false
+    },
+    "dermpath-tetris": {
+      "title": "DermaPath Tetris",
+      "icon": "🧬",
+      "description": "histology block stacker",
+      "collection": "arcade-games",
+      "hidden": false
+    },
+    "dmv-maze": {
+      "title": "DMV Maze of Despair",
+      "icon": "📋",
+      "description": "bureaucratic nightmare simulator",
+      "collection": "arcade-games",
+      "hidden": false
+    },
+    "snake-retriever": {
+      "title": "Snake Retriever",
+      "description": "Golden retriever snake variant",
       "icon": "🐕",
-      "collection": "stories-content"
-    },
-    "basket-jam": {
-      "title": "Basket Jam",
-      "description": "Arcade hoops skills test",
-      "icon": "🏀",
       "collection": "arcade-games"
     },
-    "bills-superbowl-infographic": {
-      "title": "Bills Super Bowl Case",
-      "description": "Hype-heavy data infographic",
-      "icon": "🏈",
-      "collection": "stories-content"
-    },
-    "bills_qb_game": {
-      "title": "Bills QB Challenge",
-      "description": "Pass timing skill drill",
-      "icon": "🏈",
+    "tictactoe-confetti": {
+      "title": "Tic-Tac-Toe Confetti",
+      "description": "Two-player board with celebrations",
+      "icon": "🎉",
       "collection": "arcade-games"
     },
-    "borscht": {
-      "title": "Borscht Recipe",
-      "description": "Step-by-step beet ritual",
-      "icon": "🍲",
-      "collection": "stories-content"
+    "space-invaders": {
+      "title": "AI vs Human Invaders",
+      "description": "Kaboom duel defense wave",
+      "icon": "👾",
+      "collection": "arcade-games"
     },
     "bubba_clicker": {
       "title": "Bubba Clicker",
@@ -111,41 +157,23 @@
       "icon": "🐴",
       "collection": "arcade-games"
     },
-    "bushwick": {
-      "title": "Bushwick Field Guide",
-      "description": "Neighborhood missions explorer",
-      "icon": "🗺️",
-      "collection": "stories-content"
+    "jackson_biscuit_game": {
+      "title": "Jackson Biscuit Catch",
+      "description": "Pet treat juggling mini",
+      "icon": "🐶",
+      "collection": "arcade-games"
     },
-    "cen-sunday-todo": {
-      "title": "Cen Sunday Todo",
-      "description": "Weekend chore battle plan",
-      "icon": "✅",
-      "collection": "utilities-apps"
+    "bills_qb_game": {
+      "title": "Bills QB Challenge",
+      "description": "Pass timing skill drill",
+      "icon": "🏈",
+      "collection": "arcade-games"
     },
-    "cen-todo-list": {
-      "title": "Cen Todo Console",
-      "description": "Daily tasks tracker",
-      "icon": "✅",
-      "collection": "utilities-apps"
-    },
-    "cen_veggie_haul": {
-      "title": "Cen's Veggie Haul",
-      "description": "Farmers market inventory log",
-      "icon": "🥬",
-      "collection": "stories-content"
-    },
-    "digital_sisyphus": {
-      "title": "Digital Sisyphus Loop",
-      "description": "Absurdist scroll meditation",
-      "icon": "🪨",
-      "collection": "stories-content"
-    },
-    "droid-union": {
-      "title": "Droid Union Dispatch",
-      "description": "Robot labor rights zine",
-      "icon": "🤖",
-      "collection": "stories-content"
+    "basket-jam": {
+      "title": "Basket Jam",
+      "description": "Arcade hoops skills test",
+      "icon": "🏀",
+      "collection": "arcade-games"
     },
     "frog_whack_a_mole": {
       "title": "Frog Whack-a-Mole",
@@ -159,18 +187,90 @@
       "icon": "🐸",
       "collection": "arcade-games"
     },
+    "snaker": {
+      "title": "Snaker",
+      "description": "Endless neon snake run",
+      "icon": "🐍",
+      "collection": "arcade-games"
+    },
+    "sudoku": {
+      "title": "Sudoku",
+      "description": "Grid logic puzzle board",
+      "icon": "🔢",
+      "collection": "arcade-games"
+    },
+    "riddle-river": {
+      "title": "The River Riddle",
+      "icon": "📜",
+      "description": "scroll-reveal riddle utility",
+      "collection": "utilities-apps",
+      "hidden": false
+    },
+    "tarot-reading": {
+      "title": "Tarot Reading",
+      "icon": "🔮",
+      "description": "mystical three-card tarot spread",
+      "collection": "utilities-apps",
+      "hidden": false
+    },
+    "pleasantville-clues": {
+      "title": "Pleasantville Clues & Answers",
+      "icon": "🔍",
+      "description": "searchable noir trivia database",
+      "collection": "utilities-apps",
+      "hidden": false
+    },
+    "cen-schedule": {
+      "title": "Cen's Day Planner",
+      "icon": "🗓️",
+      "description": "branching daily schedule explorer",
+      "collection": "utilities-apps",
+      "hidden": false
+    },
+    "sunday-wheel": {
+      "title": "Sunday Spin",
+      "icon": "🎡",
+      "description": "weekend activity spinner wheel",
+      "collection": "utilities-apps",
+      "hidden": false
+    },
+    "friday-wheel": {
+      "title": "Friday Night Wheel",
+      "icon": "🎡",
+      "description": "spinning activity decision maker",
+      "collection": "utilities-apps",
+      "hidden": false
+    },
+    "zach_work_schedule": {
+      "title": "Zach Work Schedule",
+      "description": "Shift tracking console grid",
+      "icon": "📆",
+      "collection": "utilities-apps"
+    },
+    "zach-errands": {
+      "title": "Zach Errands",
+      "description": "Quick errand hit list",
+      "icon": "🧾",
+      "collection": "utilities-apps"
+    },
+    "cen-sunday-todo": {
+      "title": "Cen Sunday Todo",
+      "description": "Weekend chore battle plan",
+      "icon": "✅",
+      "collection": "utilities-apps"
+    },
+    "cen-todo-list": {
+      "title": "Cen Todo Console",
+      "description": "Daily tasks tracker",
+      "icon": "✅",
+      "collection": "utilities-apps"
+    },
     "index": {
       "title": "Legacy Index",
       "description": "Old hub placeholder page",
       "icon": "🌐",
       "collection": "utilities-apps",
       "hidden": true
-    },
-    "jackson_biscuit_game": {
-      "title": "Jackson Biscuit Catch",
-      "description": "Pet treat juggling mini",
-      "icon": "🐶",
-      "collection": "arcade-games"
     },
     "noodle_inventory": {
       "title": "Noodle Inventory",
@@ -190,10 +290,49 @@
       "icon": "📋",
       "collection": "utilities-apps"
     },
-    "red-siren-protocol": {
-      "title": "Red Siren Protocol",
-      "description": "Emergency alert hub",
-      "icon": "🚨",
+    "subway_sub_ratio": {
+      "title": "Subway Sub Ratio",
+      "description": "Sandwich proportions tracker",
+      "icon": "🥖",
+      "collection": "utilities-apps"
+    },
+    "weekend planner": {
+      "title": "Weekend Planner",
+      "description": "Two-day mission brief",
+      "icon": "📅",
+      "collection": "utilities-apps"
+    },
+    "tuesday-letter-cen": {
+      "title": "Tuesday Letter for Cen",
+      "icon": "💌",
+      "description": "warm tuesday check-in letter",
+      "collection": "stories-content",
+      "hidden": false
+    },
+    "coffee-steam-viz": {
+      "title": "Coffee in Snow",
+      "icon": "☕",
+      "description": "cozy particle coffee ritual",
+      "collection": "stories-content",
+      "hidden": false
+    },
+    "letter-to-nancy": {
+      "title": "Letter to Nancy",
+      "icon": "✉️",
+      "description": "noir letter interactive reveal",
+      "collection": "stories-content",
+      "hidden": false
+    },
+    "ai-agency-flier": {
+      "title": "AI Agency Reality Check",
+      "description": "Touch flier myth busts",
+      "icon": "📡",
+      "collection": "stories-content"
+    },
+    "bills-superbowl-infographic": {
+      "title": "Bills Super Bowl Case",
+      "description": "Hype-heavy data infographic",
+      "icon": "🏈",
       "collection": "stories-content"
     },
     "rubi_infomercial": {
@@ -208,29 +347,17 @@
       "icon": "🧴",
       "collection": "stories-content"
     },
-    "snaker": {
-      "title": "Snaker",
-      "description": "Endless neon snake run",
-      "icon": "🐍",
-      "collection": "arcade-games"
+    "zach-sleep-letter": {
+      "title": "Zach Sleep Letter",
+      "description": "Wellness plea about rest",
+      "icon": "😴",
+      "collection": "stories-content"
     },
-    "space-invaders": {
-      "title": "AI vs Human Invaders",
-      "description": "Kaboom duel defense wave",
-      "icon": "👾",
-      "collection": "arcade-games"
-    },
-    "subway_sub_ratio": {
-      "title": "Subway Sub Ratio",
-      "description": "Sandwich proportions tracker",
-      "icon": "🥖",
-      "collection": "utilities-apps"
-    },
-    "sudoku": {
-      "title": "Sudoku",
-      "description": "Grid logic puzzle board",
-      "icon": "🔢",
-      "collection": "arcade-games"
+    "red-siren-protocol": {
+      "title": "Red Siren Protocol",
+      "description": "Emergency alert hub",
+      "icon": "🚨",
+      "collection": "stories-content"
     },
     "task-warning": {
       "title": "Task Warning Beacon",
@@ -238,174 +365,47 @@
       "icon": "⚠️",
       "collection": "stories-content"
     },
-    "weekend planner": {
-      "title": "Weekend Planner",
-      "description": "Two-day mission brief",
-      "icon": "📅",
-      "collection": "utilities-apps"
-    },
-    "zach-errands": {
-      "title": "Zach Errands",
-      "description": "Quick errand hit list",
-      "icon": "🧾",
-      "collection": "utilities-apps"
-    },
-    "zach-sleep-letter": {
-      "title": "Zach Sleep Letter",
-      "description": "Wellness plea about rest",
-      "icon": "😴",
+    "digital_sisyphus": {
+      "title": "Digital Sisyphus Loop",
+      "description": "Absurdist scroll meditation",
+      "icon": "🪨",
       "collection": "stories-content"
     },
-    "zach_work_schedule": {
-      "title": "Zach Work Schedule",
-      "description": "Shift tracking console grid",
-      "icon": "📆",
-      "collection": "utilities-apps"
+    "bushwick": {
+      "title": "Bushwick Field Guide",
+      "description": "Neighborhood missions explorer",
+      "icon": "🗺️",
+      "collection": "stories-content"
     },
-    "tictactoe-confetti": {
-      "title": "Tic-Tac-Toe Confetti",
-      "description": "Two-player board with celebrations",
-      "icon": "🎉",
-      "collection": "arcade-games"
+    "cen_veggie_haul": {
+      "title": "Cen's Veggie Haul",
+      "description": "Farmers market inventory log",
+      "icon": "🥬",
+      "collection": "stories-content"
     },
-    "snake-retriever": {
-      "title": "Snake Retriever",
-      "description": "Golden retriever snake variant",
+    "radish_love": {
+      "title": "Radish Love Letter",
+      "description": "Playful ode to roots",
+      "icon": "❤️",
+      "collection": "stories-content"
+    },
+    "alex_dog_mess": {
+      "title": "Alex's Dog Mess",
+      "description": "Humorous cleanup field report",
       "icon": "🐕",
-      "collection": "arcade-games"
+      "collection": "stories-content"
     },
-    "dmv-maze": {
-      "title": "DMV Maze of Despair",
-      "icon": "📋",
-      "description": "bureaucratic nightmare simulator",
-      "collection": "arcade-games",
-      "hidden": false
+    "borscht": {
+      "title": "Borscht Recipe",
+      "description": "Step-by-step beet ritual",
+      "icon": "🍲",
+      "collection": "stories-content"
     },
-    "dermpath-tetris": {
-      "title": "DermaPath Tetris",
-      "icon": "🧬",
-      "description": "histology block stacker",
-      "collection": "arcade-games",
-      "hidden": false
-    },
-    "letter-to-nancy": {
-      "title": "Letter to Nancy",
-      "icon": "✉️",
-      "description": "noir letter interactive reveal",
-      "collection": "stories-content",
-      "hidden": false
-    },
-    "coffee-steam-viz": {
-      "title": "Coffee in Snow",
-      "icon": "☕",
-      "description": "cozy particle coffee ritual",
-      "collection": "stories-content",
-      "hidden": false
-    },
-    "friday-wheel": {
-      "title": "Friday Night Wheel",
-      "icon": "🎡",
-      "description": "spinning activity decision maker",
-      "collection": "utilities-apps",
-      "hidden": false
-    },
-    "hangman": {
-      "title": "Hangman",
-      "icon": "✏️",
-      "description": "two-player word guessing duel",
-      "collection": "arcade-games",
-      "hidden": false
-    },
-    "sunday-wheel": {
-      "title": "Sunday Spin",
-      "icon": "🎡",
-      "description": "weekend activity spinner wheel",
-      "collection": "utilities-apps",
-      "hidden": false
-    },
-    "foot-scratch-game": {
-      "title": "Foot Scratch Simulator",
-      "icon": "🦶",
-      "description": "absurd itch relief arcade",
-      "collection": "arcade-games",
-      "hidden": false
-    },
-    "cen-schedule": {
-      "title": "Cen's Day Planner",
-      "icon": "🗓️",
-      "description": "branching daily schedule explorer",
-      "collection": "utilities-apps",
-      "hidden": false
-    },
-    "pleasantville-crossword": {
-      "title": "Pleasantville Crossword",
-      "icon": "🧩",
-      "description": "noir terminal crossword puzzle",
-      "collection": "arcade-games",
-      "hidden": false
-    },
-    "pleasantville-clues": {
-      "title": "Pleasantville Clues & Answers",
-      "icon": "🔍",
-      "description": "searchable noir trivia database",
-      "collection": "utilities-apps",
-      "hidden": false
-    },
-    "tarot-reading": {
-      "title": "Tarot Reading",
-      "icon": "🔮",
-      "description": "mystical three-card tarot spread",
-      "collection": "utilities-apps",
-      "hidden": false
-    },
-    "site-inventory": {
-      "title": "Site Inventory",
-      "icon": "🗂️",
-      "description": "repository scanner utility",
-      "collection": "featured",
-      "hidden": false
-    },
-    "memory-cheer-cen": {
-      "title": "Memory Cheer for Cen",
-      "icon": "🎮",
-      "description": "cheerful card matching game",
-      "collection": "arcade-games",
-      "hidden": false
-    },
-    "sequence-recall": {
-      "title": "Sequence Recall",
-      "icon": "🧩",
-      "description": "memory pattern arcade challenge",
-      "collection": "arcade-games",
-      "hidden": false
-    },
-    "tuesday-letter-cen": {
-      "title": "Tuesday Letter for Cen",
-      "icon": "💌",
-      "description": "warm tuesday check-in letter",
-      "collection": "stories-content",
-      "hidden": false
-    },
-    "tv-intervention-infomercial": {
-      "title": "TV Intervention Infomercial",
-      "icon": "📺",
-      "description": "late-night hype parody",
-      "collection": "featured",
-      "hidden": false
-    },
-    "rhythm-test": {
-      "title": "Rhythm Test",
-      "icon": "🎵",
-      "description": "beat matching rhythm arcade",
-      "collection": "arcade-games",
-      "hidden": false
-    },
-    "riddle-river": {
-      "title": "The River Riddle",
-      "icon": "📜",
-      "description": "scroll-reveal riddle utility",
-      "collection": "utilities-apps",
-      "hidden": false
+    "droid-union": {
+      "title": "Droid Union Dispatch",
+      "description": "Robot labor rights zine",
+      "icon": "🤖",
+      "collection": "stories-content"
     }
   }
 }
