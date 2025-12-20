@@ -264,7 +264,11 @@ The entire bot is contained in `index.js` (~3700+ lines) with these key sections
 The bot uses OpenRouter's function calling with an **agentic loop** to give the AI autonomous multi-step capabilities. All tools are available via both slash commands AND @mentions:
 
 **Filesystem Tools**:
-- `list_files(path)` - Recursively list all files with paths, types, sizes organized by category
+- `file_exists(path|url)` - **FAST existence check with fuzzy matching**. Use FIRST when given a URL or informal name. Supports:
+  * URLs: `https://bot.inference-arcade.com/src/game.html` → extracts path automatically
+  * Informal names: `"peanut city"` → tries `src/peanut-city.html`, `src/peanut_city.html`
+  * Returns similar file suggestions if not found
+- `list_files(path)` - List files grouped by extension for easy scanning
 - `read_file(path)` - Read file contents (5000 char limit)
 - `write_file(path, content)` - Create/update files completely
 - `edit_file(path, old_string, new_string, instructions)` - Edit existing files via exact string replacement (FAST, preferred) or AI instructions (SLOW, fallback)

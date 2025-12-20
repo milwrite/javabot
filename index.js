@@ -888,8 +888,9 @@ URL FORMATTING (CRITICAL - FOLLOW EXACTLY):
 - Use plain hyphens (-) not em dashes (—) in page names
 
 AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
-- list_files(path|[paths]): List files in directory or multiple directories
-- search_files(pattern, path|[paths], options): Search text patterns across single file, multiple files, or directories (supports regex, case-insensitive)
+- file_exists(path|url): FAST existence check - use FIRST when given a URL like bot.inference-arcade.com/src/file.html
+- list_files(path|[paths]): List files in directory (grouped by extension for easy scanning)
+- search_files(pattern, path|[paths], options): Search text patterns across files (supports regex, case-insensitive)
 - read_file(path|[paths]): Read single file or multiple files (respects file size limits)
 - write_file(path, content): Create/update files completely
 - edit_file(path, instructions): Edit files with natural language instructions
@@ -915,6 +916,8 @@ DISCORD INTEGRATION FEATURES:
 - Message History: Fetches last 20 messages from Discord API with reactions
 
 WHEN TO USE EACH TOOL:
+- When user provides a URL (bot.inference-arcade.com/src/file.html): Use file_exists FIRST to verify the file exists
+- When user mentions a page name informally ("Peanut city", "the maze game"): Convert to likely filename (peanut-city.html, maze.html) and use file_exists to check. If not found, use list_files to find similar names.
 - For multi-file operations: Use array syntax - search_files("pattern", ["file1.html", "file2.js"])
 - To find content across files: ALWAYS use search_files FIRST before reading files
   * Examples: "list clues", "find answers", "show all X", "what are the Y"
@@ -1378,9 +1381,119 @@ async function listFiles(dirPath = './src') {
         }
 
         const files = await fs.readdir(dirPath);
-        return files.join(', ');
+
+        // Return structured, searchable format instead of flat comma-separated list
+        // Group by extension for easier navigation
+        const byExtension = {};
+        files.forEach(file => {
+            const ext = path.extname(file).toLowerCase() || '.other';
+            if (!byExtension[ext]) byExtension[ext] = [];
+            byExtension[ext].push(file);
+        });
+
+        // Build searchable output with file count
+        let output = `📁 ${dirPath} (${files.length} files)\n`;
+
+        // Sort extensions by frequency (most common first)
+        const sortedExts = Object.entries(byExtension)
+            .sort((a, b) => b[1].length - a[1].length);
+
+        for (const [ext, extFiles] of sortedExts) {
+            output += `\n${ext} (${extFiles.length}):\n`;
+            // Sort files alphabetically for easy scanning
+            extFiles.sort().forEach(file => {
+                output += `  - ${file}\n`;
+            });
+        }
+
+        return output.trim();
     } catch (error) {
         return `Error listing files: ${error.message}`;
+    }
+}
+
+/**
+ * Check if a file exists at the given path
+ * Fast existence check without reading content
+ * Supports: URLs, informal names ("Peanut city" → src/peanut-city.html), and exact paths
+ */
+async function fileExists(filePath) {
+    try {
+        // Handle multiple files (array input)
+        if (Array.isArray(filePath)) {
+            const results = [];
+            for (const singlePath of filePath) {
+                const exists = await fileExists(singlePath);
+                results.push(`${singlePath}: ${exists}`);
+            }
+            return results.join('\n');
+        }
+
+        // Normalize path - handle URLs from bot.inference-arcade.com
+        let normalizedPath = filePath;
+        const urlMatch = filePath.match(/bot\.inference-arcade\.com\/(.+)/);
+        if (urlMatch) {
+            normalizedPath = urlMatch[1];
+            console.log(`[FILE_EXISTS] Extracted path from URL: ${normalizedPath}`);
+        }
+
+        // Try exact path first
+        try {
+            await fs.access(normalizedPath);
+            const stats = await fs.stat(normalizedPath);
+            return `✅ EXISTS: ${normalizedPath} (${stats.size} bytes)`;
+        } catch {
+            // Exact path not found - try fuzzy variations
+        }
+
+        // Generate fuzzy variations for informal names
+        const variations = [];
+        const baseName = normalizedPath
+            .toLowerCase()
+            .replace(/\s+/g, '-')           // "Peanut City" → "peanut-city"
+            .replace(/[^a-z0-9\-\.\/]/g, '') // Remove special chars
+            .replace(/\.html$/, '');         // Remove .html if present
+
+        // Try common patterns
+        variations.push(`src/${baseName}.html`);
+        variations.push(`src/${baseName}`);
+        variations.push(`${baseName}.html`);
+
+        // Also try with underscores instead of hyphens
+        const underscoreVersion = baseName.replace(/-/g, '_');
+        if (underscoreVersion !== baseName) {
+            variations.push(`src/${underscoreVersion}.html`);
+        }
+
+        for (const variation of variations) {
+            try {
+                await fs.access(variation);
+                const stats = await fs.stat(variation);
+                return `✅ EXISTS: ${variation} (${stats.size} bytes) [matched from "${filePath}"]`;
+            } catch {
+                // Try next variation
+            }
+        }
+
+        // If still not found, suggest similar files
+        try {
+            const srcFiles = await fs.readdir('./src');
+            const searchTerm = baseName.replace(/-/g, '').replace(/_/g, '');
+            const similar = srcFiles.filter(f => {
+                const normalized = f.toLowerCase().replace(/-/g, '').replace(/_/g, '').replace('.html', '').replace('.js', '');
+                return normalized.includes(searchTerm) || searchTerm.includes(normalized);
+            }).slice(0, 5);
+
+            if (similar.length > 0) {
+                return `❌ NOT FOUND: ${filePath}\n💡 Similar files in src/: ${similar.join(', ')}`;
+            }
+        } catch {
+            // Can't read src dir
+        }
+
+        return `❌ NOT FOUND: ${filePath}`;
+    } catch (error) {
+        return `❌ NOT FOUND: ${filePath} (error: ${error.message})`;
     }
 }
 
@@ -1412,7 +1525,15 @@ async function readFile(filePath) {
             return allResults.join('\n\n---\n\n');
         }
 
-        const content = await fs.readFile(filePath, 'utf8');
+        // Normalize path - handle URLs from bot.inference-arcade.com
+        let normalizedPath = filePath;
+        const urlMatch = filePath.match(/bot\.inference-arcade\.com\/(.+)/);
+        if (urlMatch) {
+            normalizedPath = urlMatch[1];
+            console.log(`[READ_FILE] Extracted path from URL: ${normalizedPath}`);
+        }
+
+        const content = await fs.readFile(normalizedPath, 'utf8');
         const truncatedContent = content.substring(0, CONFIG.FILE_READ_LIMIT);
 
         // Log file read to GUI dashboard
@@ -2217,13 +2338,32 @@ Do not use web search or create new content - only edit existing files.`
             {
                 type: 'function',
                 function: {
+                    name: 'file_exists',
+                    description: 'FAST check if a file exists. Use this FIRST when given a URL like bot.inference-arcade.com/src/file.html - pass the URL or path directly.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: {
+                                oneOf: [
+                                    { type: 'string', description: 'File path or URL to check' },
+                                    { type: 'array', items: { type: 'string' }, description: 'Array of paths/URLs to check' }
+                                ]
+                            }
+                        },
+                        required: ['path']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
                     name: 'search_files',
                     description: 'Search for text patterns across files to find what needs editing',
                     parameters: {
                         type: 'object',
                         properties: {
                             pattern: { type: 'string', description: 'Text or regex pattern to search for' },
-                            path: { 
+                            path: {
                                 oneOf: [
                                     { type: 'string', description: 'Directory or file to search in (default: ./src)' },
                                     { type: 'array', items: { type: 'string' }, description: 'Array of files/directories to search' }
@@ -2337,7 +2477,9 @@ Do not use web search or create new content - only edit existing files.`
                 }
 
                 let result;
-                if (functionName === 'search_files') {
+                if (functionName === 'file_exists') {
+                    result = await fileExists(args.path);
+                } else if (functionName === 'search_files') {
                     result = await searchFiles(args.pattern, args.path || './src', {
                         caseInsensitive: args.case_insensitive || false
                     });
@@ -2431,17 +2573,36 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'list_files',
-                    description: 'List files in a directory in the repository',
+                    description: 'List files in a directory in the repository. Returns files grouped by extension for easy scanning.',
                     parameters: {
                         type: 'object',
                         properties: {
-                            path: { 
+                            path: {
                                 oneOf: [
                                     { type: 'string', description: 'Directory path (default: ./src)' },
                                     { type: 'array', items: { type: 'string' }, description: 'Array of directories to list' }
                                 ]
                             }
                         }
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'file_exists',
+                    description: 'FAST check if a file exists. Use this FIRST when a user provides a URL like bot.inference-arcade.com/src/file.html - pass the URL or path directly and it will check existence. Returns EXISTS with size or NOT FOUND.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: {
+                                oneOf: [
+                                    { type: 'string', description: 'File path or URL to check (e.g., "src/game.html" or "https://bot.inference-arcade.com/src/game.html")' },
+                                    { type: 'array', items: { type: 'string' }, description: 'Array of paths/URLs to check' }
+                                ]
+                            }
+                        },
+                        required: ['path']
                     }
                 }
             },
@@ -2741,6 +2902,8 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 let result;
                 if (functionName === 'list_files') {
                     result = await listFiles(args.path || './src');
+                } else if (functionName === 'file_exists') {
+                    result = await fileExists(args.path);
                 } else if (functionName === 'search_files') {
                     result = await searchFiles(args.pattern, args.path || './src', {
                         caseInsensitive: args.case_insensitive || false,
