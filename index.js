@@ -635,12 +635,13 @@ const MODEL_PRESETS = {
 // Models that support reasoning will expose thinking during tool-calling workflows
 const REASONING_CONFIG = {
     // Claude models - native reasoning support via OpenRouter
-    'anthropic/claude-haiku-4.5': { enabled: true, effort: 'low', max_tokens: 1024 },
-    'anthropic/claude-sonnet-4.5': { enabled: true, effort: 'low', max_tokens: 1024 },
+    // Note: OpenRouter only allows ONE of effort OR max_tokens, not both
+    'anthropic/claude-haiku-4.5': { effort: 'low' },
+    'anthropic/claude-sonnet-4.5': { effort: 'low' },
     // Gemini - supports reasoning
-    'google/gemini-2.5-pro': { enabled: true, effort: 'low' },
+    'google/gemini-2.5-pro': { effort: 'low' },
     // Kimi K2 thinking - mandatory reasoning with <think> tokens
-    'moonshotai/kimi-k2-thinking': { enabled: true, effort: 'low', max_tokens: 2048 },
+    'moonshotai/kimi-k2-thinking': { effort: 'low' },
     // Models without reasoning support - graceful skip
     'perplexity/sonar': null,
     'moonshotai/kimi-k2-0905:exacto': null,
