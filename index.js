@@ -2756,11 +2756,16 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
 
         // Agentic loop - allow multiple rounds of tool calling
         const MAX_ITERATIONS = 6; // Reasonable limit to prevent infinite loops
+        const MAX_READONLY_ITERATIONS = 3; // Cap read-only tool loops to prevent over-searching
         let iteration = 0;
+        let readOnlyIterations = 0; // Track consecutive read-only iterations
         let lastResponse;
         const editedFiles = new Set(); // Track files already edited to prevent redundant edits
         const searchResults = []; // Track web search results for context persistence
         let completedActions = 0; // Count primary actions (edits, creates, commits)
+
+        // Read-only tools that don't modify state
+        const READ_ONLY_TOOLS = new Set(['list_files', 'file_exists', 'search_files', 'read_file', 'get_repo_status', 'git_log', 'web_search']);
 
         while (iteration < MAX_ITERATIONS) {
             iteration++;
@@ -2971,6 +2976,23 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 const toolsUsed = lastResponse.tool_calls.map(tc => tc.function.name);
                 const thinkingForGUI = formatThinkingForGUI(reasoning);
                 updateAgentLoop(iteration, toolsUsed, thinkingForGUI);
+            }
+
+            // Track read-only iterations to prevent over-searching on info requests
+            const allToolsReadOnly = lastResponse.tool_calls.every(tc => READ_ONLY_TOOLS.has(tc.function.name));
+            if (allToolsReadOnly && !actionCompletedThisIteration) {
+                readOnlyIterations++;
+                if (readOnlyIterations >= MAX_READONLY_ITERATIONS) {
+                    logEvent('LLM', `Read-only cap reached (${readOnlyIterations} iterations) - forcing final response`);
+
+                    // Get final text-only response
+                    const result = await getFinalTextResponse(messages, tools);
+                    if (result) lastResponse = result;
+
+                    break; // Exit loop - we have enough info
+                }
+            } else {
+                readOnlyIterations = 0; // Reset if we did a write action
             }
 
             // After completing a primary action, give AI one more iteration to naturally respond
