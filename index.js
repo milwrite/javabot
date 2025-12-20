@@ -2813,6 +2813,12 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             if (actionCompletedThisIteration && iteration < MAX_ITERATIONS) {
                 logEvent('LLM', 'Primary action completed - getting final response');
 
+                // Notify user that action completed
+                if (onStatusUpdate) {
+                    const completedTools = lastResponse.tool_calls.map(tc => tc.function.name).join(', ');
+                    await onStatusUpdate(`✓ done: ${completedTools}`);
+                }
+
                 // Get final text-only response (consolidated API call)
                 const result = await getFinalTextResponse(messages, tools);
                 if (result) lastResponse = result;
@@ -3406,16 +3412,20 @@ async function handleMentionAsync(message) {
                         
                         if (llmResult.toolCalls && llmResult.toolCalls.length > 0) {
                             logEvent('EDIT_LOOP', `Iteration 1: ${llmResult.toolCalls.length} tools`);
-                            
+
                             // Process tool calls and iterate up to 10 times
                             for (let iteration = 1; iteration <= 10 && llmResult.toolCalls && llmResult.toolCalls.length > 0; iteration++) {
                                 const results = [];
-                                
+
+                                // Show user what tools are being executed
+                                const toolNames = llmResult.toolCalls.map(tc => tc.function?.name || 'unknown').join(', ');
+                                await safeEditReply(thinkingMsg, `✏️ step ${iteration}: ${toolNames}...`);
+
                                 for (const toolCall of llmResult.toolCalls) {
                                     const result = await executeToolCall(toolCall);
                                     results.push(result);
                                 }
-                                
+
                                 if (iteration < 10) {
                                     llmResult = await getEditResponse(content, conversationMessages, results);
                                     response = cleanBotResponse(llmResult.text);
@@ -3424,17 +3434,26 @@ async function handleMentionAsync(message) {
                                     }
                                 }
                             }
-                            
+
+                            // If we have a response from the AI, send it
                             if (response) {
                                 await safeEditReply(thinkingMsg, response);
                                 addToHistory(username, content, false);
                                 addToHistory('Bot Sportello', response, true);
                                 return; // Success - exit
                             }
+
+                            // Tools executed but AI didn't provide text - generate completion message
+                            const toolsExecuted = results.length > 0 ? results.map(r => r.tool_call_id || 'tool').join(', ') : 'edits';
+                            const fallbackMsg = `✓ done - made the requested changes`;
+                            await safeEditReply(thinkingMsg, fallbackMsg);
+                            addToHistory(username, content, false);
+                            addToHistory('Bot Sportello', fallbackMsg, true);
+                            return; // Success - exit with fallback message
                         } else {
-                            logEvent('EDIT_LOOP', 'Max iterations reached without edit - this may not be an edit request');
+                            logEvent('EDIT_LOOP', 'No tool calls in response - AI may need more context');
                         }
-                        
+
                         // If edit loop didn't work, continue to fallback loops below
                         processingAttempt++;
                         if (processingAttempt <= maxProcessingAttempts) {
