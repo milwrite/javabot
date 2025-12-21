@@ -891,7 +891,7 @@ RESPONSIVE BREAKPOINTS (MANDATORY):
 WHEN CREATING PAGES:
 1. Link to ../page-theme.css (REQUIRED)
 2. Add viewport meta tag: <meta name="viewport" content="width=device-width, initial-scale=1.0">
-3. Add .home-link navigation (styled by page-theme.css)
+3. Use the unified page chrome: wrap the back arrow + titles in a .page-header, with .home-link for the arrow, .page-title for the main heading, and .page-subtitle (or .page-title-group .subtitle) for subheadings; do not override title/subtitle sizes inline (use the CSS tokens)
 4. Body: padding-top 80px for home button, overflow-x/y: auto
 5. For GAMES: Always include .mobile-controls with touch buttons
 6. Canvas games: max-width 100%, height auto
