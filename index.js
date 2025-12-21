@@ -2230,26 +2230,57 @@ async function getRepoStatus() {
     }
 }
 
-// Git log - view commit history
+// Helper: Convert ISO date to relative time (e.g., "2 hours ago")
+function getRelativeTime(isoDate) {
+    const now = new Date();
+    const date = new Date(isoDate);
+    const seconds = Math.floor((now - date) / 1000);
+
+    const intervals = [
+        { label: 'year', seconds: 31536000 },
+        { label: 'month', seconds: 2592000 },
+        { label: 'week', seconds: 604800 },
+        { label: 'day', seconds: 86400 },
+        { label: 'hour', seconds: 3600 },
+        { label: 'minute', seconds: 60 }
+    ];
+
+    for (const interval of intervals) {
+        const count = Math.floor(seconds / interval.seconds);
+        if (count >= 1) {
+            return `${count} ${interval.label}${count !== 1 ? 's' : ''} ago`;
+        }
+    }
+    return 'just now';
+}
+
+// Git log - view commit history (uses simple-git for proper PATH handling)
 async function getGitLog(count = 10, file = null, oneline = false) {
     try {
         const maxCount = Math.min(count || 10, 50);
-        const { exec } = require('child_process');
-        const { promisify } = require('util');
-        const execAsync = promisify(exec);
 
-        let cmd = `git log -${maxCount}`;
+        // Build options for simple-git log
+        const logOptions = {
+            maxCount: maxCount,
+            ...(file && { file: file })
+        };
+
+        const logResult = await git.log(logOptions);
+
+        if (!logResult.all || logResult.all.length === 0) {
+            return 'No commits found.';
+        }
+
+        // Format output based on oneline preference
         if (oneline) {
-            cmd += ' --oneline';
+            return logResult.all
+                .map(commit => `${commit.hash.substring(0, 7)} ${commit.message}`)
+                .join('\n');
         } else {
-            cmd += ' --format="%h | %an | %ar | %s"';
+            return logResult.all
+                .map(commit => `${commit.hash.substring(0, 7)} | ${commit.author_name} | ${getRelativeTime(commit.date)} | ${commit.message}`)
+                .join('\n');
         }
-        if (file) {
-            cmd += ` -- "${file}"`;
-        }
-
-        const { stdout } = await execAsync(cmd, { cwd: __dirname });
-        return stdout.trim() || 'No commits found.';
     } catch (error) {
         return `Error getting git log: ${error.message}`;
     }
