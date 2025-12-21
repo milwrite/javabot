@@ -187,6 +187,39 @@ class DiscordContextManager {
         this.cache = new Map(); // channelId -> { messages, timestamp }
     }
 
+    // Keep cache hot when new messages arrive (prevents stale context within TTL)
+    upsertMessage(discordMessage, limit = CONFIG.DISCORD_FETCH_LIMIT) {
+        const channelId = discordMessage.channel.id;
+        const cached = this.cache.get(channelId);
+
+        // Start fresh if we have no cache yet
+        if (!cached) {
+            this.cache.set(channelId, {
+                data: [discordMessage],
+                timestamp: Date.now()
+            });
+            return;
+        }
+
+        // Replace or append message, then trim to most recent N chronologically
+        const updated = [...cached.data];
+        const idx = updated.findIndex(msg => msg.id === discordMessage.id);
+        if (idx >= 0) {
+            updated[idx] = discordMessage;
+        } else {
+            updated.push(discordMessage);
+        }
+
+        // Sort by creation time to keep chronological order, then trim
+        updated.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+        const trimmed = updated.slice(-limit);
+
+        this.cache.set(channelId, {
+            data: trimmed,
+            timestamp: Date.now()
+        });
+    }
+
     // Fetch message history from Discord API with caching
     async fetchChannelHistory(channel, limit = CONFIG.DISCORD_FETCH_LIMIT) {
         const cacheKey = channel.id;
@@ -3399,6 +3432,9 @@ client.on('messageCreate', async message => {
     // Add message to conversation history
     console.log(`[TRACKING] ${message.author.username} in #${message.channel.name || message.channel.id}: ${message.content.substring(0, 100)}`);
     addToHistory(message.author.username, message.content, false);
+    if (contextManager) {
+        contextManager.upsertMessage(message);
+    }
 
     // Handle @ mentions with full AI capabilities
     if (message.mentions.has(client.user)) {
