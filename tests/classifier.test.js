@@ -72,6 +72,43 @@ const TEST_CASES = [
         expected: 'READ_ONLY',
         description: 'Directory listing'
     },
+    {
+        prompt: 'list previous 3 commit messages',
+        expected: 'READ_ONLY',
+        description: 'Git history query (not a commit action)'
+    },
+    {
+        prompt: 'show commit history',
+        expected: 'READ_ONLY',
+        description: 'Git log request'
+    },
+    {
+        prompt: 'search git log for peanuts',
+        expected: 'READ_ONLY',
+        description: 'Search commit history'
+    },
+    {
+        prompt: 'what was the last commit?',
+        expected: 'READ_ONLY',
+        description: 'Recent commit query'
+    },
+
+    // COMMIT cases (actual commit actions)
+    {
+        prompt: 'commit this game',
+        expected: 'COMMIT',
+        description: 'Commit action with target'
+    },
+    {
+        prompt: 'save this and push changes',
+        expected: 'COMMIT',
+        description: 'Save and push action'
+    },
+    {
+        prompt: 'make a commit with message "fixed bug"',
+        expected: 'COMMIT',
+        description: 'Explicit commit action'
+    },
     
     // CONVERSATION cases
     {

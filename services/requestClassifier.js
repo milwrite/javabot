@@ -122,14 +122,37 @@ Respond with ONLY one of these exact words: SIMPLE_EDIT, FUNCTIONALITY_FIX, CREA
  */
 function fallbackClassification(prompt, meta = {}) {
     const lowerPrompt = prompt.toLowerCase();
-    
+
     // Conservative fallback - when LLM fails, default to normal chat flow
     // This ensures functionality fixes get proper tool access
-    
-    // Clear commit indicators
-    if (lowerPrompt.includes('commit') || 
-        lowerPrompt.includes('save') || 
-        lowerPrompt.includes('push') ||
+
+    // READ-ONLY queries about git history (must check BEFORE commit check)
+    // Handles: "list commit messages", "show commit history", "previous commits", "git log"
+    const gitHistoryPatterns = [
+        'commit message', 'commit history', 'commit log',
+        'previous commit', 'recent commit', 'last commit',
+        'show commit', 'list commit', 'search commit',
+        'git log', 'git history'
+    ];
+    if (gitHistoryPatterns.some(pattern => lowerPrompt.includes(pattern))) {
+        return {
+            type: 'READ_ONLY',
+            isEdit: false,
+            isCreate: false,
+            isCommit: false,
+            isReadOnly: true,
+            isConversation: false,
+            method: meta.method || 'fallback'
+        };
+    }
+
+    // Clear commit indicators (create a NEW commit)
+    if (lowerPrompt.includes('commit this') ||
+        lowerPrompt.includes('commit the') ||
+        lowerPrompt.includes('make a commit') ||
+        lowerPrompt.includes('save this') ||
+        lowerPrompt.includes('push this') ||
+        lowerPrompt.includes('push changes') ||
         lowerPrompt.includes('git add') ||
         lowerPrompt.includes('save changes')) {
         return {
