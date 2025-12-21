@@ -108,8 +108,8 @@ const CONFIG = {
     PUSH_TIMEOUT: 60000,
     API_TIMEOUT: 60000,
     // Discord Context Settings (replaces agents.md)
-    DISCORD_FETCH_LIMIT: 20,      // Max messages to fetch per Discord API request
-    DISCORD_CONTEXT_LIMIT: 20,    // Messages to include in LLM context
+    DISCORD_FETCH_LIMIT: 5,       // Max messages to fetch per Discord API request
+    DISCORD_CONTEXT_LIMIT: 5,     // Messages to include in LLM context
     DISCORD_CACHE_TTL: 60000,     // Cache duration (1 minute)
     INCLUDE_REACTIONS: true       // Add reaction data to context
 };
