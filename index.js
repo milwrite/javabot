@@ -4066,15 +4066,37 @@ async function handleMentionAsync(message) {
 
         // Send response directly (no commit prompts in mentions)
         if (finalResponse.length > 2000) {
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const fileName = `logs/responses/mention-${timestamp}.txt`;
-
-            await fs.mkdir('logs/responses', { recursive: true });
-            const fileContent = `User: ${username}\nMessage: ${content}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${finalResponse}`;
-            await fs.writeFile(fileName, fileContent);
-
-            const truncated = finalResponse.substring(0, 1800);
-            await safeEditReply(thinkingMsg, `${truncated}...\n\n*[Full response saved to \`${fileName}\`]*`);
+            // Split long messages into multiple parts instead of truncating
+            const maxLength = 1950; // Leave room for formatting
+            const parts = [];
+            let remaining = finalResponse;
+            
+            while (remaining.length > 0) {
+                if (remaining.length <= maxLength) {
+                    parts.push(remaining);
+                    break;
+                }
+                
+                // Try to split at a natural break point
+                let splitIndex = remaining.lastIndexOf('\n', maxLength);
+                if (splitIndex === -1 || splitIndex < maxLength * 0.5) {
+                    splitIndex = remaining.lastIndexOf(' ', maxLength);
+                }
+                if (splitIndex === -1 || splitIndex < maxLength * 0.5) {
+                    splitIndex = maxLength;
+                }
+                
+                parts.push(remaining.substring(0, splitIndex));
+                remaining = remaining.substring(splitIndex).trim();
+            }
+            
+            // Send first part as edit to thinking message
+            await safeEditReply(thinkingMsg, parts[0]);
+            
+            // Send remaining parts as follow-up messages
+            for (let i = 1; i < parts.length; i++) {
+                await message.channel.send(parts[i]);
+            }
         } else {
             await safeEditReply(thinkingMsg, finalResponse);
         }
@@ -4411,26 +4433,62 @@ async function handleSearch(interaction) {
         // Perform web search
         const searchResult = await webSearch(query);
 
-        // If response is longer than 2000 characters, save to file and truncate
-        if (searchResult.length > 2000) {
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const fileName = `logs/responses/search-${timestamp}.txt`;
-
-            // Create responses directory if it doesn't exist
-            await fs.mkdir('logs/responses', { recursive: true });
-
-            // Save full response to file
-            const fileContent = `Search Query: ${query}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${searchResult}`;
-            await fs.writeFile(fileName, fileContent);
-
-            // Truncate response and add link
-            const truncated = searchResult.substring(0, 1800);
-            const replyMessage = `**Search: "${query}"**\n\n${truncated}...\n\n*[Full results saved to \`${fileName}\`]*`;
-
-            await interaction.editReply(replyMessage);
+        // Split long search results instead of truncating
+        const header = `**Search: "${query}"**\n\n`;
+        const fullMessage = header + searchResult;
+        
+        if (fullMessage.length > 2000) {
+            const maxLength = 1950;
+            const parts = [];
+            let remaining = searchResult; // Don't include header in remaining
+            
+            // First part includes the header
+            const firstPartMaxLength = maxLength - header.length;
+            if (remaining.length <= firstPartMaxLength) {
+                parts.push(header + remaining);
+            } else {
+                // Find natural break point for first part
+                let splitIndex = remaining.lastIndexOf('\n', firstPartMaxLength);
+                if (splitIndex === -1 || splitIndex < firstPartMaxLength * 0.5) {
+                    splitIndex = remaining.lastIndexOf(' ', firstPartMaxLength);
+                }
+                if (splitIndex === -1 || splitIndex < firstPartMaxLength * 0.5) {
+                    splitIndex = firstPartMaxLength;
+                }
+                
+                parts.push(header + remaining.substring(0, splitIndex));
+                remaining = remaining.substring(splitIndex).trim();
+                
+                // Split remaining parts
+                while (remaining.length > 0) {
+                    if (remaining.length <= maxLength) {
+                        parts.push(remaining);
+                        break;
+                    }
+                    
+                    let splitIndex = remaining.lastIndexOf('\n', maxLength);
+                    if (splitIndex === -1 || splitIndex < maxLength * 0.5) {
+                        splitIndex = remaining.lastIndexOf(' ', maxLength);
+                    }
+                    if (splitIndex === -1 || splitIndex < maxLength * 0.5) {
+                        splitIndex = maxLength;
+                    }
+                    
+                    parts.push(remaining.substring(0, splitIndex));
+                    remaining = remaining.substring(splitIndex).trim();
+                }
+            }
+            
+            // Send first part as reply
+            await interaction.editReply(parts[0]);
+            
+            // Send remaining parts as follow-ups
+            for (let i = 1; i < parts.length; i++) {
+                await interaction.followUp(parts[i]);
+            }
         } else {
             // Response is short enough, send normally
-            await interaction.editReply(`**Search: "${query}"**\n\n${searchResult}`);
+            await interaction.editReply(fullMessage);
         }
 
     } catch (error) {
