@@ -296,7 +296,7 @@
     </style>
 </head>
 <body>
-    <a class="home-link" href="../index.html">← HOME</a>
+    <a href="../index.html" class="home-link">←</a>
 
     <div class="progress-indicator">
         <div class="progress-bar" id="progressBar"></div>
@@ -329,7 +329,6 @@
             </div>
         </div>
 
-        <div class="divider">* * *</div>
 
         <div class="chapter" data-chapter="2">
             <div class="parallax-layer slow">
@@ -355,7 +354,6 @@
             </div>
         </div>
 
-        <div class="divider">* * *</div>
 
         <div class="chapter" data-chapter="3">
             <div class="parallax-layer medium">
@@ -375,7 +373,6 @@
             </div>
         </div>
 
-        <div class="divider">* * *</div>
 
         <div class="chapter" data-chapter="4">
             <div class="parallax-layer fast">
@@ -401,7 +398,6 @@
             </div>
         </div>
 
-        <div class="divider">* * *</div>
 
         <div class="chapter" data-chapter="5">
             <div class="parallax-layer slow">
@@ -584,20 +580,9 @@
         let paragraphs = [];
         let currentParagraphIndex = 0;
 
-        // Detective voice preferences - deep American male voices
+        // Bot Sportello's voice - Ralph only
         const DETECTIVE_VOICE_KEYWORDS = [
-            'Aaron',      // macOS deep male
-            'Alex',       // macOS American male
-            'Tom',        // Windows deep male
-            'David',      // Windows/macOS male
-            'James',      // Deep male
-            'Mark',       // Male voice
-            'Guy',        // macOS male
-            'Fred',       // Classic deep voice
-            'Daniel',     // UK but deep
-            'Google US English Male',
-            'Microsoft David',
-            'Microsoft Mark',
+            'Ralph',      // Bot Sportello's voice - no other choice
         ];
 
         // Get all story text
@@ -626,69 +611,39 @@
             return texts;
         }
 
-        // Find best detective-style voice
+        // Find Ralph voice - Bot Sportello's only voice
         function findDetectiveVoice(voiceList) {
-            // First pass: look for exact keyword matches in American English
-            for (const keyword of DETECTIVE_VOICE_KEYWORDS) {
-                const match = voiceList.find(v =>
-                    v.name.includes(keyword) &&
-                    (v.lang === 'en-US' || v.lang.startsWith('en'))
-                );
-                if (match) return match;
-            }
-
-            // Second pass: any American English male-sounding voice
-            const americanVoices = voiceList.filter(v => v.lang === 'en-US');
-            if (americanVoices.length > 0) {
-                // Prefer voices without female-associated names
-                const maleVoice = americanVoices.find(v =>
-                    !v.name.match(/samantha|victoria|karen|susan|zira|hazel|jenny|aria|sara|cortana/i)
-                );
-                if (maleVoice) return maleVoice;
-                return americanVoices[0];
-            }
-
-            // Fallback: any English voice
-            const englishVoices = voiceList.filter(v => v.lang.startsWith('en'));
-            return englishVoices[0] || voiceList[0];
+            // Ralph only - no other choices
+            const ralph = voiceList.find(v =>
+                v.name.includes('Ralph') &&
+                v.lang.startsWith('en')
+            );
+            return ralph || null;
         }
 
-        // Load available voices
+        // Load Ralph voice only
         function loadVoices() {
             voices = synth.getVoices();
             const select = document.getElementById('voiceSelect');
             select.innerHTML = '';
 
-            // Filter for English voices
-            const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+            // Find Ralph - the only choice
+            const ralph = findDetectiveVoice(voices);
 
-            if (englishVoices.length === 0) {
-                select.innerHTML = '<option value="">No voices available</option>';
+            if (!ralph) {
+                select.innerHTML = '<option value="">Ralph not available</option>';
+                document.getElementById('audioStatus').textContent = 'Ralph voice not found';
                 return;
             }
 
-            // Find the best detective voice
-            const detectiveVoice = findDetectiveVoice(englishVoices);
-            let detectiveIndex = 0;
+            // Ralph only - no other choices
+            const option = document.createElement('option');
+            option.value = '0';
+            option.textContent = `Ralph (${ralph.lang})`;
+            option.selected = true;
+            select.appendChild(option);
 
-            englishVoices.forEach((voice, i) => {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `${voice.name} (${voice.lang})`;
-
-                // Select the detective voice
-                if (voice === detectiveVoice) {
-                    option.selected = true;
-                    detectiveIndex = i;
-                }
-                select.appendChild(option);
-            });
-
-            // Update status to show selected voice
-            if (detectiveVoice) {
-                document.getElementById('audioStatus').textContent =
-                    `Voice: ${detectiveVoice.name.split(' ')[0]}`;
-            }
+            document.getElementById('audioStatus').textContent = 'Voice: Ralph';
         }
 
         // Initialize voices
@@ -697,20 +652,10 @@
         }
         loadVoices();
 
-        function changeVoice() {
-            const select = document.getElementById('voiceSelect');
-            const englishVoices = voices.filter(v => v.lang.startsWith('en'));
-            const selectedVoice = englishVoices[select.value];
-            if (selectedVoice) {
-                document.getElementById('audioStatus').textContent =
-                    `Voice: ${selectedVoice.name.split(' ')[0]}`;
-            }
-        }
+        function changeVoice() {}
 
         function getSelectedVoice() {
-            const select = document.getElementById('voiceSelect');
-            const englishVoices = voices.filter(v => v.lang.startsWith('en'));
-            return englishVoices[select.value] || findDetectiveVoice(englishVoices) || voices[0];
+            return findDetectiveVoice(voices);
         }
 
         function highlightParagraph(element) {

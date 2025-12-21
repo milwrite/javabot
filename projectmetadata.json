@@ -63,6 +63,12 @@
       "title": "Anniversary Chronicle",
       "description": "Surreal relationship time capsule",
       "icon": "💜",
+      "collection": "stories-content"
+    },
+    "peanut-city": {
+      "title": "Peanut City",
+      "description": "Noir detective horror tale",
+      "icon": "🥜",
       "collection": "featured"
     },
     "terminal-memory": {
