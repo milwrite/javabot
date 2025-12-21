@@ -690,33 +690,12 @@ function getReasoningConfig(model) {
 
 // Format reasoning for Discord (condensed 80 char summary)
 function formatThinkingForDiscord(reasoning) {
-    if (!reasoning) return null;
-    // Handle various reasoning response formats
-    let text = '';
-    if (typeof reasoning === 'string') {
-        text = reasoning;
-    } else if (reasoning.summary) {
-        text = reasoning.summary;
-    } else if (reasoning.text) {
-        text = reasoning.text;
-    } else if (Array.isArray(reasoning) && reasoning[0]?.text) {
-        text = reasoning[0].text;
-    }
-    // Truncate to 80 chars for clean Discord display
-    const condensed = text.slice(0, 80).replace(/\n/g, ' ').trim();
-    return condensed ? `thinking: ${condensed}...` : null;
+    return null;
 }
 
 // Format reasoning for GUI (fuller display)
 function formatThinkingForGUI(reasoning) {
-    if (!reasoning) return null;
-    if (typeof reasoning === 'string') return reasoning;
-    if (reasoning.text) return reasoning.text;
-    if (reasoning.summary) return reasoning.summary;
-    if (Array.isArray(reasoning)) {
-        return reasoning.map(r => r.text || r.summary || '').filter(Boolean).join('\n');
-    }
-    return JSON.stringify(reasoning);
+    return null;
 }
 
 // Get final text-only response (consolidated helper to reduce duplicate API calls)
@@ -1044,6 +1023,15 @@ function cleanBotResponse(response) {
 
     // Remove "Bot Sportello:" prefix patterns
     let cleaned = response.replace(/^Bot Sportello:\s*/i, '').replace(/Bot Sportello:\s*Bot Sportello:\s*/gi, '');
+
+    // Strip any tool-call markup that some models emit in plain text
+    cleaned = cleaned
+        .replace(/<[^>]*tool_call[^>]*>[\s\S]*?<\/[^>]*tool_call>/gi, '')
+        .replace(/<invoke\b[^>]*>[\s\S]*?<\/invoke>/gi, '')
+        .replace(/<parameter\b[^>]*>[\s\S]*?<\/parameter>/gi, '')
+        .replace(/<[^>]*tool_call[^>]*>/gi, '')
+        .replace(/<\/?(invoke|parameter)\b[^>]*>/gi, '')
+        .replace(/^<[^>\n]*(tool_call|invoke|parameter)[^>\n]*>\s*$/gmi, '');
 
     // Improve markdown formatting with proper spacing
     cleaned = cleaned
