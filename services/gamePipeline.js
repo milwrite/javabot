@@ -8,7 +8,25 @@ const { testGame } = require('../agents/gameTester');
 const { documentGame, updateProjectMetadata } = require('../agents/gameScribe');
 const { writeBuildLog, getRecentPatternsSummary } = require('./buildLogs');
 const simpleGit = require('simple-git');
-const git = simpleGit();
+const fsSync = require('fs');
+const { execSync } = require('child_process');
+
+// Find git binary - works on Railway (Linux) and macOS
+function findGitBinary() {
+    const candidates = ['/usr/bin/git', '/usr/local/bin/git', '/opt/homebrew/bin/git'];
+    try {
+        const gitPath = execSync('which git', { encoding: 'utf8' }).trim();
+        if (gitPath && fsSync.existsSync(gitPath)) return gitPath;
+    } catch (e) { /* continue to candidates */ }
+    for (const candidate of candidates) {
+        if (fsSync.existsSync(candidate)) return candidate;
+    }
+    return 'git';
+}
+
+const git = simpleGit({
+    binary: findGitBinary()
+});
 
 /**
  * Run the complete game building pipeline
