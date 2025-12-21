@@ -617,14 +617,13 @@ axiosRetry(axios, {
 
 // OpenRouter configuration
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-let MODEL = 'anthropic/claude-haiku-4.5'; // Default to Haiku 4.5
+let MODEL = 'moonshotai/kimi-k2-thinking'; // Default to Kimi K2 Thinking
 
 // Available models (2025 latest)
 const MODEL_PRESETS = {
-    'haiku': 'anthropic/claude-haiku-4.5',
+    'kimi': 'moonshotai/kimi-k2-thinking',  // Default - with interleaved reasoning
+    'kimi-fast': 'moonshotai/kimi-k2-0905:exacto',  // Kimi without reasoning
     'sonnet': 'anthropic/claude-sonnet-4.5',
-    'kimi': 'moonshotai/kimi-k2-0905:exacto',
-    'kimi-thinking': 'moonshotai/kimi-k2-thinking',  // With interleaved reasoning
     'qwen': 'qwen/qwen3-coder',
     'gemini': 'google/gemini-2.5-pro',
     'glm': 'z-ai/glm-4.6:exacto',
@@ -634,14 +633,12 @@ const MODEL_PRESETS = {
 // Reasoning configuration per model (interleaved thinking support)
 // Models that support reasoning will expose thinking during tool-calling workflows
 const REASONING_CONFIG = {
+    // Kimi K2 thinking - mandatory reasoning with <think> tokens (default)
+    'moonshotai/kimi-k2-thinking': { effort: 'low' },
     // Claude models - native reasoning support via OpenRouter
-    // Note: OpenRouter only allows ONE of effort OR max_tokens, not both
-    'anthropic/claude-haiku-4.5': { effort: 'low' },
     'anthropic/claude-sonnet-4.5': { effort: 'low' },
     // Gemini - supports reasoning
     'google/gemini-2.5-pro': { effort: 'low' },
-    // Kimi K2 thinking - mandatory reasoning with <think> tokens
-    'moonshotai/kimi-k2-thinking': { effort: 'low' },
     // Models without reasoning support - graceful skip
     'perplexity/sonar': null,
     'moonshotai/kimi-k2-0905:exacto': null,
@@ -725,14 +722,14 @@ let apiHealthStatus = {
     isHealthy: true,
     consecutiveFailures: 0,
     lastError: null,
-    lastSuccessfulModel: 'anthropic/claude-haiku-4.5'
+    lastSuccessfulModel: 'moonshotai/kimi-k2-thinking'
 };
 
 // Check API health with quick test request
 async function checkAPIHealth() {
     try {
         const testResponse = await axios.post(OPENROUTER_URL, {
-            model: 'anthropic/claude-haiku-4.5',
+            model: 'moonshotai/kimi-k2-thinking',
             messages: [{ role: 'user', content: 'ping' }],
             max_tokens: 10,
             temperature: 0.1
@@ -744,12 +741,12 @@ async function checkAPIHealth() {
             timeout: 10000,
             validateStatus: (status) => status < 500
         });
-        
+
         if (testResponse.status === 200) {
             apiHealthStatus.isHealthy = true;
             apiHealthStatus.consecutiveFailures = 0;
             apiHealthStatus.lastError = null;
-            apiHealthStatus.lastSuccessfulModel = 'anthropic/claude-haiku-4.5';
+            apiHealthStatus.lastSuccessfulModel = 'moonshotai/kimi-k2-thinking';
             logEvent('API_HEALTH', 'API healthy');
         } else {
             apiHealthStatus.isHealthy = false;
@@ -898,14 +895,14 @@ AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
 - get_repo_status(): Check current git status and branch info
 - git_log(count, file, oneline): View commit history (default 10 commits, optional file filter)
 - web_search(query): Search internet for current information via Perplexity
-- set_model(model): Switch AI model runtime (haiku, sonnet, kimi, gemini, glm, qwen, minimax) - ZDR-compliant only
+- set_model(model): Switch AI model runtime (kimi, kimi-fast, sonnet, gemini, glm, qwen, minimax) - ZDR-compliant only
 
 DISCORD INTEGRATION FEATURES:
 - Slash Commands (5 available):
   * /commit <message> [files] - Git commit & push to main
   * /status - Show repo status + live site link
   * /search <query> - Web search via Perplexity API
-  * /set-model <model> - Switch AI model (haiku/sonnet/kimi/gemini/glm/qwen/minimax) ZDR only
+  * /set-model <model> - Switch AI model (kimi/kimi-fast/sonnet/gemini/glm/qwen/minimax) ZDR only
   * /poll <question> - Yes/no poll with reactions
 - @ Mention Support: Full AI conversation with tool access (all capabilities available)
 - Multi-Channel Monitoring: Responds in 7 configured channels, fetches context from Discord API
@@ -1624,8 +1621,8 @@ async function editFile(filePath, oldString = null, newString = null, instructio
         } else if (instructions !== null) {
             console.log(`[EDIT_FILE] Using AI-based editing mode (slow fallback)`);
 
-            // Use Haiku for edits - much faster than other models
-            const editModel = MODEL_PRESETS['haiku'];
+            // Use Kimi-fast for edits - faster than thinking model
+            const editModel = MODEL_PRESETS['kimi-fast'];
             console.log(`[EDIT_FILE] Using ${editModel} for AI processing`);
 
             // Use AI to make the edit based on instructions
@@ -2769,14 +2766,14 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'set_model',
-                    description: 'Switch the AI model used for responses. ZDR-compliant models: haiku (fast), sonnet (balanced), kimi, kimi-thinking (with reasoning), gemini, glm, qwen',
+                    description: 'Switch the AI model used for responses. ZDR-compliant models: kimi (default, with reasoning), kimi-fast, sonnet, gemini, glm, qwen',
                     parameters: {
                         type: 'object',
                         properties: {
                             model: {
                                 type: 'string',
-                                description: 'Model preset name. Use kimi-thinking for interleaved reasoning support.',
-                                enum: ['haiku', 'sonnet', 'kimi', 'kimi-thinking', 'gemini', 'glm', 'qwen']
+                                description: 'Model preset name. kimi = Kimi K2 Thinking (default), kimi-fast = without reasoning.',
+                                enum: ['kimi', 'kimi-fast', 'sonnet', 'gemini', 'glm', 'qwen', 'minimax']
                             }
                         },
                         required: ['model']
@@ -2808,7 +2805,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             
             // Check API health and use fallback model if API has been failing
             if (apiHealthStatus.consecutiveFailures >= 2 && currentModel !== apiHealthStatus.lastSuccessfulModel) {
-                currentModel = apiHealthStatus.lastSuccessfulModel || 'anthropic/claude-haiku-4.5';
+                currentModel = apiHealthStatus.lastSuccessfulModel || 'moonshotai/kimi-k2-thinking';
                 logEvent('LLM', `API unhealthy, using fallback model: ${currentModel}`);
             }
             
@@ -2881,10 +2878,10 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         logEvent('LLM', `Waiting ${Math.round(delay/1000)}s before retry...`);
                         await new Promise(resolve => setTimeout(resolve, delay));
                         
-                        // On second retry, try fallback model
-                        if (retryCount === 2 && currentModel !== 'anthropic/claude-haiku-4.5') {
-                            currentModel = 'anthropic/claude-haiku-4.5';
-                            logEvent('LLM', 'Switching to Haiku model for retry');
+                        // On second retry, try fallback model (kimi-fast for speed)
+                        if (retryCount === 2 && currentModel !== 'moonshotai/kimi-k2-0905:exacto') {
+                            currentModel = 'moonshotai/kimi-k2-0905:exacto';
+                            logEvent('LLM', 'Switching to Kimi-fast model for retry');
                         }
                     } else {
                         // All retries exhausted
@@ -3139,9 +3136,9 @@ const commands = [
                 .setDescription('Model to use (or enter custom model name)')
                 .setRequired(true)
                 .addChoices(
-                    { name: 'Claude Haiku 4.5 (Fast, Cheap)', value: 'haiku' },
+                    { name: 'Kimi K2 Thinking (Default)', value: 'kimi' },
+                    { name: 'Kimi K2 Fast (No Reasoning)', value: 'kimi-fast' },
                     { name: 'Claude Sonnet 4.5 (Balanced)', value: 'sonnet' },
-                    { name: 'Kimi K2 Exacto (Moonshot AI)', value: 'kimi' },
                     { name: 'Qwen 3 Coder (Alibaba)', value: 'qwen' },
                     { name: 'Gemini 2.5 Pro (Google)', value: 'gemini' },
                     { name: 'GLM-4.6 Exacto (Z-AI)', value: 'glm' },
@@ -3729,10 +3726,10 @@ async function handleMentionAsync(message) {
                         }
                     });
                 } else if (processingAttempt === 2) {
-                    // Retry with Haiku model and reduced context
+                    // Retry with GLM model and reduced context
                     await safeEditReply(thinkingMsg, `${getBotResponse('thinking')} (trying faster model...)`);
                     const originalModel = MODEL;
-                    MODEL = MODEL_PRESETS.haiku; // Switch to Haiku for reliability
+                    MODEL = MODEL_PRESETS.glm; // Switch to GLM for reliability
                     try {
                         llmResult = await getLLMResponse(content, conversationMessages.slice(-10), discordContext);
                     } finally {
@@ -3759,10 +3756,10 @@ async function handleMentionAsync(message) {
                         }
                     });
                 } else {
-                    // Final attempt: Haiku with absolute minimal constraints and no tools
+                    // Final attempt: GLM with absolute minimal constraints and no tools
                     await safeEditReply(thinkingMsg, `${getBotResponse('thinking')} (final simplified attempt...)`);
                     const originalModel = MODEL;
-                    MODEL = MODEL_PRESETS.haiku;
+                    MODEL = MODEL_PRESETS.glm;
                     try {
                         // Make a direct API call without tools for maximum reliability
                         const simpleResponse = await axios.post(OPENROUTER_URL, {
@@ -4237,9 +4234,9 @@ async function handleSetModel(interaction) {
         }
 
         const modelNames = {
-            'haiku': 'Claude Haiku 4.5',
+            'kimi': 'Kimi K2 Thinking',
+            'kimi-fast': 'Kimi K2 Fast',
             'sonnet': 'Claude Sonnet 4.5',
-            'kimi': 'Kimi K2 Exacto',
             'qwen': 'Qwen 3 Coder',
             'gemini': 'Gemini 2.5 Pro',
             'glm': 'GLM-4.6 Exacto',
