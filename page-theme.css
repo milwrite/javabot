@@ -63,6 +63,10 @@
 
     /* Touch Targets (WCAG AAA) */
     --touch-target-min: 44px;
+
+    /* Page chrome */
+    --page-title-size: clamp(1.6rem, 2vw + 1rem, 2.4rem);
+    --page-subtitle-size: clamp(0.95rem, 1vw + 0.85rem, 1.15rem);
 }
 
 * {
@@ -213,6 +217,73 @@ a.home-link:focus {
 a.home-link {
     font-size: 20px;
     line-height: 1;
+}
+
+/* Unified page chrome for back button + title/subtitle */
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(126, 200, 227, 0.35);
+    border-radius: 14px;
+    padding: var(--space-3) var(--space-4);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+    margin: 0 auto var(--space-5);
+    max-width: 1200px;
+    position: relative;
+    z-index: 2;
+}
+
+.page-header .home-link,
+.page-header a.home-link {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    border-radius: calc(var(--touch-target-min) / 2);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.page-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.page-title {
+    margin: 0;
+    font-size: var(--page-title-size);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--color-text);
+    text-shadow: var(--shadow-glow-text);
+}
+
+.page-subtitle,
+.page-title-group .subtitle {
+    margin: 0;
+    font-size: var(--page-subtitle-size);
+    color: var(--color-text-dim);
+    letter-spacing: 0.03em;
+    line-height: 1.5;
+    max-width: 80ch;
+}
+
+@media (max-width: 640px) {
+    .page-header {
+        padding: var(--space-3);
+        gap: var(--space-3);
+    }
+
+    .page-title {
+        font-size: clamp(1.3rem, 4vw + 0.9rem, 2rem);
+    }
 }
 
 /* Container for page content */
