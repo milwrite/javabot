@@ -399,6 +399,10 @@ class DiscordContextManager {
             .slice(-maxMessages);
 
         console.log(`[CONTEXT] Built context: ${formatted.length} messages from Discord`);
+        // Debug: show what's in the context window
+        formatted.forEach((msg, i) => {
+            console.log(`[CONTEXT] ${i+1}. [${msg.role}] ${msg.content.substring(0, 100)}${msg.content.length > 100 ? '...' : ''}`);
+        });
         return formatted;
     }
 
@@ -1057,6 +1061,8 @@ WHEN TO USE WEB SEARCH:
 - Anything that changes: sports, news, prices, weather, standings, odds
 - Questions with "latest", "current", "today", "now"
 - When you don't have up-to-date info, just search
+- For follow-ups, use conversation history to expand vague references ("the movement" → the topic from previous messages)
+- Always include sources with links in your response
 
 Personality: Casual, chill, slightly unfocused but helpful. SHORT responses (1-2 sentences). Use "yeah man", "right on". Call people "man", "dude".
 
@@ -1463,9 +1469,11 @@ function buildMessagesFromHistory(maxMessages = 50) {
 // Replaces buildMessagesFromHistory for channel-based context
 async function buildContextForChannel(channel, maxMessages = CONFIG.DISCORD_CONTEXT_LIMIT) {
     // Use Discord context manager if available and channel is provided
+    console.log(`[CONTEXT_DEBUG] channel=${!!channel}, contextManager=${!!contextManager}`);
     if (channel && contextManager) {
         try {
             const discordContext = await contextManager.buildContextFromChannel(channel, maxMessages);
+            console.log(`[CONTEXT_DEBUG] Got ${discordContext?.length || 0} messages from Discord`);
             if (discordContext && discordContext.length > 0) {
                 return discordContext;
             }
@@ -3383,7 +3391,7 @@ async function getGuildIdFromChannel(channelId) {
     }
 }
 
-client.once('clientReady', async () => {
+client.once('ready', async () => {
     console.log(`Bot is ready as ${client.user.tag}`);
     console.log(`Monitoring channels: ${CHANNEL_IDS.length > 0 ? CHANNEL_IDS.join(', ') : 'ALL CHANNELS'}`);
     console.log(`Message Content Intent enabled: ${client.options.intents.has(GatewayIntentBits.MessageContent)}`);
@@ -3415,17 +3423,24 @@ client.once('clientReady', async () => {
                     { body: validCommands }
                 );
                 console.log('✅ Slash commands registered to guild successfully.');
-                return;
+            } else {
+                // Fall back to global registration
+                console.log('Attempting global command registration...');
+                await rest.put(
+                    Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
+                    { body: validCommands }
+                );
+                console.log('✅ Slash commands registered globally successfully.');
             }
+        } else {
+            // Fall back to global registration
+            console.log('Attempting global command registration...');
+            await rest.put(
+                Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
+                { body: validCommands }
+            );
+            console.log('✅ Slash commands registered globally successfully.');
         }
-
-        // Fall back to global registration
-        console.log('Attempting global command registration...');
-        await rest.put(
-            Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-            { body: validCommands }
-        );
-        console.log('✅ Slash commands registered globally successfully.');
     } catch (error) {
         console.error('❌ Error registering slash commands:', error.message);
         if (error.rawError) {
@@ -3461,7 +3476,6 @@ client.once('clientReady', async () => {
         }
     }
 
-
     // Sync index.html with all HTML files in /src
     try {
         await syncIndexWithSrcFiles();
@@ -3469,9 +3483,6 @@ client.once('clientReady', async () => {
         console.error('Error syncing index.html on startup:', error);
     }
 });
-
-// Note: Message handling disabled until Message Content Intent is properly configured
-// Uncomment this section once the intent is working
 
 client.on('interactionCreate', async interaction => {
     // Handle button interactions
