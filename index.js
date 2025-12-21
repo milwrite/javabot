@@ -784,15 +784,16 @@ REPOSITORY CONTEXT:
 Repository: https://github.com/milwrite/javabot/
 Live Site: https://bot.inference-arcade.com/
 - You can commit, push, and manage files
-- /src directory contains web pages and JS libraries
+- ALL web pages and JS libraries are in the /src directory
+- When reading files, paths auto-resolve: "game.html" → "src/game.html"
 - You help create, edit, and deploy web projects via Discord commands
 
 SITE INVENTORY (CRITICAL - Updated automatically):
-- The file SITE_INVENTORY.md contains current diagrams of all webpages and JavaScript files
+- The file src/site-inventory.html contains current diagrams of all webpages and JavaScript files
 - This inventory includes file structures, collections, links, and metadata
 - When searching for games/pages, refer to this inventory for accurate current content
 - Inventory automatically updates when DEVLOG.md changes
-- Use search_files("content", "SITE_INVENTORY.md") to see current site structure when needed
+- Use read_file("src/site-inventory.html") to see current site structure when needed
 
 URL STRUCTURE (CRITICAL):
 - Main page: https://bot.inference-arcade.com/
@@ -922,7 +923,7 @@ WHEN TO USE EACH TOOL:
 - To find content across files: ALWAYS use search_files FIRST before reading files
   * Examples: "list clues", "find answers", "show all X", "what are the Y"
   * Search for keywords like "clue", "answer", "const", function names, etc.
-  * Use SITE_INVENTORY.md for current site structure: search_files("content", "SITE_INVENTORY.md")
+  * Use site-inventory.html for current site structure: read_file("src/site-inventory.html")
   * Multi-file search: search_files("pattern", ["src/file1.html", "src/file2.html"])
 - To recall past work/history: Use git_log() - this is your MEMORY of what you've built
   * When asked "what did you make?", "show me history", "what have you done?", "recent changes" → git_log()
@@ -937,8 +938,8 @@ WHEN TO USE EACH TOOL:
 
 CRITICAL SEARCH RULES:
 - User asks "list X" or "show X" or "what are X" → use search_files to find X across multiple files if needed
-- User mentions game name + wants info → search_files with game keywords + check SITE_INVENTORY.md
-- For site overview questions → search SITE_INVENTORY.md first for current structure
+- User mentions game name + wants info → search_files with game keywords + check src/site-inventory.html
+- For site overview questions → read_file("src/site-inventory.html") first for current structure
 - Don't read random files hoping to find content - search strategically across relevant files
 - Use multi-file search when looking for patterns across similar files
 
@@ -1533,11 +1534,41 @@ async function readFile(filePath) {
             console.log(`[READ_FILE] Extracted path from URL: ${normalizedPath}`);
         }
 
-        const content = await fs.readFile(normalizedPath, 'utf8');
+        // Try reading the file with automatic src/ path resolution
+        let content;
+        const pathsToTry = [normalizedPath];
+
+        // If path doesn't start with src/ and looks like a page name, try src/ variants
+        if (!normalizedPath.startsWith('src/') && !normalizedPath.startsWith('./src/')) {
+            pathsToTry.push(`src/${normalizedPath}`);
+            // If no extension, try .html
+            if (!normalizedPath.includes('.')) {
+                pathsToTry.push(`src/${normalizedPath}.html`);
+            }
+        }
+
+        let lastError;
+        for (const tryPath of pathsToTry) {
+            try {
+                content = await fs.readFile(tryPath, 'utf8');
+                if (tryPath !== normalizedPath) {
+                    console.log(`[READ_FILE] Resolved ${normalizedPath} -> ${tryPath}`);
+                }
+                normalizedPath = tryPath;
+                break;
+            } catch (e) {
+                lastError = e;
+            }
+        }
+
+        if (!content) {
+            return `Error reading file: ${lastError.message}. Tried: ${pathsToTry.join(', ')}`;
+        }
+
         const truncatedContent = content.substring(0, CONFIG.FILE_READ_LIMIT);
 
         // Log file read to GUI dashboard
-        logFileChange('read', filePath, truncatedContent);
+        logFileChange('read', normalizedPath, truncatedContent);
 
         return truncatedContent;
     } catch (error) {
