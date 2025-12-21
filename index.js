@@ -127,6 +127,64 @@ const errorTracker = new Map();
 const MAX_ERROR_COUNT = 3;
 const ERROR_RESET_TIME = 5 * 60 * 1000; // 5 minutes
 
+// Action cache - stores recent tool actions per channel for conversational context
+// This allows follow-up requests like "add more margin to the cards" to know which file was edited
+const actionCache = new Map(); // channelId -> { actions: [], timestamp }
+const ACTION_CACHE_CONFIG = {
+    MAX_ACTIONS_PER_CHANNEL: 5,     // Keep last 5 actions
+    ACTION_TTL: 10 * 60 * 1000,     // 10 minutes - longer than Discord cache to survive cache refreshes
+};
+
+// Record an action to the cache for conversational context
+function recordAction(channelId, action) {
+    const entry = actionCache.get(channelId) || { actions: [], timestamp: Date.now() };
+
+    // Add action with metadata
+    entry.actions.push({
+        type: action.type,          // 'edit', 'create', 'write', 'commit', etc.
+        file: action.file,          // file path that was modified
+        summary: action.summary,    // brief description of what was done
+        timestamp: Date.now()
+    });
+
+    // Trim to max actions
+    if (entry.actions.length > ACTION_CACHE_CONFIG.MAX_ACTIONS_PER_CHANNEL) {
+        entry.actions = entry.actions.slice(-ACTION_CACHE_CONFIG.MAX_ACTIONS_PER_CHANNEL);
+    }
+
+    entry.timestamp = Date.now();
+    actionCache.set(channelId, entry);
+
+    console.log(`[ACTION_CACHE] Recorded ${action.type} on ${action.file} for channel ${channelId}`);
+}
+
+// Get recent actions for a channel (for context injection)
+function getRecentActions(channelId) {
+    const entry = actionCache.get(channelId);
+    if (!entry) return [];
+
+    // Check TTL
+    if (Date.now() - entry.timestamp > ACTION_CACHE_CONFIG.ACTION_TTL) {
+        actionCache.delete(channelId);
+        console.log(`[ACTION_CACHE] Expired actions for channel ${channelId}`);
+        return [];
+    }
+
+    return entry.actions;
+}
+
+// Build an action context summary for the LLM
+function buildActionContextSummary(channelId) {
+    const actions = getRecentActions(channelId);
+    if (actions.length === 0) return null;
+
+    const actionLines = actions.map(a =>
+        `- ${a.type.toUpperCase()}: ${a.file}${a.summary ? ` (${a.summary})` : ''}`
+    );
+
+    return `[RECENT BOT ACTIONS - use this context for follow-up requests]\n${actionLines.join('\n')}`;
+}
+
 // GUI logging helper functions
 function logToGUI(level, message, data = {}) {
     if (guiServer) {
@@ -2694,11 +2752,25 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 content: SYSTEM_PROMPT
             },
             ...conversationMessages,
-            {
-                role: 'user',
-                content: userMessage
-            }
         ];
+
+        // Inject action context for follow-up requests (e.g., "add more margin to the cards")
+        // This helps the LLM understand what files were recently modified
+        if (discordContext.channelId) {
+            const actionSummary = buildActionContextSummary(discordContext.channelId);
+            if (actionSummary) {
+                messages.push({
+                    role: 'system',
+                    content: actionSummary
+                });
+                console.log(`[ACTION_CACHE] Injected action context for channel ${discordContext.channelId}`);
+            }
+        }
+
+        messages.push({
+            role: 'user',
+            content: userMessage
+        });
 
         // Define available tools for the model
         const tools = [
@@ -3055,6 +3127,14 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         completedActions++;
                         actionCompletedThisIteration = true;
                         logEvent('LLM', `Primary action: write_file (${completedActions} total)`);
+                        // Record for conversational context
+                        if (discordContext.channelId) {
+                            recordAction(discordContext.channelId, {
+                                type: 'write',
+                                file: args.path,
+                                summary: `created/updated ${args.path.split('/').pop()}`
+                            });
+                        }
                     }
                 } else if (functionName === 'edit_file') {
                     // Prevent editing the same file multiple times
@@ -3069,6 +3149,14 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                             completedActions++;
                             actionCompletedThisIteration = true;
                             logEvent('LLM', `Primary action: edit_file pushed (${completedActions} total)`);
+                            // Record for conversational context
+                            if (discordContext.channelId) {
+                                recordAction(discordContext.channelId, {
+                                    type: 'edit',
+                                    file: args.path,
+                                    summary: args.instructions ? args.instructions.substring(0, 50) : 'exact replacement'
+                                });
+                            }
                         }
                     }
                 } else if (functionName === 'commit_changes') {
@@ -3077,6 +3165,14 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         completedActions++;
                         actionCompletedThisIteration = true;
                         logEvent('LLM', `Primary action: commit_changes (${completedActions} total)`);
+                        // Record for conversational context
+                        if (discordContext.channelId) {
+                            recordAction(discordContext.channelId, {
+                                type: 'commit',
+                                file: args.files || '.',
+                                summary: args.message?.substring(0, 50) || 'committed changes'
+                            });
+                        }
                     }
                 } else if (functionName === 'get_repo_status') {
                     result = await getRepoStatus();
@@ -3712,6 +3808,15 @@ async function handleMentionAsync(message) {
                     addToHistory(username, content, false);
                     addToHistory('Bot Sportello', successMsg, true);
 
+                    // Record game creation for conversational context
+                    if (message.channel.id && result.plan?.outputPath) {
+                        recordAction(message.channel.id, {
+                            type: 'create',
+                            file: result.plan.outputPath,
+                            summary: result.plan.metadata?.title || 'new game created'
+                        });
+                    }
+
                     return; // Success - exit
                     }
                     
@@ -3820,7 +3925,8 @@ async function handleMentionAsync(message) {
                 let llmResult;
                 const discordContext = {
                     user: message.author.username,
-                    channel: message.channel.name || message.channel.id
+                    channel: message.channel.name || message.channel.id,
+                    channelId: message.channel.id  // For action cache keying
                 };
                 
                 if (processingAttempt === 1) {
