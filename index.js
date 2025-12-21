@@ -4,6 +4,42 @@ const { Octokit } = require('@octokit/rest');
 const simpleGit = require('simple-git');
 const fs = require('fs').promises;
 const fsSync = require('fs');
+const { execSync } = require('child_process');
+
+// Find git binary - works on Railway (Linux) and macOS
+function findGitBinary() {
+    // Common git locations for Railway Linux and macOS
+    const candidates = [
+        '/usr/bin/git',           // Most Linux distros + macOS Xcode
+        '/usr/local/bin/git',     // Homebrew (Intel Mac)
+        '/opt/homebrew/bin/git',  // Homebrew (Apple Silicon)
+    ];
+
+    // Try to find git via which command first (most portable)
+    try {
+        const gitPath = execSync('which git', { encoding: 'utf8' }).trim();
+        if (gitPath && fsSync.existsSync(gitPath)) {
+            console.log(`[GIT] Found via which: ${gitPath}`);
+            return gitPath;
+        }
+    } catch (e) {
+        // which command failed, try candidates
+    }
+
+    // Fall back to checking known locations
+    for (const candidate of candidates) {
+        if (fsSync.existsSync(candidate)) {
+            console.log(`[GIT] Found at: ${candidate}`);
+            return candidate;
+        }
+    }
+
+    // Last resort: return 'git' and hope PATH is set correctly
+    console.warn('[GIT] Could not find git binary, using PATH');
+    return 'git';
+}
+
+const GIT_BINARY = findGitBinary();
 const path = require('path');
 const axios = require('axios');
 const axiosRetry = require('axios-retry').default;
@@ -177,7 +213,9 @@ const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN,
 });
 
-const git = simpleGit();
+const git = simpleGit({
+    binary: GIT_BINARY
+});
 
 // Discord Context Manager - fetches message history directly from Discord API
 // Replaces agents.md file-based memory with real-time Discord awareness
@@ -794,7 +832,9 @@ const DEFAULT_SYSTEM_PROMPT = `You are Bot Sportello, a laid-back Discord bot wh
 
 REPOSITORY CONTEXT:
 Repository: https://github.com/milwrite/javabot/
+Commits: https://github.com/milwrite/javabot/commits/main/
 Live Site: https://bot.inference-arcade.com/
+Dashboard: https://bot.inference-arcade.com/dashboard (GUI for logs, tool calls, file changes)
 - You can commit, push, and manage files
 - ALL web pages and JS libraries are in the /src directory
 - When reading files, paths auto-resolve: "game.html" → "src/game.html"
@@ -2269,13 +2309,21 @@ async function commitChanges(message, files = '.') {
 
 async function getRepoStatus() {
     try {
-        const status = await git.status();
-        let result = `Branch: ${status.current}\n`;
-        result += `Modified: ${status.modified.length}, New: ${status.not_added.length}\n`;
+        // Use GitHub API - works on Railway without local git
+        const { data: repo } = await octokit.repos.get({
+            owner: process.env.GITHUB_REPO_OWNER,
+            repo: process.env.GITHUB_REPO_NAME
+        });
+        const { data: commits } = await octokit.repos.listCommits({
+            owner: process.env.GITHUB_REPO_OWNER,
+            repo: process.env.GITHUB_REPO_NAME,
+            per_page: 1
+        });
+        const latestCommit = commits[0];
+        let result = `Branch: ${repo.default_branch}\n`;
+        result += `Latest: ${latestCommit.sha.substring(0, 7)} - ${latestCommit.commit.message.split('\n')[0]}\n`;
         result += `Live site: https://bot.inference-arcade.com/\n`;
-        if (status.files.length > 0) {
-            result += `Changed files: ${status.files.slice(0, 5).map(f => f.path).join(', ')}`;
-        }
+        result += `Commits: https://github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}/commits/main/`;
         return result;
     } catch (error) {
         return `Error getting status: ${error.message}`;
@@ -2306,31 +2354,33 @@ function getRelativeTime(isoDate) {
     return 'just now';
 }
 
-// Git log - view commit history (uses simple-git for proper PATH handling)
+// Git log - view commit history via GitHub API (works on Railway)
 async function getGitLog(count = 10, file = null, oneline = false) {
     try {
         const maxCount = Math.min(count || 10, 50);
 
-        // Build options for simple-git log
-        const logOptions = {
-            maxCount: maxCount,
-            ...(file && { file: file })
+        // Use GitHub API - no local git needed
+        const params = {
+            owner: process.env.GITHUB_REPO_OWNER,
+            repo: process.env.GITHUB_REPO_NAME,
+            per_page: maxCount,
+            ...(file && { path: file })
         };
 
-        const logResult = await git.log(logOptions);
+        const { data: commits } = await octokit.repos.listCommits(params);
 
-        if (!logResult.all || logResult.all.length === 0) {
+        if (!commits || commits.length === 0) {
             return 'No commits found.';
         }
 
         // Format output based on oneline preference
         if (oneline) {
-            return logResult.all
-                .map(commit => `${commit.hash.substring(0, 7)} ${commit.message}`)
+            return commits
+                .map(c => `${c.sha.substring(0, 7)} ${c.commit.message.split('\n')[0]}`)
                 .join('\n');
         } else {
-            return logResult.all
-                .map(commit => `${commit.hash.substring(0, 7)} | ${commit.author_name} | ${getRelativeTime(commit.date)} | ${commit.message}`)
+            return commits
+                .map(c => `${c.sha.substring(0, 7)} | ${c.commit.author.name} | ${getRelativeTime(c.commit.author.date)} | ${c.commit.message.split('\n')[0]}`)
                 .join('\n');
         }
     } catch (error) {
@@ -2781,7 +2831,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'get_repo_status',
-                    description: 'Get current git repository status',
+                    description: 'Get repository status via GitHub API (https://github.com/milwrite/javabot/commits/main/)',
                     parameters: {
                         type: 'object',
                         properties: {}
@@ -2792,7 +2842,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'git_log',
-                    description: 'Get git commit history. Shows recent commits with hash, author, date, and message.',
+                    description: 'Get commit history via GitHub API. Shows recent commits with hash, author, date, and message.',
                     parameters: {
                         type: 'object',
                         properties: {
