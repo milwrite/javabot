@@ -10,6 +10,7 @@ Bot Sportello is a Discord bot with a laid-back Doc Sportello personality that m
 
 **Live Site**: https://bot.inference-arcade.com/
 **Repository**: https://github.com/milwrite/javabot/
+**Hosting**: Production bot runs on Railway (auto-deploys from main branch)
 
 **Key Features**:
 - AI-generated HTML pages & JavaScript features using OpenRouter
