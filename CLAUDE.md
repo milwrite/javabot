@@ -339,6 +339,36 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 
 **`/update-style`**: Updates website theme with presets (noir-terminal, neon-arcade, dark-minimal, retro-terminal) or AI-generated custom CSS. Modifies embedded CSS in `index.html`.
 
+**Bot Sportello Narrator (TTS Component)**:
+When generating story pages or content that should be read aloud, use the reusable TTS component:
+
+```html
+<!-- Add container where you want controls to appear -->
+<div id="narrator-controls"></div>
+
+<!-- Include the narrator script -->
+<script src="sportello-narrator.js"></script>
+
+<!-- Initialize with options -->
+<script>
+SportelloNarrator.init({
+    voice: 'Ralph',           // Bot Sportello's voice (Ralph only)
+    selector: '.paragraph',   // CSS selector for text to read
+    titleSelector: '.chapter-title',  // Optional: chapter titles
+    rate: 0.85,              // Speech rate (slower for noir atmosphere)
+    pitch: 0.9,              // Slightly deeper pitch
+    narratorName: 'Bot Sportello'  // Display name in controls
+});
+</script>
+```
+
+- Located at `src/sportello-narrator.js`
+- Auto-injects noir-styled control panel CSS
+- Uses Ralph voice exclusively (Bot Sportello's voice)
+- Includes play/pause/stop, voice selector, reading progress
+- Highlights current paragraph with red left-border
+- Mobile-responsive controls
+
 ### Doc Sportello Personality System
 
 **Response Categories** (`botResponses` object):
