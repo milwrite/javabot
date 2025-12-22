@@ -9,8 +9,7 @@ const axios = require('axios');
 const axiosRetry = require('axios-retry').default;
 
 // Game pipeline modules (system-v1)
-const { runGamePipeline, commitGameFiles, isGameRequest, isEditRequest } = require('./services/gamePipeline');
-const { getRecentPatternsSummary } = require('./services/buildLogs');
+const { runGamePipeline, commitGameFiles } = require('./services/gamePipeline');
 const { classifyRequest } = require('./services/requestClassifier');
 
 // Site inventory system
@@ -1027,21 +1026,27 @@ function cleanBotResponse(response) {
         .replace(/<\/?(invoke|parameter)\b[^>]*>/gi, '')
         .replace(/^<[^>\n]*(tool_call|invoke|parameter)[^>\n]*>\s*$/gmi, '');
 
-    // Improve markdown formatting with proper spacing
+    // Cut at thinking markers - truncate when AI starts "thinking out loud"
+    const thinkingCutoff = cleaned.search(/I need to find|Let me search|Let me think|I'll need to|Now let me|Looking at the|I have the web|From the web search/i);
+    if (thinkingCutoff > 50) {
+        const beforeThinking = cleaned.substring(0, thinkingCutoff);
+        const lastSentence = beforeThinking.lastIndexOf('. ');
+        if (lastSentence > 0) {
+            cleaned = beforeThinking.substring(0, lastSentence + 1).trim();
+        }
+    }
+
+    // Remove consecutive blank lines
+    cleaned = cleaned.replace(/\n{3,}/g, '\n\n').trim();
+
+    // Improve markdown formatting
     cleaned = cleaned
-        // Add blank line before headers (##, ###, etc)
         .replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
-        // Add blank line after headers
         .replace(/(#{1,6}\s[^\n]+)\n([^\n])/g, '$1\n\n$2')
-        // Add blank line before lists (-, *, 1., etc)
         .replace(/([^\n])\n([\-\*]|\d+\.)\s/g, '$1\n\n$2 ')
-        // Add blank line before code blocks
         .replace(/([^\n])\n```/g, '$1\n\n```')
-        // Add blank line after code blocks
         .replace(/```\n([^\n])/g, '```\n\n$1')
-        // Add blank line before bold sections (ACROSS:, DOWN:, etc)
         .replace(/([^\n])\n(\*\*[A-Z][^\*]+\*\*)/g, '$1\n\n$2')
-        // Fix multiple consecutive blank lines (max 2)
         .replace(/\n{3,}/g, '\n\n');
 
     return cleaned;
@@ -1341,22 +1346,7 @@ function addToHistory(username, message, isBot = false) {
     // The in-memory messageHistory is kept for debugging/fallback purposes only
 }
 
-// Build proper messages array from conversation history
-function buildMessagesFromHistory(maxMessages = 50) {
-    // Get last N messages (increased from 10 to 50 for better context)
-    const recentMessages = messageHistory.slice(-maxMessages);
-
-    // Convert to OpenRouter message format
-    const messages = recentMessages.map(entry => ({
-        role: entry.role,
-        content: `${entry.username}: ${entry.message}`
-    }));
-
-    return messages;
-}
-
 // Build context from Discord channel using the context manager
-// Replaces buildMessagesFromHistory for channel-based context
 async function buildContextForChannel(channel, maxMessages = CONFIG.DISCORD_CONTEXT_LIMIT) {
     // Use Discord context manager if available and channel is provided
     console.log(`[CONTEXT_DEBUG] channel=${!!channel}, contextManager=${!!contextManager}`);
@@ -2779,7 +2769,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                     parameters: {
                         type: 'object',
                         properties: {
-                            path: { type: 'string', description: 'File path to edit (e.g., "src/example.html", "index.html", "style.css")' },
+                            path: { type: 'string', description: 'File path to edit (e.g., "src/example.html", "index.html", "page-theme.css")' },
                             old_string: { type: 'string', description: 'EXACT string to replace (including all whitespace, indentation, newlines). Must be unique in the file. Use for single edits.' },
                             new_string: { type: 'string', description: 'New string to replace old_string with. Use with old_string parameter.' },
                             replacements: {
@@ -3545,53 +3535,7 @@ async function handleMentionAsync(message) {
         let lastFailureReason = '';
 
         // Multi-loop processing with resilient reassessment
-        while (processingAttempt <= maxProcessingAttempts) {
-            logEvent('MENTION', `Processing attempt ${processingAttempt}/${maxProcessingAttempts}${lastFailureReason ? ` (prev: ${lastFailureReason})` : ''}`);
-            
-            try {
-                // Loop 1: Edit request detection (DISABLED - now using LLM classifier)
-                if (false && processingAttempt <= 2 && isEditRequest(content, conversationMessages)) {
-                    logEvent('MENTION', `Attempt ${processingAttempt}: Detected edit request - using streamlined edit loop`);
-
-                    let llmResult = await getEditResponse(content, conversationMessages);
-                    let response = cleanBotResponse(llmResult.text);
-
-                    // Check if edit loop suggests using normal flow instead
-                    if (llmResult.suggestNormalFlow) {
-                        lastFailureReason = 'edit-loop-suggests-normal';
-                        logEvent('MENTION', 'Edit loop suggests normal flow - reassessing');
-                        processingAttempt++;
-                        continue; // Try next approach
-                    } else if (!response || response.trim().length === 0) {
-                        lastFailureReason = 'empty-edit-response';
-                        logEvent('MENTION', 'Empty edit response - reassessing');
-                        processingAttempt++;
-                        continue; // Try next approach
-                    } else {
-                        await safeEditReply(thinkingMsg, response);
-                        addToHistory(username, content, false);
-                        addToHistory('Bot Sportello', response, true);
-                        return; // Success - exit
-                    }
-                }
-
-                // Break out to continue with other processing loops below
-                break;
-
-            } catch (error) {
-                lastFailureReason = `error-${error.message.slice(0, 20)}`;
-                logEvent('MENTION', `Attempt ${processingAttempt} failed: ${error.message}`);
-                processingAttempt++;
-                if (processingAttempt <= maxProcessingAttempts) {
-                    await safeEditReply(thinkingMsg, `${getBotResponse('thinking')} (trying different approach...)`);
-                    continue;
-                }
-                throw error; // Re-throw if all attempts failed
-            }
-        }
-
-        // Continue with additional processing loops
-        processingAttempt = Math.max(processingAttempt, 1); // Reset if needed
+        // Note: Old keyword-based edit detection loop removed (now using LLM classifier below)
         
         // Cache classification so we only do it once per mention
         let classificationResult = null;
@@ -3735,55 +3679,27 @@ async function handleMentionAsync(message) {
                     if (classification.isEdit) {
                         logEvent('MENTION', `SIMPLE_EDIT request - using streamlined edit loop`);
                         await safeEditReply(thinkingMsg, '✏️ making simple edit...');
-                        
-                        let llmResult = await getEditResponse(content, conversationMessages);
-                        let response = cleanBotResponse(llmResult.text);
-                        
-                        if (llmResult.toolCalls && llmResult.toolCalls.length > 0) {
-                            logEvent('EDIT_LOOP', `Iteration 1: ${llmResult.toolCalls.length} tools`);
 
-                            // Process tool calls and iterate up to 10 times
-                            for (let iteration = 1; iteration <= 10 && llmResult.toolCalls && llmResult.toolCalls.length > 0; iteration++) {
-                                const results = [];
+                        // getEditResponse handles its own internal tool loop
+                        const llmResult = await getEditResponse(content, conversationMessages);
+                        const response = cleanBotResponse(llmResult.text);
 
-                                // Show user what tools are being executed
-                                const toolNames = llmResult.toolCalls.map(tc => tc.function?.name || 'unknown').join(', ');
-                                await safeEditReply(thinkingMsg, `✏️ step ${iteration}: ${toolNames}...`);
-
-                                for (const toolCall of llmResult.toolCalls) {
-                                    const result = await executeToolCall(toolCall);
-                                    results.push(result);
-                                }
-
-                                if (iteration < 10) {
-                                    llmResult = await getEditResponse(content, conversationMessages, results);
-                                    response = cleanBotResponse(llmResult.text);
-                                    if (llmResult.toolCalls && llmResult.toolCalls.length > 0) {
-                                        logEvent('EDIT_LOOP', `Iteration ${iteration + 1}: ${llmResult.toolCalls.length} tools`);
-                                    }
-                                }
-                            }
-
-                            // If we have a response from the AI, send it
-                            if (response) {
-                                await safeEditReply(thinkingMsg, response);
-                                addToHistory(username, content, false);
-                                addToHistory('Bot Sportello', response, true);
-                                return; // Success - exit
-                            }
-
-                            // Tools executed but AI didn't provide text - generate completion message
-                            const toolsExecuted = results.length > 0 ? results.map(r => r.tool_call_id || 'tool').join(', ') : 'edits';
-                            const fallbackMsg = `✓ done - made the requested changes`;
-                            await safeEditReply(thinkingMsg, fallbackMsg);
-                            addToHistory(username, content, false);
-                            addToHistory('Bot Sportello', fallbackMsg, true);
-                            return; // Success - exit with fallback message
-                        } else {
-                            logEvent('EDIT_LOOP', 'No tool calls in response - AI may need more context');
+                        // If edit suggests using normal flow instead, continue to fallback
+                        if (llmResult.suggestNormalFlow) {
+                            logEvent('EDIT_LOOP', 'Edit loop suggests normal flow - continuing to LLM');
+                            processingAttempt = 4; // Skip to final LLM
+                            break;
                         }
 
-                        // If edit loop didn't work, continue to fallback loops below
+                        // Send the response from edit loop
+                        if (response) {
+                            await safeEditReply(thinkingMsg, response);
+                            addToHistory(username, content, false);
+                            addToHistory('Bot Sportello', response, true);
+                            return; // Success - exit
+                        }
+
+                        // If edit loop didn't produce a response, continue to fallback
                         processingAttempt++;
                         if (processingAttempt <= maxProcessingAttempts) {
                             await safeEditReply(thinkingMsg, 'hmm that didn\'t quite work... lemme try a different approach...');
@@ -3956,18 +3872,21 @@ async function handleMentionAsync(message) {
         }
 
         // Send response directly (no commit prompts in mentions)
+        // HARD LIMIT: Max 3 messages to prevent chat spam
+        const MAX_DISCORD_MESSAGES = 3;
+
         if (finalResponse.length > 2000) {
-            // Split long messages into multiple parts instead of truncating
+            // Split long messages into multiple parts
             const maxLength = 1950; // Leave room for formatting
             const parts = [];
             let remaining = finalResponse;
-            
-            while (remaining.length > 0) {
+
+            while (remaining.length > 0 && parts.length < MAX_DISCORD_MESSAGES) {
                 if (remaining.length <= maxLength) {
                     parts.push(remaining);
                     break;
                 }
-                
+
                 // Try to split at a natural break point
                 let splitIndex = remaining.lastIndexOf('\n', maxLength);
                 if (splitIndex === -1 || splitIndex < maxLength * 0.5) {
@@ -3976,15 +3895,20 @@ async function handleMentionAsync(message) {
                 if (splitIndex === -1 || splitIndex < maxLength * 0.5) {
                     splitIndex = maxLength;
                 }
-                
+
                 parts.push(remaining.substring(0, splitIndex));
                 remaining = remaining.substring(splitIndex).trim();
             }
-            
+
+            // Truncate last part if we hit the limit and there's more
+            if (parts.length === MAX_DISCORD_MESSAGES && remaining.length > 0) {
+                parts[parts.length - 1] = parts[parts.length - 1].substring(0, 1900) + '...';
+            }
+
             // Send first part as edit to thinking message
             await safeEditReply(thinkingMsg, parts[0]);
-            
-            // Send remaining parts as follow-up messages
+
+            // Send remaining parts as follow-up messages (max 2 more)
             for (let i = 1; i < parts.length; i++) {
                 await message.channel.send(parts[i]);
             }
@@ -4659,12 +4583,12 @@ Output ONLY the CSS code, no explanations.`;
             newCSS = stylePresets[preset];
         }
 
-        // Write the new CSS to style.css locally
-        await fs.writeFile('./style.css', newCSS);
+        // Write the new CSS to page-theme.css locally
+        await fs.writeFile('./page-theme.css', newCSS);
 
         // Commit and push via GitHub API
         const commitMessage = `update style to ${preset === 'custom' ? 'custom: ' + customDescription.substring(0, 50) : preset}`;
-        const result = await pushFileViaAPI('./style.css', newCSS, commitMessage, 'main');
+        const result = await pushFileViaAPI('./page-theme.css', newCSS, commitMessage, 'main');
 
         const embed = new EmbedBuilder()
             .setTitle('🎨 Style Updated & Pushed')
