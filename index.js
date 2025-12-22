@@ -1758,7 +1758,7 @@ async function writeFile(filePath, content) {
     }
 }
 
-async function editFile(filePath, oldString = null, newString = null, instructions = null) {
+async function editFile(filePath, oldString = null, newString = null, instructions = null, replacements = null) {
     const startTime = Date.now();
     console.log(`[EDIT_FILE] Starting edit for: ${filePath}`);
 
@@ -1771,8 +1771,40 @@ async function editFile(filePath, oldString = null, newString = null, instructio
         let updatedContent;
         let changeDescription;
 
+        // Mode 0: Batch replacement (FASTEST - multiple edits in one call)
+        if (replacements !== null && Array.isArray(replacements) && replacements.length > 0) {
+            console.log(`[EDIT_FILE] Using batch replacement mode (${replacements.length} replacements)`);
+
+            updatedContent = currentContent;
+            const results = [];
+
+            for (let i = 0; i < replacements.length; i++) {
+                const { old: oldStr, new: newStr, replace_all: replaceAll } = replacements[i];
+
+                if (!oldStr || newStr === undefined) {
+                    throw new Error(`Batch edit ${i + 1}: missing 'old' or 'new' property`);
+                }
+
+                const occurrences = updatedContent.split(oldStr).length - 1;
+
+                if (occurrences === 0) {
+                    throw new Error(`Batch edit ${i + 1}/${replacements.length} failed: string not found: "${oldStr.slice(0, 50)}..."`);
+                }
+
+                if (occurrences > 1 && !replaceAll) {
+                    throw new Error(`Batch edit ${i + 1}/${replacements.length} failed: string appears ${occurrences} times. Use replace_all: true or provide more context.`);
+                }
+
+                updatedContent = replaceAll ? updatedContent.split(oldStr).join(newStr) : updatedContent.replace(oldStr, newStr);
+                results.push(`${i + 1}. ${oldStr.length}→${newStr.length}${replaceAll ? ` (×${occurrences})` : ''}`);
+            }
+
+            changeDescription = `Batch replaced ${replacements.length} strings: ${results.join(', ')}`;
+            const batchTime = ((Date.now() - startTime) / 1000).toFixed(2);
+            console.log(`[EDIT_FILE] Batch replacement completed in ${batchTime}s`);
+
         // Mode 1: Exact string replacement (FAST - preferred method)
-        if (oldString !== null && newString !== null) {
+        } else if (oldString !== null && newString !== null) {
             console.log(`[EDIT_FILE] Using exact string replacement mode`);
 
             // Count occurrences of old_string
@@ -2581,13 +2613,26 @@ Do not use web search or create new content - only edit existing files.`
                 type: 'function',
                 function: {
                     name: 'edit_file',
-                    description: 'Edit an existing file using EXACT string replacement. Always use exact mode for speed.',
+                    description: 'Edit an existing file using EXACT string replacement. For multiple edits, use batch mode with replacements array.',
                     parameters: {
                         type: 'object',
                         properties: {
                             path: { type: 'string', description: 'File path to edit' },
                             old_string: { type: 'string', description: 'EXACT string to replace (must be unique in file)' },
-                            new_string: { type: 'string', description: 'New string to replace old_string with' }
+                            new_string: { type: 'string', description: 'New string to replace old_string with' },
+                            replacements: {
+                                type: 'array',
+                                description: 'BATCH MODE: Array of {old, new, replace_all?} objects for multiple edits in one call',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        old: { type: 'string' },
+                                        new: { type: 'string' },
+                                        replace_all: { type: 'boolean', description: 'Replace all occurrences (default: false)' }
+                                    },
+                                    required: ['old', 'new']
+                                }
+                            }
                         },
                         required: ['path']
                     }
@@ -2669,7 +2714,7 @@ Do not use web search or create new content - only edit existing files.`
                 } else if (functionName === 'read_file') {
                     result = await readFile(args.path);
                 } else if (functionName === 'edit_file') {
-                    result = await editFile(args.path, args.old_string, args.new_string, args.instructions);
+                    result = await editFile(args.path, args.old_string, args.new_string, args.instructions, args.replacements);
                     if (!result.startsWith('Error')) {
                         editCompleted = true;
                         logEvent('EDIT_LOOP', 'Edit completed successfully');
@@ -2863,14 +2908,27 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'edit_file',
-                    description: 'Edit an existing file using EXACT string replacement (preferred) or natural language instructions (fallback). ALWAYS prefer exact replacement for speed and accuracy. Use exact mode when you know the exact text to replace. Use instructions mode only for complex multi-location edits.',
+                    description: 'Edit an existing file using EXACT string replacement. For multiple edits, use batch mode with replacements array - this is MUCH faster than multiple edit_file calls. ALWAYS prefer exact replacement for speed and accuracy.',
                     parameters: {
                         type: 'object',
                         properties: {
                             path: { type: 'string', description: 'File path to edit (e.g., "src/example.html", "index.html", "style.css")' },
-                            old_string: { type: 'string', description: 'EXACT string to replace (including all whitespace, indentation, newlines). Must be unique in the file. If not unique, provide more surrounding context to make it unique. PREFERRED METHOD - use this whenever possible for fast, deterministic edits.' },
+                            old_string: { type: 'string', description: 'EXACT string to replace (including all whitespace, indentation, newlines). Must be unique in the file. Use for single edits.' },
                             new_string: { type: 'string', description: 'New string to replace old_string with. Use with old_string parameter.' },
-                            instructions: { type: 'string', description: 'FALLBACK: Natural language instructions for complex edits (e.g., "change all background colors to blue"). Only use when exact replacement is not feasible. This mode is SLOW (requires AI processing).' }
+                            replacements: {
+                                type: 'array',
+                                description: 'BATCH MODE (preferred for multiple edits): Array of {old, new, replace_all?} objects. Each edit is applied in sequence. Uses single file read/write - much faster than multiple edit_file calls.',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        old: { type: 'string', description: 'Exact string to find' },
+                                        new: { type: 'string', description: 'Replacement string' },
+                                        replace_all: { type: 'boolean', description: 'If true, replace ALL occurrences of old string (default: false, requires unique match)' }
+                                    },
+                                    required: ['old', 'new']
+                                }
+                            },
+                            instructions: { type: 'string', description: 'FALLBACK: Natural language instructions for complex edits. Only use when exact replacement is not feasible. This mode is SLOW (requires AI processing).' }
                         },
                         required: ['path']
                     }
@@ -2953,7 +3011,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
 
         // Agentic loop - allow multiple rounds of tool calling
         const MAX_ITERATIONS = 6; // Reasonable limit to prevent infinite loops
-        const MAX_READONLY_ITERATIONS = 3; // Cap read-only tool loops to prevent over-searching
+        const MAX_READONLY_ITERATIONS = 5; // Cap read-only tool loops to prevent over-searching
         let iteration = 0;
         let readOnlyIterations = 0; // Track consecutive read-only iterations
         let lastResponse;
@@ -3134,8 +3192,8 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         result = `File ${args.path} was already edited in this conversation. Skipping redundant edit to save time.`;
                         logEvent('LLM', `Skipped redundant edit of ${args.path}`);
                     } else {
-                        // Support both exact replacement (preferred) and AI-based instructions (fallback)
-                        result = await editFile(args.path, args.old_string, args.new_string, args.instructions);
+                        // Support exact replacement (preferred), batch mode (for multiple edits), and AI-based instructions (fallback)
+                        result = await editFile(args.path, args.old_string, args.new_string, args.instructions, args.replacements);
                         editedFiles.add(args.path);
                         if (!result.startsWith('Error')) {
                             completedActions++;
