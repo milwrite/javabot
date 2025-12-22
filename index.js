@@ -2705,24 +2705,9 @@ client.once('clientReady', async () => {
     }
 
     // Initialize Discord context manager (replaces agents.md)
+    // Context is fetched on-demand when user engages, not preloaded
     contextManager = new DiscordContextManager(client);
-    console.log('✅ Discord context manager initialized');
-
-    // Fetch initial message history for configured channels
-    if (CHANNEL_IDS.length > 0) {
-        console.log('📜 Fetching initial message history from Discord...');
-        for (const channelId of CHANNEL_IDS) {
-            try {
-                const channel = await client.channels.fetch(channelId);
-                if (channel) {
-                    await contextManager.fetchChannelHistory(channel, CONFIG.DISCORD_FETCH_LIMIT);
-                    console.log(`✅ Fetched history for #${channel.name || channelId}`);
-                }
-            } catch (error) {
-                console.warn(`⚠️ Could not fetch history for ${channelId}:`, error.message);
-            }
-        }
-    }
+    console.log('✅ Discord context manager initialized (on-demand fetching)');
 
     // Sync index.html with all HTML files in /src
     try {
