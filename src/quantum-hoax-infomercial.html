@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Sock Sorter 3000 - Revolutionary Technology</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #7ec8e3;
+            font-family: 'Courier Prime', monospace;
+            padding: 80px 20px 20px 20px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid #ff0000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff0000, #00ffff, #ff0000);
+            z-index: -1;
+            animation: borderGlow 3s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        h1 {
+            color: #00ffff;
+            font-size: 2.5em;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            text-shadow: 0 0 10px #00ffff;
+            animation: flicker 2s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .tagline {
+            color: #ff0000;
+            font-size: 1.2em;
+            margin: 10px 0;
+            font-weight: bold;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            border-left: 3px solid #7ec8e3;
+            background: rgba(126, 200, 227, 0.05);
+        }
+
+        h2 {
+            color: #00ffff;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(126, 200, 227, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .feature-list li:hover {
+            background: rgba(126, 200, 227, 0.1);
+            padding-left: 20px;
+        }
+
+        .feature-list li::before {
+            content: "▶";
+            color: #ff0000;
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-list li:hover::before {
+            transform: rotate(90deg);
+        }
+
+        .reveal-content {
+            display: none;
+            margin-top: 10px;
+            padding: 15px;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid #00ffff;
+            color: #7ec8e3;
+            animation: slideIn 0.5s ease;
+        }
+
+        .reveal-content.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .price-tag {
+            background: #ff0000;
+            color: #0a0a0a;
+            padding: 20px;
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            margin: 30px 0;
+            position: relative;
+            transform: rotate(-2deg);
+            box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .price-tag::after {
+            content: "LIMITED TIME!";
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background: #00ffff;
+            color: #0a0a0a;
+            padding: 5px 10px;
+            font-size: 0.5em;
+            transform: rotate(15deg);
+        }
+
+        .testimonial {
+            background: rgba(0, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #00ffff;
+            font-style: italic;
+            position: relative;
+        }
+
+        .testimonial::before {
+            content: """;
+            font-size: 4em;
+            color: #00ffff;
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            opacity: 0.3;
+        }
+
+        .cta-button {
+            display: block;
+            width: 100%;
+            padding: 20px;
+            background: #ff0000;
+            color: #0a0a0a;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+            margin: 30px 0;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            letter-spacing: 2px;
+        }
+
+        .cta-button:hover {
+            background: #00ffff;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .warning {
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid #ff0000;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 0.9em;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+            
+            .price-tag {
+                font-size: 1.5em;
+            }
+            
+            .cta-button {
+                font-size: 1.2em;
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+                letter-spacing: 1px;
+            }
+            
+            .tagline {
+                font-size: 1em;
+            }
+            
+            h2 {
+                font-size: 1.5em;
+            }
+            
+            .price-tag {
+                font-size: 1.2em;
+            }
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: #0a0a0a;
+            padding: 10px;
+            border: 2px solid #7ec8e3;
+            border-radius: 5px;
+        }
+
+        .home-link a {
+            color: #7ec8e3;
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .home-link a:hover {
+            color: #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="home-link">
+        <a href="../index.html">← Home</a>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>Quantum Sock Sorter 3000</h1>
+            <div class="tagline">Revolutionizing Laundry Through Quantum Entanglement!</div>
+        </header>
+
+        <section class="section">
+            <h2>Are You Tired of Lost Socks?</h2>
+            <p>Introducing the Quantum Sock Sorter 3000 - the world's first quantum-powered laundry assistant that uses advanced quantum mechanics to ensure your socks never go missing again!</p>
+            
+            <div class="testimonial">
+                "I used to lose socks every week. Now with QSS-3000, my socks are quantum entangled! If one goes missing, I can find its twin anywhere in the multiverse!" - Dr. Sarah Mitchell, Quantum Physicist
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Revolutionary Features</h2>
+            <ul class="feature-list">
+                <li onclick="toggleReveal(this)">
+                    Quantum Entanglement Technology
+                    <div class="reveal-content">
+                        Each pair of socks is molecularly bonded at the quantum level. When one sock is loaded, its twin instantly knows its location across all possible dimensions!
+                    </div>
+                </li>
+                <li onclick="toggleReveal(this)">
+                    Multiverse Detection System
+                    <div class="reveal-content">
+                        Scans over 10^500 parallel universes to locate missing socks. Found 3 socks from alternate realities in our tests!
+                    </div>
+                </li>
+                <li onclick="toggleReveal(this)">
+                    Time-Traveling Dryer Integration
+                    <div class="reveal-content">
+                        Sends socks 5 minutes into the future to pre-dry them, saving energy and preventing sock-related temporal paradoxes.
+                    </div>
+                </li>
+                <li onclick="toggleReveal(this)">
+                    AI-Powered Pattern Recognition
+                    <div class="reveal-content">
+                        Advanced neural network identifies socks by their quantum signature, not just appearance. Even identical twins are distinguishable!
+                    </div>
+                </li>
+                <li onclick="toggleReveal(this)">
+                    Anti-Black Hole Gravity Field
+                    <div class="reveal-content">
+                        Generates a localized gravitational anomaly that prevents socks from being sucked into miniature black holes (the #1 cause of sock loss).
+                    </div>
+                </li>
+            </ul>
+        </section>
+
+        <div class="price-tag">
+            Only $999.99
+        </div>
+
+        <section class="section">
+            <h2>How It Works</h2>
+            <p>1. Place your socks in the Quantum Chamber<br>
+            2. Press the "Entangle" button<br>
+            3. Watch as the QSS-3000 uses quantum tunneling to sort and pair<br>
+            4. Never lose a sock again - GUARANTEED!</p>
+            
+            <div class="warning">
+                ⚠️ WARNING: May occasionally create sock clones from parallel dimensions. Side effects include: sudden understanding of quantum physics, increased laundry efficiency, and neighbors asking about your "magic sock machine."
+            </div>
+        </section>
+
+        <button class="cta-button" onclick="orderNow()">
+            Order Now - Free Parallel Universe Shipping!
+        </button>
+
+        <section class="section">
+            <h2>Scientifically Proven Results</h2>
+            <ul class="feature-list">
+                <li onclick="toggleReveal(this)">
+                    99.9% Sock Retention Rate
+                    <div class="reveal-content">
+                        Independent studies show only 1 sock lost per 1,000 loads - and that one was abducted by aliens, not our fault!
+                    </div>
+                </li>
+                <li onclick="toggleReveal(this)">
+                    Reduces Laundry Time by 50%
+                    <div class="reveal-content">
+                        Quantum sorting happens at the speed of light. You'll have more time for important things like watching cat videos.
+                    </div>
+                </li>
+                <li onclick="toggleReveal(this)">
+                    Increases Relationship Satisfaction
+                    <div class="reveal-content">
+                        Couples report 73% fewer arguments about missing socks after installing QSS-3000.
+                    </div>
+                </li>
+            </ul>
+        </section>
+
+        <button class="cta-button" onclick="orderNow()">
+            Buy Now - Includes Free Sock Insurance!
+        </button>
+
+        <div class="testimonial">
+            "My husband thought I was crazy buying a quantum sock sorter. Now he asks me to do laundry just to see it work. It's like magic, but with more science!" - Jennifer L., Happy Customer
+        </div>
+    </div>
+
+    <script>
+        function toggleReveal(element) {
+            const content = element.querySelector('.reveal-content');
+            content.classList.toggle('active');
+            
+            // Close other reveals
+            const allReveals = document.querySelectorAll('.reveal-content');
+            allReveals.forEach(reveal => {
+                if (reveal !== content) {
+                    reveal.classList.remove('active');
+                }
+            });
+        }
+
+        function orderNow() {
+            const messages = [
+                "Initializing quantum payment portal...",
+                "Checking parallel universe inventory...",
+                "Entangling your credit card with our server...",
+                "Your order has been collapsed into a superposition of states!",
+                "Thank you for your quantum purchase! Your socks will arrive yesterday."
+            ];
+            
+            const message = messages[Math.floor(Math.random() * messages.length)];
+            
+            // Create a temporary message element
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #00ffff;
+                color: #0a0a0a;
+                padding: 30px;
+                border: 3px solid #ff0000;
+                font-size: 1.2em;
+                font-weight: bold;
+                z-index: 10000;
+                animation: pulse 0.5s ease;
+            `;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
+        // Add some quantum randomness to the page
+        setInterval(() => {
+            const elements = document.querySelectorAll('h1, h2');
+            const randomElement = elements[Math.floor(Math.random() * elements.length)];
+            randomElement.style.textShadow = `0 0 ${Math.random() * 20}px #00ffff`;
+        }, 2000);
+    </script>
+</body>
+</html>
