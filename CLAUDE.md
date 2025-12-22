@@ -138,28 +138,33 @@ git remote set-url origin https://github.com/milwrite/javabot.git
 
 ## Architecture Overview
 
-### Single-File Architecture
-The entire bot is contained in `index.js` (~5500 lines) with these key sections in order:
-1. Environment configuration and imports (lines 1-27)
-2. Configuration constants in `CONFIG` object (lines 29-41)
-3. Error tracking system (prevents infinite error loops, lines 43-70)
-4. Message history tracking setup (lines 72-87)
-5. Channel ID parsing for multi-channel support (lines 89-92)
-6. Discord client and GitHub (Octokit + simple-git) setup (lines 94-108)
-7. Git timeout wrapper and logging utilities
-8. OpenRouter configuration with model presets (~line 139)
-9. Bot personality system (`botResponses`, `SYSTEM_PROMPT`) (~line 150-290)
-10. Discord context manager (direct API fetching, replaces agents.md)
-11. Filesystem tools (list/read/write/edit files) (~line 715-870)
-12. Content creation tools (create_page, create_feature) (~line 870-1320)
-13. Web search and configuration tools (set_model) (~line 1322-1450)
-14. Enhanced LLM with function calling (agentic loop, max 10 iterations) (~line 1452-1700)
-15. Slash command definitions array (~line 1770)
-16. Command handlers (one `handle*` function per command) (~line 2260+)
-17. Message tracking, @ mention responses, and bot ready event (~line 2143+)
+### Modular Architecture
+The bot is organized across `index.js` (~4900 lines) and modular services:
+
+**index.js key sections**:
+1. Environment configuration and imports (lines 1-35)
+2. Configuration constants in `CONFIG` object (lines 68-83)
+3. Error tracking system (prevents infinite error loops)
+4. Discord client setup and context manager
+5. Content creation tools (create_page, create_feature)
+6. Enhanced LLM with function calling (agentic loop, max 6 iterations)
+7. Slash command definitions and handlers
+8. Message tracking, @ mention responses, and bot ready event
+
+**Services Modules** (`/services/`):
+- `filesystem.js` - File operations (listFiles, fileExists, readFile, writeFile, editFile, searchFiles)
+- `gitHelper.js` - GitHub API operations (octokit, pushFileViaAPI, getExistingFileSha)
+- `gamePipeline.js` - Game building pipeline
+- `llmClient.js` - OpenRouter API client with role-specific prompts
+- `requestClassifier.js` - Request classification
+
+**Config Modules** (`/config/`):
+- `models.js` - MODEL_PRESETS, OPENROUTER_URL, reasoning config
 
 **File Organization**:
 - `/src/` - All generated HTML pages, JS features, and demos
+- `/services/` - Modular service modules (filesystem, git, LLM, pipelines)
+- `/config/` - Configuration modules (models, presets)
 - `/responses/` - AI responses >2000 chars saved with timestamps
 - `index.html` - Main hub page with embedded CSS (no longer uses style.css)
 - `page-theme.css` - Shared arcade theme for all /src/ pages
@@ -573,7 +578,11 @@ const CONFIG = {
 
 ## Architecture Notes
 
-**Single-File Design**: `index.js` (~5,500 lines) contains all bot logic for simplicity and easy understanding
+**Modular Design**: Core bot in `index.js` (~4,900 lines) with services extracted to `/services/` for maintainability:
+- `services/filesystem.js` - File operations with grep/search capability
+- `services/gitHelper.js` - GitHub API operations
+- `services/llmClient.js` - LLM client with role prompts
+- `config/models.js` - Model presets and configuration
 
 **Known Issues**:
 - Tool API mismatches (camelCase vs snake_case)
@@ -581,4 +590,4 @@ const CONFIG = {
 - No automated testing (uses runtime validation instead)
 - Unbounded growth in `responses/` directory
 
-**Design Rationale**: Prioritizes rapid iteration and observability over perfect separation of concerns
+**Design Rationale**: Balances rapid iteration with modular organization for critical services
