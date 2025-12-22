@@ -1,7 +1,7 @@
 // agents/gameArchitect.js
 // Game planning agent - analyzes user request and creates implementation plan
 
-const { callSonnet, extractJSON } = require('../services/llmClient');
+const { callLLM, extractJSON } = require('../services/llmClient');
 
 /**
  * Plan a game based on user prompt
@@ -29,10 +29,10 @@ Plan a simple, mobile-first game/page that satisfies this request. Return a comp
         }
     ];
 
-    const response = await callSonnet({
+    const response = await callLLM({
         role: 'architect',
         messages,
-        model: 'sonnet',
+        model: 'glm',
         temperature: 0.7,
         onHeartbeat: onStatusUpdate
     });

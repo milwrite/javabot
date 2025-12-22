@@ -152,7 +152,7 @@ The entire bot is contained in `index.js` (~5500 lines) with these key sections 
 10. Discord context manager (direct API fetching, replaces agents.md)
 11. Filesystem tools (list/read/write/edit files) (~line 715-870)
 12. Content creation tools (create_page, create_feature) (~line 870-1320)
-13. Web search and configuration tools (set_model, update_style, build_game) (~line 1322-1450)
+13. Web search and configuration tools (set_model) (~line 1322-1450)
 14. Enhanced LLM with function calling (agentic loop, max 10 iterations) (~line 1452-1700)
 15. Slash command definitions array (~line 1770)
 16. Command handlers (one `handle*` function per command) (~line 2260+)
@@ -197,8 +197,12 @@ The entire bot is contained in `index.js` (~5500 lines) with these key sections 
 - **Zero Data Retention (ZDR) ENFORCED** - all requests use `provider.data_collection: 'deny'`
 - Only ZDR-compliant models allowed (no OpenAI - they don't support ZDR on OpenRouter)
 - Swappable models via `MODEL_PRESETS` (ZDR-compliant only)
-- Default: `anthropic/claude-haiku-4.5`
-- Available: Claude Haiku/Sonnet 4.5, Kimi K2, Gemini 2.5, GLM 4.6
+- Default: `z-ai/glm-4.6:exacto`
+- Available: GLM 4.6, Kimi K2, Gemini 2.5, Qwen 3
+- `set_model(model)` - Switch AI model: glm, kimi, gemini, qwen (equivalent to `/set-model`)
+- `glm` - GLM 4.6 (default, exacto)
+- `kimi` - K2 (with reasoning)
+- `gemini` - Gemini 2.5 Pro
 - Function calling support (filesystem tools, web search)
 - 10,000 token output limit for detailed responses
 - Automatic 402 error recovery (reduces max_tokens when credits low)
@@ -291,7 +295,7 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - `get_repo_status()` - Check current git status (equivalent to `/status`)
 
 **Configuration Tools**:
-- `set_model(model)` - Switch AI model: haiku, sonnet, kimi, gpt5, gemini (equivalent to `/set-model`)
+- `set_model(model)` - Switch AI model: glm, kimi, gemini, qwen (equivalent to `/set-model`)
 - `update_style(preset, description)` - Change website theme (equivalent to `/update-style`)
 
 **Web Search**:
@@ -507,11 +511,10 @@ MODEL = MODEL_PRESETS[modelChoice];
 ```
 
 Available presets (ZDR-compliant only):
-- `haiku` - Claude Haiku 4.5 (fast, cheap)
-- `sonnet` - Claude Sonnet 4.5 (balanced)
+- `glm` - GLM 4.6 (default, exacto)
 - `kimi` - Kimi K2 Thinking (reasoning)
 - `gemini` - Gemini 2.5 Pro (Google)
-- `glm` - GLM 4.6 (Z-AI)
+- `qwen` - Qwen 3 Coder (Alibaba)
 
 **Note**: OpenAI models removed - they don't support Zero Data Retention on OpenRouter.
 

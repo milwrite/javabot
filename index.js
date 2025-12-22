@@ -991,7 +991,7 @@ TOOLS:
 - commit_changes(message, files): Git add, commit, push
 - git_log(): Commit history - YOUR MEMORY of past work
 - web_search(query): Current info (sports, news, weather, "latest/today")
-- set_model(model): Switch AI (kimi/sonnet/gemini/glm)
+- set_model(model): Switch AI (kimi/gemini/glm)
 
 TOOL USAGE:
 - URL given → file_exists first
@@ -2860,14 +2860,14 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'set_model',
-                    description: 'Switch the AI model used for responses. ZDR-compliant models: glm (default), kimi, kimi-fast, sonnet, gemini, qwen',
+                    description: 'Switch the AI model used for responses. ZDR-compliant models: glm (default), kimi, kimi-fast, gemini, qwen',
                     parameters: {
                         type: 'object',
                         properties: {
                             model: {
                                 type: 'string',
                                 description: 'Model preset name. glm = GLM-4.6 (default), kimi = with reasoning, kimi-fast = without.',
-                                enum: ['glm', 'kimi', 'kimi-fast', 'sonnet', 'gemini', 'qwen', 'minimax']
+                                enum: ['glm', 'kimi', 'kimi-fast', 'gemini', 'qwen', 'minimax']
                             }
                         },
                         required: ['model']
@@ -4407,7 +4407,6 @@ async function handleSetModel(interaction) {
             'glm': 'GLM-4.6 Exacto',
             'kimi': 'Kimi K2 Thinking',
             'kimi-fast': 'Kimi K2 Fast',
-            'sonnet': 'Claude Sonnet 4.5',
             'qwen': 'Qwen 3 Coder',
             'gemini': 'Gemini 2.5 Pro',
             'minimax': 'Minimax M2',

@@ -21,18 +21,18 @@ axiosRetry(axios, {
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const API_KEY = process.env.OPENROUTER_API_KEY;
 
-// Model presets (ZDR-compliant only - no OpenAI)
+// Model presets (ZDR-compliant only - no OpenAI, no Anthropic)
 const MODEL_PRESETS = {
-    'haiku': 'anthropic/claude-haiku-4.5',
-    'sonnet': 'anthropic/claude-sonnet-4.5',
+    'glm': 'z-ai/glm-4.6:exacto',
     'kimi': 'moonshotai/kimi-k2-0905:exacto',
     'gemini': 'google/gemini-2.5-pro',
-    'glm': 'z-ai/glm-4.6:exacto'
+    'minimax': 'minimax/minimax-m2',
+    'qwen': 'qwen/qwen3-coder'
 };
 
 // Fallback models for 500 error recovery (ZDR-compliant only)
 const FALLBACK_MODELS = [
-    'anthropic/claude-haiku-4.5',
+    'z-ai/glm-4.6:exacto',
     'google/gemini-2.5-flash-preview-05-20',
     'moonshotai/kimi-k2-0905:exacto'
 ];
@@ -120,24 +120,24 @@ RELEASE NOTES: "yeah built you [thing] with [feature] - [interaction], classic n
 };
 
 /**
- * Call Claude Sonnet via OpenRouter with role-specific prompting
+ * Call an LLM via OpenRouter with role-specific prompting
  * @param {object} options - Call options
  * @param {string} options.role - Agent role: 'architect' | 'builder' | 'tester' | 'scribe'
  * @param {string} options.systemPrompt - Optional custom system prompt (overrides role default)
  * @param {Array} options.messages - Conversation messages
  * @param {Array} options.tools - Optional function tools
- * @param {string} options.model - Model to use (default: sonnet)
+ * @param {string} options.model - Model to use (default: glm)
  * @param {number} options.maxTokens - Max output tokens (default: 10000)
  * @param {number} options.temperature - Temperature (default: 0.7)
  * @param {Function} options.onHeartbeat - Optional callback for progress updates during long calls
  * @returns {object} API response with content and tool_calls
  */
-async function callSonnet({
+async function callLLM({
     role,
     systemPrompt = null,
     messages,
     tools = [],
-    model = 'sonnet',
+    model = 'glm',
     maxTokens = 10000,
     temperature = 0.7,
     onHeartbeat = null
@@ -232,7 +232,7 @@ async function callSonnet({
                     console.log(`[LLM] 402 error - retrying with reduced max_tokens: ${reduced} (was ${maxTokens})`);
 
                     // Recursive retry with reduced tokens (no infinite loop - only retries once)
-                    return await callSonnet({
+                    return await callLLM({
                         role,
                         systemPrompt,
                         messages,
@@ -263,7 +263,7 @@ async function callSonnet({
                     // Reset error count and try fallback
                     model500ErrorCount.set(modelString, 0);
 
-                    return await callSonnet({
+                    return await callLLM({
                         role,
                         systemPrompt,
                         messages,
@@ -305,7 +305,7 @@ function extractJSON(content) {
 }
 
 module.exports = {
-    callSonnet,
+    callLLM,
     extractJSON,
     MODEL_PRESETS,
     FALLBACK_MODELS,

@@ -122,7 +122,7 @@ The system chooses between two modes for modifying content:
     *   **Logic**: Can iterate up to 6 times. It "Thinks", acts, observes tool output, and acts again.
     *   **Features**:
         *   **Action Injection**: "I see you just edited `game.html`, I will look there first."
-        *   **Model Switching**: Can fallback from `GLM` to `Kimi` or `Sonnet` if stuck.
+        *   **Model Switching**: Can fallback from `GLM` to `Kimi` or `Gemini` if stuck.
 
 ### D. The Tool Belt
 The AI interacts with the system via these defined functions:
@@ -144,12 +144,12 @@ The AI interacts with the system via these defined functions:
 
 ### Zero Data Retention (ZDR)
 *   **Provider**: All calls use OpenRouter with `provider: { data_collection: 'deny' }`.
-*   **Models**: Only ZDR-compliant models are used (Claude 3.5 Sonnet, GLM-4, Gemini Pro).
+*   **Models**: Only ZDR-compliant models are used (GLM-4, Kimi K2, Gemini Pro).
 
 ### Resilience Strategies
 *   **Model Fallback**:
-    *   Primary: `GLM-4.6` / `Claude 3.5 Sonnet`.
-    *   Fallback: If 500 errors occur, automatically switches to `Kimi` or `Gemini`.
+    *   Primary: `GLM-4.6` / `Kimi K2`.
+    *   Fallback: If 500 errors occur, automatically switches to `Gemini` or `Qwen`.
 *   **Retry Logic**:
     *   `axios-retry` handles network blips.
     *   Pipeline retries builds up to 3 times if the **Tester** finds critical issues.

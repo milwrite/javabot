@@ -1,7 +1,7 @@
 // agents/gameScribe.js
 // Documentation agent - generates metadata and release notes
 
-const { callSonnet, extractJSON } = require('../services/llmClient');
+const { callLLM, extractJSON } = require('../services/llmClient');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -37,10 +37,10 @@ Return as JSON.`
         }
     ];
 
-    const response = await callSonnet({
+    const response = await callLLM({
         role: 'scribe',
         messages,
-        model: 'sonnet',
+        model: 'glm',
         temperature: 0.8, // Slightly higher for creative captions
         onHeartbeat: onStatusUpdate
     });
