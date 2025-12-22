@@ -1014,8 +1014,8 @@ let SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT;
 function cleanBotResponse(response) {
     if (!response) return '';
 
-    // Remove "Bot Sportello:" prefix patterns
-    let cleaned = response.replace(/^Bot Sportello:\s*/i, '').replace(/Bot Sportello:\s*Bot Sportello:\s*/gi, '');
+    // Remove "Bot Sportello:" prefix anywhere it appears
+    let cleaned = response.replace(/Bot Sportello:\s*/gi, '').trim();
 
     // Strip any tool-call markup that some models emit in plain text
     cleaned = cleaned
