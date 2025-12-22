@@ -275,6 +275,64 @@ const git = simpleGit({
     binary: GIT_BINARY
 });
 
+// --- Push Fallbacks: GitHub API via Octokit ---
+function isGitAvailable() {
+    try {
+        execSync(`${GIT_BINARY} --version`, { stdio: 'ignore' });
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+function shouldUseApiPush() {
+    const method = (process.env.PUSH_METHOD || '').toLowerCase();
+    if (method === 'api') return true;
+    if (method === 'git') return false;
+
+    const flag = (process.env.FEATURE_OCTOKIT_PUSH || '').toLowerCase();
+    const enabled = flag === 'true' || flag === '1' || flag === 'yes';
+    return enabled || !isGitAvailable();
+}
+
+async function getExistingFileSha(repoPath, branch = 'main') {
+    const owner = process.env.GITHUB_REPO_OWNER;
+    const repo = process.env.GITHUB_REPO_NAME;
+    try {
+        const { data } = await octokit.repos.getContent({ owner, repo, path: repoPath, ref: branch });
+        if (Array.isArray(data)) {
+            throw new Error(`Path refers to a directory: ${repoPath}`);
+        }
+        return data.sha;
+    } catch (e) {
+        if (e.status === 404) return undefined; // New file
+        throw e;
+    }
+}
+
+async function pushFileViaAPI(filePath, content, commitMessage, branch = 'main') {
+    const owner = process.env.GITHUB_REPO_OWNER;
+    const repo = process.env.GITHUB_REPO_NAME;
+
+    // Normalize to posix path for GitHub API
+    const posixPath = filePath.replace(/\\/g, '/').replace(/^\.\//, '');
+
+    const sha = await getExistingFileSha(posixPath, branch);
+    const base64Content = Buffer.from(content, 'utf8').toString('base64');
+
+    const res = await octokit.repos.createOrUpdateFileContents({
+        owner,
+        repo,
+        path: posixPath,
+        message: commitMessage,
+        content: base64Content,
+        branch,
+        sha
+    });
+
+    return res.data.commit?.sha || null;
+}
+
 // Discord Context Manager - fetches message history directly from Discord API
 // Replaces agents.md file-based memory with real-time Discord awareness
 class DiscordContextManager {
@@ -510,6 +568,14 @@ async function pushWithAuth(branch = 'main') {
 // Initialize Git remote URL with validation and cleanup
 async function initializeGitRemote() {
     try {
+        // Ensure git is available before attempting any operations
+        try {
+            execSync(`${GIT_BINARY} --version`, { stdio: 'ignore' });
+        } catch (binErr) {
+            console.warn('⚠️ Git binary not available; skipping remote initialization');
+            return;
+        }
+
         // First ensure we have a clean remote URL
         await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
         console.log('✅ Git remote URL initialized (clean)');
@@ -1721,22 +1787,32 @@ async function writeFile(filePath, content) {
         const fileName = path.basename(filePath);
         const commitMessage = `add ${fileName}`;
 
-        await gitWithTimeout(() => git.add(filePath));
-        await gitWithTimeout(() => git.commit(commitMessage));
-        const status = await gitWithTimeout(() => git.status());
-        const currentBranch = status.current || 'main';
+        if (shouldUseApiPush()) {
+            try {
+                const branch = 'main';
+                const sha = await pushFileViaAPI(filePath, content, commitMessage, branch);
+                console.log(`[WRITE_FILE] API pushed: ${commitMessage} (${sha?.slice(0,7) || 'no-sha'})`);
+                return `File written and pushed: ${filePath} (${content.length} bytes) - now live at https://bot.inference-arcade.com/${filePath}`;
+            } catch (pushErr) {
+                const error = errorLogger.log('WRITE_FILE_PUSH_API', pushErr, { filePath, commitMessage });
+                throw pushErr;
+            }
+        } else {
+            await gitWithTimeout(() => git.add(filePath));
+            await gitWithTimeout(() => git.commit(commitMessage));
+            const status = await gitWithTimeout(() => git.status());
+            const currentBranch = status.current || 'main';
 
-        try {
-            await pushWithAuth(currentBranch);
-        } catch (pushError) {
-            const error = errorLogger.log('WRITE_FILE_PUSH', pushError, { filePath, branch: currentBranch });
-            
-            // Surface push error
-            throw pushError;
+            try {
+                await pushWithAuth(currentBranch);
+            } catch (pushError) {
+                const error = errorLogger.log('WRITE_FILE_PUSH', pushError, { filePath, branch: currentBranch });
+                throw pushError;
+            }
+
+            console.log(`[WRITE_FILE] Auto-pushed: ${commitMessage}`);
+            return `File written and pushed: ${filePath} (${content.length} bytes) - now live at https://bot.inference-arcade.com/${filePath}`;
         }
-
-        console.log(`[WRITE_FILE] Auto-pushed: ${commitMessage}`);
-        return `File written and pushed: ${filePath} (${content.length} bytes) - now live at https://bot.inference-arcade.com/${filePath}`;
     } catch (error) {
         console.error(`[WRITE_FILE] Error:`, error.message);
         return `Error writing file: ${error.message}`;
@@ -1838,16 +1914,29 @@ Return ONLY the complete updated file content. No explanations, no markdown code
         const fileName = path.basename(filePath);
         const commitMessage = `update ${fileName}`;
 
-        await gitWithTimeout(() => git.add(filePath));
-        await gitWithTimeout(() => git.commit(commitMessage));
-        const status = await gitWithTimeout(() => git.status());
-        const currentBranch = status.current || 'main';
+        if (shouldUseApiPush()) {
+            try {
+                const branch = 'main';
+                const sha = await pushFileViaAPI(filePath, updatedContent, commitMessage, branch);
+                const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+                console.log(`[EDIT_FILE] API pushed: ${filePath} (${sha?.slice(0,7) || 'no-sha'}) in ${totalTime}s`);
+                return `File edited and pushed: ${filePath}. ${changeDescription} - now live`;
+            } catch (apiErr) {
+                console.error(`[EDIT_FILE] API push failed: ${apiErr.message}`);
+                return `Error editing file: ${apiErr.message}`;
+            }
+        } else {
+            await gitWithTimeout(() => git.add(filePath));
+            await gitWithTimeout(() => git.commit(commitMessage));
+            const status = await gitWithTimeout(() => git.status());
+            const currentBranch = status.current || 'main';
 
-        await pushWithAuth(currentBranch);
+            await pushWithAuth(currentBranch);
 
-        const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`[EDIT_FILE] Success + pushed: ${filePath} (${totalTime}s total)`);
-        return `File edited and pushed: ${filePath}. ${changeDescription} - now live`;
+            const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            console.log(`[EDIT_FILE] Success + pushed: ${filePath} (${totalTime}s total)`);
+            return `File edited and pushed: ${filePath}. ${changeDescription} - now live`;
+        }
     } catch (error) {
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
         console.error(`[EDIT_FILE] Error after ${totalTime}s:`, error.message);
@@ -2274,6 +2363,33 @@ async function commitChanges(message, files = '.') {
     const metadata = { files, messageLength: message.length };
     
     try {
+        // If API push fallback is enabled or git is unavailable, use Octokit per-file commits
+        if (shouldUseApiPush()) {
+            if (!files || files === '.') {
+                console.warn('[COMMIT] API fallback requires explicit file list');
+                return 'Nothing to commit via API. Provide specific files (comma-separated) or use write/edit actions which push automatically.';
+            }
+
+            const branch = 'main';
+            const fileList = files.split(',').map(f => f.trim()).filter(Boolean);
+            if (fileList.length === 0) return 'Nothing to commit';
+
+            const results = [];
+            for (const f of fileList) {
+                try {
+                    const content = await fs.readFile(f, 'utf8');
+                    const sha = await pushFileViaAPI(f, content, message, branch);
+                    results.push({ file: f, sha: sha ? sha.slice(0,7) : 'no-sha' });
+                } catch (e) {
+                    errorLogger.log('COMMIT_PUSH_API', e, { file: f });
+                    return `Error committing ${f}: ${e.message}`;
+                }
+            }
+
+            const summary = results.map(r => `${r.file} (${r.sha})`).slice(0,5).join(', ');
+            return `Committed via API (${results.length} files): ${summary}${results.length>5?'…':''}`;
+        }
+
         // Validate environment before starting
         const envValidation = pipelineValidator.validateEnvironment();
         if (!envValidation.valid) {
@@ -3391,7 +3507,7 @@ async function getGuildIdFromChannel(channelId) {
     }
 }
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
     console.log(`Bot is ready as ${client.user.tag}`);
     console.log(`Monitoring channels: ${CHANNEL_IDS.length > 0 ? CHANNEL_IDS.join(', ') : 'ALL CHANNELS'}`);
     console.log(`Message Content Intent enabled: ${client.options.intents.has(GatewayIntentBits.MessageContent)}`);
