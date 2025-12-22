@@ -223,17 +223,22 @@ async function readFile(filePath, options = {}) {
             console.log(`[READ_FILE] Extracted path from URL: ${normalizedPath}`);
         }
 
-        // Try reading the file with automatic src/ path resolution
+        // Try reading the file with automatic path resolution
         let content;
         const pathsToTry = [normalizedPath];
 
-        // If path doesn't start with src/ and looks like a page name, try src/ variants
+        // If path doesn't start with src/, try adding src/ prefix
         if (!normalizedPath.startsWith('src/') && !normalizedPath.startsWith('./src/')) {
             pathsToTry.push(`src/${normalizedPath}`);
             // If no extension, try .html
             if (!normalizedPath.includes('.')) {
                 pathsToTry.push(`src/${normalizedPath}.html`);
             }
+        }
+
+        // If path starts with src/, also try without src/ prefix (for root files like projectmetadata.json)
+        if (normalizedPath.startsWith('src/')) {
+            pathsToTry.push(normalizedPath.replace(/^src\//, ''));
         }
 
         let lastError;
