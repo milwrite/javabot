@@ -44,7 +44,7 @@
       "title": "Site Inventory",
       "icon": "🗂️",
       "description": "repository scanner utility",
-      "collection": "featured",
+      "collection": "utilities-apps",
       "hidden": false
     },
     "double_dragon_beatem_up": {
@@ -75,13 +75,13 @@
       "title": "Terminal Memory",
       "description": "CRT card match challenge",
       "icon": "🧠",
-      "collection": "featured"
+      "collection": "arcade-games"
     },
     "rat_bushwick": {
       "title": "Rat Bushwick Log",
       "description": "Underground survival brief",
       "icon": "🐀",
-      "collection": "featured"
+      "collection": "stories-content"
     },
     "rhythm-test": {
       "title": "Rhythm Test",
