@@ -89,31 +89,101 @@
             max-width: 100%;
         }
 
-        /* Arcade Joystick Container */
-        .joystick-section {
+        /* Controls Layout */
+        .controls-area {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 30px;
             margin-bottom: 20px;
-            padding: 20px;
+            padding: 15px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
         }
 
-        .joystick-label {
+        /* D-Pad Style */
+        .d-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 40px);
+            grid-template-rows: repeat(2, 40px);
+            gap: 5px;
+            align-self: center;
+        }
+        
+        .d-pad-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(26, 26, 46, 0.8);
+            border: 2px solid #ffd93d;
+            border-radius: 8px;
             color: #ffd93d;
-            font-size: 0.9em;
-            font-weight: bold;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.1s;
+            user-select: none;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.5);
+        }
+
+        .d-pad-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.5);
+            background: #ffd93d;
+            color: #1a1a2e;
+        }
+
+        .d-btn-up { grid-column: 2; grid-row: 1; }
+        .d-btn-left { grid-column: 1; grid-row: 2; }
+        .d-btn-down { grid-column: 2; grid-row: 2; }
+        .d-btn-right { grid-column: 3; grid-row: 2; }
+
+        /* Joystick & Start Button Group */
+        .stick-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
         }
 
         #joystick-container {
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        .start-btn-small {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.85em;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            width: auto;
+            min-width: 100px;
+            transition: all 0.2s;
+        }
+        
+        .start-btn-small:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            filter: brightness(1.1);
+        }
+        
+        .start-btn-small:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive Tweaks for Controls */
+        @media (max-width: 480px) {
+            .controls-area { gap: 15px; padding: 10px; }
+            .d-pad { grid-template-columns: repeat(3, 35px); grid-template-rows: repeat(2, 35px); }
+            .d-pad-btn { width: 35px; height: 35px; font-size: 1em; }
         }
 
         .game-info {
@@ -226,15 +296,23 @@
         <!-- Kaboom.js renders here -->
         <div id="game-root"></div>
 
-        <!-- Arcade Joystick -->
-        <div class="joystick-section">
-            <div class="joystick-label">🕹️ Arcade Controls</div>
-            <div id="joystick-container"></div>
-        </div>
+        <!-- Controls Area -->
+        <div class="controls-area">
+            <!-- D-Pad (Left) -->
+            <div class="d-pad">
+                <div class="d-pad-btn d-btn-up" data-key="UP">▲</div>
+                <div class="d-pad-btn d-btn-left" data-key="LEFT">◀</div>
+                <div class="d-pad-btn d-btn-down" data-key="DOWN">▼</div>
+                <div class="d-pad-btn d-btn-right" data-key="RIGHT">▶</div>
+            </div>
 
-        <!-- Action buttons -->
-        <button class="action-btn" id="startBtn">START GAME</button>
-        <button class="action-btn hidden" id="restartBtn">RESTART GAME</button>
+            <!-- Joystick & Start (Right) -->
+            <div class="stick-section">
+                <div id="joystick-container"></div>
+                <button class="start-btn-small" id="startBtn">START</button>
+                <button class="start-btn-small hidden" id="restartBtn">RESTART</button>
+            </div>
+        </div>
 
         <!-- Instructions -->
         <div class="game-info">
@@ -260,22 +338,38 @@
         let arcadeJoystick = null;
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Initialize arcade joystick (smaller size)
             arcadeJoystick = new ArcadeJoystick('joystick-container', {
-                size: 160,
-                ballSize: 55,
-                ballColor: '#ff6b6b',        // Match pigman theme
-                baseColor: '#1a1a2e',        // Match container background
-                accentColor: '#ffd93d',      // Match score color
+                size: 120,                   // Smaller size
+                ballSize: 40,                // Smaller ball
+                ballColor: '#ff6b6b',
+                baseColor: '#1a1a2e',
+                accentColor: '#ffd93d',
                 deadzone: 0.25,
-                allowDiagonal: false,        // 4-way movement like Pac-Man
-                keyboardEmulation: false,    // Use direct callback instead
+                allowDiagonal: false,
+                keyboardEmulation: false,
                 hapticFeedback: true,
                 onDirectionChange: (direction) => {
-                    // Directly control game movement
                     if (window.setJoystickDirection) {
                         window.setJoystickDirection(direction);
                     }
                 }
+            });
+
+            // Initialize D-Pad buttons
+            document.querySelectorAll('.d-pad-btn').forEach(btn => {
+                const direction = btn.dataset.key;
+                
+                // Touch events
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (window.setJoystickDirection) window.setJoystickDirection(direction);
+                });
+                
+                // Mouse events for desktop testing
+                btn.addEventListener('mousedown', () => {
+                    if (window.setJoystickDirection) window.setJoystickDirection(direction);
+                });
             });
         });
     </script>
