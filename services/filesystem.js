@@ -334,8 +334,40 @@ async function editFile(filePath, oldString = null, newString = null, instructio
     console.log(`[EDIT_FILE] Starting edit for: ${filePath}`);
 
     try {
-        // Read the current file content
-        const currentContent = await fs.readFile(filePath, 'utf-8');
+        // Path resolution - same logic as readFile
+        let resolvedPath = filePath;
+        const pathsToTry = [filePath];
+
+        // If path starts with src/, also try without src/ prefix (for root files like projectmetadata.json)
+        if (filePath.startsWith('src/')) {
+            pathsToTry.push(filePath.replace(/^src\//, ''));
+        }
+        // If path doesn't start with src/, try adding src/ prefix
+        if (!filePath.startsWith('src/') && !filePath.startsWith('./src/')) {
+            pathsToTry.push(`src/${filePath}`);
+        }
+
+        let currentContent;
+        let lastError;
+        for (const tryPath of pathsToTry) {
+            try {
+                currentContent = await fs.readFile(tryPath, 'utf-8');
+                if (tryPath !== filePath) {
+                    console.log(`[EDIT_FILE] Resolved ${filePath} -> ${tryPath}`);
+                }
+                resolvedPath = tryPath;
+                break;
+            } catch (e) {
+                lastError = e;
+            }
+        }
+
+        if (!currentContent) {
+            throw lastError;
+        }
+
+        // Update filePath to resolved path for write operations
+        filePath = resolvedPath;
         const fileSize = (currentContent.length / 1024).toFixed(1);
         console.log(`[EDIT_FILE] File size: ${fileSize}KB`);
 
