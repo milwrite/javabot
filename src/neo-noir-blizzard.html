@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo-Noir Blizzard - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        body {
+            padding: 80px 20px 20px 20px;
+            background: #0a0a0a;
+            overflow-x: hidden;
+        }
+
+        .visualization-container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            background: #0a0a0a;
+            border: 2px solid #7ec8e3;
+            box-shadow: 0 0 20px rgba(126, 200, 227, 0.3);
+            margin-bottom: 30px;
+        }
+
+        #blizzardCanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            cursor: pointer;
+        }
+
+        .message-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 10;
+            padding: 20px;
+            background: rgba(10, 10, 10, 0.85);
+            border: 2px solid #7ec8e3;
+            box-shadow: 0 0 30px rgba(126, 200, 227, 0.5);
+            max-width: 90%;
+        }
+
+        .message-overlay h2 {
+            font-family: 'Courier Prime', monospace;
+            color: #00ffff;
+            font-size: 1.8em;
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .message-overlay p {
+            font-family: 'Courier Prime', monospace;
+            color: #7ec8e3;
+            font-size: 1em;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .signature {
+            color: #ff0000;
+            font-style: italic;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .controls {
+            background: rgba(126, 200, 227, 0.1);
+            border: 1px solid #7ec8e3;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            font-family: 'Courier Prime', monospace;
+            color: #00ffff;
+            font-size: 0.9em;
+            min-width: 120px;
+        }
+
+        .control-input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #0a0a0a;
+            border: 1px solid #7ec8e3;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #ff0000;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #ff0000;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ff0000;
+            border: none;
+        }
+
+        .value-display {
+            font-family: 'Courier Prime', monospace;
+            color: #7ec8e3;
+            font-size: 0.9em;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .tap-hint {
+            font-family: 'Courier Prime', monospace;
+            color: #7ec8e3;
+            text-align: center;
+            font-size: 0.9em;
+            margin-top: 15px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .info-section {
+            background: rgba(126, 200, 227, 0.05);
+            border: 1px solid #7ec8e3;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 4px;
+        }
+
+        .info-section h3 {
+            font-family: 'Courier Prime', monospace;
+            color: #00ffff;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .info-section p {
+            font-family: 'Courier Prime', monospace;
+            color: #7ec8e3;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: rgba(10, 10, 10, 0.6);
+            border: 1px solid #7ec8e3;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-family: 'Courier Prime', monospace;
+            color: #7ec8e3;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-family: 'Courier Prime', monospace;
+            color: #00ffff;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .message-overlay h2 {
+                font-size: 1.3em;
+            }
+
+            .message-overlay p {
+                font-size: 0.85em;
+            }
+
+            .control-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .control-label {
+                min-width: auto;
+            }
+
+            .control-input {
+                width: 100%;
+                min-width: auto;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 80px 10px 10px 10px;
+            }
+
+            .message-overlay {
+                padding: 15px;
+            }
+
+            .message-overlay h2 {
+                font-size: 1.1em;
+            }
+
+            .message-overlay p {
+                font-size: 0.75em;
+            }
+
+            .signature {
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="home-link">
+        <a href="../index.html">← BACK TO COLLECTION</a>
+    </nav>
+
+    <div class="visualization-container">
+        <h1>NEO-NOIR BLIZZARD</h1>
+        
+        <div class="canvas-wrapper">
+            <canvas id="blizzardCanvas"></canvas>
+            <div class="message-overlay">
+                <h2>SEASON'S GREETINGS</h2>
+                <p>From the neon-lit streets of the city,<br>
+                where snow falls like digital rain,<br>
+                and mysteries lurk in every shadow...</p>
+                <p class="signature">— Bot Sportello</p>
+            </div>
+        </div>
+
+        <div class="tap-hint">TAP ANYWHERE TO CREATE SNOW BURSTS</div>
+
+        <div class="controls">
+            <div class="control-row">
+                <span class="control-label">INTENSITY:</span>
+                <div class="control-input">
+                    <input type="range" id="intensitySlider" min="50" max="500" value="200" step="10">
+                </div>
+                <span class="value-display" id="intensityValue">200</span>
+            </div>
+            <div class="control-row">
+                <span class="control-label">WIND SPEED:</span>
+                <div class="control-input">
+                    <input type="range" id="windSlider" min="-3" max="3" value="0.5" step="0.1">
+                </div>
+                <span class="value-display" id="windValue">0.5</span>
+            </div>
+            <div class="control-row">
+                <span class="control-label">DEPTH EFFECT:</span>
+                <div class="control-input">
+                    <input type="range" id="depthSlider" min="1" max="5" value="3" step="0.5">
+                </div>
+                <span class="value-display" id="depthValue">3.0</span>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">SNOWFLAKES</div>
+                <div class="stat-value" id="flakeCount">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">FPS</div>
+                <div class="stat-value" id="fpsCounter">60</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">BURSTS</div>
+                <div class="stat-value" id="burstCount">0</div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3>ABOUT THE VISUALIZATION</h3>
+            <p>This atmospheric particle system creates a neo-noir winter scene using the Bot Sportello cityscape as a backdrop. Each snowflake is rendered with varying speeds and sizes to create depth, while the cyan glow gives it that signature neon-noir aesthetic.</p>
+            <p><strong>INTERACTION:</strong> Tap or click anywhere on the canvas to create localized snow bursts. Adjust the controls to modify the overall snowfall intensity, wind direction, and depth effect. The system is optimized for mobile devices using requestAnimationFrame for smooth 60fps performance.</p>
+            <p><strong>TECHNICAL:</strong> Canvas-based particle system with configurable parameters, touch-optimized interaction, responsive sizing, and real-time statistics tracking. The backdrop image (default.png) is integrated as the cityscape foundation.</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('blizzardCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let particles = [];
+        let baseIntensity = 200;
+        let windSpeed = 0.5;
+        let depthMultiplier = 3;
+        let burstTotal = 0;
+        
+        let lastFrameTime = Date.now();
+        let fps = 60;
+        
+        const cityImage = new Image();
+        cityImage.src = '../default.png';
+        
+        function resizeCanvas() {
+            const wrapper = canvas.parentElement;
+            const aspectRatio = 16 / 9;
+            const width = wrapper.clientWidth - 4;
+            const height = width / aspectRatio;
+            
+            canvas.width = width;
+            canvas.height = height;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+        }
+        
+        class Snowflake {
+            constructor(x, y, burst = false) {
+                this.x = x !== undefined ? x : Math.random() * canvas.width;
+                this.y = y !== undefined ? y : Math.random() * -canvas.height;
+                this.depth = Math.random() * depthMultiplier + 0.5;
+                this.size = (Math.random() * 3 + 1) / this.depth;
+                this.speedY = (Math.random() * 2 + 1) * this.depth;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.opacity = Math.random() * 0.5 + 0.5;
+                this.burst = burst;
+                this.life = burst ? 1.0 : null;
+            }
+            
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX + windSpeed / this.depth;
+                
+                this.speedX += (Math.random() - 0.5) * 0.1;
+                this.speedX *= 0.98;
+                
+                if (this.burst) {
+                    this.life -= 0.02;
+                    this.opacity = this.life * 0.8;
+                }
+                
+                if (this.y > canvas.height) {
+                    this.y = -10;
+                    this.x = Math.random() * canvas.width;
+                }
+                
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                
+                const gradient = ctx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, this.size * 2
+                );
+                gradient.addColorStop(0, '#00ffff');
+                gradient.addColorStop(0.5, '#7ec8e3');
+                gradient.addColorStop(1, 'rgba(126, 200, 227, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+            
+            isDead() {
+                return this.burst && this.life <= 0;
+            }
+        }
+        
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < baseIntensity; i++) {
+                particles.push(new Snowflake());
+            }
+        }
+        
+        function createBurst(x, y) {
+            const burstCount = 30;
+            for (let i = 0; i < burstCount; i++) {
+                const angle = (Math.PI * 2 * i) / burstCount;
+                const speed = Math.random() * 3 + 2;
+                const particle = new Snowflake(x, y, true);
+                particle.speedX = Math.cos(angle) * speed;
+                particle.speedY = Math.sin(angle) * speed;
+                particles.push(particle);
+            }
+            burstTotal++;
+            document.getElementById('burstCount').textContent = burstTotal;
+        }
+        
+        function animate() {
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (cityImage.complete) {
+                ctx.globalAlpha = 0.4;
+                const imgAspect = cityImage.width / cityImage.height;
+                const canvasAspect = canvas.width / canvas.height;
+                let drawWidth, drawHeight, drawX, drawY;
+                
+                if (imgAspect > canvasAspect) {
+                    drawHeight = canvas.height;
+                    drawWidth = drawHeight * imgAspect;
+                    drawX = (canvas.width - drawWidth) / 2;
+                    drawY = 0;
+                } else {
+                    drawWidth = canvas.width;
+                    drawHeight = drawWidth / imgAspect;
+                    drawX = 0;
+                    drawY = (canvas.height - drawHeight) / 2;
+                }
+                
+                ctx.drawImage(cityImage, drawX, drawY, drawWidth, drawHeight);
+                ctx.globalAlpha = 1;
+            }
+            
+            particles = particles.filter(p => !p.isDead());
+            
+            while (particles.filter(p => !p.burst).length < baseIntensity) {
+                particles.push(new Snowflake());
+            }
+            
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            
+            const now = Date.now();
+            const delta = now - lastFrameTime;
+            fps = Math.round(1000 / delta);
+            lastFrameTime = now;
+            
+            document.getElementById('flakeCount').textContent = particles.length;
+            document.getElementById('fpsCounter').textContent = fps;
+            
+            requestAnimationFrame(animate);
+        }
+        
+        function handleInteraction(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            let x, y;
+            
+            if (e.type.startsWith('touch')) {
+                const touch = e.touches[0] || e.changedTouches[0];
+                x = touch.clientX - rect.left;
+                y = touch.clientY - rect.top;
+            } else {
+                x = e.clientX - rect.left;
+                y = e.clientY - rect.top;
+            }
+            
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            createBurst(x * scaleX, y * scaleY);
+        }
+        
+        canvas.addEventListener('click', handleInteraction);
+        canvas.addEventListener('touchstart', handleInteraction, { passive: false });
+        
+        const intensitySlider = document.getElementById('intensitySlider');
+        const windSlider = document.getElementById('windSlider');
+        const depthSlider = document.getElementById('depthSlider');
+        
+        intensitySlider.addEventListener('input', (e) => {
+            baseIntensity = parseInt(e.target.value);
+            document.getElementById('intensityValue').textContent = baseIntensity;
+        });
+        
+        windSlider.addEventListener('input', (e) => {
+            windSpeed = parseFloat(e.target.value);
+            document.getElementById('windValue').textContent = windSpeed.toFixed(1);
+        });
+        
+        depthSlider.addEventListener('input', (e) => {
+            depthMultiplier = parseFloat(e.target.value);
+            document.getElementById('depthValue').textContent = depthMultiplier.toFixed(1);
+        });
+        
+        window.addEventListener('resize', resizeCanvas);
+        
+        resizeCanvas();
+        initParticles();
+        animate();
+    </script>
+</body>
+</html>

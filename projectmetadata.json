@@ -412,6 +412,13 @@
       "description": "Robot labor rights zine",
       "icon": "🤖",
       "collection": "stories-content"
+    },
+    "neo-noir-blizzard": {
+      "title": "Neo-Noir Blizzard",
+      "icon": "❄️",
+      "description": "atmospheric holiday snow viz",
+      "collection": "utilities-apps",
+      "hidden": false
     }
   }
 }
