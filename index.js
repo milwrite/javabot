@@ -1,45 +1,9 @@
 require('dotenv').config({ override: true });
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { Octokit } = require('@octokit/rest');
-const simpleGit = require('simple-git');
 const fs = require('fs').promises;
 const fsSync = require('fs');
-const { execSync } = require('child_process');
 
-// Find git binary - works on Railway (Linux) and macOS
-function findGitBinary() {
-    // Common git locations for Railway Linux and macOS
-    const candidates = [
-        '/usr/bin/git',           // Most Linux distros + macOS Xcode
-        '/usr/local/bin/git',     // Homebrew (Intel Mac)
-        '/opt/homebrew/bin/git',  // Homebrew (Apple Silicon)
-    ];
-
-    // Try to find git via which command first (most portable)
-    try {
-        const gitPath = execSync('which git', { encoding: 'utf8' }).trim();
-        if (gitPath && fsSync.existsSync(gitPath)) {
-            console.log(`[GIT] Found via which: ${gitPath}`);
-            return gitPath;
-        }
-    } catch (e) {
-        // which command failed, try candidates
-    }
-
-    // Fall back to checking known locations
-    for (const candidate of candidates) {
-        if (fsSync.existsSync(candidate)) {
-            console.log(`[GIT] Found at: ${candidate}`);
-            return candidate;
-        }
-    }
-
-    // Last resort: return 'git' and hope PATH is set correctly
-    console.warn('[GIT] Could not find git binary, using PATH');
-    return 'git';
-}
-
-const GIT_BINARY = findGitBinary();
 const path = require('path');
 const axios = require('axios');
 const axiosRetry = require('axios-retry').default;
@@ -271,29 +235,7 @@ const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN,
 });
 
-const git = simpleGit({
-    binary: GIT_BINARY
-});
-
-// --- Push Fallbacks: GitHub API via Octokit ---
-function isGitAvailable() {
-    try {
-        execSync(`${GIT_BINARY} --version`, { stdio: 'ignore' });
-        return true;
-    } catch (_) {
-        return false;
-    }
-}
-
-function shouldUseApiPush() {
-    const method = (process.env.PUSH_METHOD || '').toLowerCase();
-    if (method === 'api') return true;
-    if (method === 'git') return false;
-
-    const flag = (process.env.FEATURE_OCTOKIT_PUSH || '').toLowerCase();
-    const enabled = flag === 'true' || flag === '1' || flag === 'yes';
-    return enabled || !isGitAvailable();
-}
+// --- GitHub API Git Operations (Railway-compatible, no local git needed) ---
 
 async function getExistingFileSha(repoPath, branch = 'main') {
     const owner = process.env.GITHUB_REPO_OWNER;
@@ -486,122 +428,138 @@ class DiscordContextManager {
 // Global context manager instance (initialized in clientReady)
 let contextManager = null;
 
-
-// Helper: build an HTTPS URL with encoded token in userinfo (no permanent storage)
-function getEncodedRemoteUrl() {
-    const token = process.env.GITHUB_TOKEN;
-    if (!token) {
-        throw new Error('GITHUB_TOKEN environment variable is not set');
-    }
-    
-    // Validate token format (should start with ghp_ or github_pat_)
-    if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-        console.warn('⚠️ GitHub token format may be invalid - should start with ghp_ or github_pat_');
-    }
-    
-    // Don't encode the token - GitHub tokens don't need URL encoding
+// Commit multiple files to GitHub in a single commit via the Git Trees API
+// More efficient than multiple single-file commits for batch operations
+async function commitFilesViaAPI(files, commitMessage, branch = 'main') {
     const owner = process.env.GITHUB_REPO_OWNER;
     const repo = process.env.GITHUB_REPO_NAME;
-    
-    if (!owner || !repo) {
-        throw new Error('GITHUB_REPO_OWNER and GITHUB_REPO_NAME must be set');
-    }
-    
-    // Use milwrite as the username with the GitHub token (no encoding needed)
-    const url = `https://milwrite:${token}@github.com/${owner}/${repo}.git`;
-    
-    // Validate URL format without logging the actual token
-    if (!url.includes('@github.com') || !url.includes('.git')) {
-        throw new Error('Generated remote URL format is invalid');
-    }
-    
-    return url;
-}
 
-// Helper: push using an ephemeral URL so we never persist tokens in remotes
-async function pushWithAuth(branch = 'main') {
-    const url = getEncodedRemoteUrl();
-    let lastError = null;
-    
+    if (!files || files.length === 0) {
+        return { success: false, error: 'No files to commit' };
+    }
+
+    console.log(`[GITHUB_API] Committing ${files.length} file(s): "${commitMessage}"`);
+
     try {
-        // Preferred: push directly to URL (no remote mutation)
-        console.log('[PUSH] Attempting direct push to authenticated URL...');
-        await gitWithTimeout(() => git.push(url, branch), CONFIG.PUSH_TIMEOUT);
-        console.log('[PUSH] Direct push successful');
-        return;
-    } catch (directErr) {
-        console.log('[PUSH] Direct push failed:', directErr.message);
-        lastError = directErr;
-        
-        // Fallback 1: use raw git invocation
-        try {
-            console.log('[PUSH] Attempting raw git push...');
-            await gitWithTimeout(() => git.raw(['push', url, branch]), CONFIG.PUSH_TIMEOUT);
-            console.log('[PUSH] Raw git push successful');
-            return;
-        } catch (rawErr) {
-            console.log('[PUSH] Raw git push failed:', rawErr.message);
-            lastError = rawErr;
-            
-            // Fallback 2: add a temporary remote, push, then remove
-            const tempRemote = `auth-${Date.now()}`;
-            try {
-                console.log('[PUSH] Attempting temporary remote push...');
-                await git.remote(['add', tempRemote, url]);
-                await gitWithTimeout(() => git.push(tempRemote, branch), CONFIG.PUSH_TIMEOUT);
-                console.log('[PUSH] Temporary remote push successful');
-                return;
-            } catch (tempErr) {
-                console.log('[PUSH] Temporary remote push failed:', tempErr.message);
-                lastError = tempErr;
-            } finally {
-                try { await git.remote(['remove', tempRemote]); } catch (_) {}
-            }
-        }
-    }
-    
-    // If we get here, all methods failed
-    console.error('[PUSH] All push methods failed. Last error:', lastError.message);
-    throw new Error(`Push failed: ${lastError.message}`);
-}
+        // Get the current commit SHA for the branch
+        const { data: refData } = await octokit.git.getRef({
+            owner,
+            repo,
+            ref: `heads/${branch}`
+        });
+        const currentCommitSha = refData.object.sha;
 
-// Initialize Git remote URL with validation and cleanup
-async function initializeGitRemote() {
-    try {
-        // Ensure git is available before attempting any operations
-        try {
-            execSync(`${GIT_BINARY} --version`, { stdio: 'ignore' });
-        } catch (binErr) {
-            console.warn('⚠️ Git binary not available; skipping remote initialization');
-            return;
+        // Get the tree SHA from the current commit
+        const { data: commitData } = await octokit.git.getCommit({
+            owner,
+            repo,
+            commit_sha: currentCommitSha
+        });
+        const baseTreeSha = commitData.tree.sha;
+
+        // Create blobs for each file and build tree entries
+        const treeEntries = [];
+        for (const file of files) {
+            const posixPath = file.path.replace(/\\/g, '/').replace(/^\.\//, '');
+            const base64Content = Buffer.from(file.content, 'utf8').toString('base64');
+
+            // Create blob for the file
+            const { data: blobData } = await octokit.git.createBlob({
+                owner,
+                repo,
+                content: base64Content,
+                encoding: 'base64'
+            });
+
+            treeEntries.push({
+                path: posixPath,
+                mode: '100644', // Regular file
+                type: 'blob',
+                sha: blobData.sha
+            });
         }
 
-        // First ensure we have a clean remote URL
-        await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
-        console.log('✅ Git remote URL initialized (clean)');
-        
-        // Validate token without setting it permanently
-        try {
-            const testUrl = getEncodedRemoteUrl();
-            console.log('✅ GitHub token validation passed');
-        } catch (tokenError) {
-            console.error('❌ GitHub token validation failed:', tokenError.message);
-            console.error('⚠️ Git operations may fail due to authentication issues');
-        }
+        // Create new tree with our changes
+        const { data: newTree } = await octokit.git.createTree({
+            owner,
+            repo,
+            base_tree: baseTreeSha,
+            tree: treeEntries
+        });
+
+        // Create the commit
+        const { data: newCommit } = await octokit.git.createCommit({
+            owner,
+            repo,
+            message: commitMessage,
+            tree: newTree.sha,
+            parents: [currentCommitSha]
+        });
+
+        // Update the branch reference to point to new commit
+        await octokit.git.updateRef({
+            owner,
+            repo,
+            ref: `heads/${branch}`,
+            sha: newCommit.sha
+        });
+
+        console.log(`[GITHUB_API] Commit successful: ${newCommit.sha.substring(0, 7)}`);
+        return {
+            success: true,
+            sha: newCommit.sha,
+            shortSha: newCommit.sha.substring(0, 7),
+            filesCommitted: files.length
+        };
+
     } catch (error) {
-        const errorEntry = errorLogger.log('INIT_REMOTE', error);
-        console.warn('⚠️ Git remote URL initialization warning:', error.message);
+        console.error(`[GITHUB_API] Commit failed:`, error.message);
+        return {
+            success: false,
+            error: error.message
+        };
     }
 }
 
-// Git operation wrapper with timeout and authentication protection
-async function gitWithTimeout(operation, timeoutMs = CONFIG.GIT_TIMEOUT) {
-    return Promise.race([
-        operation(),
-        new Promise((_, reject) =>
-            setTimeout(() => reject(new Error(`Git operation timeout after ${timeoutMs}ms`)), timeoutMs)
-        )
-    ]);
+// Get list of changed local files that differ from GitHub (for commit preview)
+async function getLocalChanges(filePaths) {
+    const owner = process.env.GITHUB_REPO_OWNER;
+    const repo = process.env.GITHUB_REPO_NAME;
+    const changes = [];
+
+    for (const filePath of filePaths) {
+        try {
+            const localContent = await fs.readFile(filePath, 'utf8');
+            const posixPath = filePath.replace(/\\/g, '/').replace(/^\.\//, '');
+
+            // Try to get existing file from GitHub
+            try {
+                const { data } = await octokit.repos.getContent({
+                    owner,
+                    repo,
+                    path: posixPath,
+                    ref: 'main'
+                });
+
+                // File exists on GitHub - check if content differs
+                const remoteContent = Buffer.from(data.content, 'base64').toString('utf8');
+                if (localContent !== remoteContent) {
+                    changes.push({ path: filePath, content: localContent, status: 'modified' });
+                }
+            } catch (e) {
+                if (e.status === 404) {
+                    // File doesn't exist on GitHub - it's new
+                    changes.push({ path: filePath, content: localContent, status: 'new' });
+                } else {
+                    throw e;
+                }
+            }
+        } catch (error) {
+            console.warn(`[GITHUB_API] Could not check ${filePath}: ${error.message}`);
+        }
+    }
+
+    return changes;
 }
 
 // Discord interaction timeout handler with automatic fallback to channel messages
@@ -733,21 +691,20 @@ const errorLogger = {
 
 // Pipeline validation and recovery system
 const pipelineValidator = {
-    // Validate git repository state before operations
+    // Validate GitHub repository access before operations
     async validateGitState() {
         try {
-            const status = await gitWithTimeout(() => git.status(), 5000);
-            const isRepo = await git.checkIsRepo();
-            
-            if (!isRepo) {
-                throw new Error('Not a git repository');
-            }
-            
+            // Use GitHub API to validate repository access
+            const { data: repo } = await octokit.repos.get({
+                owner: process.env.GITHUB_REPO_OWNER,
+                repo: process.env.GITHUB_REPO_NAME
+            });
+
             return {
                 valid: true,
-                branch: status.current,
-                hasChanges: status.files.length > 0,
-                status
+                branch: repo.default_branch || 'main',
+                hasChanges: true, // Always allow commits via API
+                repoName: repo.full_name
             };
         } catch (error) {
             errorLogger.log('VALIDATE_GIT_STATE', error);
@@ -1782,36 +1739,18 @@ async function writeFile(filePath, content) {
         // Log file creation to GUI dashboard
         logFileChange('create', filePath, content);
 
-        // Auto-commit and push so file is live before link is shared
-        console.log(`[WRITE_FILE] Auto-pushing to remote...`);
+        // Auto-commit and push via GitHub API so file is live before link is shared
+        console.log(`[WRITE_FILE] Auto-pushing to remote via GitHub API...`);
         const fileName = path.basename(filePath);
         const commitMessage = `add ${fileName}`;
 
-        if (shouldUseApiPush()) {
-            try {
-                const branch = 'main';
-                const sha = await pushFileViaAPI(filePath, content, commitMessage, branch);
-                console.log(`[WRITE_FILE] API pushed: ${commitMessage} (${sha?.slice(0,7) || 'no-sha'})`);
-                return `File written and pushed: ${filePath} (${content.length} bytes) - now live at https://bot.inference-arcade.com/${filePath}`;
-            } catch (pushErr) {
-                const error = errorLogger.log('WRITE_FILE_PUSH_API', pushErr, { filePath, commitMessage });
-                throw pushErr;
-            }
-        } else {
-            await gitWithTimeout(() => git.add(filePath));
-            await gitWithTimeout(() => git.commit(commitMessage));
-            const status = await gitWithTimeout(() => git.status());
-            const currentBranch = status.current || 'main';
-
-            try {
-                await pushWithAuth(currentBranch);
-            } catch (pushError) {
-                const error = errorLogger.log('WRITE_FILE_PUSH', pushError, { filePath, branch: currentBranch });
-                throw pushError;
-            }
-
-            console.log(`[WRITE_FILE] Auto-pushed: ${commitMessage}`);
+        try {
+            const sha = await pushFileViaAPI(filePath, content, commitMessage, 'main');
+            console.log(`[WRITE_FILE] Pushed: ${commitMessage} (${sha?.slice(0,7) || 'no-sha'})`);
             return `File written and pushed: ${filePath} (${content.length} bytes) - now live at https://bot.inference-arcade.com/${filePath}`;
+        } catch (pushErr) {
+            errorLogger.log('WRITE_FILE_PUSH', pushErr, { filePath, commitMessage });
+            throw pushErr;
         }
     } catch (error) {
         console.error(`[WRITE_FILE] Error:`, error.message);
@@ -1914,28 +1853,15 @@ Return ONLY the complete updated file content. No explanations, no markdown code
         const fileName = path.basename(filePath);
         const commitMessage = `update ${fileName}`;
 
-        if (shouldUseApiPush()) {
-            try {
-                const branch = 'main';
-                const sha = await pushFileViaAPI(filePath, updatedContent, commitMessage, branch);
-                const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-                console.log(`[EDIT_FILE] API pushed: ${filePath} (${sha?.slice(0,7) || 'no-sha'}) in ${totalTime}s`);
-                return `File edited and pushed: ${filePath}. ${changeDescription} - now live`;
-            } catch (apiErr) {
-                console.error(`[EDIT_FILE] API push failed: ${apiErr.message}`);
-                return `Error editing file: ${apiErr.message}`;
-            }
-        } else {
-            await gitWithTimeout(() => git.add(filePath));
-            await gitWithTimeout(() => git.commit(commitMessage));
-            const status = await gitWithTimeout(() => git.status());
-            const currentBranch = status.current || 'main';
-
-            await pushWithAuth(currentBranch);
-
+        // Push via GitHub API
+        try {
+            const sha = await pushFileViaAPI(filePath, updatedContent, commitMessage, 'main');
             const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-            console.log(`[EDIT_FILE] Success + pushed: ${filePath} (${totalTime}s total)`);
+            console.log(`[EDIT_FILE] Pushed: ${filePath} (${sha?.slice(0,7) || 'no-sha'}) in ${totalTime}s`);
             return `File edited and pushed: ${filePath}. ${changeDescription} - now live`;
+        } catch (apiErr) {
+            console.error(`[EDIT_FILE] Push failed: ${apiErr.message}`);
+            return `Error editing file: ${apiErr.message}`;
         }
     } catch (error) {
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -2361,127 +2287,69 @@ async function syncIndexWithSrcFiles() {
 async function commitChanges(message, files = '.') {
     console.log(`[COMMIT] Starting: "${message}"`);
     const metadata = { files, messageLength: message.length };
-    
+
     try {
-        // If API push fallback is enabled or git is unavailable, use Octokit per-file commits
-        if (shouldUseApiPush()) {
-            if (!files || files === '.') {
-                console.warn('[COMMIT] API fallback requires explicit file list');
-                return 'Nothing to commit via API. Provide specific files (comma-separated) or use write/edit actions which push automatically.';
-            }
-
-            const branch = 'main';
-            const fileList = files.split(',').map(f => f.trim()).filter(Boolean);
-            if (fileList.length === 0) return 'Nothing to commit';
-
-            const results = [];
-            for (const f of fileList) {
-                try {
-                    const content = await fs.readFile(f, 'utf8');
-                    const sha = await pushFileViaAPI(f, content, message, branch);
-                    results.push({ file: f, sha: sha ? sha.slice(0,7) : 'no-sha' });
-                } catch (e) {
-                    errorLogger.log('COMMIT_PUSH_API', e, { file: f });
-                    return `Error committing ${f}: ${e.message}`;
-                }
-            }
-
-            const summary = results.map(r => `${r.file} (${r.sha})`).slice(0,5).join(', ');
-            return `Committed via API (${results.length} files): ${summary}${results.length>5?'…':''}`;
-        }
-
         // Validate environment before starting
         const envValidation = pipelineValidator.validateEnvironment();
         if (!envValidation.valid) {
             throw new Error(`Environment validation failed: ${envValidation.missing.join(', ')} missing`);
         }
-        
-        // Validate git state
+
+        // Validate GitHub access
         const gitValidation = await pipelineValidator.validateGitState();
         if (!gitValidation.valid) {
-            throw new Error(`Git validation failed: ${gitValidation.error}`);
-        }
-        
-        // Enhanced status check with timeout protection
-        const status = gitValidation.status || await gitWithTimeout(() => git.status(), 10000);
-
-        console.log(`[COMMIT] Status:`, {
-            branch: status.current,
-            filesChanged: status.files.length,
-            files: status.files.map(f => f.path).slice(0, 5) // Log first 5 files
-        });
-
-        if (status.files.length === 0) {
-            console.log('[COMMIT] No changes to commit');
-            return 'Nothing to commit';
+            throw new Error(`GitHub validation failed: ${gitValidation.error}`);
         }
 
-        // Stage files with enhanced error handling
-        console.log('[COMMIT] Staging files...');
-        try {
-            if (files === '.') {
-                await gitWithTimeout(() => git.add('.'), 15000);
-            } else {
-                const fileList = files.split(',').map(f => f.trim());
-                await gitWithTimeout(() => git.add(fileList), 15000);
-            }
-        } catch (stageError) {
-            const error = errorLogger.log('COMMIT_STAGE', stageError, metadata);
-            throw new Error(`Staging failed: ${stageError.message}`);
+        // Require explicit file list for API commits
+        if (!files || files === '.') {
+            return 'Provide specific files to commit (comma-separated). Use write/edit actions which push automatically.';
         }
 
-        // Validate files before committing if specific files were requested
-        if (files !== '.') {
-            const fileList = files.split(',').map(f => f.trim());
-            const fileValidation = await pipelineValidator.validateFileOperations(fileList);
-            if (!fileValidation.valid) {
-                console.warn('⚠️ File validation issues:', fileValidation.issues);
-                // Continue with commit but log the issues
-                metadata.fileIssues = fileValidation.issues;
+        const fileList = files.split(',').map(f => f.trim()).filter(Boolean);
+        if (fileList.length === 0) return 'Nothing to commit';
+
+        // Validate files before committing
+        const fileValidation = await pipelineValidator.validateFileOperations(fileList);
+        if (!fileValidation.valid) {
+            console.warn('⚠️ File validation issues:', fileValidation.issues);
+            metadata.fileIssues = fileValidation.issues;
+        }
+
+        // Read all files and prepare for batch commit
+        const filesToCommit = [];
+        for (const f of fileList) {
+            try {
+                const content = await fs.readFile(f, 'utf8');
+                filesToCommit.push({ path: f, content });
+            } catch (e) {
+                errorLogger.log('COMMIT_READ', e, { file: f });
+                return `Error reading ${f}: ${e.message}`;
             }
         }
-        
-        // Create commit with protection against empty commits
-        console.log('[COMMIT] Creating commit...');
-        let commit;
-        try {
-            // Verify we still have staged changes
-            const stagedStatus = await gitWithTimeout(() => git.status(), 5000);
-            if (stagedStatus.staged.length === 0) {
-                throw new Error('No staged changes found after add operation');
-            }
-            commit = await gitWithTimeout(() => git.commit(message), 15000);
-        } catch (commitError) {
-            const error = errorLogger.log('COMMIT_CREATE', commitError, metadata);
-            throw new Error(`Commit failed: ${commitError.message}`);
+
+        console.log(`[COMMIT] Committing ${filesToCommit.length} file(s) via GitHub API...`);
+
+        // Commit all files in a single commit via GitHub API
+        const result = await commitFilesViaAPI(filesToCommit, message, 'main');
+
+        if (!result.success) {
+            throw new Error(result.error);
         }
 
-        console.log('[COMMIT] Pushing to remote...');
-        const currentBranch = status.current || 'main';
-        metadata.branch = currentBranch;
+        console.log(`[COMMIT] Success: ${result.shortSha}`);
+        return `Committed: ${result.shortSha} - ${message} (${result.filesCommitted} files)`;
 
-        // Push with ephemeral URL and error handling
-        try {
-            await pushWithAuth(currentBranch);
-        } catch (pushError) {
-            const error = errorLogger.log('COMMIT_PUSH', pushError, metadata);
-            
-            throw new Error(`Push failed: ${pushError.message}`);
-        }
-
-        console.log(`[COMMIT] Success: ${commit.commit.substring(0, 7)}`);
-        return `Committed and pushed: ${commit.commit.substring(0, 7)} - ${message}`;
-        
     } catch (error) {
         const errorEntry = errorLogger.log('COMMIT', error, metadata);
         errorLogger.track(errorEntry);
-        
+
         // Return user-friendly error message
-        if (error.message.includes('authentication')) {
+        if (error.message.includes('authentication') || error.message.includes('401')) {
             return `Error: GitHub authentication failed. Check token permissions.`;
         } else if (error.message.includes('timeout')) {
-            return `Error: Git operation timed out. Repository may be busy.`;
-        } else if (error.message.includes('nothing to commit')) {
+            return `Error: GitHub API timed out. Try again.`;
+        } else if (error.message.includes('nothing to commit') || error.message.includes('No files')) {
             return 'Nothing to commit - no changes detected.';
         } else {
             return `Error committing: ${error.message}`;
@@ -3569,9 +3437,6 @@ client.once('clientReady', async () => {
         console.log('⚠️ Continuing without registered commands (will attempt to use cached commands)');
     }
 
-    // Initialize Git remote URL with current token
-    await initializeGitRemote();
-
     // Initialize Discord context manager (replaces agents.md)
     contextManager = new DiscordContextManager(client);
     console.log('✅ Discord context manager initialized');
@@ -3832,34 +3697,32 @@ async function handleMentionAsync(message) {
                     if (classification.isCommit) {
                         logEvent('MENTION', `COMMIT request - executing git commit`);
                         await safeEditReply(thinkingMsg, '💾 committing changes...');
-                        
+
                         try {
                             // Extract commit message from the request, or use default
                             let commitMessage = 'commit changes';
-                            const lowerContent = content.toLowerCase();
-                            
-                            // Extract the file reference if mentioned (e.g., "commit this game" -> look for recent files)
-                            if (lowerContent.includes('this game') || lowerContent.includes('this file') || lowerContent.includes('this page')) {
-                                // Get git status to find modified files
-                                const status = await git.status();
-                                if (status.files.length > 0) {
-                                    const recentFile = status.files[0].path;
-                                    commitMessage = `commit ${recentFile}`;
-                                }
-                            }
-                            
+
                             // Try to extract explicit commit message (e.g., "commit with message 'fix bug'")
                             const messageMatch = content.match(/(?:commit.*?(?:with message|as|:)\s*['"]([^'"]+)['"])|(?:commit\s+['"]([^'"]+)['"])/i);
                             if (messageMatch) {
                                 commitMessage = messageMatch[1] || messageMatch[2];
                             }
 
-                            const result = await commitChanges(commitMessage);
+                            // Try to extract file list from request
+                            const fileMatch = content.match(/(?:commit|push)\s+(?:files?\s+)?([^\s'"]+(?:\s*,\s*[^\s'"]+)*)/i);
+                            const files = fileMatch ? fileMatch[1] : '';
+
+                            if (!files) {
+                                await safeEditReply(thinkingMsg, `ℹ️ specify files to commit, e.g. "commit src/game.html". files are auto-committed when created/edited.`);
+                                return;
+                            }
+
+                            const result = await commitChanges(commitMessage, files);
                             await safeEditReply(thinkingMsg, `✅ ${result}`);
-                            
+
                             // Success - break out of retry loop
                             return;
-                            
+
                         } catch (error) {
                             lastFailureReason = `commit-failed`;
                             logEvent('MENTION', `Commit failed: ${error.message}`);
@@ -3904,26 +3767,14 @@ async function handleMentionAsync(message) {
                         break;
                     }
 
-                    // Commit and push
-                    await safeEditReply(thinkingMsg, '💾 committing to repo...');
+                    // Commit and push via GitHub API
+                    await safeEditReply(thinkingMsg, '💾 committing and pushing to github...');
                     const commitSuccess = await commitGameFiles(result);
 
-            if (commitSuccess) {
-                await safeEditReply(thinkingMsg, '🚀 pushing to github pages...');
-
-                try {
-                    await pushWithAuth('main');
-                    console.log('[MENTION_PIPELINE] Push successful');
-                } catch (pushError) {
-                    const error = errorLogger.log('MENTION_PIPELINE_PUSH', pushError);
-                    errorLogger.track(error);
-                    console.error('🚨 Mention pipeline deployment failed:', pushError.message);
-                    
-                    // Report error to user instead of silently failing
-                    await safeEditReply(thinkingMsg, `⚠️ Content built successfully but deployment failed: ${pushError.message}. Files are saved locally but not published. Check GitHub token permissions.`);
-                    return; // Exit early to prevent success message
-                }
-            }
+                    if (!commitSuccess) {
+                        await safeEditReply(thinkingMsg, `⚠️ Content built but commit failed. Check GitHub token permissions.`);
+                        return;
+                    }
 
                     // Success message
                     const scoreEmoji = result.testResult.score >= 80 ? '✨' : result.testResult.score >= 60 ? '✓' : '⚠️';
@@ -4268,24 +4119,27 @@ async function handleMentionAsync(message) {
 async function handleCommit(interaction) {
     try {
         const message = validateInput(interaction.options.getString('message'), 500);
-        const files = interaction.options.getString('files') || '.';
-        
-        // First, check if there's anything to commit
-        const status = await gitWithTimeout(() => git.status());
-        
-        if (status.files.length === 0) {
-            await interaction.editReply("Nothing to commit.");
+        const files = interaction.options.getString('files') || '';
+
+        // Require explicit file list for GitHub API commits
+        if (!files || files === '.') {
+            await interaction.editReply("Please specify files to commit (comma-separated). Example: `src/game.html, src/utils.js`\n\nNote: Files are auto-committed when created/edited via bot commands.");
+            return;
+        }
+
+        const fileList = files.split(',').map(f => f.trim()).filter(Boolean);
+        if (fileList.length === 0) {
+            await interaction.editReply("No valid files specified.");
             return;
         }
 
         // Show confirmation dialog with file details
         const confirmEmbed = new EmbedBuilder()
             .setTitle('⚠️ Confirm Commit & Push')
-            .setDescription(`Ready to commit and push **${status.files.length} file(s)** to the live repository?`)
+            .setDescription(`Ready to commit and push **${fileList.length} file(s)** to GitHub?`)
             .addFields(
                 { name: 'Commit Message', value: message, inline: false },
-                { name: 'Files to Commit', value: files === '.' ? 'All changed files' : files, inline: false },
-                { name: 'Changed Files', value: status.files.slice(0, 10).map(f => `• ${f.path}`).join('\n') + (status.files.length > 10 ? `\n... and ${status.files.length - 10} more` : ''), inline: false }
+                { name: 'Files to Commit', value: fileList.slice(0, 10).map(f => `• ${f}`).join('\n') + (fileList.length > 10 ? `\n... and ${fileList.length - 10} more` : ''), inline: false }
             )
             .setColor(0xFF6B35) // Orange warning color
             .setTimestamp();
@@ -4303,10 +4157,10 @@ async function handleCommit(interaction) {
                     .setStyle(ButtonStyle.Danger)
             );
 
-        await interaction.editReply({ 
-            content: '', 
-            embeds: [confirmEmbed], 
-            components: [confirmRow] 
+        await interaction.editReply({
+            content: '',
+            embeds: [confirmEmbed],
+            components: [confirmRow]
         });
 
         // Store commit data for button handler
@@ -4314,7 +4168,7 @@ async function handleCommit(interaction) {
         global.commitPendingData.set(interaction.user.id, {
             message,
             files,
-            status,
+            fileList,
             interactionId: interaction.id
         });
 
@@ -4329,73 +4183,68 @@ async function handleCommit(interaction) {
     }
 }
 
-// New function to handle the actual commit process
+// Execute commit via GitHub API
 async function executeCommit(interaction, commitData) {
     try {
-        // Update status with progress
-        await interaction.editReply({ content: 'Staging files...', embeds: [], components: [] });
-        
-        // Stage files
-        if (commitData.files === '.') {
-            await gitWithTimeout(() => git.add('.'));
-        } else {
-            const fileList = commitData.files.split(',').map(f => f.trim());
-            await gitWithTimeout(() => git.add(fileList));
+        await interaction.editReply({ content: 'Reading files...', embeds: [], components: [] });
+
+        // Read all files and prepare for batch commit
+        const filesToCommit = [];
+        for (const f of commitData.fileList) {
+            try {
+                const content = await fs.readFile(f, 'utf8');
+                filesToCommit.push({ path: f, content });
+            } catch (e) {
+                await interaction.editReply(`Error reading ${f}: ${e.message}`);
+                return;
+            }
         }
-        
-        // Update progress
-        await interaction.editReply('Creating commit...');
-        
-        // Create commit
-        const commit = await gitWithTimeout(() => git.commit(commitData.message));
-        
-        // Update progress
-        await interaction.editReply('Pushing to repository...');
-        
-        // Push changes - use current branch via ephemeral URL
-        const currentBranch = commitData.status.current || 'main';
-        await pushWithAuth(currentBranch);
-        
+
+        await interaction.editReply('Committing to GitHub...');
+
+        // Commit all files via GitHub API
+        const result = await commitFilesViaAPI(filesToCommit, commitData.message, 'main');
+
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+
         // Success - create and send embed
         const embed = new EmbedBuilder()
             .setTitle('🚀 Changes Committed & Pushed')
             .setDescription(getBotResponse('success') + '\n\n**Note:** Changes pushed! Site will update in 1-2 minutes.')
             .addFields(
                 { name: 'Commit Message', value: commitData.message, inline: false },
-                { name: 'Commit Hash', value: commit.commit.substring(0, 7), inline: true },
-                { name: 'Files Changed', value: commitData.status.files.length.toString(), inline: true },
+                { name: 'Commit Hash', value: result.shortSha, inline: true },
+                { name: 'Files Changed', value: result.filesCommitted.toString(), inline: true },
                 { name: 'Deployment', value: '⏳ Deploying... (1-2 min)', inline: false }
             )
             .setColor(0x00AE86)
             .setTimestamp();
-        
+
         // Add repository link if URL is available
         if (process.env.GITHUB_REPO_URL) {
             embed.addFields({
                 name: 'Repository',
-                value: `[View Changes](${process.env.GITHUB_REPO_URL}/commit/${commit.commit})`,
+                value: `[View Changes](${process.env.GITHUB_REPO_URL}/commit/${result.sha})`,
                 inline: false
             });
         }
-        
+
         await safeEditReply(interaction, { content: '', embeds: [embed] });
-        
+
     } catch (error) {
         console.error('Commit execution error:', error);
-        
-        // Provide more specific error messages
+
         let errorMessage = getBotResponse('errors');
-        
-        if (error.message.includes('authentication')) {
+        if (error.message.includes('authentication') || error.message.includes('401')) {
             errorMessage += ' Authentication issue with GitHub.';
-        } else if (error.message.includes('nothing to commit')) {
-            errorMessage += ' Nothing new to commit.';
-        } else if (error.message.includes('remote')) {
-            errorMessage += ' Trouble reaching the remote repository.';
+        } else if (error.message.includes('404')) {
+            errorMessage += ' File not found on GitHub.';
         } else {
             errorMessage += ` ${error.message}`;
         }
-        
+
         await interaction.editReply(errorMessage);
     }
 }
@@ -4500,16 +4349,14 @@ async function handleButtonInteraction(interaction) {
             } else if (type === 'discard') {
                 // Get stored mention commit data for response
                 const commitData = global.mentionCommitData?.get(interaction.user.id);
-                
+
                 // Clean up pending data
                 global.mentionCommitData?.delete(interaction.user.id);
-                
-                // Discard changes and show original response
-                await gitWithTimeout(() => git.reset(['--hard', 'HEAD']));
-                
+
+                // Note: With GitHub API commits, there's nothing local to discard
                 const discardEmbed = new EmbedBuilder()
-                    .setTitle('🗑️ Changes Discarded')
-                    .setDescription('Local changes have been discarded. Here was the AI response:')
+                    .setTitle('🗑️ Commit Cancelled')
+                    .setDescription('Changes were not committed. Here was the AI response:')
                     .addFields(
                         { name: 'Original Response', value: commitData?.response?.substring(0, 1000) + (commitData?.response?.length > 1000 ? '...' : '') || 'No response available', inline: false }
                     )
@@ -4666,30 +4513,36 @@ async function handleSetModel(interaction) {
 
 async function handleStatus(interaction) {
     try {
-        const status = await git.status();
-        
+        const owner = process.env.GITHUB_REPO_OWNER;
+        const repo = process.env.GITHUB_REPO_NAME;
+
+        // Fetch repo info and recent commits from GitHub API
+        const [repoData, commitsData] = await Promise.all([
+            octokit.repos.get({ owner, repo }),
+            octokit.repos.listCommits({ owner, repo, per_page: 5 })
+        ]);
+
+        const repoInfo = repoData.data;
+        const commits = commitsData.data;
+
+        // Format recent commits
+        const recentCommits = commits.slice(0, 5).map(c =>
+            `\`${c.sha.substring(0, 7)}\` ${c.commit.message.split('\n')[0].substring(0, 50)}`
+        ).join('\n');
+
         const embed = new EmbedBuilder()
             .setTitle('📊 Repository Status')
-            .setDescription('Current repository status')
+            .setDescription(`**${repoInfo.full_name}**`)
             .addFields(
-                { name: 'Branch', value: status.current || 'unknown', inline: true },
-                { name: 'Modified Files', value: status.modified.length.toString(), inline: true },
-                { name: 'New Files', value: status.not_added.length.toString(), inline: true },
-                { name: 'Live Site', value: 'https://bot.inference-arcade.com/', inline: false }
+                { name: 'Branch', value: repoInfo.default_branch || 'main', inline: true },
+                { name: 'Total Commits', value: commits.length > 0 ? '✓' : '0', inline: true },
+                { name: 'Visibility', value: repoInfo.private ? '🔒 Private' : '🌐 Public', inline: true },
+                { name: 'Recent Commits', value: recentCommits || 'No commits yet', inline: false },
+                { name: 'Live Site', value: 'https://bot.inference-arcade.com/', inline: false },
+                { name: 'Repository', value: `[View on GitHub](${repoInfo.html_url})`, inline: false }
             )
-            .setColor(0x3498db);
-
-        if (status.files.length > 0) {
-            const fileList = status.files.slice(0, 10).map(file =>
-                `${file.working_dir === 'M' ? '📝' : '🆕'} ${file.path}`
-            ).join('\n');
-
-            embed.addFields({
-                name: 'Changed Files',
-                value: fileList + (status.files.length > 10 ? '\n...and more' : ''),
-                inline: false
-            });
-        }
+            .setColor(0x3498db)
+            .setTimestamp();
 
         await interaction.editReply({ embeds: [embed] });
 
@@ -4767,69 +4620,72 @@ async function handlePoll(interaction) {
     }
 }
 
-// New function to handle mention-triggered commits
+// Handle mention-triggered commits via GitHub API
 async function executeMentionCommit(interaction, commitData) {
     try {
-        // Update status with progress
-        await interaction.editReply({ content: 'Staging files...', embeds: [], components: [] });
-        
-        // Stage all changed files
-        await gitWithTimeout(() => git.add('.'));
-        
-        // Update progress
-        await interaction.editReply('Creating commit...');
-        
-        // Create commit with AI response as commit message (truncated)
+        await interaction.editReply({ content: 'Reading files...', embeds: [], components: [] });
+
+        // Require explicit file list
+        if (!commitData.files || commitData.files.length === 0) {
+            await interaction.editReply('No files specified for commit.');
+            return;
+        }
+
+        // Read file contents
+        const filesToCommit = [];
+        for (const filePath of commitData.files) {
+            try {
+                const content = await fs.readFile(filePath, 'utf8');
+                filesToCommit.push({ path: filePath, content });
+            } catch (e) {
+                console.warn(`Could not read ${filePath}: ${e.message}`);
+            }
+        }
+
+        if (filesToCommit.length === 0) {
+            await interaction.editReply('Could not read any files to commit.');
+            return;
+        }
+
+        await interaction.editReply('Committing to GitHub...');
+
         const commitMessage = `ai changes: ${commitData.originalContent.substring(0, 50)}${commitData.originalContent.length > 50 ? '...' : ''}`;
-        const commit = await gitWithTimeout(() => git.commit(commitMessage));
-        
-        // Update progress
-        await interaction.editReply('Pushing to repository...');
-        
-        // Push changes - use current branch via ephemeral URL
-        const currentBranch = commitData.status.current || 'main';
-        await pushWithAuth(currentBranch);
-        
-        // Success - create and send embed
+        const result = await commitFilesViaAPI(filesToCommit, commitMessage, 'main');
+
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+
         const embed = new EmbedBuilder()
             .setTitle('🚀 AI Changes Committed & Pushed')
             .setDescription(getBotResponse('success') + '\n\n**Note:** AI-generated changes are now live!')
             .addFields(
                 { name: 'Commit Message', value: commitMessage, inline: false },
-                { name: 'Commit Hash', value: commit.commit.substring(0, 7), inline: true },
-                { name: 'Files Changed', value: commitData.status.files.length.toString(), inline: true },
+                { name: 'Commit Hash', value: result.shortSha, inline: true },
+                { name: 'Files Changed', value: result.filesCommitted.toString(), inline: true },
                 { name: 'Live Site', value: '[View Changes](https://bot.inference-arcade.com/)', inline: false }
             )
-            .setColor(0x7dd3a0) // Mint green
+            .setColor(0x7dd3a0)
             .setTimestamp();
-        
-        // Add repository link if URL is available
+
         if (process.env.GITHUB_REPO_URL) {
             embed.addFields({
                 name: 'Repository',
-                value: `[View Commit](${process.env.GITHUB_REPO_URL}/commit/${commit.commit})`,
+                value: `[View Commit](${process.env.GITHUB_REPO_URL}/commit/${result.sha})`,
                 inline: false
             });
         }
-        
+
         await safeEditReply(interaction, { content: '', embeds: [embed] });
-        
+
     } catch (error) {
-        console.error('Mention commit execution error:', error);
-        
-        // Provide more specific error messages
+        console.error('Mention commit error:', error);
         let errorMessage = getBotResponse('errors');
-        
-        if (error.message.includes('authentication')) {
+        if (error.message.includes('401')) {
             errorMessage += ' Authentication issue with GitHub.';
-        } else if (error.message.includes('nothing to commit')) {
-            errorMessage += ' Nothing to commit.';
-        } else if (error.message.includes('remote')) {
-            errorMessage += ' Trouble reaching the remote repository.';
         } else {
             errorMessage += ` ${error.message}`;
         }
-        
         await interaction.editReply(errorMessage);
     }
 }
@@ -5512,23 +5368,19 @@ Output ONLY the CSS code, no explanations.`;
             newCSS = stylePresets[preset];
         }
 
-        // Write the new CSS to style.css
+        // Write the new CSS to style.css locally
         await fs.writeFile('./style.css', newCSS);
 
-        // Commit and push
-        await git.add('./style.css');
-        const status = await git.status();
-        const commitMessage = `update style to ${preset === 'custom' ? 'custom: ' + customDescription : preset}`;
-        await git.commit(commitMessage);
-
-        await pushWithAuth(status.current || 'main');
+        // Commit and push via GitHub API
+        const commitMessage = `update style to ${preset === 'custom' ? 'custom: ' + customDescription.substring(0, 50) : preset}`;
+        const result = await pushFileViaAPI('./style.css', newCSS, commitMessage, 'main');
 
         const embed = new EmbedBuilder()
             .setTitle('🎨 Style Updated & Pushed')
             .setDescription(getBotResponse('success') + '\n\n**Note:** Changes pushed! Site will update in 1-2 minutes.')
             .addFields(
                 { name: 'Style', value: preset === 'custom' ? 'Custom AI-generated' : preset, inline: true },
-                { name: 'File', value: 'style.css', inline: true },
+                { name: 'Commit', value: result ? result.substring(0, 7) : 'pushed', inline: true },
                 { name: 'Deployment', value: '⏳ Deploying... Please be patient (1-2 min)', inline: false },
                 { name: 'Live Site', value: '[View Changes](https://bot.inference-arcade.com/)', inline: false }
             )
