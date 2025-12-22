@@ -139,7 +139,7 @@ git remote set-url origin https://github.com/milwrite/javabot.git
 ## Architecture Overview
 
 ### Single-File Architecture
-The entire bot is contained in `index.js` (~3700+ lines) with these key sections in order:
+The entire bot is contained in `index.js` (~5500 lines) with these key sections in order:
 1. Environment configuration and imports (lines 1-27)
 2. Configuration constants in `CONFIG` object (lines 29-41)
 3. Error tracking system (prevents infinite error loops, lines 43-70)
@@ -272,11 +272,14 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - `list_files(path)` - List files grouped by extension for easy scanning
 - `read_file(path)` - Read file contents (5000 char limit)
 - `write_file(path, content)` - Create/update files completely
-- `edit_file(path, old_string, new_string, instructions)` - Edit existing files via exact string replacement (FAST, preferred) or AI instructions (SLOW, fallback)
+- `edit_file(path, old_string, new_string, instructions, replacements)` - Edit existing files via exact string replacement (FAST, preferred) or AI instructions (SLOW, fallback)
   * **Exact mode** (preferred): Provide `old_string` and `new_string` for deterministic replacement (~0.1s)
+  * **Batch mode** (fastest for multiple edits): Provide `replacements` array of `{old, new, replace_all?}` objects
+    - Example: `[{old: "color: red", new: "color: blue", replace_all: true}, {old: "Title", new: "New Title"}]`
+    - Single file read/write, single push - much faster than multiple edit_file calls
   * **AI mode** (fallback): Provide `instructions` for complex multi-location edits (~3-5s)
   * Must use EXACT string from file including all whitespace/indentation
-  * String must be unique in file (or provide more context to make it unique)
+  * String must be unique in file (or use `replace_all: true` in batch mode)
 
 **Content Creation Tools**:
 - `create_page(name, description)` - Generate and deploy a new HTML page (equivalent to `/add-page`)
@@ -296,11 +299,11 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - Automatically triggered for questions about "latest", "recent", "current"
 
 **Agentic Loop (Multi-Step Execution)**:
-- AI can chain multiple tool calls across iterations (max 10 rounds)
+- AI can chain multiple tool calls across iterations (max 6 rounds, max 5 read-only iterations)
 - Example flow: read file → edit based on contents → commit changes
 - Tools remain available after each step, enabling complex multi-step tasks
 - Console logs show iteration count and tools used per step
-- Safety limit prevents infinite loops
+- Safety limits: `MAX_ITERATIONS=6`, `MAX_READONLY_ITERATIONS=5`
 - **Redundant edit prevention**: Files can only be edited once per conversation to prevent slow repeated edits
 
 **Response Handling**:
@@ -496,31 +499,6 @@ When generating new pages, AI must enforce:
 - Any style changes to `page-theme.css` automatically apply across entire site
 - Broken CSS links or custom fonts are now considered technical debt
 
-## Key Development Patterns
-
-**Git Operations**:
-- Always push to main after commit
-- Use `interaction.editReply()` for progress updates
-- Lowercase commit messages without attribution
-- Check `git.status()` before operations
-
-**AI Content Generation**:
-- Optimize prompts for token efficiency
-- Clean markdown code blocks from responses
-- Inject home link fallback if AI doesn't include it
-- Use template literals for HTML generation
-
-**Discord Embeds**:
-- Always include live site URLs
-- Use themed colors (purple for pages, orange for functions, red for model)
-- Show timestamp on all embeds
-- Use Doc Sportello responses in descriptions
-
-**File Operations**:
-- All generated content goes to `src/` directory
-- Create directories with `{ recursive: true }`
-- Long responses saved to `responses/` directory with timestamps
-
 ## Model Switching
 
 The `MODEL` variable is mutable and can be changed at runtime:
@@ -539,153 +517,9 @@ Available presets (ZDR-compliant only):
 
 Changes apply immediately to all subsequent AI calls.
 
-## Mobile Responsiveness Standards
+## Mobile & Styling
 
-**CRITICAL**: All pages must be mobile-responsive and fully scrollable. The bot MUST implement these patterns consistently:
-
-### Required Mobile Features
-
-**1. Viewport and Overflow Settings**:
-```html
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-```
-```css
-body {
-    overflow-x: auto;
-    overflow-y: auto;
-    padding: 20px; /* or appropriate mobile padding */
-}
-```
-
-**2. Mobile Breakpoints (MANDATORY)**:
-```css
-@media (max-width: 768px) {
-    /* Tablet/mobile landscape */
-    body { padding: 10px; }
-    .container { max-width: 100%; }
-    /* Touch targets minimum 44px */
-    .btn, .control-btn, .number-btn { min-height: 44px; }
-}
-
-@media (max-width: 480px) {
-    /* Mobile portrait */
-    body { padding: 5px; }
-    /* Smaller text and spacing */
-    h1 { font-size: 1.8em; }
-}
-```
-
-**3. Touch-Friendly Interactions**:
-- All buttons minimum 44px height/width for accessibility
-- Form inputs minimum 44px height
-- Adequate spacing between clickable elements (minimum 8px gap)
-- No hover-only functionality (provide tap alternatives)
-
-### Mobile Control Implementation (CRITICAL)
-
-**Preventing Zoom on Button Tap** - Mobile Safari/Chrome zoom when buttons are tapped rapidly. Fix with:
-
-```css
-.mobile-btn, .control-btn, .aim-btn {
-    touch-action: manipulation;  /* PREVENTS ZOOM */
-    -webkit-tap-highlight-color: transparent;
-    min-height: 50px;
-    min-width: 50px;
-    font-size: 20px;  /* Readable arrows */
-}
-```
-
-**JavaScript Event Handlers** - Use `touchstart` with `preventDefault`, not just `click`:
-
-```javascript
-// CORRECT: touchstart with preventDefault prevents zoom
-btn.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    handleInput();
-}, { passive: false });
-
-// Add click as fallback for desktop
-btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    handleInput();
-});
-```
-
-**Control Positioning** - Place mobile controls DIRECTLY below canvas, before other content.
-
-### UI Layout Hierarchy for Games (CRITICAL)
-
-**MANDATORY Element Order**: All game pages MUST follow this exact structure for optimal mobile UX:
-
-```
-1. Title/Header (compact, minimal)
-2. Game Canvas/Play Area
-3. Mobile Controls (d-pad, joystick, etc.)
-4. Start/Action Buttons (smaller, economical)
-5. Instructions/How to Play
-6. Additional Info (stats, legend - only if essential)
-```
-
-**Key Principles**:
-- **Controls above start button**: Mobile controls must be immediately visible with the canvas
-- **Start button above instructions**: Don't make users scroll past instructions to start playing
-- **Economical spacing**: Use tight margins (5-8px) instead of generous spacing (15-20px)
-- **Above-the-fold priority**: Canvas + controls must be visible without scrolling on mobile
-- **Remove unnecessary text**: If stats/legend interfere with visibility, move them below or remove them
-
-**Start Button Sizing** - Keep start buttons compact and unobtrusive:
-```css
-.start-btn, .action-btn {
-    font-size: 0.85em - 0.95em;  /* Smaller than previous 1.2-1.3em */
-    padding: 8px 20px;            /* Reduced from 12-15px */
-    min-height: 44px;             /* Maintain touch target */
-}
-```
-
-**Bad Example** (old pattern):
-```html
-<!-- DON'T DO THIS -->
-<canvas></canvas>
-<div class="instructions">Long how to play...</div>
-<div class="mobile-controls"></div>
-<button class="start-btn">START</button>  <!-- Too far down! -->
-```
-
-**Good Example** (current standard):
-```html
-<!-- DO THIS -->
-<h1>Game Title</h1>
-<canvas></canvas>
-<div class="mobile-controls"></div>
-<button class="start-btn">START</button>  <!-- Immediately accessible -->
-<div class="instructions">How to play...</div>
-```
-
-**Spacing Economy** - Reduce margins throughout:
-```css
-/* BEFORE: Too spacious */
-.game-header { margin-bottom: 20px; }
-.message-box { padding: 15px; margin: 15px 0; }
-
-/* AFTER: Economical */
-.game-header { margin-bottom: 8px; }
-.message-box { padding: 8px; margin: 5px 0; }
-```
-
-### Standard Mobile D-Pad Controls
-
-**Standard Pattern**: 3x3 grid with directional arrows, 140px max-width, touch-optimized buttons with `touch-action: manipulation`. Use for all directional games (snake, maze, etc.).
-
-### Game-Specific Mobile Patterns
-
-**Canvas Games**: Max-width 95vw on mobile, responsive height  
-**Grid Games**: Max-width 90vw, tighter gaps, smaller fonts on mobile
-
-### Mobile Requirements Summary
-
-**Required**: Viewport meta, responsive breakpoints (@768px, @480px), 44px+ touch targets, scrollable content
-**Avoid**: `overflow: hidden`, fixed widths without fallbacks, sub-44px touch targets  
-**Layout Order**: Canvas → Controls → Start Button → Instructions
+See `SYSTEM_PROMPT` in index.js:916-1107 for bot content generation rules (mobile CSS, noir theme, page structure).
 
 ## Key Configuration Constants
 
@@ -736,7 +570,7 @@ const CONFIG = {
 
 ## Architecture Notes
 
-**Single-File Design**: `index.js` (~6,585 lines) contains all bot logic for simplicity and easy understanding
+**Single-File Design**: `index.js` (~5,500 lines) contains all bot logic for simplicity and easy understanding
 
 **Known Issues**:
 - Tool API mismatches (camelCase vs snake_case)
