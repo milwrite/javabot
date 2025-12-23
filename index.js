@@ -63,6 +63,28 @@ console.log('✅ All required environment variables loaded');
 console.log(`🔐 GitHub token: ${githubToken.substring(0, 8)}...`);
 console.log(`📂 Repository: ${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}`);
 
+// OpenRouter API Key Management with Fallback
+let activeOpenRouterKey = process.env.OPENROUTER_API_KEY;
+let usingFallbackKey = false;
+
+function getOpenRouterKey() {
+    return activeOpenRouterKey;
+}
+
+function switchToFallbackKey() {
+    if (!usingFallbackKey && process.env.OPENROUTER_FALLBACK) {
+        activeOpenRouterKey = process.env.OPENROUTER_FALLBACK;
+        usingFallbackKey = true;
+        console.log('🔄 Switched to fallback OpenRouter API key');
+        return true;
+    }
+    return false;
+}
+
+if (process.env.OPENROUTER_FALLBACK) {
+    console.log('🔑 Fallback OpenRouter key configured');
+}
+
 // Initialize GUI server
 if (!process.env.NO_GUI) {
     guiServer = new BotGUIServer(process.env.GUI_PORT || 3001);
@@ -683,7 +705,7 @@ async function getFinalTextResponse(messages, tools, options = {}) {
             provider: { data_collection: 'deny' }
         }, {
             headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Authorization': `Bearer ${getOpenRouterKey()}`,
                 'Content-Type': 'application/json'
             },
             timeout: 45000
@@ -721,7 +743,7 @@ async function checkAPIHealth() {
             temperature: 0.1
         }, {
             headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Authorization': `Bearer ${getOpenRouterKey()}`,
                 'Content-Type': 'application/json'
             },
             timeout: 10000,
@@ -1638,7 +1660,7 @@ Return ONLY the complete updated file content. No explanations, no markdown code
                 provider: { data_collection: 'deny' } // ZDR enforcement
             }, {
                 headers: {
-                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Authorization': `Bearer ${getOpenRouterKey()}`,
                     'Content-Type': 'application/json'
                 },
                 timeout: 90000
@@ -2297,7 +2319,7 @@ async function webSearch(query) {
             temperature: 0.3
         }, {
             headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Authorization': `Bearer ${getOpenRouterKey()}`,
                 'Content-Type': 'application/json'
             },
             timeout: 45000
@@ -2470,7 +2492,7 @@ Do not use web search or create new content - only edit existing files.`
                 tool_choice: 'auto'
             }, {
                 headers: {
-                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Authorization': `Bearer ${getOpenRouterKey()}`,
                     'Content-Type': 'application/json'
                 },
                 timeout: 45000
@@ -2850,7 +2872,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         ...(reasoningConfig && { reasoning: reasoningConfig })
                     }, {
                         headers: {
-                            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                            'Authorization': `Bearer ${getOpenRouterKey()}`,
                             'Content-Type': 'application/json',
                             'X-Request-ID': `${Date.now()}-${iteration}-${retryCount}` // Add unique request ID
                         },
@@ -2870,8 +2892,12 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         if (response.status === 429) {
                             throw new Error(`Rate limited: ${errorMsg}`);
                         }
-                        // 402 payment required - reduce tokens and retry
+                        // 402 payment required - try fallback key first
                         if (response.status === 402) {
+                            if (switchToFallbackKey()) {
+                                logEvent('LLM', 'Switched to fallback API key due to 402');
+                                throw new Error(`Payment required, retrying with fallback key`);
+                            }
                             throw new Error(`Payment required: ${errorMsg}`);
                         }
                         // Other 4xx - don't retry, exit with graceful message
@@ -3851,7 +3877,7 @@ async function handleMentionAsync(message) {
                             temperature: 0.7
                         }, {
                             headers: {
-                                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                                'Authorization': `Bearer ${getOpenRouterKey()}`,
                                 'Content-Type': 'application/json'
                             },
                             timeout: 30000
