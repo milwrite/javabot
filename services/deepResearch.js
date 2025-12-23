@@ -55,11 +55,36 @@ async function deepResearch(query, options = {}) {
         if (progressInterval) clearInterval(progressInterval);
 
         const message = response.data.choices[0].message;
-        const { cleanContent, citations, citationMap } = extractCitations(message.content);
+
+        // Perplexity returns citations in response.data.citations as an array of URLs
+        // These correspond to [1], [2], etc. in the text (1-indexed)
+        let apiCitations = response.data.citations || [];
+        console.log(`[DEEP_RESEARCH] API returned ${apiCitations.length} citations`);
+
+        // Fallback: if no API citations, try extracting URLs from content
+        if (apiCitations.length === 0) {
+            console.log('[DEEP_RESEARCH] No API citations, extracting from content...');
+            const extracted = extractCitations(message.content);
+            apiCitations = extracted.citations;
+            console.log(`[DEEP_RESEARCH] Extracted ${apiCitations.length} URLs from content`);
+        }
+
+        // Build citation map: [1] -> first URL, [2] -> second URL, etc.
+        const citationMap = {};
+        apiCitations.forEach((url, index) => {
+            citationMap[index + 1] = url; // 1-indexed to match [1], [2], etc.
+        });
+
+        // Clean up the content
+        const cleanContent = message.content
+            .replace(/\n{4,}/g, '\n\n\n')
+            .trim();
+
+        console.log(`[DEEP_RESEARCH] Built citationMap with ${Object.keys(citationMap).length} entries`);
 
         return {
             content: cleanContent,
-            citations: citations,
+            citations: apiCitations,
             citationMap: citationMap,
             usage: response.data.usage
         };
@@ -89,22 +114,11 @@ function extractCitations(content) {
         }
     }
 
-    // Build citation map from bracket references [1], [2], etc.
-    // Perplexity uses sequential numbering that maps to URLs in order
-    const bracketPattern = /\[(\d+)\]/g;
-    const usedCitations = new Set();
-    let bracketMatch;
-    while ((bracketMatch = bracketPattern.exec(content)) !== null) {
-        usedCitations.add(parseInt(bracketMatch[1]));
-    }
-
-    // Create ordered citation map (bracket number -> URL)
+    // Build citation map: bracket number [n] -> nth URL (1-indexed)
+    // Perplexity uses sequential numbering: [1] = 1st URL, [2] = 2nd URL, etc.
     const citationMap = {};
-    const sortedCitations = Array.from(usedCitations).sort((a, b) => a - b);
-    sortedCitations.forEach((num, idx) => {
-        if (citations[idx]) {
-            citationMap[num] = citations[idx];
-        }
+    citations.forEach((url, index) => {
+        citationMap[index + 1] = url; // [1] -> citations[0], [2] -> citations[1], etc.
     });
 
     // Keep content as-is (Perplexity formats it well)
