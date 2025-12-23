@@ -1,7 +1,7 @@
 // agents/gameBuilder.js
 // Code generation agent - builds HTML/JS from architect's plan
 
-const { callLLM } = require('../services/llmClient');
+const { callSonnet } = require('../services/llmClient');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -73,10 +73,10 @@ Generate the HTML file content now.`;
 
     const messages = [{ role: 'user', content: prompt }];
 
-    const response = await callLLM({
+    const response = await callSonnet({
         role: 'builder',
         messages,
-        model: 'glm',
+        model: 'sonnet',
         temperature: 0.7,
         maxTokens: 12000, // More tokens for complete code generation
         onHeartbeat: onStatusUpdate
@@ -110,10 +110,10 @@ Include:
 
 Return ONLY the JavaScript code, no markdown.`;
 
-        const jsResponse = await callLLM({
+        const jsResponse = await callSonnet({
             role: 'builder',
             messages: [{ role: 'user', content: jsPrompt }],
-            model: 'glm',
+            model: 'sonnet',
             temperature: 0.7,
             maxTokens: 8000
         });

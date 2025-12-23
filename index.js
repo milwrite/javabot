@@ -1,20 +1,61 @@
 require('dotenv').config({ override: true });
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-// Octokit now imported from services/gitHelper
+const { Octokit } = require('@octokit/rest');
+const simpleGit = require('simple-git');
 const fs = require('fs').promises;
 const fsSync = require('fs');
+const { execSync } = require('child_process');
 
+// Find git binary - works on Railway (Linux) and macOS
+function findGitBinary() {
+    // Common git locations for Railway Linux and macOS
+    const candidates = [
+        '/usr/bin/git',           // Most Linux distros + macOS Xcode
+        '/usr/local/bin/git',     // Homebrew (Intel Mac)
+        '/opt/homebrew/bin/git',  // Homebrew (Apple Silicon)
+    ];
+
+    // Try to find git via which command first (most portable)
+    try {
+        const gitPath = execSync('which git', { encoding: 'utf8' }).trim();
+        if (gitPath && fsSync.existsSync(gitPath)) {
+            console.log(`[GIT] Found via which: ${gitPath}`);
+            return gitPath;
+        }
+    } catch (e) {
+        // which command failed, try candidates
+    }
+
+    // Fall back to checking known locations
+    for (const candidate of candidates) {
+        if (fsSync.existsSync(candidate)) {
+            console.log(`[GIT] Found at: ${candidate}`);
+            return candidate;
+        }
+    }
+
+    // Last resort: return 'git' and hope PATH is set correctly
+    console.warn('[GIT] Could not find git binary, using PATH');
+    return 'git';
+}
+
+const GIT_BINARY = findGitBinary();
 const path = require('path');
 const axios = require('axios');
 const axiosRetry = require('axios-retry').default;
 
 // Game pipeline modules (system-v1)
-const { runGamePipeline, commitGameFiles } = require('./services/gamePipeline');
+const { runGamePipeline, commitGameFiles, isGameRequest, isEditRequest } = require('./services/gamePipeline');
+const { getRecentPatternsSummary } = require('./services/buildLogs');
 const { classifyRequest } = require('./services/requestClassifier');
 
 // Filesystem and Git tools (Phase 2 extraction)
-const { listFiles, fileExists, readFile, writeFile, editFile, searchFiles } = require('./services/filesystem');
-const { octokit, pushFileViaAPI } = require('./services/gitHelper');
+const { listFiles: listFilesService, fileExists: fileExistsService, readFile: readFileService, writeFile: writeFileService, editFile: editFileService, searchFiles: searchFilesService } = require('./services/filesystem');
+const { pushFileViaAPI } = require('./services/gitHelper');
+
+// Modular imports (Phase 1 extraction)
+const { getBotResponse, botResponses } = require('./personality/botResponses');
+const { stylePresets, getStylePreset } = require('./styles/presets');
 
 // Site inventory system
 const { generateSiteInventory } = require('./scripts/generateSiteInventory.js');
@@ -25,11 +66,6 @@ const SITE_CONFIG = require('./site-config.js');
 // GUI Server for verbose logging
 const BotGUIServer = require('./scripts/gui-server.js');
 let guiServer = null;
-
-// Modular imports (Phase 1 extraction)
-const { MODEL_PRESETS, DEFAULT_MODEL, REASONING_CONFIG, OPENROUTER_URL, getReasoningConfig, formatThinkingForDiscord, formatThinkingForGUI } = require('./config/models');
-const { getBotResponse, botResponses } = require('./personality/botResponses');
-const { stylePresets, getStylePreset } = require('./styles/presets');
 
 // Validate required environment variables
 const REQUIRED_ENV_VARS = [
@@ -80,8 +116,8 @@ const CONFIG = {
     PUSH_TIMEOUT: 60000,
     API_TIMEOUT: 60000,
     // Discord Context Settings (replaces agents.md)
-    DISCORD_FETCH_LIMIT: 5,       // Max messages to fetch per Discord API request
-    DISCORD_CONTEXT_LIMIT: 5,     // Messages to include in LLM context
+    DISCORD_FETCH_LIMIT: 20,      // Max messages to fetch per Discord API request
+    DISCORD_CONTEXT_LIMIT: 20,    // Messages to include in LLM context
     DISCORD_CACHE_TTL: 60000,     // Cache duration (1 minute)
     INCLUDE_REACTIONS: true       // Add reaction data to context
 };
@@ -239,6 +275,14 @@ const client = new Client({
     ],
 });
 
+const octokit = new Octokit({
+    auth: process.env.GITHUB_TOKEN,
+});
+
+const git = simpleGit({
+    binary: GIT_BINARY
+});
+
 // Discord Context Manager - fetches message history directly from Discord API
 // Replaces agents.md file-based memory with real-time Discord awareness
 class DiscordContextManager {
@@ -392,138 +436,114 @@ class DiscordContextManager {
 // Global context manager instance (initialized in clientReady)
 let contextManager = null;
 
-// Commit multiple files to GitHub in a single commit via the Git Trees API
-// More efficient than multiple single-file commits for batch operations
-async function commitFilesViaAPI(files, commitMessage, branch = 'main') {
+
+// Helper: build an HTTPS URL with encoded token in userinfo (no permanent storage)
+function getEncodedRemoteUrl() {
+    const token = process.env.GITHUB_TOKEN;
+    if (!token) {
+        throw new Error('GITHUB_TOKEN environment variable is not set');
+    }
+    
+    // Validate token format (should start with ghp_ or github_pat_)
+    if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+        console.warn('⚠️ GitHub token format may be invalid - should start with ghp_ or github_pat_');
+    }
+    
+    // Don't encode the token - GitHub tokens don't need URL encoding
     const owner = process.env.GITHUB_REPO_OWNER;
     const repo = process.env.GITHUB_REPO_NAME;
-
-    if (!files || files.length === 0) {
-        return { success: false, error: 'No files to commit' };
+    
+    if (!owner || !repo) {
+        throw new Error('GITHUB_REPO_OWNER and GITHUB_REPO_NAME must be set');
     }
+    
+    // Use milwrite as the username with the GitHub token (no encoding needed)
+    const url = `https://milwrite:${token}@github.com/${owner}/${repo}.git`;
+    
+    // Validate URL format without logging the actual token
+    if (!url.includes('@github.com') || !url.includes('.git')) {
+        throw new Error('Generated remote URL format is invalid');
+    }
+    
+    return url;
+}
 
-    console.log(`[GITHUB_API] Committing ${files.length} file(s): "${commitMessage}"`);
-
+// Helper: push using an ephemeral URL so we never persist tokens in remotes
+async function pushWithAuth(branch = 'main') {
+    const url = getEncodedRemoteUrl();
+    let lastError = null;
+    
     try {
-        // Get the current commit SHA for the branch
-        const { data: refData } = await octokit.git.getRef({
-            owner,
-            repo,
-            ref: `heads/${branch}`
-        });
-        const currentCommitSha = refData.object.sha;
-
-        // Get the tree SHA from the current commit
-        const { data: commitData } = await octokit.git.getCommit({
-            owner,
-            repo,
-            commit_sha: currentCommitSha
-        });
-        const baseTreeSha = commitData.tree.sha;
-
-        // Create blobs for each file and build tree entries
-        const treeEntries = [];
-        for (const file of files) {
-            const posixPath = file.path.replace(/\\/g, '/').replace(/^\.\//, '');
-            const base64Content = Buffer.from(file.content, 'utf8').toString('base64');
-
-            // Create blob for the file
-            const { data: blobData } = await octokit.git.createBlob({
-                owner,
-                repo,
-                content: base64Content,
-                encoding: 'base64'
-            });
-
-            treeEntries.push({
-                path: posixPath,
-                mode: '100644', // Regular file
-                type: 'blob',
-                sha: blobData.sha
-            });
+        // Preferred: push directly to URL (no remote mutation)
+        console.log('[PUSH] Attempting direct push to authenticated URL...');
+        await gitWithTimeout(() => git.push(url, branch), CONFIG.PUSH_TIMEOUT);
+        console.log('[PUSH] Direct push successful');
+        return;
+    } catch (directErr) {
+        console.log('[PUSH] Direct push failed:', directErr.message);
+        lastError = directErr;
+        
+        // Fallback 1: use raw git invocation
+        try {
+            console.log('[PUSH] Attempting raw git push...');
+            await gitWithTimeout(() => git.raw(['push', url, branch]), CONFIG.PUSH_TIMEOUT);
+            console.log('[PUSH] Raw git push successful');
+            return;
+        } catch (rawErr) {
+            console.log('[PUSH] Raw git push failed:', rawErr.message);
+            lastError = rawErr;
+            
+            // Fallback 2: add a temporary remote, push, then remove
+            const tempRemote = `auth-${Date.now()}`;
+            try {
+                console.log('[PUSH] Attempting temporary remote push...');
+                await git.remote(['add', tempRemote, url]);
+                await gitWithTimeout(() => git.push(tempRemote, branch), CONFIG.PUSH_TIMEOUT);
+                console.log('[PUSH] Temporary remote push successful');
+                return;
+            } catch (tempErr) {
+                console.log('[PUSH] Temporary remote push failed:', tempErr.message);
+                lastError = tempErr;
+            } finally {
+                try { await git.remote(['remove', tempRemote]); } catch (_) {}
+            }
         }
+    }
+    
+    // If we get here, all methods failed
+    console.error('[PUSH] All push methods failed. Last error:', lastError.message);
+    throw new Error(`Push failed: ${lastError.message}`);
+}
 
-        // Create new tree with our changes
-        const { data: newTree } = await octokit.git.createTree({
-            owner,
-            repo,
-            base_tree: baseTreeSha,
-            tree: treeEntries
-        });
-
-        // Create the commit
-        const { data: newCommit } = await octokit.git.createCommit({
-            owner,
-            repo,
-            message: commitMessage,
-            tree: newTree.sha,
-            parents: [currentCommitSha]
-        });
-
-        // Update the branch reference to point to new commit
-        await octokit.git.updateRef({
-            owner,
-            repo,
-            ref: `heads/${branch}`,
-            sha: newCommit.sha
-        });
-
-        console.log(`[GITHUB_API] Commit successful: ${newCommit.sha.substring(0, 7)}`);
-        return {
-            success: true,
-            sha: newCommit.sha,
-            shortSha: newCommit.sha.substring(0, 7),
-            filesCommitted: files.length
-        };
-
+// Initialize Git remote URL with validation and cleanup
+async function initializeGitRemote() {
+    try {
+        // First ensure we have a clean remote URL
+        await git.remote(['set-url', 'origin', 'https://github.com/milwrite/javabot.git']);
+        console.log('✅ Git remote URL initialized (clean)');
+        
+        // Validate token without setting it permanently
+        try {
+            const testUrl = getEncodedRemoteUrl();
+            console.log('✅ GitHub token validation passed');
+        } catch (tokenError) {
+            console.error('❌ GitHub token validation failed:', tokenError.message);
+            console.error('⚠️ Git operations may fail due to authentication issues');
+        }
     } catch (error) {
-        console.error(`[GITHUB_API] Commit failed:`, error.message);
-        return {
-            success: false,
-            error: error.message
-        };
+        const errorEntry = errorLogger.log('INIT_REMOTE', error);
+        console.warn('⚠️ Git remote URL initialization warning:', error.message);
     }
 }
 
-// Get list of changed local files that differ from GitHub (for commit preview)
-async function getLocalChanges(filePaths) {
-    const owner = process.env.GITHUB_REPO_OWNER;
-    const repo = process.env.GITHUB_REPO_NAME;
-    const changes = [];
-
-    for (const filePath of filePaths) {
-        try {
-            const localContent = await fs.readFile(filePath, 'utf8');
-            const posixPath = filePath.replace(/\\/g, '/').replace(/^\.\//, '');
-
-            // Try to get existing file from GitHub
-            try {
-                const { data } = await octokit.repos.getContent({
-                    owner,
-                    repo,
-                    path: posixPath,
-                    ref: 'main'
-                });
-
-                // File exists on GitHub - check if content differs
-                const remoteContent = Buffer.from(data.content, 'base64').toString('utf8');
-                if (localContent !== remoteContent) {
-                    changes.push({ path: filePath, content: localContent, status: 'modified' });
-                }
-            } catch (e) {
-                if (e.status === 404) {
-                    // File doesn't exist on GitHub - it's new
-                    changes.push({ path: filePath, content: localContent, status: 'new' });
-                } else {
-                    throw e;
-                }
-            }
-        } catch (error) {
-            console.warn(`[GITHUB_API] Could not check ${filePath}: ${error.message}`);
-        }
-    }
-
-    return changes;
+// Git operation wrapper with timeout and authentication protection
+async function gitWithTimeout(operation, timeoutMs = CONFIG.GIT_TIMEOUT) {
+    return Promise.race([
+        operation(),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`Git operation timeout after ${timeoutMs}ms`)), timeoutMs)
+        )
+    ]);
 }
 
 // Discord interaction timeout handler with automatic fallback to channel messages
@@ -655,20 +675,21 @@ const errorLogger = {
 
 // Pipeline validation and recovery system
 const pipelineValidator = {
-    // Validate GitHub repository access before operations
+    // Validate git repository state before operations
     async validateGitState() {
         try {
-            // Use GitHub API to validate repository access
-            const { data: repo } = await octokit.repos.get({
-                owner: process.env.GITHUB_REPO_OWNER,
-                repo: process.env.GITHUB_REPO_NAME
-            });
-
+            const status = await gitWithTimeout(() => git.status(), 5000);
+            const isRepo = await git.checkIsRepo();
+            
+            if (!isRepo) {
+                throw new Error('Not a git repository');
+            }
+            
             return {
                 valid: true,
-                branch: repo.default_branch || 'main',
-                hasChanges: true, // Always allow commits via API
-                repoName: repo.full_name
+                branch: status.current,
+                hasChanges: status.files.length > 0,
+                status
             };
         } catch (error) {
             errorLogger.log('VALIDATE_GIT_STATE', error);
@@ -735,8 +756,27 @@ axiosRetry(axios, {
     shouldResetTimeout: true
 });
 
-// Mutable model state - uses imported MODEL_PRESETS and DEFAULT_MODEL
+// Import model configuration from config module
+const { MODEL_PRESETS, DEFAULT_MODEL: DEFAULT_MODEL_CONFIG, REASONING_CONFIG, OPENROUTER_URL, getReasoningConfig, formatThinkingForDiscord, formatThinkingForGUI } = require('./config/models');
+
+// Override local model definitions with imported ones
+const MODEL_PRESETS_LOCAL = {
+    'glm': 'z-ai/glm-4.6:exacto',
+    'kimi': 'moonshotai/kimi-k2-thinking',
+    'kimi-fast': 'moonshotai/kimi-k2-0905:exacto',
+    'sonnet': 'anthropic/claude-sonnet-4.5',
+    'qwen': 'qwen/qwen3-coder',
+    'gemini': 'google/gemini-2.5-pro',
+    'minimax': 'minimax/minimax-m2'
+};
+
+// SINGLE SOURCE OF TRUTH: Default model for all operations
+const DEFAULT_MODEL = 'glm';
 let MODEL = MODEL_PRESETS[DEFAULT_MODEL];
+
+// Note: REASONING_CONFIG and getReasoningConfig are imported from config/models.js
+
+// Note: formatThinkingForDiscord and formatThinkingForGUI are imported from config/models.js
 
 // Get final text-only response (consolidated helper to reduce duplicate API calls)
 async function getFinalTextResponse(messages, tools, options = {}) {
@@ -934,48 +974,139 @@ When you finish creating a page, briefly tell the user what you made:
 4. ALWAYS remind users: "Give it a minute or two to go live"
 Keep it casual and brief - don't list every HTML element or CSS class used.
 
-URL FORMATTING:
-- ALWAYS put SPACE after URLs before any punctuation (breaks links otherwise)
-- BAD: https://example.com—text  GOOD: https://example.com - text
-- Use hyphens (-) not em dashes (—) in page names
+URL FORMATTING (CRITICAL - FOLLOW EXACTLY):
+- NEVER put em dash (—) or any punctuation directly after a URL - it breaks the link!
+- BAD: "Check it out at https://example.com—cool right?" (BROKEN - em dash touching URL)
+- GOOD: "Check it out at https://example.com - cool right?" (space before dash)
+- GOOD: "Check it out: https://example.com" (URL on its own)
+- Always put a SPACE after URLs before any punctuation
+- Use plain hyphens (-) not em dashes (—) in page names
 
-TOOLS:
-- file_exists(path|url): Check existence - use FIRST for URLs or informal names
-- list_files(path): List directory
-- search_files(pattern, path): Search text patterns
-- read_file(path): Read file (use src/site-inventory.html for site overview)
-- write_file(path, content): Create/update files
-- edit_file(path, old_string, new_string): Exact string replacement (fast)
-- edit_file(path, instructions): AI-based edit (slow fallback)
-- commit_changes(message, files): Git add, commit, push
-- git_log(): Commit history - YOUR MEMORY of past work
-- web_search(query): Current info (sports, news, weather, "latest/today")
-- set_model(model): Switch AI (kimi/gemini/glm)
+AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
+- file_exists(path|url): FAST existence check - use FIRST when given a URL like bot.inference-arcade.com/src/file.html
+- list_files(path|[paths]): List files in directory (grouped by extension for easy scanning)
+- search_files(pattern, path|[paths], options): Search text patterns across files (supports regex, case-insensitive)
+- read_file(path|[paths]): Read single file or multiple files (respects file size limits)
+- write_file(path, content): Create/update files completely
+- edit_file(path, instructions): Edit files with natural language instructions
+- commit_changes(message, files): Git add, commit, push to main branch
+- get_repo_status(): Check current git status and branch info
+- git_log(count, file, oneline): View commit history (default 10 commits, optional file filter)
+- web_search(query): Search internet for current information via Perplexity
+- set_model(model): Switch AI model runtime (glm, kimi, kimi-fast, sonnet, gemini, qwen, minimax) - ZDR-compliant only
 
-TOOL USAGE:
-- URL given → file_exists first
-- Informal name ("peanut city") → peanut-city.html, file_exists
-- "list/show/what are X" → search_files
-- "what did you make?" → git_log()
-- Search before reading random files
+DISCORD INTEGRATION FEATURES:
+- Slash Commands (5 available):
+  * /commit <message> [files] - Git commit & push to main
+  * /status - Show repo status + live site link
+  * /search <query> - Web search via Perplexity API
+  * /set-model <model> - Switch AI model (glm/kimi/kimi-fast/sonnet/gemini/qwen/minimax) ZDR only
+  * /poll <question> - Yes/no poll with reactions
+- @ Mention Support: Full AI conversation with tool access (all capabilities available)
+- Multi-Channel Monitoring: Responds in 7 configured channels, fetches context from Discord API
+- Auto Error Handling: 3-error cooldown system prevents spam loops (5min timeout)
+- Response Management: Long responses (>2000 chars) auto-saved to responses/ with Discord links
+- Real-Time Updates: Progress tracking via editReply() for long operations
+- Embed Styling: Color-coded embeds (purple=pages, orange=features, red=model, green=success)
+- Message History: Fetches last 20 messages from Discord API with reactions
 
-PERSONALITY: Casual, chill, SHORT (1-2 sentences). "yeah man", "right on". Call people "man/dude".
+WHEN TO USE EACH TOOL:
+- When user provides a URL (bot.inference-arcade.com/src/file.html): Use file_exists FIRST to verify the file exists
+- When user mentions a page name informally ("Peanut city", "the maze game"): Convert to likely filename (peanut-city.html, maze.html) and use file_exists to check. If not found, use list_files to find similar names.
+- For multi-file operations: Use array syntax - search_files("pattern", ["file1.html", "file2.js"])
+- To find content across files: ALWAYS use search_files FIRST before reading files
+  * Examples: "list clues", "find answers", "show all X", "what are the Y"
+  * Search for keywords like "clue", "answer", "const", function names, etc.
+  * Use site-inventory.html for current site structure: read_file("src/site-inventory.html")
+  * Multi-file search: search_files("pattern", ["src/file1.html", "src/file2.html"])
+- To recall past work/history: Use git_log() - this is your MEMORY of what you've built
+  * When asked "what did you make?", "show me history", "what have you done?", "recent changes" → git_log()
+  * To see changes to a specific file: git_log(10, "src/filename.html")
+  * Your commit messages describe what you built - use them to remember past work
+  * Don't guess filenames - search to find the right file
+- For quick file edits: use edit_file with natural language instructions
+- To deploy changes: use commit_changes (auto-pushes and deploys)
+- To switch AI behavior: use set_model (affects all subsequent responses)
+- For current events/news: use web_search (gets latest information)
+- For batch operations: Use arrays - read_file(["file1", "file2"]), list_files(["dir1", "dir2"])
 
-FORMATTING: Markdown headers, bold labels, blank lines between sections. No "Bot Sportello:" prefix.
+CRITICAL SEARCH RULES:
+- User asks "list X" or "show X" or "what are X" → use search_files to find X across multiple files if needed
+- User mentions game name + wants info → search_files with game keywords + check src/site-inventory.html
+- For site overview questions → read_file("src/site-inventory.html") first for current structure
+- Don't read random files hoping to find content - search strategically across relevant files
+- Use multi-file search when looking for patterns across similar files
 
-Live site: https://bot.inference-arcade.com/`;
+WHEN TO USE WEB SEARCH:
+- Anything that changes: sports, news, prices, weather, standings, odds
+- Questions with "latest", "current", "today", "now"
+- When you don't have up-to-date info, just search
+- For follow-ups, use conversation history to expand vague references ("the movement" → the topic from previous messages)
+- Always include sources with links in your response
+
+Personality: Casual, chill, slightly unfocused but helpful. SHORT responses (1-2 sentences). Use "yeah man", "right on". Call people "man", "dude".
+
+RESPONSE FORMATTING (CRITICAL):
+When listing information (clues, answers, items, data):
+- Use markdown headers (## ACROSS, ## DOWN, etc.)
+- Add blank lines between sections for readability
+- Use bold (**text**) for labels and important terms
+- Format lists with proper spacing:
+  **Item 1:** Description
+
+  **Item 2:** Description
+
+- Use code blocks for code snippets with blank lines before/after
+- Structure long responses with clear sections separated by blank lines
+
+IMPORTANT: Do not prefix your responses with "Bot Sportello:" - just respond naturally as Bot Sportello. Always mention the live site URL (https://bot.inference-arcade.com/) before making changes to give users context.
+
+Be concise and helpful. Context fetched directly from Discord channel history.`;
 
 // Mutable system prompt - can be changed at runtime
 let SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT;
 
-// botResponses and getBotResponse imported from ./personality/botResponses
+const botResponses = {
+    confirmations: [
+        "yeah man, i got you...",
+        "right on, let me handle that...",
+        "cool cool, working on it...",
+        "alright dude, give me a sec...",
+    ],
+
+    errors: [
+        "oh... yeah something went sideways there",
+        "hmm that's weird man, let me check what happened",
+        "ah yeah... that didn't work out, my bad",
+        "well that's not right... give me a minute",
+    ],
+
+    success: [
+        "nice, that worked out pretty smooth",
+        "right on, all done man",
+        "yeah there we go, all set",
+        "cool, got it all sorted for you",
+    ],
+
+    thinking: [
+        "let me think about this for a sec...",
+        "hmm yeah give me a moment...",
+        "hold on, processing this...",
+        "just a sec man, checking that out...",
+    ]
+};
+
+function getBotResponse(category) {
+    const responses = botResponses[category];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
 
 // Clean and format bot responses for better markdown rendering
 function cleanBotResponse(response) {
     if (!response) return '';
 
-    // Remove "Bot Sportello:" prefix anywhere it appears
-    let cleaned = response.replace(/Bot Sportello:\s*/gi, '').trim();
+    // Remove "Bot Sportello:" prefix patterns
+    let cleaned = response.replace(/^Bot Sportello:\s*/i, '').replace(/Bot Sportello:\s*Bot Sportello:\s*/gi, '');
 
     // Strip any tool-call markup that some models emit in plain text
     cleaned = cleaned
@@ -986,27 +1117,21 @@ function cleanBotResponse(response) {
         .replace(/<\/?(invoke|parameter)\b[^>]*>/gi, '')
         .replace(/^<[^>\n]*(tool_call|invoke|parameter)[^>\n]*>\s*$/gmi, '');
 
-    // Cut at thinking markers - truncate when AI starts "thinking out loud"
-    const thinkingCutoff = cleaned.search(/I need to find|Let me search|Let me think|I'll need to|Now let me|Looking at the|I have the web|From the web search/i);
-    if (thinkingCutoff > 50) {
-        const beforeThinking = cleaned.substring(0, thinkingCutoff);
-        const lastSentence = beforeThinking.lastIndexOf('. ');
-        if (lastSentence > 0) {
-            cleaned = beforeThinking.substring(0, lastSentence + 1).trim();
-        }
-    }
-
-    // Remove consecutive blank lines
-    cleaned = cleaned.replace(/\n{3,}/g, '\n\n').trim();
-
-    // Improve markdown formatting
+    // Improve markdown formatting with proper spacing
     cleaned = cleaned
+        // Add blank line before headers (##, ###, etc)
         .replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
+        // Add blank line after headers
         .replace(/(#{1,6}\s[^\n]+)\n([^\n])/g, '$1\n\n$2')
+        // Add blank line before lists (-, *, 1., etc)
         .replace(/([^\n])\n([\-\*]|\d+\.)\s/g, '$1\n\n$2 ')
+        // Add blank line before code blocks
         .replace(/([^\n])\n```/g, '$1\n\n```')
+        // Add blank line after code blocks
         .replace(/```\n([^\n])/g, '```\n\n$1')
+        // Add blank line before bold sections (ACROSS:, DOWN:, etc)
         .replace(/([^\n])\n(\*\*[A-Z][^\*]+\*\*)/g, '$1\n\n$2')
+        // Fix multiple consecutive blank lines (max 2)
         .replace(/\n{3,}/g, '\n\n');
 
     return cleaned;
@@ -1083,7 +1208,19 @@ function validateInput(input, maxLength = 500) {
     return input.trim();
 }
 
-// cleanMarkdownCodeBlocks now imported from services/filesystem
+function cleanMarkdownCodeBlocks(content, type = 'html') {
+    const patterns = {
+        html: /```html\n?/g,
+        javascript: /```javascript\n?/g,
+        js: /```js\n?/g,
+        css: /```css\n?/g
+    };
+
+    return content
+        .replace(patterns[type] || /```\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+}
 
 function ensureHomeLinkInHTML(htmlContent) {
     if (!htmlContent.includes('index.html') && !htmlContent.includes('Home</a>')) {
@@ -1294,7 +1431,22 @@ function addToHistory(username, message, isBot = false) {
     // The in-memory messageHistory is kept for debugging/fallback purposes only
 }
 
+// Build proper messages array from conversation history
+function buildMessagesFromHistory(maxMessages = 50) {
+    // Get last N messages (increased from 10 to 50 for better context)
+    const recentMessages = messageHistory.slice(-maxMessages);
+
+    // Convert to OpenRouter message format
+    const messages = recentMessages.map(entry => ({
+        role: entry.role,
+        content: `${entry.username}: ${entry.message}`
+    }));
+
+    return messages;
+}
+
 // Build context from Discord channel using the context manager
+// Replaces buildMessagesFromHistory for channel-based context
 async function buildContextForChannel(channel, maxMessages = CONFIG.DISCORD_CONTEXT_LIMIT) {
     // Use Discord context manager if available and channel is provided
     console.log(`[CONTEXT_DEBUG] channel=${!!channel}, contextManager=${!!contextManager}`);
@@ -1317,8 +1469,579 @@ async function buildContextForChannel(channel, maxMessages = CONFIG.DISCORD_CONT
 
 
 
-// Filesystem tools now imported from services/filesystem.js
-// (listFiles, fileExists, readFile, writeFile, editFile, searchFiles, searchSingleFile)
+// Filesystem tools for the AI
+async function listFiles(dirPath = './src') {
+    try {
+        // Handle multiple directories (array input)
+        if (Array.isArray(dirPath)) {
+            const allResults = [];
+            
+            for (const singleDir of dirPath) {
+                const result = await listFiles(singleDir);
+                if (!result.startsWith('Error')) {
+                    allResults.push(`**${singleDir}:** ${result}`);
+                } else {
+                    allResults.push(`**${singleDir}:** ${result}`);
+                }
+            }
+            
+            return allResults.join('\n');
+        }
+
+        const files = await fs.readdir(dirPath);
+
+        // Return structured, searchable format instead of flat comma-separated list
+        // Group by extension for easier navigation
+        const byExtension = {};
+        files.forEach(file => {
+            const ext = path.extname(file).toLowerCase() || '.other';
+            if (!byExtension[ext]) byExtension[ext] = [];
+            byExtension[ext].push(file);
+        });
+
+        // Build searchable output with file count
+        let output = `📁 ${dirPath} (${files.length} files)\n`;
+
+        // Sort extensions by frequency (most common first)
+        const sortedExts = Object.entries(byExtension)
+            .sort((a, b) => b[1].length - a[1].length);
+
+        for (const [ext, extFiles] of sortedExts) {
+            output += `\n${ext} (${extFiles.length}):\n`;
+            // Sort files alphabetically for easy scanning
+            extFiles.sort().forEach(file => {
+                output += `  - ${file}\n`;
+            });
+        }
+
+        return output.trim();
+    } catch (error) {
+        return `Error listing files: ${error.message}`;
+    }
+}
+
+/**
+ * Check if a file exists at the given path
+ * Fast existence check without reading content
+ * Supports: URLs, informal names ("Peanut city" → src/peanut-city.html), and exact paths
+ */
+async function fileExists(filePath) {
+    try {
+        // Handle multiple files (array input)
+        if (Array.isArray(filePath)) {
+            const results = [];
+            for (const singlePath of filePath) {
+                const exists = await fileExists(singlePath);
+                results.push(`${singlePath}: ${exists}`);
+            }
+            return results.join('\n');
+        }
+
+        // Normalize path - handle URLs from bot.inference-arcade.com
+        let normalizedPath = filePath;
+        const urlMatch = filePath.match(/bot\.inference-arcade\.com\/(.+)/);
+        if (urlMatch) {
+            normalizedPath = urlMatch[1];
+            console.log(`[FILE_EXISTS] Extracted path from URL: ${normalizedPath}`);
+        }
+
+        // Try exact path first
+        try {
+            await fs.access(normalizedPath);
+            const stats = await fs.stat(normalizedPath);
+            return `✅ EXISTS: ${normalizedPath} (${stats.size} bytes)`;
+        } catch {
+            // Exact path not found - try fuzzy variations
+        }
+
+        // Generate fuzzy variations for informal names
+        const variations = [];
+        const baseName = normalizedPath
+            .toLowerCase()
+            .replace(/\s+/g, '-')           // "Peanut City" → "peanut-city"
+            .replace(/[^a-z0-9\-\.\/]/g, '') // Remove special chars
+            .replace(/\.html$/, '');         // Remove .html if present
+
+        // Try common patterns
+        variations.push(`src/${baseName}.html`);
+        variations.push(`src/${baseName}`);
+        variations.push(`${baseName}.html`);
+
+        // Also try with underscores instead of hyphens
+        const underscoreVersion = baseName.replace(/-/g, '_');
+        if (underscoreVersion !== baseName) {
+            variations.push(`src/${underscoreVersion}.html`);
+        }
+
+        for (const variation of variations) {
+            try {
+                await fs.access(variation);
+                const stats = await fs.stat(variation);
+                return `✅ EXISTS: ${variation} (${stats.size} bytes) [matched from "${filePath}"]`;
+            } catch {
+                // Try next variation
+            }
+        }
+
+        // If still not found, suggest similar files
+        try {
+            const srcFiles = await fs.readdir('./src');
+            const searchTerm = baseName.replace(/-/g, '').replace(/_/g, '');
+            const similar = srcFiles.filter(f => {
+                const normalized = f.toLowerCase().replace(/-/g, '').replace(/_/g, '').replace('.html', '').replace('.js', '');
+                return normalized.includes(searchTerm) || searchTerm.includes(normalized);
+            }).slice(0, 5);
+
+            if (similar.length > 0) {
+                return `❌ NOT FOUND: ${filePath}\n💡 Similar files in src/: ${similar.join(', ')}`;
+            }
+        } catch {
+            // Can't read src dir
+        }
+
+        return `❌ NOT FOUND: ${filePath}`;
+    } catch (error) {
+        return `❌ NOT FOUND: ${filePath} (error: ${error.message})`;
+    }
+}
+
+async function readFile(filePath) {
+    try {
+        // Handle multiple files (array input)
+        if (Array.isArray(filePath)) {
+            const allResults = [];
+            let totalChars = 0;
+            
+            for (const singleFile of filePath) {
+                if (totalChars >= CONFIG.FILE_READ_LIMIT) {
+                    allResults.push(`**[Truncated]** - File limit reached`);
+                    break;
+                }
+                
+                const result = await readFile(singleFile);
+                const remaining = CONFIG.FILE_READ_LIMIT - totalChars;
+                
+                if (!result.startsWith('Error')) {
+                    const truncated = result.length > remaining ? result.substring(0, remaining) : result;
+                    allResults.push(`**${singleFile}:**\n${truncated}`);
+                    totalChars += truncated.length;
+                } else {
+                    allResults.push(`**${singleFile}:** ${result}`);
+                }
+            }
+            
+            return allResults.join('\n\n---\n\n');
+        }
+
+        // Normalize path - handle URLs from bot.inference-arcade.com
+        let normalizedPath = filePath;
+        const urlMatch = filePath.match(/bot\.inference-arcade\.com\/(.+)/);
+        if (urlMatch) {
+            normalizedPath = urlMatch[1];
+            console.log(`[READ_FILE] Extracted path from URL: ${normalizedPath}`);
+        }
+
+        // Try reading the file with automatic src/ path resolution
+        let content;
+        const pathsToTry = [normalizedPath];
+
+        // If path doesn't start with src/ and looks like a page name, try src/ variants
+        if (!normalizedPath.startsWith('src/') && !normalizedPath.startsWith('./src/')) {
+            pathsToTry.push(`src/${normalizedPath}`);
+            // If no extension, try .html
+            if (!normalizedPath.includes('.')) {
+                pathsToTry.push(`src/${normalizedPath}.html`);
+            }
+        }
+
+        let lastError;
+        for (const tryPath of pathsToTry) {
+            try {
+                content = await fs.readFile(tryPath, 'utf8');
+                if (tryPath !== normalizedPath) {
+                    console.log(`[READ_FILE] Resolved ${normalizedPath} -> ${tryPath}`);
+                }
+                normalizedPath = tryPath;
+                break;
+            } catch (e) {
+                lastError = e;
+            }
+        }
+
+        if (!content) {
+            return `Error reading file: ${lastError.message}. Tried: ${pathsToTry.join(', ')}`;
+        }
+
+        const truncatedContent = content.substring(0, CONFIG.FILE_READ_LIMIT);
+
+        // Log file read to GUI dashboard
+        logFileChange('read', normalizedPath, truncatedContent);
+
+        return truncatedContent;
+    } catch (error) {
+        return `Error reading file: ${error.message}`;
+    }
+}
+
+async function writeFile(filePath, content) {
+    try {
+        // Create directory if it doesn't exist
+        const dir = path.dirname(filePath);
+        await fs.mkdir(dir, { recursive: true });
+
+        // Write the file
+        await fs.writeFile(filePath, content, 'utf8');
+        console.log(`[WRITE_FILE] Written: ${filePath} (${content.length} bytes)`);
+
+        // Log file creation to GUI dashboard
+        logFileChange('create', filePath, content);
+
+        // Auto-commit and push so file is live before link is shared
+        console.log(`[WRITE_FILE] Auto-pushing to remote...`);
+        const fileName = path.basename(filePath);
+        const commitMessage = `add ${fileName}`;
+
+        await gitWithTimeout(() => git.add(filePath));
+        await gitWithTimeout(() => git.commit(commitMessage));
+        const status = await gitWithTimeout(() => git.status());
+        const currentBranch = status.current || 'main';
+
+        try {
+            await pushWithAuth(currentBranch);
+        } catch (pushError) {
+            const error = errorLogger.log('WRITE_FILE_PUSH', pushError, { filePath, branch: currentBranch });
+            
+            // Surface push error
+            throw pushError;
+        }
+
+        console.log(`[WRITE_FILE] Auto-pushed: ${commitMessage}`);
+        return `File written and pushed: ${filePath} (${content.length} bytes) - now live at https://bot.inference-arcade.com/${filePath}`;
+    } catch (error) {
+        console.error(`[WRITE_FILE] Error:`, error.message);
+        return `Error writing file: ${error.message}`;
+    }
+}
+
+async function editFile(filePath, oldString = null, newString = null, instructions = null) {
+    const startTime = Date.now();
+    console.log(`[EDIT_FILE] Starting edit for: ${filePath}`);
+
+    try {
+        // Read the current file content
+        const currentContent = await fs.readFile(filePath, 'utf-8');
+        const fileSize = (currentContent.length / 1024).toFixed(1);
+        console.log(`[EDIT_FILE] File size: ${fileSize}KB`);
+
+        let updatedContent;
+        let changeDescription;
+
+        // Mode 1: Exact string replacement (FAST - preferred method)
+        if (oldString !== null && newString !== null) {
+            console.log(`[EDIT_FILE] Using exact string replacement mode`);
+
+            // Count occurrences of old_string
+            const occurrences = currentContent.split(oldString).length - 1;
+
+            if (occurrences === 0) {
+                throw new Error(`String not found in file. The exact string to replace was not found. Make sure to use the EXACT string from the file, including all whitespace and indentation.`);
+            }
+
+            if (occurrences > 1) {
+                throw new Error(`String appears ${occurrences} times in file. The old_string must be unique. Provide more context (surrounding lines) to make it unique, or use replace_all mode.`);
+            }
+
+            // Perform the replacement
+            updatedContent = currentContent.replace(oldString, newString);
+            changeDescription = `Replaced exact string (${oldString.length} → ${newString.length} chars)`;
+
+            const replacementTime = ((Date.now() - startTime) / 1000).toFixed(2);
+            console.log(`[EDIT_FILE] Exact replacement completed in ${replacementTime}s`);
+
+        // Mode 2: AI-based editing (SLOW - fallback for complex changes)
+        } else if (instructions !== null) {
+            console.log(`[EDIT_FILE] Using AI-based editing mode (slow fallback)`);
+
+            // Use Kimi-fast for edits - faster than thinking model
+            const editModel = MODEL_PRESETS['kimi-fast'];
+            console.log(`[EDIT_FILE] Using ${editModel} for AI processing`);
+
+            // Use AI to make the edit based on instructions
+            const editPrompt = `You are editing a file: ${filePath}
+
+Current file content:
+\`\`\`
+${currentContent}
+\`\`\`
+
+User instructions: ${instructions}
+
+Return ONLY the complete updated file content. No explanations, no markdown code blocks, just the raw file content.`;
+
+            console.log(`[EDIT_FILE] Sending to AI for processing...`);
+            const response = await axios.post(OPENROUTER_URL, {
+                model: editModel,
+                messages: [{ role: 'user', content: editPrompt }],
+                max_tokens: 16000,
+                temperature: CONFIG.AI_TEMPERATURE,
+                provider: { data_collection: 'deny' } // ZDR enforcement
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 90000
+            });
+
+            const aiTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            console.log(`[EDIT_FILE] AI processing completed in ${aiTime}s`);
+
+            updatedContent = response.data.choices[0].message.content;
+
+            // Clean markdown code blocks if present
+            const extension = path.extname(filePath).substring(1);
+            updatedContent = cleanMarkdownCodeBlocks(updatedContent, extension);
+
+            changeDescription = `AI edit: ${instructions}`;
+        } else {
+            throw new Error('Must provide either (old_string + new_string) OR instructions');
+        }
+
+        // Write the updated content
+        await fs.writeFile(filePath, updatedContent, 'utf8');
+
+        // Log file edit to GUI dashboard
+        logFileChange('edit', filePath, updatedContent, currentContent);
+
+        // Auto-commit and push so changes are live before link is shared
+        console.log(`[EDIT_FILE] Auto-pushing to remote...`);
+        const fileName = path.basename(filePath);
+        const commitMessage = `update ${fileName}`;
+
+        await gitWithTimeout(() => git.add(filePath));
+        await gitWithTimeout(() => git.commit(commitMessage));
+        const status = await gitWithTimeout(() => git.status());
+        const currentBranch = status.current || 'main';
+
+        await pushWithAuth(currentBranch);
+
+        const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`[EDIT_FILE] Success + pushed: ${filePath} (${totalTime}s total)`);
+        return `File edited and pushed: ${filePath}. ${changeDescription} - now live`;
+    } catch (error) {
+        const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.error(`[EDIT_FILE] Error after ${totalTime}s:`, error.message);
+        return `Error editing file: ${error.message}`;
+    }
+}
+
+// Tool: Search files for text patterns (like grep)
+// Helper function to search within a single file
+async function searchSingleFile(pattern, filePath, options = {}) {
+    const {
+        caseInsensitive = false,
+        wholeWord = false,
+        maxResults = 50
+    } = options;
+
+    const results = [];
+    const flags = caseInsensitive ? 'gi' : 'g';
+    let searchRegex;
+
+    try {
+        const regexPattern = wholeWord ? `\\b${pattern}\\b` : pattern;
+        searchRegex = new RegExp(regexPattern, flags);
+    } catch (error) {
+        return `Error: Invalid regex pattern "${pattern}": ${error.message}`;
+    }
+
+    try {
+        const content = await fs.readFile(filePath, 'utf8');
+        const lines = content.split('\n');
+        const relativePath = path.relative(process.cwd(), filePath);
+
+        lines.forEach((line, index) => {
+            if (searchRegex.test(line)) {
+                results.push({
+                    file: relativePath,
+                    line: index + 1,
+                    content: line.trim()
+                });
+
+                // Stop if we hit max results
+                if (results.length >= maxResults) {
+                    return;
+                }
+            }
+        });
+
+        if (results.length === 0) {
+            return `No matches found for "${pattern}" in ${relativePath}`;
+        }
+
+        // Format results
+        let output = `**Found ${results.length} match${results.length === 1 ? '' : 'es'} for "${pattern}" in ${relativePath}**\n\n`;
+        
+        results.forEach(result => {
+            output += `**Line ${result.line}:** ${result.content}\n`;
+        });
+
+        return output.trim();
+    } catch (error) {
+        return `Error reading file ${filePath}: ${error.message}`;
+    }
+}
+
+async function searchFiles(pattern, searchPath = './src', options = {}) {
+    try {
+        const {
+            caseInsensitive = false,
+            wholeWord = false,
+            filePattern = null,
+            maxResults = 50
+        } = options;
+
+        // Handle multiple paths (array input)
+        if (Array.isArray(searchPath)) {
+            const allResults = [];
+            let totalMatches = 0;
+            
+            for (const singlePath of searchPath) {
+                if (totalMatches >= maxResults) break;
+                
+                const result = await searchFiles(pattern, singlePath, {
+                    ...options,
+                    maxResults: maxResults - totalMatches
+                });
+                
+                if (!result.startsWith('Error:') && !result.startsWith('No matches')) {
+                    allResults.push(result);
+                    // Count matches from this result
+                    const matches = (result.match(/\*\*Line \d+:\*\*/g) || []).length;
+                    totalMatches += matches;
+                }
+            }
+            
+            if (allResults.length === 0) {
+                return `No matches found for "${pattern}" in ${searchPath.length} files`;
+            }
+            
+            return allResults.join('\n\n');
+        }
+
+        const basePath = path.resolve(searchPath);
+
+        // Check if path exists
+        try {
+            await fs.access(basePath);
+        } catch {
+            return `Error: Path "${searchPath}" does not exist`;
+        }
+
+        // Check if the path is a file instead of directory
+        const stats = await fs.stat(basePath);
+        if (stats.isFile()) {
+            // If it's a file, search within that specific file
+            return await searchSingleFile(pattern, basePath, options);
+        }
+
+        const results = [];
+        const flags = caseInsensitive ? 'gi' : 'g';
+        let searchRegex;
+
+        try {
+            // If wholeWord, add word boundaries
+            const regexPattern = wholeWord ? `\\b${pattern}\\b` : pattern;
+            searchRegex = new RegExp(regexPattern, flags);
+        } catch (error) {
+            return `Error: Invalid regex pattern "${pattern}": ${error.message}`;
+        }
+
+        // Recursive file search
+        async function searchDirectory(dirPath) {
+            const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+            for (const entry of entries) {
+                const fullPath = path.join(dirPath, entry.name);
+
+                // Skip node_modules, .git, etc.
+                if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'responses' || entry.name === 'build-logs') {
+                    continue;
+                }
+
+                if (entry.isDirectory()) {
+                    await searchDirectory(fullPath);
+                } else if (entry.isFile()) {
+                    // Filter by file pattern if provided
+                    if (filePattern && !entry.name.includes(filePattern)) {
+                        continue;
+                    }
+
+                    // Only search text files
+                    const ext = path.extname(entry.name).toLowerCase();
+                    const textExtensions = ['.html', '.js', '.css', '.txt', '.md', '.json', '.xml', '.svg'];
+                    if (!textExtensions.includes(ext)) {
+                        continue;
+                    }
+
+                    try {
+                        const content = await fs.readFile(fullPath, 'utf8');
+                        const lines = content.split('\n');
+
+                        lines.forEach((line, index) => {
+                            if (searchRegex.test(line)) {
+                                const relativePath = path.relative(process.cwd(), fullPath);
+                                results.push({
+                                    file: relativePath,
+                                    line: index + 1,
+                                    content: line.trim()
+                                });
+                            }
+                        });
+
+                        // Stop if we hit max results
+                        if (results.length >= maxResults) {
+                            return;
+                        }
+                    } catch (readError) {
+                        // Skip files that can't be read as text
+                        continue;
+                    }
+                }
+            }
+        }
+
+        await searchDirectory(basePath);
+
+        if (results.length === 0) {
+            return `No matches found for "${pattern}" in ${searchPath}`;
+        }
+
+        // Format results with better markdown
+        let output = `**Found ${results.length} match${results.length === 1 ? '' : 'es'} for "${pattern}"**\n\n`;
+
+        // Group by file
+        const byFile = {};
+        results.forEach(result => {
+            if (!byFile[result.file]) {
+                byFile[result.file] = [];
+            }
+            byFile[result.file].push(result);
+        });
+
+        Object.keys(byFile).forEach(file => {
+            output += `### ${file}\n\n`;
+            byFile[file].forEach(match => {
+                output += `**Line ${match.line}:** \`${match.content}\`\n\n`;
+            });
+        });
+
+        return output.trim();
+    } catch (error) {
+        console.error('Search files error:', error);
+        return `Error searching files: ${error.message}`;
+    }
+}
 
 // Helper function to pick emoji based on description
 function getIconForDescription(description = '') {
@@ -1529,69 +2252,100 @@ async function syncIndexWithSrcFiles() {
 async function commitChanges(message, files = '.') {
     console.log(`[COMMIT] Starting: "${message}"`);
     const metadata = { files, messageLength: message.length };
-
+    
     try {
         // Validate environment before starting
         const envValidation = pipelineValidator.validateEnvironment();
         if (!envValidation.valid) {
             throw new Error(`Environment validation failed: ${envValidation.missing.join(', ')} missing`);
         }
-
-        // Validate GitHub access
+        
+        // Validate git state
         const gitValidation = await pipelineValidator.validateGitState();
         if (!gitValidation.valid) {
-            throw new Error(`GitHub validation failed: ${gitValidation.error}`);
+            throw new Error(`Git validation failed: ${gitValidation.error}`);
+        }
+        
+        // Enhanced status check with timeout protection
+        const status = gitValidation.status || await gitWithTimeout(() => git.status(), 10000);
+
+        console.log(`[COMMIT] Status:`, {
+            branch: status.current,
+            filesChanged: status.files.length,
+            files: status.files.map(f => f.path).slice(0, 5) // Log first 5 files
+        });
+
+        if (status.files.length === 0) {
+            console.log('[COMMIT] No changes to commit');
+            return 'Nothing to commit';
         }
 
-        // Require explicit file list for API commits
-        if (!files || files === '.') {
-            return 'Provide specific files to commit (comma-separated). Use write/edit actions which push automatically.';
+        // Stage files with enhanced error handling
+        console.log('[COMMIT] Staging files...');
+        try {
+            if (files === '.') {
+                await gitWithTimeout(() => git.add('.'), 15000);
+            } else {
+                const fileList = files.split(',').map(f => f.trim());
+                await gitWithTimeout(() => git.add(fileList), 15000);
+            }
+        } catch (stageError) {
+            const error = errorLogger.log('COMMIT_STAGE', stageError, metadata);
+            throw new Error(`Staging failed: ${stageError.message}`);
         }
 
-        const fileList = files.split(',').map(f => f.trim()).filter(Boolean);
-        if (fileList.length === 0) return 'Nothing to commit';
-
-        // Validate files before committing
-        const fileValidation = await pipelineValidator.validateFileOperations(fileList);
-        if (!fileValidation.valid) {
-            console.warn('⚠️ File validation issues:', fileValidation.issues);
-            metadata.fileIssues = fileValidation.issues;
-        }
-
-        // Read all files and prepare for batch commit
-        const filesToCommit = [];
-        for (const f of fileList) {
-            try {
-                const content = await fs.readFile(f, 'utf8');
-                filesToCommit.push({ path: f, content });
-            } catch (e) {
-                errorLogger.log('COMMIT_READ', e, { file: f });
-                return `Error reading ${f}: ${e.message}`;
+        // Validate files before committing if specific files were requested
+        if (files !== '.') {
+            const fileList = files.split(',').map(f => f.trim());
+            const fileValidation = await pipelineValidator.validateFileOperations(fileList);
+            if (!fileValidation.valid) {
+                console.warn('⚠️ File validation issues:', fileValidation.issues);
+                // Continue with commit but log the issues
+                metadata.fileIssues = fileValidation.issues;
             }
         }
-
-        console.log(`[COMMIT] Committing ${filesToCommit.length} file(s) via GitHub API...`);
-
-        // Commit all files in a single commit via GitHub API
-        const result = await commitFilesViaAPI(filesToCommit, message, 'main');
-
-        if (!result.success) {
-            throw new Error(result.error);
+        
+        // Create commit with protection against empty commits
+        console.log('[COMMIT] Creating commit...');
+        let commit;
+        try {
+            // Verify we still have staged changes
+            const stagedStatus = await gitWithTimeout(() => git.status(), 5000);
+            if (stagedStatus.staged.length === 0) {
+                throw new Error('No staged changes found after add operation');
+            }
+            commit = await gitWithTimeout(() => git.commit(message), 15000);
+        } catch (commitError) {
+            const error = errorLogger.log('COMMIT_CREATE', commitError, metadata);
+            throw new Error(`Commit failed: ${commitError.message}`);
         }
 
-        console.log(`[COMMIT] Success: ${result.shortSha}`);
-        return `Committed: ${result.shortSha} - ${message} (${result.filesCommitted} files)`;
+        console.log('[COMMIT] Pushing to remote...');
+        const currentBranch = status.current || 'main';
+        metadata.branch = currentBranch;
 
+        // Push with ephemeral URL and error handling
+        try {
+            await pushWithAuth(currentBranch);
+        } catch (pushError) {
+            const error = errorLogger.log('COMMIT_PUSH', pushError, metadata);
+            
+            throw new Error(`Push failed: ${pushError.message}`);
+        }
+
+        console.log(`[COMMIT] Success: ${commit.commit.substring(0, 7)}`);
+        return `Committed and pushed: ${commit.commit.substring(0, 7)} - ${message}`;
+        
     } catch (error) {
         const errorEntry = errorLogger.log('COMMIT', error, metadata);
         errorLogger.track(errorEntry);
-
+        
         // Return user-friendly error message
-        if (error.message.includes('authentication') || error.message.includes('401')) {
+        if (error.message.includes('authentication')) {
             return `Error: GitHub authentication failed. Check token permissions.`;
         } else if (error.message.includes('timeout')) {
-            return `Error: GitHub API timed out. Try again.`;
-        } else if (error.message.includes('nothing to commit') || error.message.includes('No files')) {
+            return `Error: Git operation timed out. Repository may be busy.`;
+        } else if (error.message.includes('nothing to commit')) {
             return 'Nothing to commit - no changes detected.';
         } else {
             return `Error committing: ${error.message}`;
@@ -1823,26 +2577,13 @@ Do not use web search or create new content - only edit existing files.`
                 type: 'function',
                 function: {
                     name: 'edit_file',
-                    description: 'Edit an existing file using EXACT string replacement. For multiple edits, use batch mode with replacements array.',
+                    description: 'Edit an existing file using EXACT string replacement. Always use exact mode for speed.',
                     parameters: {
                         type: 'object',
                         properties: {
                             path: { type: 'string', description: 'File path to edit' },
                             old_string: { type: 'string', description: 'EXACT string to replace (must be unique in file)' },
-                            new_string: { type: 'string', description: 'New string to replace old_string with' },
-                            replacements: {
-                                type: 'array',
-                                description: 'BATCH MODE: Array of {old, new, replace_all?} objects for multiple edits in one call',
-                                items: {
-                                    type: 'object',
-                                    properties: {
-                                        old: { type: 'string' },
-                                        new: { type: 'string' },
-                                        replace_all: { type: 'boolean', description: 'Replace all occurrences (default: false)' }
-                                    },
-                                    required: ['old', 'new']
-                                }
-                            }
+                            new_string: { type: 'string', description: 'New string to replace old_string with' }
                         },
                         required: ['path']
                     }
@@ -1922,9 +2663,9 @@ Do not use web search or create new content - only edit existing files.`
                         caseInsensitive: args.case_insensitive || false
                     });
                 } else if (functionName === 'read_file') {
-                    result = await readFile(args.path, { onFileChange: logFileChange, fileReadLimit: CONFIG.FILE_READ_LIMIT });
+                    result = await readFile(args.path);
                 } else if (functionName === 'edit_file') {
-                    result = await editFile(args.path, args.old_string, args.new_string, args.instructions, args.replacements, { onFileChange: logFileChange, aiTemperature: CONFIG.AI_TEMPERATURE });
+                    result = await editFile(args.path, args.old_string, args.new_string, args.instructions);
                     if (!result.startsWith('Error')) {
                         editCompleted = true;
                         logEvent('EDIT_LOOP', 'Edit completed successfully');
@@ -2118,27 +2859,14 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'edit_file',
-                    description: 'Edit an existing file using EXACT string replacement. For multiple edits, use batch mode with replacements array - this is MUCH faster than multiple edit_file calls. ALWAYS prefer exact replacement for speed and accuracy.',
+                    description: 'Edit an existing file using EXACT string replacement (preferred) or natural language instructions (fallback). ALWAYS prefer exact replacement for speed and accuracy. Use exact mode when you know the exact text to replace. Use instructions mode only for complex multi-location edits.',
                     parameters: {
                         type: 'object',
                         properties: {
-                            path: { type: 'string', description: 'File path to edit (e.g., "src/example.html", "index.html", "page-theme.css")' },
-                            old_string: { type: 'string', description: 'EXACT string to replace (including all whitespace, indentation, newlines). Must be unique in the file. Use for single edits.' },
+                            path: { type: 'string', description: 'File path to edit (e.g., "src/example.html", "index.html", "style.css")' },
+                            old_string: { type: 'string', description: 'EXACT string to replace (including all whitespace, indentation, newlines). Must be unique in the file. If not unique, provide more surrounding context to make it unique. PREFERRED METHOD - use this whenever possible for fast, deterministic edits.' },
                             new_string: { type: 'string', description: 'New string to replace old_string with. Use with old_string parameter.' },
-                            replacements: {
-                                type: 'array',
-                                description: 'BATCH MODE (preferred for multiple edits): Array of {old, new, replace_all?} objects. Each edit is applied in sequence. Uses single file read/write - much faster than multiple edit_file calls.',
-                                items: {
-                                    type: 'object',
-                                    properties: {
-                                        old: { type: 'string', description: 'Exact string to find' },
-                                        new: { type: 'string', description: 'Replacement string' },
-                                        replace_all: { type: 'boolean', description: 'If true, replace ALL occurrences of old string (default: false, requires unique match)' }
-                                    },
-                                    required: ['old', 'new']
-                                }
-                            },
-                            instructions: { type: 'string', description: 'FALLBACK: Natural language instructions for complex edits. Only use when exact replacement is not feasible. This mode is SLOW (requires AI processing).' }
+                            instructions: { type: 'string', description: 'FALLBACK: Natural language instructions for complex edits (e.g., "change all background colors to blue"). Only use when exact replacement is not feasible. This mode is SLOW (requires AI processing).' }
                         },
                         required: ['path']
                     }
@@ -2203,14 +2931,14 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'set_model',
-                    description: 'Switch the AI model used for responses. ZDR-compliant models: glm (default), kimi, kimi-fast, gemini, qwen',
+                    description: 'Switch the AI model used for responses. ZDR-compliant models: glm (default), kimi, kimi-fast, sonnet, gemini, qwen',
                     parameters: {
                         type: 'object',
                         properties: {
                             model: {
                                 type: 'string',
                                 description: 'Model preset name. glm = GLM-4.6 (default), kimi = with reasoning, kimi-fast = without.',
-                                enum: ['glm', 'kimi', 'kimi-fast', 'gemini', 'qwen', 'minimax']
+                                enum: ['glm', 'kimi', 'kimi-fast', 'sonnet', 'gemini', 'qwen', 'minimax']
                             }
                         },
                         required: ['model']
@@ -2221,7 +2949,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
 
         // Agentic loop - allow multiple rounds of tool calling
         const MAX_ITERATIONS = 6; // Reasonable limit to prevent infinite loops
-        const MAX_READONLY_ITERATIONS = 5; // Cap read-only tool loops to prevent over-searching
+        const MAX_READONLY_ITERATIONS = 3; // Cap read-only tool loops to prevent over-searching
         let iteration = 0;
         let readOnlyIterations = 0; // Track consecutive read-only iterations
         let lastResponse;
@@ -2380,9 +3108,9 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         filePattern: args.file_pattern || null
                     });
                 } else if (functionName === 'read_file') {
-                    result = await readFile(args.path, { onFileChange: logFileChange, fileReadLimit: CONFIG.FILE_READ_LIMIT });
+                    result = await readFile(args.path);
                 } else if (functionName === 'write_file') {
-                    result = await writeFile(args.path, args.content, { onFileChange: logFileChange });
+                    result = await writeFile(args.path, args.content);
                     if (!result.startsWith('Error')) {
                         completedActions++;
                         actionCompletedThisIteration = true;
@@ -2402,8 +3130,8 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         result = `File ${args.path} was already edited in this conversation. Skipping redundant edit to save time.`;
                         logEvent('LLM', `Skipped redundant edit of ${args.path}`);
                     } else {
-                        // Support exact replacement (preferred), batch mode (for multiple edits), and AI-based instructions (fallback)
-                        result = await editFile(args.path, args.old_string, args.new_string, args.instructions, args.replacements, { onFileChange: logFileChange, aiTemperature: CONFIG.AI_TEMPERATURE });
+                        // Support both exact replacement (preferred) and AI-based instructions (fallback)
+                        result = await editFile(args.path, args.old_string, args.new_string, args.instructions);
                         editedFiles.add(args.path);
                         if (!result.startsWith('Error')) {
                             completedActions++;
@@ -2600,6 +3328,7 @@ const commands = [
                     { name: 'GLM-4.6 Exacto (Default)', value: 'glm' },
                     { name: 'Kimi K2 Thinking (Reasoning)', value: 'kimi' },
                     { name: 'Kimi K2 Fast (No Reasoning)', value: 'kimi-fast' },
+                    { name: 'Claude Sonnet 4.5 (Balanced)', value: 'sonnet' },
                     { name: 'Qwen 3 Coder (Alibaba)', value: 'qwen' },
                     { name: 'Gemini 2.5 Pro (Google)', value: 'gemini' },
                     { name: 'Minimax M2 (MiniMax)', value: 'minimax' },
@@ -2607,7 +3336,7 @@ const commands = [
                 ))
         .addStringOption(option =>
             option.setName('custom_model')
-                .setDescription('Custom model name (e.g. google/gemini-2.5-pro)')
+                .setDescription('Custom model name (e.g. anthropic/claude-3-5-sonnet-20241022)')
                 .setRequired(false)),
 
     new SlashCommandBuilder()
@@ -2642,7 +3371,7 @@ async function getGuildIdFromChannel(channelId) {
     }
 }
 
-client.once('clientReady', async () => {
+client.once('ready', async () => {
     console.log(`Bot is ready as ${client.user.tag}`);
     console.log(`Monitoring channels: ${CHANNEL_IDS.length > 0 ? CHANNEL_IDS.join(', ') : 'ALL CHANNELS'}`);
     console.log(`Message Content Intent enabled: ${client.options.intents.has(GatewayIntentBits.MessageContent)}`);
@@ -2704,10 +3433,28 @@ client.once('clientReady', async () => {
         console.log('⚠️ Continuing without registered commands (will attempt to use cached commands)');
     }
 
+    // Initialize Git remote URL with current token
+    await initializeGitRemote();
+
     // Initialize Discord context manager (replaces agents.md)
-    // Context is fetched on-demand when user engages, not preloaded
     contextManager = new DiscordContextManager(client);
-    console.log('✅ Discord context manager initialized (on-demand fetching)');
+    console.log('✅ Discord context manager initialized');
+
+    // Fetch initial message history for configured channels
+    if (CHANNEL_IDS.length > 0) {
+        console.log('📜 Fetching initial message history from Discord...');
+        for (const channelId of CHANNEL_IDS) {
+            try {
+                const channel = await client.channels.fetch(channelId);
+                if (channel) {
+                    await contextManager.fetchChannelHistory(channel, CONFIG.DISCORD_FETCH_LIMIT);
+                    console.log(`✅ Fetched history for #${channel.name || channelId}`);
+                }
+            } catch (error) {
+                console.warn(`⚠️ Could not fetch history for ${channelId}:`, error.message);
+            }
+        }
+    }
 
     // Sync index.html with all HTML files in /src
     try {
@@ -2873,7 +3620,53 @@ async function handleMentionAsync(message) {
         let lastFailureReason = '';
 
         // Multi-loop processing with resilient reassessment
-        // Note: Old keyword-based edit detection loop removed (now using LLM classifier below)
+        while (processingAttempt <= maxProcessingAttempts) {
+            logEvent('MENTION', `Processing attempt ${processingAttempt}/${maxProcessingAttempts}${lastFailureReason ? ` (prev: ${lastFailureReason})` : ''}`);
+            
+            try {
+                // Loop 1: Edit request detection (DISABLED - now using LLM classifier)
+                if (false && processingAttempt <= 2 && isEditRequest(content, conversationMessages)) {
+                    logEvent('MENTION', `Attempt ${processingAttempt}: Detected edit request - using streamlined edit loop`);
+
+                    let llmResult = await getEditResponse(content, conversationMessages);
+                    let response = cleanBotResponse(llmResult.text);
+
+                    // Check if edit loop suggests using normal flow instead
+                    if (llmResult.suggestNormalFlow) {
+                        lastFailureReason = 'edit-loop-suggests-normal';
+                        logEvent('MENTION', 'Edit loop suggests normal flow - reassessing');
+                        processingAttempt++;
+                        continue; // Try next approach
+                    } else if (!response || response.trim().length === 0) {
+                        lastFailureReason = 'empty-edit-response';
+                        logEvent('MENTION', 'Empty edit response - reassessing');
+                        processingAttempt++;
+                        continue; // Try next approach
+                    } else {
+                        await safeEditReply(thinkingMsg, response);
+                        addToHistory(username, content, false);
+                        addToHistory('Bot Sportello', response, true);
+                        return; // Success - exit
+                    }
+                }
+
+                // Break out to continue with other processing loops below
+                break;
+
+            } catch (error) {
+                lastFailureReason = `error-${error.message.slice(0, 20)}`;
+                logEvent('MENTION', `Attempt ${processingAttempt} failed: ${error.message}`);
+                processingAttempt++;
+                if (processingAttempt <= maxProcessingAttempts) {
+                    await safeEditReply(thinkingMsg, `${getBotResponse('thinking')} (trying different approach...)`);
+                    continue;
+                }
+                throw error; // Re-throw if all attempts failed
+            }
+        }
+
+        // Continue with additional processing loops
+        processingAttempt = Math.max(processingAttempt, 1); // Reset if needed
         
         // Cache classification so we only do it once per mention
         let classificationResult = null;
@@ -2903,32 +3696,34 @@ async function handleMentionAsync(message) {
                     if (classification.isCommit) {
                         logEvent('MENTION', `COMMIT request - executing git commit`);
                         await safeEditReply(thinkingMsg, '💾 committing changes...');
-
+                        
                         try {
                             // Extract commit message from the request, or use default
                             let commitMessage = 'commit changes';
-
+                            const lowerContent = content.toLowerCase();
+                            
+                            // Extract the file reference if mentioned (e.g., "commit this game" -> look for recent files)
+                            if (lowerContent.includes('this game') || lowerContent.includes('this file') || lowerContent.includes('this page')) {
+                                // Get git status to find modified files
+                                const status = await git.status();
+                                if (status.files.length > 0) {
+                                    const recentFile = status.files[0].path;
+                                    commitMessage = `commit ${recentFile}`;
+                                }
+                            }
+                            
                             // Try to extract explicit commit message (e.g., "commit with message 'fix bug'")
                             const messageMatch = content.match(/(?:commit.*?(?:with message|as|:)\s*['"]([^'"]+)['"])|(?:commit\s+['"]([^'"]+)['"])/i);
                             if (messageMatch) {
                                 commitMessage = messageMatch[1] || messageMatch[2];
                             }
 
-                            // Try to extract file list from request
-                            const fileMatch = content.match(/(?:commit|push)\s+(?:files?\s+)?([^\s'"]+(?:\s*,\s*[^\s'"]+)*)/i);
-                            const files = fileMatch ? fileMatch[1] : '';
-
-                            if (!files) {
-                                await safeEditReply(thinkingMsg, `ℹ️ specify files to commit, e.g. "commit src/game.html". files are auto-committed when created/edited.`);
-                                return;
-                            }
-
-                            const result = await commitChanges(commitMessage, files);
+                            const result = await commitChanges(commitMessage);
                             await safeEditReply(thinkingMsg, `✅ ${result}`);
-
+                            
                             // Success - break out of retry loop
                             return;
-
+                            
                         } catch (error) {
                             lastFailureReason = `commit-failed`;
                             logEvent('MENTION', `Commit failed: ${error.message}`);
@@ -2973,14 +3768,26 @@ async function handleMentionAsync(message) {
                         break;
                     }
 
-                    // Commit and push via GitHub API
-                    await safeEditReply(thinkingMsg, '💾 committing and pushing to github...');
+                    // Commit and push
+                    await safeEditReply(thinkingMsg, '💾 committing to repo...');
                     const commitSuccess = await commitGameFiles(result);
 
-                    if (!commitSuccess) {
-                        await safeEditReply(thinkingMsg, `⚠️ Content built but commit failed. Check GitHub token permissions.`);
-                        return;
-                    }
+            if (commitSuccess) {
+                await safeEditReply(thinkingMsg, '🚀 pushing to github pages...');
+
+                try {
+                    await pushWithAuth('main');
+                    console.log('[MENTION_PIPELINE] Push successful');
+                } catch (pushError) {
+                    const error = errorLogger.log('MENTION_PIPELINE_PUSH', pushError);
+                    errorLogger.track(error);
+                    console.error('🚨 Mention pipeline deployment failed:', pushError.message);
+                    
+                    // Report error to user instead of silently failing
+                    await safeEditReply(thinkingMsg, `⚠️ Content built successfully but deployment failed: ${pushError.message}. Files are saved locally but not published. Check GitHub token permissions.`);
+                    return; // Exit early to prevent success message
+                }
+            }
 
                     // Success message
                     const scoreEmoji = result.testResult.score >= 80 ? '✨' : result.testResult.score >= 60 ? '✓' : '⚠️';
@@ -3017,27 +3824,55 @@ async function handleMentionAsync(message) {
                     if (classification.isEdit) {
                         logEvent('MENTION', `SIMPLE_EDIT request - using streamlined edit loop`);
                         await safeEditReply(thinkingMsg, '✏️ making simple edit...');
+                        
+                        let llmResult = await getEditResponse(content, conversationMessages);
+                        let response = cleanBotResponse(llmResult.text);
+                        
+                        if (llmResult.toolCalls && llmResult.toolCalls.length > 0) {
+                            logEvent('EDIT_LOOP', `Iteration 1: ${llmResult.toolCalls.length} tools`);
 
-                        // getEditResponse handles its own internal tool loop
-                        const llmResult = await getEditResponse(content, conversationMessages);
-                        const response = cleanBotResponse(llmResult.text);
+                            // Process tool calls and iterate up to 10 times
+                            for (let iteration = 1; iteration <= 10 && llmResult.toolCalls && llmResult.toolCalls.length > 0; iteration++) {
+                                const results = [];
 
-                        // If edit suggests using normal flow instead, continue to fallback
-                        if (llmResult.suggestNormalFlow) {
-                            logEvent('EDIT_LOOP', 'Edit loop suggests normal flow - continuing to LLM');
-                            processingAttempt = 4; // Skip to final LLM
-                            break;
-                        }
+                                // Show user what tools are being executed
+                                const toolNames = llmResult.toolCalls.map(tc => tc.function?.name || 'unknown').join(', ');
+                                await safeEditReply(thinkingMsg, `✏️ step ${iteration}: ${toolNames}...`);
 
-                        // Send the response from edit loop
-                        if (response) {
-                            await safeEditReply(thinkingMsg, response);
+                                for (const toolCall of llmResult.toolCalls) {
+                                    const result = await executeToolCall(toolCall);
+                                    results.push(result);
+                                }
+
+                                if (iteration < 10) {
+                                    llmResult = await getEditResponse(content, conversationMessages, results);
+                                    response = cleanBotResponse(llmResult.text);
+                                    if (llmResult.toolCalls && llmResult.toolCalls.length > 0) {
+                                        logEvent('EDIT_LOOP', `Iteration ${iteration + 1}: ${llmResult.toolCalls.length} tools`);
+                                    }
+                                }
+                            }
+
+                            // If we have a response from the AI, send it
+                            if (response) {
+                                await safeEditReply(thinkingMsg, response);
+                                addToHistory(username, content, false);
+                                addToHistory('Bot Sportello', response, true);
+                                return; // Success - exit
+                            }
+
+                            // Tools executed but AI didn't provide text - generate completion message
+                            const toolsExecuted = results.length > 0 ? results.map(r => r.tool_call_id || 'tool').join(', ') : 'edits';
+                            const fallbackMsg = `✓ done - made the requested changes`;
+                            await safeEditReply(thinkingMsg, fallbackMsg);
                             addToHistory(username, content, false);
-                            addToHistory('Bot Sportello', response, true);
-                            return; // Success - exit
+                            addToHistory('Bot Sportello', fallbackMsg, true);
+                            return; // Success - exit with fallback message
+                        } else {
+                            logEvent('EDIT_LOOP', 'No tool calls in response - AI may need more context');
                         }
 
-                        // If edit loop didn't produce a response, continue to fallback
+                        // If edit loop didn't work, continue to fallback loops below
                         processingAttempt++;
                         if (processingAttempt <= maxProcessingAttempts) {
                             await safeEditReply(thinkingMsg, 'hmm that didn\'t quite work... lemme try a different approach...');
@@ -3210,46 +4045,16 @@ async function handleMentionAsync(message) {
         }
 
         // Send response directly (no commit prompts in mentions)
-        // HARD LIMIT: Max 3 messages to prevent chat spam
-        const MAX_DISCORD_MESSAGES = 3;
-
         if (finalResponse.length > 2000) {
-            // Split long messages into multiple parts
-            const maxLength = 1950; // Leave room for formatting
-            const parts = [];
-            let remaining = finalResponse;
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `logs/responses/mention-${timestamp}.txt`;
 
-            while (remaining.length > 0 && parts.length < MAX_DISCORD_MESSAGES) {
-                if (remaining.length <= maxLength) {
-                    parts.push(remaining);
-                    break;
-                }
+            await fs.mkdir('logs/responses', { recursive: true });
+            const fileContent = `User: ${username}\nMessage: ${content}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${finalResponse}`;
+            await fs.writeFile(fileName, fileContent);
 
-                // Try to split at a natural break point
-                let splitIndex = remaining.lastIndexOf('\n', maxLength);
-                if (splitIndex === -1 || splitIndex < maxLength * 0.5) {
-                    splitIndex = remaining.lastIndexOf(' ', maxLength);
-                }
-                if (splitIndex === -1 || splitIndex < maxLength * 0.5) {
-                    splitIndex = maxLength;
-                }
-
-                parts.push(remaining.substring(0, splitIndex));
-                remaining = remaining.substring(splitIndex).trim();
-            }
-
-            // Truncate last part if we hit the limit and there's more
-            if (parts.length === MAX_DISCORD_MESSAGES && remaining.length > 0) {
-                parts[parts.length - 1] = parts[parts.length - 1].substring(0, 1900) + '...';
-            }
-
-            // Send first part as edit to thinking message
-            await safeEditReply(thinkingMsg, parts[0]);
-
-            // Send remaining parts as follow-up messages (max 2 more)
-            for (let i = 1; i < parts.length; i++) {
-                await message.channel.send(parts[i]);
-            }
+            const truncated = finalResponse.substring(0, 1800);
+            await safeEditReply(thinkingMsg, `${truncated}...\n\n*[Full response saved to \`${fileName}\`]*`);
         } else {
             await safeEditReply(thinkingMsg, finalResponse);
         }
@@ -3305,27 +4110,24 @@ async function handleMentionAsync(message) {
 async function handleCommit(interaction) {
     try {
         const message = validateInput(interaction.options.getString('message'), 500);
-        const files = interaction.options.getString('files') || '';
-
-        // Require explicit file list for GitHub API commits
-        if (!files || files === '.') {
-            await interaction.editReply("Please specify files to commit (comma-separated). Example: `src/game.html, src/utils.js`\n\nNote: Files are auto-committed when created/edited via bot commands.");
-            return;
-        }
-
-        const fileList = files.split(',').map(f => f.trim()).filter(Boolean);
-        if (fileList.length === 0) {
-            await interaction.editReply("No valid files specified.");
+        const files = interaction.options.getString('files') || '.';
+        
+        // First, check if there's anything to commit
+        const status = await gitWithTimeout(() => git.status());
+        
+        if (status.files.length === 0) {
+            await interaction.editReply("Nothing to commit.");
             return;
         }
 
         // Show confirmation dialog with file details
         const confirmEmbed = new EmbedBuilder()
             .setTitle('⚠️ Confirm Commit & Push')
-            .setDescription(`Ready to commit and push **${fileList.length} file(s)** to GitHub?`)
+            .setDescription(`Ready to commit and push **${status.files.length} file(s)** to the live repository?`)
             .addFields(
                 { name: 'Commit Message', value: message, inline: false },
-                { name: 'Files to Commit', value: fileList.slice(0, 10).map(f => `• ${f}`).join('\n') + (fileList.length > 10 ? `\n... and ${fileList.length - 10} more` : ''), inline: false }
+                { name: 'Files to Commit', value: files === '.' ? 'All changed files' : files, inline: false },
+                { name: 'Changed Files', value: status.files.slice(0, 10).map(f => `• ${f.path}`).join('\n') + (status.files.length > 10 ? `\n... and ${status.files.length - 10} more` : ''), inline: false }
             )
             .setColor(0xFF6B35) // Orange warning color
             .setTimestamp();
@@ -3343,10 +4145,10 @@ async function handleCommit(interaction) {
                     .setStyle(ButtonStyle.Danger)
             );
 
-        await interaction.editReply({
-            content: '',
-            embeds: [confirmEmbed],
-            components: [confirmRow]
+        await interaction.editReply({ 
+            content: '', 
+            embeds: [confirmEmbed], 
+            components: [confirmRow] 
         });
 
         // Store commit data for button handler
@@ -3354,7 +4156,7 @@ async function handleCommit(interaction) {
         global.commitPendingData.set(interaction.user.id, {
             message,
             files,
-            fileList,
+            status,
             interactionId: interaction.id
         });
 
@@ -3369,68 +4171,73 @@ async function handleCommit(interaction) {
     }
 }
 
-// Execute commit via GitHub API
+// New function to handle the actual commit process
 async function executeCommit(interaction, commitData) {
     try {
-        await interaction.editReply({ content: 'Reading files...', embeds: [], components: [] });
-
-        // Read all files and prepare for batch commit
-        const filesToCommit = [];
-        for (const f of commitData.fileList) {
-            try {
-                const content = await fs.readFile(f, 'utf8');
-                filesToCommit.push({ path: f, content });
-            } catch (e) {
-                await interaction.editReply(`Error reading ${f}: ${e.message}`);
-                return;
-            }
+        // Update status with progress
+        await interaction.editReply({ content: 'Staging files...', embeds: [], components: [] });
+        
+        // Stage files
+        if (commitData.files === '.') {
+            await gitWithTimeout(() => git.add('.'));
+        } else {
+            const fileList = commitData.files.split(',').map(f => f.trim());
+            await gitWithTimeout(() => git.add(fileList));
         }
-
-        await interaction.editReply('Committing to GitHub...');
-
-        // Commit all files via GitHub API
-        const result = await commitFilesViaAPI(filesToCommit, commitData.message, 'main');
-
-        if (!result.success) {
-            throw new Error(result.error);
-        }
-
+        
+        // Update progress
+        await interaction.editReply('Creating commit...');
+        
+        // Create commit
+        const commit = await gitWithTimeout(() => git.commit(commitData.message));
+        
+        // Update progress
+        await interaction.editReply('Pushing to repository...');
+        
+        // Push changes - use current branch via ephemeral URL
+        const currentBranch = commitData.status.current || 'main';
+        await pushWithAuth(currentBranch);
+        
         // Success - create and send embed
         const embed = new EmbedBuilder()
             .setTitle('🚀 Changes Committed & Pushed')
             .setDescription(getBotResponse('success') + '\n\n**Note:** Changes pushed! Site will update in 1-2 minutes.')
             .addFields(
                 { name: 'Commit Message', value: commitData.message, inline: false },
-                { name: 'Commit Hash', value: result.shortSha, inline: true },
-                { name: 'Files Changed', value: result.filesCommitted.toString(), inline: true },
+                { name: 'Commit Hash', value: commit.commit.substring(0, 7), inline: true },
+                { name: 'Files Changed', value: commitData.status.files.length.toString(), inline: true },
                 { name: 'Deployment', value: '⏳ Deploying... (1-2 min)', inline: false }
             )
             .setColor(0x00AE86)
             .setTimestamp();
-
+        
         // Add repository link if URL is available
         if (process.env.GITHUB_REPO_URL) {
             embed.addFields({
                 name: 'Repository',
-                value: `[View Changes](${process.env.GITHUB_REPO_URL}/commit/${result.sha})`,
+                value: `[View Changes](${process.env.GITHUB_REPO_URL}/commit/${commit.commit})`,
                 inline: false
             });
         }
-
+        
         await safeEditReply(interaction, { content: '', embeds: [embed] });
-
+        
     } catch (error) {
         console.error('Commit execution error:', error);
-
+        
+        // Provide more specific error messages
         let errorMessage = getBotResponse('errors');
-        if (error.message.includes('authentication') || error.message.includes('401')) {
+        
+        if (error.message.includes('authentication')) {
             errorMessage += ' Authentication issue with GitHub.';
-        } else if (error.message.includes('404')) {
-            errorMessage += ' File not found on GitHub.';
+        } else if (error.message.includes('nothing to commit')) {
+            errorMessage += ' Nothing new to commit.';
+        } else if (error.message.includes('remote')) {
+            errorMessage += ' Trouble reaching the remote repository.';
         } else {
             errorMessage += ` ${error.message}`;
         }
-
+        
         await interaction.editReply(errorMessage);
     }
 }
@@ -3535,14 +4342,16 @@ async function handleButtonInteraction(interaction) {
             } else if (type === 'discard') {
                 // Get stored mention commit data for response
                 const commitData = global.mentionCommitData?.get(interaction.user.id);
-
+                
                 // Clean up pending data
                 global.mentionCommitData?.delete(interaction.user.id);
-
-                // Note: With GitHub API commits, there's nothing local to discard
+                
+                // Discard changes and show original response
+                await gitWithTimeout(() => git.reset(['--hard', 'HEAD']));
+                
                 const discardEmbed = new EmbedBuilder()
-                    .setTitle('🗑️ Commit Cancelled')
-                    .setDescription('Changes were not committed. Here was the AI response:')
+                    .setTitle('🗑️ Changes Discarded')
+                    .setDescription('Local changes have been discarded. Here was the AI response:')
                     .addFields(
                         { name: 'Original Response', value: commitData?.response?.substring(0, 1000) + (commitData?.response?.length > 1000 ? '...' : '') || 'No response available', inline: false }
                     )
@@ -3582,62 +4391,26 @@ async function handleSearch(interaction) {
         // Perform web search
         const searchResult = await webSearch(query);
 
-        // Split long search results instead of truncating
-        const header = `**Search: "${query}"**\n\n`;
-        const fullMessage = header + searchResult;
-        
-        if (fullMessage.length > 2000) {
-            const maxLength = 1950;
-            const parts = [];
-            let remaining = searchResult; // Don't include header in remaining
-            
-            // First part includes the header
-            const firstPartMaxLength = maxLength - header.length;
-            if (remaining.length <= firstPartMaxLength) {
-                parts.push(header + remaining);
-            } else {
-                // Find natural break point for first part
-                let splitIndex = remaining.lastIndexOf('\n', firstPartMaxLength);
-                if (splitIndex === -1 || splitIndex < firstPartMaxLength * 0.5) {
-                    splitIndex = remaining.lastIndexOf(' ', firstPartMaxLength);
-                }
-                if (splitIndex === -1 || splitIndex < firstPartMaxLength * 0.5) {
-                    splitIndex = firstPartMaxLength;
-                }
-                
-                parts.push(header + remaining.substring(0, splitIndex));
-                remaining = remaining.substring(splitIndex).trim();
-                
-                // Split remaining parts
-                while (remaining.length > 0) {
-                    if (remaining.length <= maxLength) {
-                        parts.push(remaining);
-                        break;
-                    }
-                    
-                    let splitIndex = remaining.lastIndexOf('\n', maxLength);
-                    if (splitIndex === -1 || splitIndex < maxLength * 0.5) {
-                        splitIndex = remaining.lastIndexOf(' ', maxLength);
-                    }
-                    if (splitIndex === -1 || splitIndex < maxLength * 0.5) {
-                        splitIndex = maxLength;
-                    }
-                    
-                    parts.push(remaining.substring(0, splitIndex));
-                    remaining = remaining.substring(splitIndex).trim();
-                }
-            }
-            
-            // Send first part as reply
-            await interaction.editReply(parts[0]);
-            
-            // Send remaining parts as follow-ups
-            for (let i = 1; i < parts.length; i++) {
-                await interaction.followUp(parts[i]);
-            }
+        // If response is longer than 2000 characters, save to file and truncate
+        if (searchResult.length > 2000) {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `logs/responses/search-${timestamp}.txt`;
+
+            // Create responses directory if it doesn't exist
+            await fs.mkdir('logs/responses', { recursive: true });
+
+            // Save full response to file
+            const fileContent = `Search Query: ${query}\nTimestamp: ${new Date().toISOString()}\n\n---\n\n${searchResult}`;
+            await fs.writeFile(fileName, fileContent);
+
+            // Truncate response and add link
+            const truncated = searchResult.substring(0, 1800);
+            const replyMessage = `**Search: "${query}"**\n\n${truncated}...\n\n*[Full results saved to \`${fileName}\`]*`;
+
+            await interaction.editReply(replyMessage);
         } else {
             // Response is short enough, send normally
-            await interaction.editReply(fullMessage);
+            await interaction.editReply(`**Search: "${query}"**\n\n${searchResult}`);
         }
 
     } catch (error) {
@@ -3669,6 +4442,7 @@ async function handleSetModel(interaction) {
             'glm': 'GLM-4.6 Exacto',
             'kimi': 'Kimi K2 Thinking',
             'kimi-fast': 'Kimi K2 Fast',
+            'sonnet': 'Claude Sonnet 4.5',
             'qwen': 'Qwen 3 Coder',
             'gemini': 'Gemini 2.5 Pro',
             'minimax': 'Minimax M2',
@@ -3698,36 +4472,30 @@ async function handleSetModel(interaction) {
 
 async function handleStatus(interaction) {
     try {
-        const owner = process.env.GITHUB_REPO_OWNER;
-        const repo = process.env.GITHUB_REPO_NAME;
-
-        // Fetch repo info and recent commits from GitHub API
-        const [repoData, commitsData] = await Promise.all([
-            octokit.repos.get({ owner, repo }),
-            octokit.repos.listCommits({ owner, repo, per_page: 5 })
-        ]);
-
-        const repoInfo = repoData.data;
-        const commits = commitsData.data;
-
-        // Format recent commits
-        const recentCommits = commits.slice(0, 5).map(c =>
-            `\`${c.sha.substring(0, 7)}\` ${c.commit.message.split('\n')[0].substring(0, 50)}`
-        ).join('\n');
-
+        const status = await git.status();
+        
         const embed = new EmbedBuilder()
             .setTitle('📊 Repository Status')
-            .setDescription(`**${repoInfo.full_name}**`)
+            .setDescription('Current repository status')
             .addFields(
-                { name: 'Branch', value: repoInfo.default_branch || 'main', inline: true },
-                { name: 'Total Commits', value: commits.length > 0 ? '✓' : '0', inline: true },
-                { name: 'Visibility', value: repoInfo.private ? '🔒 Private' : '🌐 Public', inline: true },
-                { name: 'Recent Commits', value: recentCommits || 'No commits yet', inline: false },
-                { name: 'Live Site', value: 'https://bot.inference-arcade.com/', inline: false },
-                { name: 'Repository', value: `[View on GitHub](${repoInfo.html_url})`, inline: false }
+                { name: 'Branch', value: status.current || 'unknown', inline: true },
+                { name: 'Modified Files', value: status.modified.length.toString(), inline: true },
+                { name: 'New Files', value: status.not_added.length.toString(), inline: true },
+                { name: 'Live Site', value: 'https://bot.inference-arcade.com/', inline: false }
             )
-            .setColor(0x3498db)
-            .setTimestamp();
+            .setColor(0x3498db);
+
+        if (status.files.length > 0) {
+            const fileList = status.files.slice(0, 10).map(file =>
+                `${file.working_dir === 'M' ? '📝' : '🆕'} ${file.path}`
+            ).join('\n');
+
+            embed.addFields({
+                name: 'Changed Files',
+                value: fileList + (status.files.length > 10 ? '\n...and more' : ''),
+                inline: false
+            });
+        }
 
         await interaction.editReply({ embeds: [embed] });
 
@@ -3805,72 +4573,69 @@ async function handlePoll(interaction) {
     }
 }
 
-// Handle mention-triggered commits via GitHub API
+// New function to handle mention-triggered commits
 async function executeMentionCommit(interaction, commitData) {
     try {
-        await interaction.editReply({ content: 'Reading files...', embeds: [], components: [] });
-
-        // Require explicit file list
-        if (!commitData.files || commitData.files.length === 0) {
-            await interaction.editReply('No files specified for commit.');
-            return;
-        }
-
-        // Read file contents
-        const filesToCommit = [];
-        for (const filePath of commitData.files) {
-            try {
-                const content = await fs.readFile(filePath, 'utf8');
-                filesToCommit.push({ path: filePath, content });
-            } catch (e) {
-                console.warn(`Could not read ${filePath}: ${e.message}`);
-            }
-        }
-
-        if (filesToCommit.length === 0) {
-            await interaction.editReply('Could not read any files to commit.');
-            return;
-        }
-
-        await interaction.editReply('Committing to GitHub...');
-
+        // Update status with progress
+        await interaction.editReply({ content: 'Staging files...', embeds: [], components: [] });
+        
+        // Stage all changed files
+        await gitWithTimeout(() => git.add('.'));
+        
+        // Update progress
+        await interaction.editReply('Creating commit...');
+        
+        // Create commit with AI response as commit message (truncated)
         const commitMessage = `ai changes: ${commitData.originalContent.substring(0, 50)}${commitData.originalContent.length > 50 ? '...' : ''}`;
-        const result = await commitFilesViaAPI(filesToCommit, commitMessage, 'main');
-
-        if (!result.success) {
-            throw new Error(result.error);
-        }
-
+        const commit = await gitWithTimeout(() => git.commit(commitMessage));
+        
+        // Update progress
+        await interaction.editReply('Pushing to repository...');
+        
+        // Push changes - use current branch via ephemeral URL
+        const currentBranch = commitData.status.current || 'main';
+        await pushWithAuth(currentBranch);
+        
+        // Success - create and send embed
         const embed = new EmbedBuilder()
             .setTitle('🚀 AI Changes Committed & Pushed')
             .setDescription(getBotResponse('success') + '\n\n**Note:** AI-generated changes are now live!')
             .addFields(
                 { name: 'Commit Message', value: commitMessage, inline: false },
-                { name: 'Commit Hash', value: result.shortSha, inline: true },
-                { name: 'Files Changed', value: result.filesCommitted.toString(), inline: true },
+                { name: 'Commit Hash', value: commit.commit.substring(0, 7), inline: true },
+                { name: 'Files Changed', value: commitData.status.files.length.toString(), inline: true },
                 { name: 'Live Site', value: '[View Changes](https://bot.inference-arcade.com/)', inline: false }
             )
-            .setColor(0x7dd3a0)
+            .setColor(0x7dd3a0) // Mint green
             .setTimestamp();
-
+        
+        // Add repository link if URL is available
         if (process.env.GITHUB_REPO_URL) {
             embed.addFields({
                 name: 'Repository',
-                value: `[View Commit](${process.env.GITHUB_REPO_URL}/commit/${result.sha})`,
+                value: `[View Commit](${process.env.GITHUB_REPO_URL}/commit/${commit.commit})`,
                 inline: false
             });
         }
-
+        
         await safeEditReply(interaction, { content: '', embeds: [embed] });
-
+        
     } catch (error) {
-        console.error('Mention commit error:', error);
+        console.error('Mention commit execution error:', error);
+        
+        // Provide more specific error messages
         let errorMessage = getBotResponse('errors');
-        if (error.message.includes('401')) {
+        
+        if (error.message.includes('authentication')) {
             errorMessage += ' Authentication issue with GitHub.';
+        } else if (error.message.includes('nothing to commit')) {
+            errorMessage += ' Nothing to commit.';
+        } else if (error.message.includes('remote')) {
+            errorMessage += ' Trouble reaching the remote repository.';
         } else {
             errorMessage += ` ${error.message}`;
         }
+        
         await interaction.editReply(errorMessage);
     }
 }
@@ -3886,7 +4651,639 @@ async function executeStyleUpdate(interaction, styleData) {
         const preset = styleData.preset;
         const customDescription = styleData.customDescription;
 
-        // stylePresets imported from ./styles/presets at top of file
+        // Style presets
+        const stylePresets = {
+            'soft-arcade': `/* Bot Sportello Arcade - Softer Retro Style */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Press Start 2P', cursive, monospace;
+    background: linear-gradient(to bottom, #1a1d23 0%, #0f1419 100%);
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 49px,
+            rgba(100, 200, 150, 0.08) 49px,
+            rgba(100, 200, 150, 0.08) 50px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 49px,
+            rgba(100, 200, 150, 0.08) 49px,
+            rgba(100, 200, 150, 0.08) 50px
+        );
+    background-size: 50px 50px;
+    min-height: 100vh;
+    padding: 40px 20px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+@keyframes gridMove {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 50px; }
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+header {
+    text-align: center;
+    color: #7dd3a0;
+    margin-bottom: 50px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.tagline {
+    font-size: 0.6em;
+    color: #95c9ad;
+    margin-top: 10px;
+    opacity: 0.85;
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.project-card {
+    background: linear-gradient(135deg, #252a32 0%, #1d2228 100%);
+    border: 2px solid #5a9d7a;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: #7dd3a0;
+    display: block;
+    position: relative;
+    overflow: hidden;
+}
+
+.project-card::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #5a9d7a, #7dd3a0, #5a9d7a);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(93, 157, 122, 0.3);
+    border-color: #7dd3a0;
+}
+
+.project-card:hover::before {
+    opacity: 0.15;
+}
+
+.project-icon {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.project-title {
+    font-size: 0.9em;
+    margin-bottom: 15px;
+    color: #a8e6c1;
+    line-height: 1.4;
+}
+
+.project-description {
+    color: #95c9ad;
+    line-height: 1.6;
+    font-size: 0.5em;
+    opacity: 0.9;
+}
+
+.add-project {
+    background: linear-gradient(135deg, #2a4035 0%, #1f3028 100%);
+    border-color: #6bb88f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.add-project:hover {
+    background: linear-gradient(135deg, #325442 0%, #2a4035 100%);
+    box-shadow: 0 8px 20px rgba(107, 184, 143, 0.25);
+}
+
+footer {
+    text-align: center;
+    color: #95c9ad;
+    margin-top: 60px;
+    font-size: 0.5em;
+    line-height: 1.8;
+    opacity: 0.8;
+}
+
+footer a {
+    color: #7dd3a0;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+footer a:hover {
+    color: #a8e6c1;
+}
+
+footer code {
+    background: #252a32;
+    padding: 3px 8px;
+    border: 1px solid #5a9d7a;
+    border-radius: 3px;
+    color: #7dd3a0;
+}
+
+.refresh-btn {
+    background: #252a32;
+    color: #7dd3a0;
+    border: 2px solid #5a9d7a;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 0.6em;
+    font-family: 'Press Start 2P', cursive;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    background: #5a9d7a;
+    color: #1a1d23;
+    border-color: #7dd3a0;
+    transform: translateY(-2px);
+}
+
+.refresh-btn:active {
+    transform: translateY(0);
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.05) 0px,
+        transparent 1px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.05) 3px
+    );
+    pointer-events: none;
+    z-index: 999;
+}
+`,
+
+            'neon-arcade': `/* Bot Sportello Arcade - Intense Neon Style */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Press Start 2P', cursive, monospace;
+    background: #0a0e0f;
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 49px,
+            rgba(0, 255, 100, 0.15) 49px,
+            rgba(0, 255, 100, 0.15) 50px
+        );
+    background-size: 50px 50px;
+    animation: gridMove 2s linear infinite;
+    min-height: 100vh;
+    padding: 40px 20px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+@keyframes gridMove {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 50px; }
+}
+
+@keyframes glow {
+    0%, 100% { text-shadow: 0 0 5px #00ff64, 0 0 10px #00ff64; }
+    50% { text-shadow: 0 0 10px #00ff64, 0 0 20px #00ff64, 0 0 30px #00ff64; }
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+header {
+    text-align: center;
+    color: #00ff64;
+    margin-bottom: 50px;
+    animation: glow 2s ease-in-out infinite;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.tagline {
+    font-size: 0.6em;
+    color: #00cc50;
+    margin-top: 10px;
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.project-card {
+    background: linear-gradient(135deg, #1a1d23 0%, #0f1419 100%);
+    border: 3px solid #00ff64;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 255, 100, 0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: #00ff64;
+    display: block;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 255, 100, 0.5);
+    border-color: #00ff88;
+}
+
+.project-icon {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 0 10px #00ff64);
+}
+
+.project-title {
+    font-size: 0.9em;
+    margin-bottom: 15px;
+    color: #00ff88;
+    line-height: 1.4;
+}
+
+.project-description {
+    color: #00cc50;
+    line-height: 1.6;
+    font-size: 0.5em;
+}
+
+footer {
+    text-align: center;
+    color: #00cc50;
+    margin-top: 60px;
+    font-size: 0.5em;
+    line-height: 1.8;
+}
+
+footer a {
+    color: #00ff64;
+    text-decoration: none;
+}
+
+.refresh-btn {
+    background: transparent;
+    color: #00ff64;
+    border: 2px solid #00ff64;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 0.6em;
+    font-family: 'Press Start 2P', cursive;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    background: #00ff64;
+    color: #0a0e0f;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15) 0px,
+        transparent 2px
+    );
+    pointer-events: none;
+    z-index: 999;
+}
+`,
+
+            'dark-minimal': `/* Dark Minimal Style */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0d0d0d;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 60px;
+}
+
+h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+.tagline {
+    font-size: 1em;
+    color: #888;
+    font-weight: 400;
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.project-card {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 30px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: #e0e0e0;
+    display: block;
+}
+
+.project-card:hover {
+    background: #222;
+    border-color: #444;
+    transform: translateY(-2px);
+}
+
+.project-icon {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+}
+
+.project-title {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: #fff;
+    font-weight: 600;
+}
+
+.project-description {
+    color: #999;
+    line-height: 1.6;
+    font-size: 0.9em;
+}
+
+footer {
+    text-align: center;
+    color: #666;
+    margin-top: 80px;
+    font-size: 0.9em;
+}
+
+footer a {
+    color: #888;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: #aaa;
+}
+
+.refresh-btn {
+    background: #1a1a1a;
+    color: #e0e0e0;
+    border: 1px solid #2a2a2a;
+    padding: 12px 24px;
+    cursor: pointer;
+    font-size: 0.9em;
+    border-radius: 6px;
+    margin-top: 20px;
+    transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+    background: #222;
+    border-color: #444;
+}
+`,
+
+            'retro-terminal': `/* Retro Terminal Style */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background: #000;
+    color: #0f0;
+    min-height: 100vh;
+    padding: 40px 20px;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 255, 0, 0.03) 0px,
+        transparent 2px
+    );
+    pointer-events: none;
+    z-index: 999;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    color: #0f0;
+    margin-bottom: 50px;
+    text-shadow: 0 0 5px #0f0;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+h1::before {
+    content: '> ';
+}
+
+.tagline {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.tagline::before {
+    content: '$ ';
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.project-card {
+    background: #001100;
+    border: 1px solid #0f0;
+    padding: 20px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: #0f0;
+    display: block;
+}
+
+.project-card:hover {
+    background: #002200;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+}
+
+.project-card::before {
+    content: '[';
+    margin-right: 5px;
+}
+
+.project-card::after {
+    content: ']';
+    margin-left: 5px;
+}
+
+.project-icon {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.project-title {
+    font-size: 1em;
+    margin-bottom: 10px;
+}
+
+.project-title::before {
+    content: '// ';
+    opacity: 0.6;
+}
+
+.project-description {
+    opacity: 0.8;
+    line-height: 1.5;
+    font-size: 0.85em;
+}
+
+footer {
+    text-align: center;
+    margin-top: 60px;
+    font-size: 0.85em;
+    opacity: 0.7;
+}
+
+footer a {
+    color: #0f0;
+    text-decoration: none;
+}
+
+.refresh-btn {
+    background: transparent;
+    color: #0f0;
+    border: 1px solid #0f0;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    margin-top: 20px;
+    transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+    background: #0f0;
+    color: #000;
+}
+`
+        };
 
         if (preset === 'custom') {
             if (!customDescription) {
@@ -3921,19 +5318,23 @@ Output ONLY the CSS code, no explanations.`;
             newCSS = stylePresets[preset];
         }
 
-        // Write the new CSS to page-theme.css locally
-        await fs.writeFile('./page-theme.css', newCSS);
+        // Write the new CSS to style.css
+        await fs.writeFile('./style.css', newCSS);
 
-        // Commit and push via GitHub API
-        const commitMessage = `update style to ${preset === 'custom' ? 'custom: ' + customDescription.substring(0, 50) : preset}`;
-        const result = await pushFileViaAPI('./page-theme.css', newCSS, commitMessage, 'main');
+        // Commit and push
+        await git.add('./style.css');
+        const status = await git.status();
+        const commitMessage = `update style to ${preset === 'custom' ? 'custom: ' + customDescription : preset}`;
+        await git.commit(commitMessage);
+
+        await pushWithAuth(status.current || 'main');
 
         const embed = new EmbedBuilder()
             .setTitle('🎨 Style Updated & Pushed')
             .setDescription(getBotResponse('success') + '\n\n**Note:** Changes pushed! Site will update in 1-2 minutes.')
             .addFields(
                 { name: 'Style', value: preset === 'custom' ? 'Custom AI-generated' : preset, inline: true },
-                { name: 'Commit', value: result ? result.substring(0, 7) : 'pushed', inline: true },
+                { name: 'File', value: 'style.css', inline: true },
                 { name: 'Deployment', value: '⏳ Deploying... Please be patient (1-2 min)', inline: false },
                 { name: 'Live Site', value: '[View Changes](https://bot.inference-arcade.com/)', inline: false }
             )

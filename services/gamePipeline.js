@@ -7,81 +7,26 @@ const { buildGame } = require('../agents/gameBuilder');
 const { testGame } = require('../agents/gameTester');
 const { documentGame, updateProjectMetadata } = require('../agents/gameScribe');
 const { writeBuildLog, getRecentPatternsSummary } = require('./buildLogs');
-const { Octokit } = require('@octokit/rest');
-const fs = require('fs').promises;
+const simpleGit = require('simple-git');
 const fsSync = require('fs');
+const { execSync } = require('child_process');
 
-// Initialize Octokit for GitHub API operations
-const octokit = new Octokit({
-    auth: process.env.GITHUB_TOKEN,
+// Find git binary - works on Railway (Linux) and macOS
+function findGitBinary() {
+    const candidates = ['/usr/bin/git', '/usr/local/bin/git', '/opt/homebrew/bin/git'];
+    try {
+        const gitPath = execSync('which git', { encoding: 'utf8' }).trim();
+        if (gitPath && fsSync.existsSync(gitPath)) return gitPath;
+    } catch (e) { /* continue to candidates */ }
+    for (const candidate of candidates) {
+        if (fsSync.existsSync(candidate)) return candidate;
+    }
+    return 'git';
+}
+
+const git = simpleGit({
+    binary: findGitBinary()
 });
-
-// Get existing file SHA for updates (needed by GitHub API)
-async function getExistingFileSha(repoPath, branch = 'main') {
-    const owner = process.env.GITHUB_REPO_OWNER;
-    const repo = process.env.GITHUB_REPO_NAME;
-    try {
-        const { data } = await octokit.repos.getContent({ owner, repo, path: repoPath, ref: branch });
-        if (Array.isArray(data)) throw new Error(`Path refers to a directory: ${repoPath}`);
-        return data.sha;
-    } catch (e) {
-        if (e.status === 404) return undefined; // New file
-        throw e;
-    }
-}
-
-// Commit multiple files via GitHub API in a single commit
-async function commitFilesViaGitHubAPI(files, commitMessage, branch = 'main') {
-    const owner = process.env.GITHUB_REPO_OWNER;
-    const repo = process.env.GITHUB_REPO_NAME;
-
-    if (!files || files.length === 0) {
-        return { success: false, error: 'No files to commit' };
-    }
-
-    console.log(`[GITHUB_API] Committing ${files.length} file(s): "${commitMessage}"`);
-
-    try {
-        // Get the current commit SHA for the branch
-        const { data: refData } = await octokit.git.getRef({ owner, repo, ref: `heads/${branch}` });
-        const currentCommitSha = refData.object.sha;
-
-        // Get the tree SHA from the current commit
-        const { data: commitData } = await octokit.git.getCommit({ owner, repo, commit_sha: currentCommitSha });
-        const baseTreeSha = commitData.tree.sha;
-
-        // Create blobs for each file and build tree entries
-        const treeEntries = [];
-        for (const file of files) {
-            const posixPath = file.path.replace(/\\/g, '/').replace(/^\.\//, '');
-            const base64Content = Buffer.from(file.content, 'utf8').toString('base64');
-
-            const { data: blobData } = await octokit.git.createBlob({
-                owner, repo, content: base64Content, encoding: 'base64'
-            });
-
-            treeEntries.push({ path: posixPath, mode: '100644', type: 'blob', sha: blobData.sha });
-        }
-
-        // Create new tree with our changes
-        const { data: newTree } = await octokit.git.createTree({ owner, repo, base_tree: baseTreeSha, tree: treeEntries });
-
-        // Create the commit
-        const { data: newCommit } = await octokit.git.createCommit({
-            owner, repo, message: commitMessage, tree: newTree.sha, parents: [currentCommitSha]
-        });
-
-        // Update the branch reference to point to new commit
-        await octokit.git.updateRef({ owner, repo, ref: `heads/${branch}`, sha: newCommit.sha });
-
-        console.log(`[GITHUB_API] Commit successful: ${newCommit.sha.substring(0, 7)}`);
-        return { success: true, sha: newCommit.sha, shortSha: newCommit.sha.substring(0, 7) };
-
-    } catch (error) {
-        console.error(`[GITHUB_API] Commit failed:`, error.message);
-        return { success: false, error: error.message };
-    }
-}
 
 /**
  * Run the complete game building pipeline
@@ -333,7 +278,7 @@ async function runGamePipeline({
 }
 
 /**
- * Commit game files via GitHub API (Railway-compatible, no local git needed)
+ * Commit game files to git
  * @param {object} result - Pipeline result
  * @param {string} customMessage - Optional custom commit message
  * @returns {boolean} Success
@@ -345,57 +290,69 @@ async function commitGameFiles(result, customMessage = null) {
     }
 
     try {
-        const filePaths = [
+        const files = [
             ...result.buildResult.files,
             'projectmetadata.json'
         ];
 
-        console.log('📦 Reading files for GitHub commit...');
+        console.log('📦 staging files for git commit...');
         if (global.logToGUI) {
-            global.logToGUI('info', '📦 Reading files for GitHub commit...', { files: filePaths });
+            global.logToGUI('info', '📦 Staging files for git commit...', { files });
         }
-
-        // Read file contents from disk
-        const filesToCommit = [];
-        for (const filePath of filePaths) {
-            try {
-                const content = await fs.readFile(filePath, 'utf8');
-                filesToCommit.push({ path: filePath, content });
-            } catch (readErr) {
-                console.warn(`⚠️ Could not read ${filePath}: ${readErr.message}`);
-            }
-        }
-
-        if (filesToCommit.length === 0) {
-            console.log('⚠️ No files to commit');
-            return true;
-        }
+        await git.add(files);
 
         // Create safe commit message (max 100 chars per user requirements)
         let message = customMessage || `add ${result.plan.metadata.title.toLowerCase()}`;
         if (message.length > 100) {
             message = message.substring(0, 97) + '...';
         }
-
-        console.log('💾 Committing via GitHub API...');
+        console.log('💾 creating git commit...');
         if (global.logToGUI) {
-            global.logToGUI('info', '💾 Committing via GitHub API...', { message });
+            global.logToGUI('info', '💾 Creating git commit...', { message });
+        }
+        
+        // Check git status before committing
+        const status = await git.status();
+        if (status.files.length === 0) {
+            console.log('⚠️  No changes to commit');
+            return true; // Not an error - just nothing to commit
         }
 
-        const commitResult = await commitFilesViaGitHubAPI(filesToCommit, message, 'main');
-
-        if (!commitResult.success) {
-            throw new Error(commitResult.error);
-        }
-
-        console.log(`✅ Committed and pushed: ${message} (${commitResult.shortSha})`);
+        await git.commit(message);
+        console.log(`✅ Committed: ${message}`);
         if (global.logToGUI) {
-            global.logToGUI('info', `✅ Committed: ${message}`, { sha: commitResult.shortSha });
+            global.logToGUI('info', `✅ Committed: ${message}`, { message });
         }
         return true;
-
+        
     } catch (error) {
-        console.error('❌ GitHub commit failed:', error.message);
+        console.error('❌ Git commit failed:', error.message);
+        
+        // Check if this is a HEAD parsing issue
+        if (error.message.includes('could not parse HEAD') || error.message.includes('bad object HEAD')) {
+            console.log('🔧 Attempting to fix corrupted git HEAD...');
+            try {
+                // Try to reset to remote
+                await git.fetch('origin');
+                await git.reset(['--hard', 'origin/main']);
+                console.log('✅ Git HEAD fixed, retrying commit...');
+                
+                // Retry the commit
+                await git.add(files);
+                let retryMessage = customMessage || `add ${result.plan.metadata.title.toLowerCase()}`;
+                if (retryMessage.length > 100) {
+                    retryMessage = retryMessage.substring(0, 97) + '...';
+                }
+                await git.commit(retryMessage);
+                console.log(`✅ Committed after HEAD fix: ${retryMessage}`);
+                return true;
+                
+            } catch (retryError) {
+                console.error('❌ Failed to fix git HEAD:', retryError.message);
+                return false;
+            }
+        }
+        
         return false;
     }
 }

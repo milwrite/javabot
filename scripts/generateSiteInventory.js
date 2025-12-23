@@ -23,6 +23,7 @@ async function generateSiteInventory() {
                     htmlFiles.push({
                         name: file,
                         size: Math.round(stats.size / 1024) + 'KB',
+                        created: stats.birthtime,
                         modified: stats.mtime.toISOString().split('T')[0],
                         title: project.title || file.replace('.html', '').replace(/-/g, ' '),
                         collection: project.collection || 'unsorted',
@@ -38,13 +39,8 @@ async function generateSiteInventory() {
             }
         }
         
-        // Sort by collection, then by name
-        htmlFiles.sort((a, b) => {
-            if (a.collection !== b.collection) {
-                return a.collection.localeCompare(b.collection);
-            }
-            return a.name.localeCompare(b.name);
-        });
+        // Sort by creation date (newest first)
+        htmlFiles.sort((a, b) => b.created - a.created);
         
         jsFiles.sort((a, b) => a.name.localeCompare(b.name));
         

@@ -226,7 +226,7 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 - **Effects**: CRT scanlines, flicker animations, glitch effects
 - **Visual effects**: Simple gradient background on main page, grid + scanlines on individual pages
 - **Project discovery**: `index.html` dynamically loads projects from `projectmetadata.json`
-- **Navigation**: All pages include standardized home link (`<a class="home-link" href="../index.html">← HOME</a>`)
+- **Navigation**: All pages include back button (`<a class="home-link" href="../index.html"></a>`) - **CSS shows arrow only via `::before` pseudo-element, any HTML content is hidden**
 - **Theme consistency**: Both index.html and page-theme.css use matching noir palette (enforced Dec 2025)
 
 **Project Metadata System**:
@@ -326,7 +326,7 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 1. User provides name + description
 2. AI generates HTML that links to `page-theme.css` (shared noir terminal theme)
 3. Prompt specifies: noir terminal colors, Courier Prime font, CSS classes to use
-4. Home link with `.home-link` class automatically included
+4. Back button with `.home-link` class automatically included (CSS displays arrow only)
 5. Mobile-responsive with touch controls for games
 6. **Layout hierarchy enforced**: Canvas → Controls → Start Button → Instructions
 7. **Economical spacing**: Tight margins (5-8px), smaller start buttons (0.85-0.95em)
@@ -345,6 +345,7 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - All new pages link to `page-theme.css` for uniform noir terminal aesthetic
 - Color palette: terminal green (#00ff41), red (#ff0000), cyan (#00ffff), black (#0a0a0a)
 - Available CSS classes: `.container`, `.card`, `.btn`, `.panel`, `.home-link`, `.mobile-controls`, etc.
+- **Back button**: Use `<a class="home-link" href="../index.html"></a>` - CSS hides all text and shows only `←` arrow via pseudo-element
 - Games MUST include `.mobile-controls` with touch buttons (Discord is mobile-forward)
 - **Economical design**: Small start buttons, tight spacing (5-8px margins)
 - **Layout hierarchy**: Controls → Start → Instructions (always in this order)

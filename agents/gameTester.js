@@ -1,7 +1,7 @@
 // agents/gameTester.js
 // Validation agent - checks generated code for quality and compliance
 
-const { callLLM, extractJSON } = require('../services/llmClient');
+const { callSonnet, extractJSON } = require('../services/llmClient');
 
 /**
  * Test generated game files
@@ -257,10 +257,10 @@ Return a JSON validation report.`
             }
         ];
 
-        const response = await callLLM({
+        const response = await callSonnet({
             role: 'tester',
             messages,
-            model: 'glm',
+            model: 'sonnet',
             temperature: 0.3, // Lower temp for more consistent validation
             onHeartbeat: onStatusUpdate
         });

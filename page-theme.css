@@ -155,54 +155,57 @@ body::before {
     100% { opacity: 0.97; }
 }
 
-/* Home link (top-left) - back arrow only, centered */
-.home-link {
+/* ========================================
+   BACK BUTTON (HOME LINK) - ARROW ONLY
+   ========================================
+   DETERMINISTIC STYLING: Always shows only "←" arrow
+   regardless of HTML content (← HOME, HOME, Back, etc.)
+   Uses pseudo-element to guarantee consistent display.
+   ======================================== */
+
+/* Base home-link styling - hides all text content */
+.home-link,
+a.home-link {
     position: fixed;
     top: 16px;
     left: 16px;
     z-index: 9999;
     width: 44px;
     height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     padding: 0;
     border-radius: 22px;
     border: 1px solid rgba(126, 200, 227, 0.35);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    white-space: nowrap;
     background: rgba(0, 0, 0, 0.4);
-    color: #7ec8e3; /* lock arrow color */
-}
-
-/* Wrapper variant with inner anchor: show text normally */
-.home-link a {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: auto;
-    height: auto;
-    text-indent: 0;
-    white-space: nowrap;
-    overflow: visible;
-    color: inherit;
-}
-
-/* Anchor-as-home-link: fixed size circle with centered arrow */
-a.home-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    text-indent: 0;
-    white-space: nowrap;
+    text-decoration: none;
+    /* CRITICAL: Hide any text content */
+    font-size: 0;
+    color: transparent;
     overflow: hidden;
-    color: #7ec8e3; /* lock arrow color */
-    background: rgba(0, 0, 0, 0.4);
 }
 
+/* Arrow displayed via pseudo-element - ALWAYS shows just ← */
+.home-link::before,
+a.home-link::before {
+    content: '←';
+    font-size: 20px;
+    line-height: 1;
+    color: #7ec8e3;
+    font-family: var(--font-family);
+}
+
+/* Wrapper variant with inner anchor - also hide text */
+.home-link a {
+    font-size: 0;
+    color: transparent;
+}
+
+/* Hover/focus states */
 .home-link:hover,
 .home-link:focus,
 a.home-link:hover,
@@ -212,11 +215,11 @@ a.home-link:focus {
     transform: translateY(-1px);
 }
 
-/* Ensure only the single arrow character is visible and centered */
-.home-link,
-a.home-link {
-    font-size: 20px;
-    line-height: 1;
+.home-link:hover::before,
+.home-link:focus::before,
+a.home-link:hover::before,
+a.home-link:focus::before {
+    color: #00ffff;
 }
 
 /* Unified page chrome for back button + title/subtitle */
@@ -235,6 +238,7 @@ a.home-link {
     z-index: 2;
 }
 
+/* Page header variant - same arrow-only display */
 .page-header .home-link,
 .page-header a.home-link {
     position: relative;
@@ -242,9 +246,11 @@ a.home-link {
     left: auto;
     width: var(--touch-target-min);
     height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
     min-height: var(--touch-target-min);
     border-radius: calc(var(--touch-target-min) / 2);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    /* Inherit arrow-only styling from base .home-link */
 }
 
 .page-title-group {
@@ -2645,8 +2651,15 @@ canvas {
     .home-link {
         top: 14px;
         left: 14px;
+        width: 36px;
+        height: 36px;
         min-height: 36px;
         min-width: 36px;
+    }
+
+    .home-link::before,
+    a.home-link::before {
+        font-size: 18px;
     }
 
     .main-content {
@@ -2932,8 +2945,15 @@ canvas {
     .home-link {
         top: 12px;
         left: 12px;
+        width: 32px;
+        height: 32px;
         min-height: 32px;
         min-width: 32px;
+    }
+
+    .home-link::before,
+    a.home-link::before {
+        font-size: 16px;
     }
 
     .header {
@@ -3116,8 +3136,15 @@ canvas {
     }
 
     .home-link {
+        width: 30px;
+        height: 30px;
         min-height: 30px;
         min-width: 30px;
+    }
+
+    .home-link::before,
+    a.home-link::before {
+        font-size: 14px;
     }
 
     .footer {

@@ -14,7 +14,7 @@ async function classifyRequest(prompt, options = {}) {
     const {
         // Default to keyword-based classification (no API call)
         useLLM = process.env.CLASSIFIER_USE_LLM === 'true',
-        model = process.env.CLASSIFIER_MODEL || 'z-ai/glm-4.6:exacto',
+        model = process.env.CLASSIFIER_MODEL || 'anthropic/claude-haiku-4.5',
         apiKey = process.env.OPENROUTER_API_KEY,
         timeoutMs = Number(process.env.CLASSIFIER_TIMEOUT_MS || 3500)
     } = options;

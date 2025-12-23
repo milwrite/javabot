@@ -1,8 +1,12 @@
+const Anthropic = require("@anthropic-ai/sdk");
+
 /**
  * Frog Whack-a-Mole Game
- * A whack-a-mole style game featuring frogs.
+ * A whack-a-mole style game featuring the wide-eyed surprised frog meme.
  * Frogs pop up randomly in a grid of holes, player clicks/taps them to score points.
  */
+
+const client = new Anthropic();
 
 /**
  * Game configuration and state management
@@ -65,13 +69,19 @@ async function initializeGame(difficulty = "normal") {
   console.log(`Grid Size: ${gameState.gridSize} holes`);
   console.log("---");
 
-  const startMessages = [
-    "Get ready! Those frogs are quick!",
-    "Time to whack some frogs!",
-    "Can you beat the high score?",
-    "Frogs incoming! Watch out!"
-  ];
-  const commentary = startMessages[Math.floor(Math.random() * startMessages.length)];
+  // Use Claude to generate fun game commentary
+  const message = await client.messages.create({
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: `Generate a fun, short (2-3 sentences) game start message for a whack-a-mole game with frogs at ${difficulty} difficulty. Be playful and encouraging!`,
+      },
+    ],
+  });
+
+  const commentary = message.content[0].text;
   console.log(`Game Commentary: ${commentary}`);
   console.log("---");
 }
@@ -168,13 +178,19 @@ async function endGame() {
   console.log(`🎯 Final Score: ${finalScore}`);
   console.log(`Difficulty: ${difficulty}`);
 
-  const endMessages = [
-    `Nice job! You whacked 'em good!`,
-    `Un-frog-gettable performance!`,
-    `Toad-ally awesome score!`,
-    `That was a hopping good time!`
-  ];
-  const endCommentary = endMessages[Math.floor(Math.random() * endMessages.length)];
+  // Use Claude to generate game end commentary
+  const message = await client.messages.create({
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: `Generate a fun, short (2-3 sentences) game end message for a whack-a-mole game with frogs. The player scored ${finalScore} points on ${difficulty} difficulty. Be encouraging and maybe make a frog-related pun!`,
+      },
+    ],
+  });
+
+  const endCommentary = message.content[0].text;
   console.log(`Game Commentary: ${endCommentary}`);
   console.log("---");
 }

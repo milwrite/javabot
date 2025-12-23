@@ -412,20 +412,6 @@
       "description": "Robot labor rights zine",
       "icon": "🤖",
       "collection": "stories-content"
-    },
-    "neo-noir-blizzard": {
-      "title": "Neo-Noir Blizzard",
-      "icon": "❄️",
-      "description": "atmospheric holiday snow viz",
-      "collection": "utilities-apps",
-      "hidden": false
-    },
-    "quantum-hoax-infomercial": {
-      "title": "Quantum Sock Sorter 3000",
-      "icon": "📺",
-      "description": "Noir sock sorter hoax",
-      "collection": "stories-content",
-      "hidden": false
     }
   }
 }
