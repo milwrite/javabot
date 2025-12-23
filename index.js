@@ -1088,19 +1088,7 @@ function validateInput(input, maxLength = 500) {
     return input.trim();
 }
 
-function cleanMarkdownCodeBlocks(content, type = 'html') {
-    const patterns = {
-        html: /```html\n?/g,
-        javascript: /```javascript\n?/g,
-        js: /```js\n?/g,
-        css: /```css\n?/g
-    };
-
-    return content
-        .replace(patterns[type] || /```\n?/g, '')
-        .replace(/```\n?/g, '')
-        .trim();
-}
+// cleanMarkdownCodeBlocks: using version from services/filesystem.js
 
 function ensureHomeLinkInHTML(htmlContent) {
     if (!htmlContent.includes('index.html') && !htmlContent.includes('Home</a>')) {
@@ -4565,9 +4553,16 @@ async function executeStyleUpdate(interaction, styleData) {
         const preset = styleData.preset;
         const customDescription = styleData.customDescription;
 
-        // Style presets
-        const stylePresets = {
-            'soft-arcade': `/* Bot Sportello Arcade - Softer Retro Style */
+        // Style presets imported from ./styles/presets.js (see line 26)
+        // Use getStylePreset(presetName) to retrieve CSS
+
+        if (preset !== 'custom' && !getStylePreset(preset)) {
+            await interaction.editReply(`Unknown preset: ${preset}. Available: soft-arcade, neon-arcade, dark-minimal, retro-terminal`);
+            return;
+        }
+
+        if (preset !== 'custom') {
+            // TODO_MARKER: This block replaces the large inline stylePresets object
 
 * {
     margin: 0;
