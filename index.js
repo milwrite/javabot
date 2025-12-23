@@ -1657,33 +1657,26 @@ async function writeFile(filePath, content) {
         const dir = path.dirname(filePath);
         await fs.mkdir(dir, { recursive: true });
 
-        // Write the file
+        // Write the file locally
         await fs.writeFile(filePath, content, 'utf8');
         console.log(`[WRITE_FILE] Written: ${filePath} (${content.length} bytes)`);
 
         // Log file creation to GUI dashboard
         logFileChange('create', filePath, content);
 
-        // Auto-commit and push so file is live before link is shared
-        console.log(`[WRITE_FILE] Auto-pushing to remote...`);
+        // Auto-push via GitHub API (no git CLI needed - Railway compatible)
+        console.log(`[WRITE_FILE] Auto-pushing to remote via GitHub API...`);
         const fileName = path.basename(filePath);
         const commitMessage = `add ${fileName}`;
 
-        await gitWithTimeout(() => git.add(filePath));
-        await gitWithTimeout(() => git.commit(commitMessage));
-        const status = await gitWithTimeout(() => git.status());
-        const currentBranch = status.current || 'main';
-
         try {
-            await pushWithAuth(currentBranch);
+            const sha = await pushFileViaAPI(filePath, content, commitMessage, 'main');
+            console.log(`[WRITE_FILE] Pushed: ${commitMessage} (${sha?.slice(0,7) || 'no-sha'})`);
         } catch (pushError) {
-            const error = errorLogger.log('WRITE_FILE_PUSH', pushError, { filePath, branch: currentBranch });
-            
-            // Surface push error
+            errorLogger.log('WRITE_FILE_PUSH', pushError, { filePath });
             throw pushError;
         }
 
-        console.log(`[WRITE_FILE] Auto-pushed: ${commitMessage}`);
         return `File written and pushed: ${filePath} (${content.length} bytes) - now live at https://bot.inference-arcade.com/${filePath}`;
     } catch (error) {
         console.error(`[WRITE_FILE] Error:`, error.message);
@@ -1781,21 +1774,20 @@ Return ONLY the complete updated file content. No explanations, no markdown code
         // Log file edit to GUI dashboard
         logFileChange('edit', filePath, updatedContent, currentContent);
 
-        // Auto-commit and push so changes are live before link is shared
-        console.log(`[EDIT_FILE] Auto-pushing to remote...`);
+        // Auto-push via GitHub API (no git CLI needed - Railway compatible)
+        console.log(`[EDIT_FILE] Auto-pushing to remote via GitHub API...`);
         const fileName = path.basename(filePath);
         const commitMessage = `update ${fileName}`;
 
-        await gitWithTimeout(() => git.add(filePath));
-        await gitWithTimeout(() => git.commit(commitMessage));
-        const status = await gitWithTimeout(() => git.status());
-        const currentBranch = status.current || 'main';
-
-        await pushWithAuth(currentBranch);
-
-        const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`[EDIT_FILE] Success + pushed: ${filePath} (${totalTime}s total)`);
-        return `File edited and pushed: ${filePath}. ${changeDescription} - now live`;
+        try {
+            const sha = await pushFileViaAPI(filePath, updatedContent, commitMessage, 'main');
+            const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            console.log(`[EDIT_FILE] Pushed: ${filePath} (${sha?.slice(0,7) || 'no-sha'}) in ${totalTime}s`);
+            return `File edited and pushed: ${filePath}. ${changeDescription} - now live`;
+        } catch (pushError) {
+            errorLogger.log('EDIT_FILE_PUSH', pushError, { filePath });
+            throw pushError;
+        }
     } catch (error) {
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
         console.error(`[EDIT_FILE] Error after ${totalTime}s:`, error.message);
