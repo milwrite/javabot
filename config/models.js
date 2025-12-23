@@ -27,6 +27,7 @@ const REASONING_CONFIG = {
     'google/gemini-2.5-pro': { effort: 'low' },
     // Models without reasoning support - graceful skip
     'perplexity/sonar': null,
+    'perplexity/sonar-deep-research': null,  // Uses internal reasoning
     'moonshotai/kimi-k2-0905:exacto': null,
     'qwen/qwen3-coder': null,
     'z-ai/glm-4.6:exacto': null,

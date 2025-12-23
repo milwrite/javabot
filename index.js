@@ -52,6 +52,7 @@ const { classifyRequest } = require('./services/requestClassifier');
 // Filesystem and Git tools (Phase 2 extraction)
 const { listFiles: listFilesService, fileExists: fileExistsService, readFile: readFileService, writeFile: writeFileService, editFile: editFileService, searchFiles: searchFilesService } = require('./services/filesystem');
 const { pushFileViaAPI } = require('./services/gitHelper');
+const { deepResearch, formatForDiscord: formatDeepResearchForDiscord, DEEP_RESEARCH_MODEL } = require('./services/deepResearch');
 
 // Modular imports (Phase 1 extraction)
 const { getBotResponse, botResponses } = require('./personality/botResponses');
@@ -2897,6 +2898,20 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             {
                 type: 'function',
                 function: {
+                    name: 'deep_research',
+                    description: 'Comprehensive multi-step research with citations and sources. Use when user explicitly says "deep research" or asks for thorough/comprehensive analysis. Takes 1-3 minutes.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            query: { type: 'string', description: 'Detailed research question or topic' }
+                        },
+                        required: ['query']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
                     name: 'set_model',
                     description: 'Switch the AI model used for responses. ZDR-compliant models: glm (default), kimi, kimi-fast, sonnet, gemini, qwen',
                     parameters: {
@@ -2925,7 +2940,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         let completedActions = 0; // Count primary actions (edits, creates, commits)
 
         // Read-only tools that don't modify state
-        const READ_ONLY_TOOLS = new Set(['list_files', 'file_exists', 'search_files', 'read_file', 'get_repo_status', 'git_log', 'web_search']);
+        const READ_ONLY_TOOLS = new Set(['list_files', 'file_exists', 'search_files', 'read_file', 'get_repo_status', 'git_log', 'web_search', 'deep_research']);
 
         while (iteration < MAX_ITERATIONS) {
             iteration++;
@@ -3137,6 +3152,10 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                     result = await webSearch(args.query);
                     // Store search results for context persistence
                     searchResults.push({ query: args.query, results: result });
+                } else if (functionName === 'deep_research') {
+                    const researchResult = await deepResearch(args.query);
+                    result = `## Deep Research Results\n\n${researchResult.content}\n\n### Sources\n${researchResult.citations.map((c, i) => `${i + 1}. ${c}`).join('\n')}`;
+                    searchResults.push({ query: args.query, results: result, type: 'deep' });
                 } else if (functionName === 'set_model') {
                     result = await setModel(args.model);
                 }
@@ -3314,6 +3333,14 @@ const commands = [
                 .setDescription('Question to ask')
                 .setRequired(true)),
 
+    new SlashCommandBuilder()
+        .setName('deep-research')
+        .setDescription('Comprehensive research with citations (takes 1-3 min)')
+        .addStringOption(option =>
+            option.setName('query')
+                .setDescription('What do you want to research in depth?')
+                .setRequired(true)),
+
 ];
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
@@ -3464,6 +3491,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'poll':
                 await handlePoll(interaction);
+                break;
+            case 'deep-research':
+                await handleDeepResearch(interaction);
                 break;
             default:
                 const unknownMsg = "Unknown command. Try /status to see available commands.";
@@ -4537,6 +4567,71 @@ async function handlePoll(interaction) {
         } catch (replyError) {
             console.error('Failed to send poll error reply:', replyError);
         }
+    }
+}
+
+// Deep Research handler - comprehensive research with citations
+async function handleDeepResearch(interaction) {
+    const query = interaction.options.getString('query');
+
+    try {
+        // Initial thinking message
+        await safeEditReply(interaction, `${getBotResponse('thinking')} diving deep into "${query.substring(0, 50)}${query.length > 50 ? '...' : ''}"...`);
+
+        // Progress callback for long research
+        const onProgress = async (message) => {
+            try {
+                await interaction.editReply(`${getBotResponse('thinking')} ${message}`);
+            } catch (e) {
+                // Ignore if interaction expired
+            }
+        };
+
+        // Execute deep research
+        const result = await deepResearch(query, { onProgress });
+
+        // Format for Discord
+        const { embed, fullText } = formatDeepResearchForDiscord(result, query);
+
+        // Save full response if too long for embed
+        if (fullText.length > 4000) {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `logs/responses/deep-research-${timestamp}.txt`;
+
+            await fs.mkdir('logs/responses', { recursive: true });
+
+            const fileContent = [
+                `Deep Research Query: ${query}`,
+                `Timestamp: ${new Date().toISOString()}`,
+                `Model: ${DEEP_RESEARCH_MODEL}`,
+                '',
+                '---',
+                '',
+                fullText,
+                '',
+                '---',
+                'Citations:',
+                ...result.citations.map((c, i) => `[${i + 1}] ${c}`)
+            ].join('\n');
+
+            await fs.writeFile(fileName, fileContent);
+
+            embed.setFooter({ text: `Full report saved to ${fileName}` });
+        }
+
+        await interaction.editReply({ embeds: [embed] });
+
+    } catch (error) {
+        console.error('Deep research error:', error);
+
+        let errorMsg = getBotResponse('errors');
+        if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+            errorMsg += ' Research timed out - try a more specific query.';
+        } else if (error.response?.status === 402) {
+            errorMsg += ' Insufficient API credits for deep research.';
+        }
+
+        await interaction.editReply(errorMsg);
     }
 }
 
