@@ -692,10 +692,10 @@ async function getFinalTextResponse(messages, tools, options = {}) {
         return response.data.choices[0].message;
     } catch (error) {
         logEvent('LLM', `Final response error: ${error.message}`);
-        // Provide fallback response if we had completed actions
+        // Provide in-character fallback response if we had completed actions
         if (completedActions > 0) {
             return {
-                content: `completed the requested actions (${completedActions} operations). check the live site for changes.`
+                content: `${getBotResponse('success')} changes are live at https://bot.inference-arcade.com/`
             };
         }
         return null;
@@ -2555,7 +2555,7 @@ Do not use web search or create new content - only edit existing files.`
             if (result) lastResponse = result;
         }
 
-        const content = lastResponse?.content || 'edit processed';
+        const content = lastResponse?.content || `${getBotResponse('success')} changes are live at https://bot.inference-arcade.com/`;
         return {
             text: content,
             searchContext: null
@@ -3106,10 +3106,24 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             logEvent('LLM', 'Empty response from AI - using fallback');
             console.error('Last response:', JSON.stringify(lastResponse, null, 2));
 
-            // Fallback based on what actions were completed
-            const fallbackText = completedActions > 0
-                ? `done - completed ${completedActions} action${completedActions > 1 ? 's' : ''}`
-                : 'processed your request';
+            // Fallback based on what actions were completed - use in-character response
+            let fallbackText = getBotResponse('success');
+
+            // Extract file URLs from tool results for context
+            const fileUrls = toolResults
+                .map(tr => tr.content)
+                .filter(c => c && c.includes('bot.inference-arcade.com'))
+                .map(c => {
+                    const match = c.match(/https:\/\/bot\.inference-arcade\.com\/[^\s)]+/);
+                    return match ? match[0] : null;
+                })
+                .filter(Boolean);
+
+            if (completedActions > 0 && fileUrls.length > 0) {
+                fallbackText += ` check it out: ${fileUrls[0]}`;
+            } else if (completedActions > 0) {
+                fallbackText += ` changes are live at https://bot.inference-arcade.com/`;
+            }
 
             return {
                 text: fallbackText,
@@ -3722,9 +3736,8 @@ async function handleMentionAsync(message) {
                                 return; // Success - exit
                             }
 
-                            // Tools executed but AI didn't provide text - generate completion message
-                            const toolsExecuted = results.length > 0 ? results.map(r => r.tool_call_id || 'tool').join(', ') : 'edits';
-                            const fallbackMsg = `✓ done - made the requested changes`;
+                            // Tools executed but AI didn't provide text - use in-character completion message
+                            const fallbackMsg = `${getBotResponse('success')} changes are live at https://bot.inference-arcade.com/`;
                             await safeEditReply(thinkingMsg, fallbackMsg);
                             addToHistory(username, content, false);
                             addToHistory('Bot Sportello', fallbackMsg, true);
