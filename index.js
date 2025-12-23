@@ -2797,7 +2797,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'deep_research',
-                    description: 'Comprehensive multi-step research with citations and sources. Use when user explicitly says "deep research" or asks for thorough/comprehensive analysis. Takes 1-3 minutes.',
+                    description: 'Comprehensive multi-step research with citations and sources. ONLY use when user explicitly says the words "deep research" in their message. Do NOT use for general research questions. Takes 1-3 minutes.',
                     parameters: {
                         type: 'object',
                         properties: {
