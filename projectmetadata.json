@@ -412,6 +412,18 @@
       "description": "Robot labor rights zine",
       "icon": "🤖",
       "collection": "stories-content"
+    },
+    "neo-noir-blizzard": {
+      "title": "Neo Noir Blizzard",
+      "description": "Neo Noir Blizzard noir project",
+      "icon": "🌐",
+      "collection": "unsorted"
+    },
+    "quantum-hoax-infomercial": {
+      "title": "Quantum Hoax Infomercial",
+      "description": "Quantum Hoax Infomercial noir project",
+      "icon": "🌐",
+      "collection": "unsorted"
     }
   }
 }

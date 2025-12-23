@@ -1066,40 +1066,7 @@ Be concise and helpful. Context fetched directly from Discord channel history.`;
 // Mutable system prompt - can be changed at runtime
 let SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT;
 
-const botResponses = {
-    confirmations: [
-        "yeah man, i got you...",
-        "right on, let me handle that...",
-        "cool cool, working on it...",
-        "alright dude, give me a sec...",
-    ],
-
-    errors: [
-        "oh... yeah something went sideways there",
-        "hmm that's weird man, let me check what happened",
-        "ah yeah... that didn't work out, my bad",
-        "well that's not right... give me a minute",
-    ],
-
-    success: [
-        "nice, that worked out pretty smooth",
-        "right on, all done man",
-        "yeah there we go, all set",
-        "cool, got it all sorted for you",
-    ],
-
-    thinking: [
-        "let me think about this for a sec...",
-        "hmm yeah give me a moment...",
-        "hold on, processing this...",
-        "just a sec man, checking that out...",
-    ]
-};
-
-function getBotResponse(category) {
-    const responses = botResponses[category];
-    return responses[Math.floor(Math.random() * responses.length)];
-}
+// Note: botResponses and getBotResponse are imported from ./personality/botResponses.js
 
 // Clean and format bot responses for better markdown rendering
 function cleanBotResponse(response) {
