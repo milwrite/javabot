@@ -3241,7 +3241,7 @@ async function getGuildIdFromChannel(channelId) {
     }
 }
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
     console.log(`Bot is ready as ${client.user.tag}`);
     console.log(`Monitoring channels: ${CHANNEL_IDS.length > 0 ? CHANNEL_IDS.join(', ') : 'ALL CHANNELS'}`);
     console.log(`Message Content Intent enabled: ${client.options.intents.has(GatewayIntentBits.MessageContent)}`);
@@ -3302,9 +3302,6 @@ client.once('ready', async () => {
         // Don't exit - commands might still work despite registration error
         console.log('⚠️ Continuing without registered commands (will attempt to use cached commands)');
     }
-
-    // Initialize Git remote URL with current token
-    await initializeGitRemote();
 
     // Initialize Discord context manager (replaces agents.md)
     contextManager = new DiscordContextManager(client);
