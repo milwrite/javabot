@@ -19,7 +19,7 @@ const { classifyRequest } = require('./services/requestClassifier');
 // Filesystem and Git tools (Phase 2 extraction)
 const { listFiles: listFilesService, fileExists: fileExistsService, readFile: readFileService, writeFile: writeFileService, editFile: editFileService, searchFiles: searchFilesService } = require('./services/filesystem');
 const { pushFileViaAPI } = require('./services/gitHelper');
-const { deepResearch, formatForDiscord: formatDeepResearchForDiscord, DEEP_RESEARCH_MODEL } = require('./services/deepResearch');
+const { deepResearch, formatForDiscord: formatDeepResearchForDiscord, generateReportHTML, DEEP_RESEARCH_MODEL } = require('./services/deepResearch');
 
 // Modular imports (Phase 1 extraction)
 const { getBotResponse, botResponses } = require('./personality/botResponses');
@@ -4489,34 +4489,24 @@ async function handleDeepResearch(interaction) {
         // Execute deep research
         const result = await deepResearch(query, { onProgress });
 
-        // Format for Discord
-        const { embed, fullText } = formatDeepResearchForDiscord(result, query);
+        // Generate HTML report and push to GitHub
+        const { html, slug } = generateReportHTML(result, query);
+        const reportPath = `src/search/${slug}.html`;
+        const liveUrl = `https://bot.inference-arcade.com/${reportPath}`;
 
-        // Save full response if too long for embed
-        if (fullText.length > 4000) {
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const fileName = `logs/responses/deep-research-${timestamp}.txt`;
-
-            await fs.mkdir('logs/responses', { recursive: true });
-
-            const fileContent = [
-                `Deep Research Query: ${query}`,
-                `Timestamp: ${new Date().toISOString()}`,
-                `Model: ${DEEP_RESEARCH_MODEL}`,
-                '',
-                '---',
-                '',
-                fullText,
-                '',
-                '---',
-                'Citations:',
-                ...result.citations.map((c, i) => `[${i + 1}] ${c}`)
-            ].join('\n');
-
-            await fs.writeFile(fileName, fileContent);
-
-            embed.setFooter({ text: `Full report saved to ${fileName}` });
+        try {
+            await pushFileViaAPI(reportPath, html, `add deep research: ${query.substring(0, 50)}`, 'main');
+            console.log(`[DEEP_RESEARCH] Pushed report: ${reportPath}`);
+        } catch (pushError) {
+            console.error('[DEEP_RESEARCH] Push failed:', pushError.message);
         }
+
+        // Format for Discord
+        const { embed } = formatDeepResearchForDiscord(result, query);
+
+        // Add link to full report
+        embed.setURL(liveUrl);
+        embed.setFooter({ text: `full report → ${liveUrl}` });
 
         await interaction.editReply({ embeds: [embed] });
 

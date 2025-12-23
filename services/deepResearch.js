@@ -147,10 +147,126 @@ function formatForDiscord(result, query) {
     };
 }
 
+/**
+ * Generate a slug from query for filename
+ * @param {string} query - Research query
+ * @returns {string} - URL-safe slug
+ */
+function generateSlug(query) {
+    return query
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .substring(0, 50)
+        .replace(/-+$/, '');
+}
+
+/**
+ * Convert markdown-ish content to HTML
+ * @param {string} content - Raw content with markdown
+ * @returns {string} - HTML formatted content
+ */
+function contentToHTML(content) {
+    return content
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+        .split(/\n\n+/)
+        .map(p => p.trim())
+        .filter(p => p)
+        .map(p => p.startsWith('<h') ? p : `<p>${p.replace(/\n/g, '<br>')}</p>`)
+        .join('\n');
+}
+
+/**
+ * Generate minimal HTML report page
+ * @param {object} result - Result from deepResearch()
+ * @param {string} query - Original query
+ * @returns {object} - { html: string, slug: string, filename: string }
+ */
+function generateReportHTML(result, query) {
+    const slug = generateSlug(query);
+    const displayDate = new Date().toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+    });
+
+    const citationsHTML = result.citations.length > 0
+        ? `<section class="sources">
+            <h2>sources</h2>
+            <ol>${result.citations.map(url =>
+                `<li><a href="${url}">${url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}</a></li>`
+            ).join('')}</ol>
+        </section>`
+        : '';
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${query.substring(0, 60)}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #111;
+            color: #999;
+            line-height: 1.6;
+            padding: 40px 20px 60px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+        a { color: #888; }
+        a:hover { color: #ccc; }
+        .back { display: inline-block; margin-bottom: 30px; font-size: 13px; text-decoration: none; }
+        .back:before { content: '← '; }
+        header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        header h1 { color: #ccc; font-size: 20px; font-weight: normal; margin-bottom: 8px; }
+        header .meta { font-size: 12px; color: #555; }
+        article { color: #aaa; }
+        article h2 { color: #999; font-size: 15px; font-weight: normal; margin: 30px 0 12px; text-transform: lowercase; }
+        article h3 { color: #777; font-size: 14px; font-weight: normal; margin: 20px 0 10px; }
+        article p { margin-bottom: 16px; }
+        article strong { color: #ccc; font-weight: normal; }
+        article em { font-style: normal; color: #888; }
+        .sources { margin-top: 50px; padding-top: 25px; border-top: 1px solid #333; }
+        .sources h2 { color: #666; font-size: 13px; margin-bottom: 15px; }
+        .sources ol { list-style: none; counter-reset: src; }
+        .sources li { font-size: 12px; margin: 6px 0; counter-increment: src; }
+        .sources li:before { content: counter(src) '. '; color: #444; }
+        footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 11px; color: #444; }
+        @media (max-width: 600px) {
+            body { padding: 25px 15px 40px; }
+            header h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <a class="back" href="../../index.html">back</a>
+    <header>
+        <h1>${query}</h1>
+        <div class="meta">researched ${displayDate} · dug up by sportello</div>
+    </header>
+    <article>
+        ${contentToHTML(result.content)}
+    </article>
+    ${citationsHTML}
+    <footer>filed under: things worth knowing</footer>
+</body>
+</html>`;
+
+    return { html, slug, filename: `src/search/${slug}.html` };
+}
+
 module.exports = {
     deepResearch,
     formatForDiscord,
     extractCitations,
+    generateReportHTML,
+    generateSlug,
     DEEP_RESEARCH_MODEL,
     DEEP_RESEARCH_TIMEOUT
 };
