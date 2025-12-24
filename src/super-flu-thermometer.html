@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Flu Warning - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        :root {
+            --noir-bg: #0a0a0a;
+            --noir-accent: #7ec8e3;
+            --noir-header: #00ffff;
+            --noir-danger: #ff0000;
+            --noir-font: 'Courier Prime', Courier, monospace;
+        }
+
+        body {
+            background-color: var(--noir-bg);
+            color: var(--noir-accent);
+            font-family: var(--noir-font);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Layout Container */
+        .vis-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        /* Header */
+        h1 {
+            color: var(--noir-header);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-align: center;
+            border-bottom: 1px solid var(--noir-accent);
+            padding-bottom: 10px;
+            width: 100%;
+        }
+
+        /* Thermometer Component */
+        .thermometer-wrapper {
+            position: relative;
+            width: 120px;
+            height: 350px;
+            display: flex;
+            justify-content: center;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .thermometer-glass {
+            width: 40px;
+            height: 300px;
+            background: #1a1a1a;
+            border: 2px solid var(--noir-accent);
+            border-radius: 20px 20px 0 0;
+            position: relative;
+            z-index: 2;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .thermometer-bulb {
+            width: 60px;
+            height: 60px;
+            background: #1a1a1a;
+            border: 2px solid var(--noir-accent);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 0;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(126, 200, 227, 0.2);
+        }
+
+        .mercury-stem {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            background: linear-gradient(to top, var(--noir-accent), var(--noir-header));
+            border-radius: 6px 6px 0 0;
+            height: 0%; /* Animated via JS */
+            transition: height 3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2;
+        }
+
+        .mercury-bulb {
+            width: 40px;
+            height: 40px;
+            background: var(--noir-accent);
+            border-radius: 50%;
+            z-index: 4;
+            transition: background-color 3s ease;
+        }
+
+        /* Ticks */
+        .ticks {
+            position: absolute;
+            right: -30px;
+            top: 20px;
+            height: 260px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: var(--noir-header);
+            font-size: 0.7rem;
+        }
+
+        .tick {
+            width: 10px;
+            height: 1px;
+            background: var(--noir-header);
+        }
+
+        /* Status Panel */
+        .status-panel {
+            width: 100%;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid var(--noir-accent);
+            padding: 15px;
+            font-family: var(--noir-font);
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .temp-readout {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--noir-header);
+        }
+
+        .alert-text {
+            color: var(--noir-accent);
+            margin-top: 5px;
+            font-size: 0.9rem;
+            animation: blink 2s infinite;
+        }
+
+        /* Easter Egg */
+        .easter-egg {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border: 2px dashed var(--noir-danger);
+            color: var(--noir-danger);
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            background: rgba(255, 0, 0, 0.05);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .easter-egg.active {
+            display: block;
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .easter-egg h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        /* Canvas Snow */
+        #snow-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let taps pass through */
+            z-index: 1;
+        }
+
+        /* Animations */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .glitch-text {
+            animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+            display: none;
+        }
+
+        .easter-egg.active .glitch-text {
+            display: inline-block;
+        }
+
+        /* Mobile Interaction Hint */
+        .tap-hint {
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Breakpoints */
+        @media (max-width: 480px) {
+            .thermometer-wrapper {
+                height: 300px;
+            }
+            .thermometer-glass {
+                height: 250px;
+            }
+            .ticks {
+                right: -25px;
+                font-size: 0.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link" aria-label="Back to home"></a>
+
+    <canvas id="snow-canvas"></canvas>
+
+    <main class="vis-container">
+        <header>
+            <h1>Super Flu Warning</h1>
+            <div class="subtitle">Global Viral Tracking System</div>
+        </header>
+
+        <!-- Thermometer Visualization -->
+        <div class="thermometer-wrapper" id="thermo-trigger" role="button" aria-label="Thermometer. Tap to reveal hidden data." tabindex="0">
+            <div class="thermometer-glass">
+                <div class="mercury-stem" id="mercury"></div>
+                <div class="ticks">
+                    <div class="tick"></div>
+                    <div class="tick"></div>
+                    <div class="tick"></div>
+                    <div class="tick"></div>
+                    <div class="tick"></div>
+                </div>
+            </div>
+            <div class="thermometer-bulb">
+                <div class="mercury-bulb" id="bulb"></div>
+            </div>
+        </div>
+
+        <div class="tap-hint">Tap thermometer to scan</div>
+
+        <!-- Status Panel -->
+        <div class="status-panel">
+            <div class="temp-readout" id="temp-display">--.-°C</div>
+            <div class="alert-text" id="status-text">INITIALIZING...</div>
+        </div>
+
+        <!-- Hidden Easter Egg -->
+        <div class="easter-egg" id="secret-panel">
+            <h2><span class="glitch-text">⚠</span> Z WITHDRAWAL <span class="glitch-text">⚠</span></h2>
+            <p>Mutant strain detected. Thermal limits exceeded. Withdrawal of Zone Z personnel recommended immediately.</p>
+            <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.7;">ID: BOT-99-ALPHA</p>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elements
+            const mercury = document.getElementById('mercury');
+            const bulb = document.getElementById('bulb');
+            const tempDisplay = document.getElementById('temp-display');
+            const statusText = document.getElementById('status-text');
+            const thermoTrigger = document.getElementById('thermo-trigger');
+            const secretPanel = document.getElementById('secret-panel');
+
+            // State
+            let isRevealed = false;
+            let currentTemp = 36.5;
+            const targetTemp = 42.0; // Critical level
+            const maxTemp = 45.0;
+
+            // 1. Thermometer Animation Sequence
+            function startSimulation() {
+                statusText.textContent = "SCANNING ENVIRONMENT...";
+                
+                // Animate Mercury Rise
+                setTimeout(() => {
+                    mercury.style.height = '90%'; // Visual height
+                    bulb.style.backgroundColor = '#ff0000'; // Turn red
+                    mercury.style.background = 'linear-gradient(to top, #ff0000, #ffaa00)';
+                }, 500);
+
+                // Animate Numbers
+                const interval = setInterval(() => {
+                    currentTemp += 0.1;
+                    if (currentTemp >= targetTemp) {
+                        currentTemp = targetTemp;
+                        clearInterval(interval);
+                        statusText.textContent = "CRITICAL WARNING";
+                        statusText.style.color = "#ff0000";
+                    }
+                    tempDisplay.textContent = currentTemp.toFixed(1) + "°C";
+                }, 100);
+            }
+
+            // Start on load
+            startSimulation();
+
+            // 2. Tap-Reveal Interaction (Easter Egg)
+            function toggleSecret() {
+                isRevealed = !isRevealed;
+                
+                if (isRevealed) {
+                    secretPanel.classList.add('active');
+                    statusText.textContent = "CLASSIFIED DATA ACCESSED";
+                    // Vibration feedback for mobile
+                    if (navigator.vibrate) navigator.vibrate(50);
+                } else {
+                    secretPanel.classList.remove('active');
+                    statusText.textContent = "CRITICAL WARNING";
+                }
+            }
+
+            // Touch/Click Handler
+            thermoTrigger.addEventListener('click', toggleSecret);
+            // Keyboard accessibility
+            thermoTrigger.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleSecret();
+                }
+            });
+
+            // 3. Winter Snow Particle Effect (Canvas)
+            const canvas = document.getElementById('snow-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            const particles = [];
+
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            }
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                    this.y = Math.random() * height; // Start scattered
+                }
+
+                reset() {
+                    this.x = Math.random() * width;
+                    this.y = -10;
+                    this.speed = Math.random() * 1 + 0.5;
+                    this.size = Math.random() * 2 + 1;
+                    this.opacity = Math.random() * 0.5 + 0.1;
+                }
+
+                update() {
+                    this.y += this.speed;
+                    if (this.y > height) {
+                        this.reset();
+                    }
+                }
+
+                draw() {
+                    ctx.fillStyle = `rgba(126, 200, 227, ${this.opacity})`; // Noir accent color
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            function initSnow() {
+                resize();
+                for (let i = 0; i < 50; i++) {
+                    particles.push(new Particle());
+                }
+                animateSnow();
+            }
+
+            function animateSnow() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                requestAnimationFrame(animateSnow);
+            }
+
+            window.addEventListener('resize', resize);
+            initSnow();
+        });
+    </script>
+</body>
+</html>

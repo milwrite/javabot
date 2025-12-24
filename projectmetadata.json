@@ -431,6 +431,13 @@
       "description": "ambient sleep mixer",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "super-flu-thermometer": {
+      "title": "Super Flu Warning",
+      "icon": "📈",
+      "description": "animated flu thermometer viz",
+      "collection": "utilities-apps",
+      "hidden": false
     }
   }
 }
