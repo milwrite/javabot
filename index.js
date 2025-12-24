@@ -35,6 +35,9 @@ const SITE_CONFIG = require('./site-config.js');
 const BotGUIServer = require('./scripts/gui-server.js');
 let guiServer = null;
 
+// PostgreSQL logging service
+const postgres = require('./services/postgres');
+
 // Validate required environment variables
 const REQUIRED_ENV_VARS = [
     'DISCORD_TOKEN',
@@ -98,6 +101,11 @@ if (!process.env.NO_GUI) {
     });
 }
 
+// Initialize PostgreSQL logging (non-blocking)
+postgres.init().catch(err => {
+    console.error('[POSTGRES] Init failed:', err.message);
+});
+
 // Configuration constants
 const CONFIG = {
     FILE_READ_LIMIT: 5000,
@@ -109,9 +117,8 @@ const CONFIG = {
     GIT_TIMEOUT: 30000,
     PUSH_TIMEOUT: 60000,
     API_TIMEOUT: 60000,
-    // Discord Context Settings (replaces agents.md)
-    DISCORD_FETCH_LIMIT: 5,       // Max messages to fetch per Discord API request
-    DISCORD_CONTEXT_LIMIT: 5,     // Messages to include in LLM context
+    DISCORD_FETCH_LIMIT: 10,       // Max messages to fetch per Discord API request
+    DISCORD_CONTEXT_LIMIT: 10,     // Messages to include in LLM context
     DISCORD_CACHE_TTL: 60000,     // Cache duration (1 minute)
     INCLUDE_REACTIONS: true       // Add reaction data to context
 };
@@ -196,16 +203,34 @@ function logToGUI(level, message, data = {}) {
 // Make logToGUI available globally for other modules
 global.logToGUI = logToGUI;
 
-function logToolCall(toolName, args, result, error = null) {
+function logToolCall(toolName, args, result, error = null, options = {}) {
     if (guiServer) {
         guiServer.logToolCall(toolName, args, result, error);
     }
+    // Log to PostgreSQL (fire-and-forget)
+    postgres.logToolCall({
+        toolName,
+        args,
+        result: typeof result === 'string' ? result : JSON.stringify(result),
+        error: error ? String(error) : null,
+        durationMs: options.durationMs,
+        iteration: options.iteration,
+        channelId: options.channelId,
+        userId: options.userId
+    });
 }
 
-function logFileChange(action, path, content = null, oldContent = null) {
+function logFileChange(action, path, content = null, oldContent = null, channelId = null) {
     if (guiServer) {
         guiServer.logFileChange(action, path, content, oldContent);
     }
+    // Log to PostgreSQL (fire-and-forget)
+    postgres.logFileChange({
+        action,
+        path,
+        contentPreview: content ? content.slice(0, 500) : null,
+        channelId
+    });
 }
 
 function startAgentLoop(command, user, channel) {
@@ -221,9 +246,21 @@ function updateAgentLoop(iteration, toolsUsed, thinking = null) {
     }
 }
 
-function endAgentLoop(result, error = null) {
+function endAgentLoop(result, error = null, options = {}) {
     if (guiServer) {
         guiServer.endAgentLoop(result, error);
+    }
+    // Log to PostgreSQL (fire-and-forget)
+    if (options.command) {
+        postgres.logAgentLoop({
+            command: options.command,
+            toolsUsed: options.toolsUsed || [],
+            finalResult: result,
+            status: error ? 'error' : 'completed',
+            durationMs: options.durationMs,
+            userId: options.userId,
+            channelId: options.channelId
+        });
     }
 }
 
@@ -2936,6 +2973,50 @@ const commands = [
                 .setDescription('What do you want to research in depth?')
                 .setRequired(true)),
 
+    new SlashCommandBuilder()
+        .setName('logs')
+        .setDescription('Query bot activity logs and statistics')
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('recent')
+                .setDescription('Show recent events')
+                .addStringOption(option =>
+                    option.setName('type')
+                        .setDescription('Event type to filter')
+                        .setRequired(false)
+                        .addChoices(
+                            { name: 'Mentions', value: 'mention' },
+                            { name: 'Tool Calls', value: 'tool_call' },
+                            { name: 'File Changes', value: 'file_change' },
+                            { name: 'Errors', value: 'error' },
+                            { name: 'All', value: 'all' }
+                        ))
+                .addIntegerOption(option =>
+                    option.setName('limit')
+                        .setDescription('Number of results (default: 10, max: 25)')
+                        .setRequired(false)))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('errors')
+                .setDescription('Show error summary')
+                .addStringOption(option =>
+                    option.setName('period')
+                        .setDescription('Time period')
+                        .setRequired(false)
+                        .addChoices(
+                            { name: 'Last hour', value: '1h' },
+                            { name: 'Last 24 hours', value: '24h' },
+                            { name: 'Last 7 days', value: '7d' }
+                        )))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('stats')
+                .setDescription('Show activity statistics')
+                .addIntegerOption(option =>
+                    option.setName('days')
+                        .setDescription('Number of days (default: 7)')
+                        .setRequired(false))),
+
 ];
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
@@ -3073,6 +3154,9 @@ client.on('interactionCreate', async interaction => {
             case 'deep-research':
                 await handleDeepResearch(interaction);
                 break;
+            case 'logs':
+                await handleLogs(interaction);
+                break;
             default:
                 const unknownMsg = "Unknown command. Try /status to see available commands.";
                 if (interaction.deferred) {
@@ -3171,6 +3255,14 @@ async function handleMentionAsync(message) {
         const username = message.author.username;
 
         logEvent('MENTION', `${username}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`);
+
+        // Log mention to PostgreSQL
+        postgres.logMention({
+            userId: message.author.id,
+            username,
+            channelId: message.channel.id,
+            content
+        });
 
         // Send context-aware thinking message
         console.log(`[MENTION] Sending thinking response to ${username}...`);
@@ -4191,6 +4283,95 @@ async function handlePoll(interaction) {
         } catch (replyError) {
             console.error('Failed to send poll error reply:', replyError);
         }
+    }
+}
+
+// Logs command handler - query PostgreSQL logs
+async function handleLogs(interaction) {
+    if (!postgres.enabled()) {
+        await interaction.editReply('database logging is not configured, man. need DATABASE_URL in environment.');
+        return;
+    }
+
+    const subcommand = interaction.options.getSubcommand();
+
+    try {
+        switch (subcommand) {
+            case 'recent': {
+                const eventType = interaction.options.getString('type') || 'all';
+                const limit = Math.min(interaction.options.getInteger('limit') || 10, 25);
+
+                const events = await postgres.getRecentEvents(eventType, limit);
+
+                if (events.length === 0) {
+                    await interaction.editReply(`no ${eventType === 'all' ? '' : eventType + ' '}events found, man.`);
+                    return;
+                }
+
+                const embed = new EmbedBuilder()
+                    .setColor('#00ff41')
+                    .setTitle(`Recent ${eventType === 'all' ? 'Events' : eventType.replace('_', ' ')}`)
+                    .setDescription(events.map((e) => {
+                        const time = new Date(e.timestamp).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit' });
+                        const user = e.username ? `@${e.username}` : '';
+                        const preview = e.payload?.content?.slice(0, 50) || e.payload?.tool || e.payload?.message?.slice(0, 50) || '';
+                        return `\`${time}\` ${e.event_type} ${user} ${preview}`;
+                    }).join('\n').slice(0, 4000))
+                    .setFooter({ text: `showing ${events.length} events` })
+                    .setTimestamp();
+
+                await interaction.editReply({ embeds: [embed] });
+                break;
+            }
+
+            case 'errors': {
+                const period = interaction.options.getString('period') || '24h';
+                const stats = await postgres.getErrorStats(period);
+
+                const periodLabels = { '1h': 'Last Hour', '24h': 'Last 24 Hours', '7d': 'Last 7 Days' };
+
+                const embed = new EmbedBuilder()
+                    .setColor(stats.total > 0 ? '#ff0000' : '#00ff41')
+                    .setTitle(`Error Summary (${periodLabels[period]})`)
+                    .addFields(
+                        { name: 'Total Errors', value: `${stats.total}`, inline: true },
+                        { name: 'Critical', value: `${stats.critical}`, inline: true },
+                        { name: 'Auth', value: `${stats.auth}`, inline: true },
+                        { name: 'Network', value: `${stats.network}`, inline: true },
+                        { name: 'Git', value: `${stats.git}`, inline: true },
+                        { name: 'Discord', value: `${stats.discord}`, inline: true }
+                    )
+                    .setTimestamp();
+
+                await interaction.editReply({ embeds: [embed] });
+                break;
+            }
+
+            case 'stats': {
+                const days = interaction.options.getInteger('days') || 7;
+                const stats = await postgres.getDailyStats(days);
+
+                const embed = new EmbedBuilder()
+                    .setColor('#00ffff')
+                    .setTitle(`Activity Statistics (${days} days)`)
+                    .addFields(
+                        { name: 'Total Events', value: `${stats.total}`, inline: true },
+                        { name: 'Mentions', value: `${stats.mentions}`, inline: true },
+                        { name: 'Tool Calls', value: `${stats.toolCalls}`, inline: true },
+                        { name: 'File Changes', value: `${stats.fileChanges}`, inline: true },
+                        { name: 'Agent Loops', value: `${stats.agentLoops}`, inline: true },
+                        { name: 'Errors', value: `${stats.errors}`, inline: true },
+                        { name: 'Unique Users', value: `${stats.uniqueUsers}`, inline: true }
+                    )
+                    .setTimestamp();
+
+                await interaction.editReply({ embeds: [embed] });
+                break;
+            }
+        }
+    } catch (error) {
+        console.error('[LOGS] Error:', error);
+        await interaction.editReply(getBotResponse('errors') + ' Failed to query logs.');
     }
 }
 
