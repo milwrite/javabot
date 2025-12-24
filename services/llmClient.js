@@ -3,6 +3,7 @@
 
 const axios = require('axios');
 const axiosRetry = require('axios-retry').default;
+const { TEMPLATE_PROMPT } = require('../config/templates');
 
 // Configure axios with retry logic
 axiosRetry(axios, {
@@ -74,37 +75,37 @@ RULES: Only arcade-games need d-pad/mobile controls. Letters/stories use typogra
 
 TASK: Generate complete HTML from Architect plan. No TODOs/placeholders.
 
-UNIVERSAL: Valid HTML, ../page-theme.css link, viewport meta, .home-link nav, noir colors, responsive 320-768px
+${TEMPLATE_PROMPT}
 
 BY TYPE:
-- arcade-game: Canvas ≤400px, .mobile-controls d-pad, touchstart+preventDefault, game loop/scoring
-- letter: Typography focus, typewriter reveal optional, NO game controls
-- recipe: Ingredients list, step-by-step, timing info, NO game controls
-- infographic: Charts/graphs, tap for details, NO game controls
-- story: Narrative scroll/paginated, atmospheric, NO game controls
-- log: Structured lists/tables, categorized, NO game controls
-- parody: Humorous mockups, playful, NO game controls
-- utility: Forms/inputs, localStorage persistence, NO game controls
-- visualization: Interactive charts, data input, NO game controls
+- arcade-game: Canvas ≤400px, include mobile-controls from template, game loop/scoring
+- letter/story: Typography focus, NO mobile-controls
+- recipe: Ingredients + steps, NO mobile-controls
+- utility/visualization: Forms/charts, localStorage, NO mobile-controls
 
-D-PAD (games only):
-<div class="mobile-controls"><button class="dpad-btn" data-direction="up">▲</button>...</div>
-CSS: .mobile-controls{display:none} @media(max-width:768px){.mobile-controls{display:grid}}
-JS: btn.addEventListener('touchstart',(e)=>{e.preventDefault();handleInput()},{passive:false})
-
-BODY: padding: 80px 20px 20px 20px (use shorthand only)`.trim(),
+CRITICAL: Copy the back button and page start templates EXACTLY. Do not modify .home-link.`.trim(),
 
     tester: `Tester for Bot Sportello noir web collection. ${BASE_SYSTEM_CONTEXT}
 
 TASK: Validate HTML, return JSON: {"ok":bool, "issues":[{"code":"...", "message":"...", "severity":"critical"}], "warnings":[], "score":0-100}
 
-UNIVERSAL CHECKS: DOCTYPE, <html>/<head>/<body>/</html>, viewport meta, page-theme.css link, .home-link, no overflow:hidden, @media breakpoints
+REQUIRED ELEMENTS:
+- DOCTYPE html
+- viewport meta tag
+- <link rel="stylesheet" href="../page-theme.css">
+- <a href="../index.html" class="home-link"></a> (empty content, CSS shows arrow)
+- No overflow:hidden on body
 
 BY TYPE:
-- arcade-game: MUST have .mobile-controls, touchstart, touch-action:manipulation, canvas≤400px
-- non-games: FAIL if game controls present
+- arcade-game: MUST have .mobile-controls with touchstart handlers
+- non-games: FAIL if .mobile-controls present
 
-SCORING: Start 100, -20/critical, -5/warning. Game controls on non-game = CRITICAL FAIL.`.trim(),
+CRITICAL CHECKS:
+- .home-link must NOT have inline styles overriding it
+- .home-link must be direct child of body, not wrapped in other elements
+- Body should NOT have overflow:hidden
+
+SCORING: Start 100, -20/critical, -5/warning.`.trim(),
 
     scribe: `Scribe for Bot Sportello noir web collection.
 

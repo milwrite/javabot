@@ -85,12 +85,13 @@ RESPONSIVE BREAKPOINTS (MANDATORY):
 WHEN CREATING PAGES:
 1. Link to ../page-theme.css (REQUIRED)
 2. Add viewport meta tag: <meta name="viewport" content="width=device-width, initial-scale=1.0">
-3. Use the unified page chrome: wrap the back arrow + titles in a .page-header, with .home-link for the arrow, .page-title for the main heading, and .page-subtitle (or .page-title-group .subtitle) for subheadings; do not override title/subtitle sizes inline (use the CSS tokens)
-4. Body: padding-top 80px for home button, overflow-x/y: auto
-5. For GAMES: Always include .mobile-controls with touch buttons
-6. Canvas games: max-width 100%, height auto
-7. Keep noir terminal colors (#7ec8e3, #ff0000, #00ffff, #0a0a0a)
-8. Test scrollability on mobile - no overflow: hidden on body
+3. Back button: <a href="../index.html" class="home-link"></a> (COPY EXACTLY - empty content, CSS shows arrow)
+4. Place back button as first child of body, before any other content
+5. Do NOT wrap .home-link in other elements or add inline styles to it
+6. Body: no overflow:hidden (breaks scrolling)
+7. For GAMES ONLY: Include .mobile-controls with touch buttons
+8. Canvas games: max-width 100%, height auto
+9. Keep noir terminal colors (#7ec8e3, #ff0000, #00ffff, #0a0a0a)
 
 PROJECT METADATA SYSTEM:
 - projectmetadata.json has { collections: {}, projects: {} }
@@ -127,21 +128,6 @@ AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
 - git_log(count, file, oneline): View commit history (default 10 commits, optional file filter)
 - web_search(query): Search internet for current information via Perplexity
 - set_model(model): Switch AI model runtime (glm, kimi, kimi-fast, deepseek, qwen, minimax, mimo) - ZDR-compliant only
-
-DISCORD INTEGRATION FEATURES:
-- Slash Commands (5 available):
-  * /commit <message> [files] - Git commit & push to main
-  * /status - Show repo status + live site link
-  * /search <query> - Web search via Perplexity API
-  * /set-model <model> - Switch AI model (glm/kimi/kimi-fast/deepseek/qwen/minimax/mimo) ZDR only
-  * /poll <question> - Yes/no poll with reactions
-- @ Mention Support: Full AI conversation with tool access (all capabilities available)
-- Multi-Channel Monitoring: Responds in 7 configured channels, fetches context from Discord API
-- Auto Error Handling: 3-error cooldown system prevents spam loops (5min timeout)
-- Response Management: Long responses (>2000 chars) auto-saved to responses/ with Discord links
-- Real-Time Updates: Progress tracking via editReply() for long operations
-- Embed Styling: Color-coded embeds (purple=pages, orange=features, red=model, green=success)
-- Message History: Fetches last 20 messages from Discord API with reactions
 
 WHEN TO USE EACH TOOL:
 - When user provides a URL (bot.inference-arcade.com/src/file.html): Use file_exists FIRST to verify the file exists
