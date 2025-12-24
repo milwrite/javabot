@@ -360,7 +360,9 @@ class DiscordContextManager {
         if (!content) return null;
 
         // Build formatted content string
-        let formattedContent = `${author.username}: ${content}`;
+        // Important: avoid prefixing assistant messages with the bot name,
+        // because the model may mimic it and duplicate prefixes.
+        let formattedContent = isBot ? content : `${author.username}: ${content}`;
 
         // Add reaction summary if configured and present
         if (CONFIG.INCLUDE_REACTIONS && discordMessage.reactions?.cache?.size > 0) {
@@ -790,8 +792,10 @@ let SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT;
 function cleanBotResponse(response) {
     if (!response) return '';
 
-    // Remove "Bot Sportello:" prefix patterns
-    let cleaned = response.replace(/^Bot Sportello:\s*/i, '').replace(/Bot Sportello:\s*Bot Sportello:\s*/gi, '');
+    // Remove "Bot Sportello:" prefix patterns (including duplicates)
+    let cleaned = response
+        .replace(/^(?:\s*(?:Bot\s+)?Sportello\s*:\s*)+/i, '')
+        .replace(/^(?:\s*Doc\s+Sportello\s*:\s*)+/i, '');
 
     // Strip any tool-call markup that some models emit in plain text
     cleaned = cleaned
@@ -801,6 +805,10 @@ function cleanBotResponse(response) {
         .replace(/<[^>]*tool_call[^>]*>/gi, '')
         .replace(/<\/?(invoke|parameter)\b[^>]*>/gi, '')
         .replace(/^<[^>\n]*(tool_call|invoke|parameter)[^>\n]*>\s*$/gmi, '');
+
+    // Also strip accidental plain-text tool call lines like
+    // "functions.read_file: { ... }" or "functions.search_files: ..."
+    cleaned = cleaned.replace(/^functions\.[a-zA-Z0-9_\-]+\s*:\s*.*$/gmi, '').trim();
 
     // Improve markdown formatting with proper spacing
     cleaned = cleaned
@@ -3305,11 +3313,76 @@ async function handleMentionAsync(message) {
                     
                     // Handle READ_ONLY requests immediately (like "print the site inventory")
                     if (classification.isReadOnly) {
-                        logEvent('MENTION', `READ_ONLY request - routing to normal LLM response`);
-                        await safeEditReply(thinkingMsg, '📖 processing your information request...');
-                        // Break out to proceed with normal LLM response
-                        processingAttempt = maxProcessingAttempts + 1; // Exit the classification loop
-                        break;
+                        // If the read-only request clearly involves repository browsing (files, src/, commits),
+                        // route to normal LLM flow with tools; otherwise use a fast no-tools reply.
+                        const repoIntent = /(src\/|\.(html|js)\b|projectmetadata\.json|index\.html|repository|repo|git|commit|push)/i.test(content);
+                        const listSearchFiles = /\b(list|show|find|search)\b[^\n]*\b(files?|pages?|commits?)\b/i.test(content);
+                        if (repoIntent || listSearchFiles) {
+                            logEvent('MENTION', `READ_ONLY repo request - routing to normal flow with tools`);
+                            // Break out to proceed with normal LLM processing below
+                        } else {
+                            logEvent('MENTION', `READ_ONLY conversational info - fast no-tools response`);
+                            await safeEditReply(thinkingMsg, '📖 processing your information request...');
+                            try {
+                                const originalModel = MODEL;
+                                MODEL = MODEL_PRESETS.glm;
+                                const simpleResponse = await axios.post(OPENROUTER_URL, {
+                                    model: MODEL,
+                                    messages: [
+                                        { role: 'system', content: 'You are Bot Sportello, a helpful Discord bot. Answer briefly and directly. No code unless asked explicitly.' },
+                                        { role: 'user', content: content }
+                                    ],
+                                    max_tokens: 500,
+                                    temperature: 0.7
+                                }, {
+                                    headers: {
+                                        'Authorization': `Bearer ${getOpenRouterKey()}`,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    timeout: 30000
+                                });
+                                let response = cleanBotResponse(simpleResponse.data.choices[0].message.content || '');
+                                if (!response) response = 'Got it.';
+                                await safeEditReply(thinkingMsg, response);
+                                addToHistory(username, content, false);
+                                addToHistory('Bot Sportello', response, true);
+                                return; // Done
+                            } finally {
+                                MODEL = originalModel;
+                            }
+                        }
+                    }
+
+                    // Handle general conversation/greetings with a super fast path
+                    if (classification.isConversation) {
+                        logEvent('MENTION', `CONVERSATION request - fast small-talk response`);
+                        try {
+                            const originalModel = MODEL;
+                            MODEL = MODEL_PRESETS.glm;
+                            const simpleResponse = await axios.post(OPENROUTER_URL, {
+                                model: MODEL,
+                                messages: [
+                                    { role: 'system', content: 'You are Bot Sportello. Reply in one or two short friendly sentences. No tools, no files, no code.' },
+                                    { role: 'user', content: content }
+                                ],
+                                max_tokens: 120,
+                                temperature: 0.8
+                            }, {
+                                headers: {
+                                    'Authorization': `Bearer ${getOpenRouterKey()}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                timeout: 20000
+                            });
+                            let response = cleanBotResponse(simpleResponse.data.choices[0].message.content || '');
+                            if (!response) response = getBotResponse('confirmations');
+                            await safeEditReply(thinkingMsg, response);
+                            addToHistory(username, content, false);
+                            addToHistory('Bot Sportello', response, true);
+                            return; // Done
+                        } finally {
+                            MODEL = originalModel;
+                        }
                     }
 
                     // Handle COMMIT requests immediately

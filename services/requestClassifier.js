@@ -126,6 +126,28 @@ function fallbackClassification(prompt, meta = {}) {
     // Conservative fallback - when LLM fails, default to normal chat flow
     // This ensures functionality fixes get proper tool access
 
+    // Fast path: common greetings/small talk → CONVERSATION
+    const trimmed = lowerPrompt.trim();
+    const greetOnly = trimmed.replace(/[^a-z\s']/g, '');
+    const greetingPatterns = [
+        /^hi\b/, /^hey\b/, /^hello\b/, /^yo\b/, /^sup\b/,
+        /^what['’]s up\b/, /^what is up\b/, /^whats up\b/, /^hiya\b/, /^howdy\b/,
+        /^good (morning|evening|afternoon)\b/, /^(yo|sup|hey|hi)$/
+    ];
+    const isGreeting = greetingPatterns.some(re => re.test(greetOnly));
+    const isVeryShort = trimmed.length <= 20 && !/(file|src\/|git|commit|push|create|build|fix)/.test(trimmed);
+    if (isGreeting || isVeryShort) {
+        return {
+            type: 'CONVERSATION',
+            isEdit: false,
+            isCreate: false,
+            isCommit: false,
+            isReadOnly: false,
+            isConversation: true,
+            method: meta.method || 'fallback'
+        };
+    }
+
     // READ-ONLY queries about git history (must check BEFORE commit check)
     // Handles: "list commit messages", "show commit history", "previous commits", "git log"
     const gitHistoryPatterns = [
