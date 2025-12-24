@@ -424,6 +424,13 @@
       "description": "Quantum Hoax Infomercial noir project",
       "icon": "🌐",
       "collection": "unsorted"
+    },
+    "sleep-sounds-for-cen": {
+      "title": "Sleep Sounds for Cen",
+      "icon": "🌙",
+      "description": "ambient sleep mixer",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }
