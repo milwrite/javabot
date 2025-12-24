@@ -29,10 +29,10 @@ This document highlights gaps observed during the README refactor and suggests t
 - Priority: Low (already constrained to fallback usage).
 - Fix: Pass model as argument or use `process.env` default only.
 
-**🔄 IN PROGRESS: Remote URL + token handling**
-- Per CLAUDE.md (Dec 17 update): Uses `getEncodedRemoteUrl()` for secure token formatting.
-- Token embedded only during push operations, then cleared afterward.
-- Status: Improved; documents proper cleanup procedure.
+**✅ RESOLVED: Remote URL + token handling**
+- Git operations now use the GitHub API via Octokit (`services/gitHelper.js`).
+- No URL‑embedded tokens; authentication is sent in the `Authorization` header.
+- Legacy helper `getEncodedRemoteUrl()` has been removed from the codebase.
 
 **⏳ PENDING: Duplication across edit vs normal loops**
 - Separate edit loop (`getEditResponse`) and general loop (`getLLMResponse`) maintain similar tool specs and logic.
@@ -96,4 +96,3 @@ This document highlights gaps observed during the README refactor and suggests t
 4. Long response storage rotation (prevents unbounded growth)
 
 These items are intentionally small and focused for incremental adoption. Tackle items by priority or availability.
-

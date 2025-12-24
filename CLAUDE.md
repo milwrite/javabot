@@ -111,11 +111,7 @@ The bot automatically commits and pushes changes when:
 - Building games (`/build-game`, `build_game()`)
 - Manual commits (`/commit`, `commit_changes()`)
 
-**Authentication**: The bot uses `getEncodedRemoteUrl()` which formats URLs as:
-```
-https://milwrite:TOKEN@github.com/milwrite/javabot.git
-```
-This function properly encodes the GitHub token and uses `milwrite` as the username for authentication.
+Note: The bot itself does not use local git remotes for pushing. It commits via the GitHub API (Octokit) using `services/gitHelper.js`, sending the token in an `Authorization` header. No URL‑embedded tokens are used by the bot.
 
 **Commit Message Format**: Following global user instructions:
 - Lowercase only
@@ -192,11 +188,10 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 - Multi-channel support via comma-separated `CHANNEL_ID` env var
 
 **GitHub Integration**:
-- simple-git for local operations (add, commit, push)
-- Octokit for GitHub API interactions
-- All commits push to `main` branch automatically
-- Dynamic branch detection via `git.status().current`
-- Token authentication configured at runtime
+- Octokit for GitHub API interactions (no local git required for the bot)
+- All bot commits target the `main` branch via API
+- Branch context derives from repository defaults/config (no reliance on local `git status`)
+- Token authentication configured at runtime and sent via `Authorization` header
 
 **OpenRouter AI Integration**:
 - **Zero Data Retention (ZDR) ENFORCED** - all requests use `provider.data_collection: 'deny'`
@@ -566,6 +561,7 @@ const CONFIG = {
 **Git**: Never embed GITHUB_TOKEN permanently, use only during push operations
 **Files**: Use hyphens for page names (`amtrak-journey.html`), verify completeness after git operations
 **Edits**: Files can only be edited once per conversation to prevent expensive repeated operations
+**Reusable Components**: When implementing a feature that could benefit other pages (audio, TTS, animations, UI patterns), ask if it should be made into a reusable component in `src/audio/` or similar. Only ask when the feature is genuinely reusable - not for one-off page-specific logic.
 
 ## Important Dependencies
 

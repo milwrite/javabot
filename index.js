@@ -60,7 +60,11 @@ if (!githubToken.startsWith('ghp_') && !githubToken.startsWith('github_pat_')) {
 }
 
 console.log('✅ All required environment variables loaded');
-console.log(`🔐 GitHub token: ${githubToken.substring(0, 8)}...`);
+if (process.env.NODE_ENV === 'development') {
+    console.log(`🔐 GitHub token (prefix): ${githubToken.substring(0, 8)}...`);
+} else {
+    console.log('🔐 GitHub token loaded');
+}
 console.log(`📂 Repository: ${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}`);
 
 // OpenRouter API Key Management with Fallback
@@ -427,36 +431,7 @@ class DiscordContextManager {
 let contextManager = null;
 
 
-// Helper: build an HTTPS URL with encoded token in userinfo (no permanent storage)
-function getEncodedRemoteUrl() {
-    const token = process.env.GITHUB_TOKEN;
-    if (!token) {
-        throw new Error('GITHUB_TOKEN environment variable is not set');
-    }
-    
-    // Validate token format (should start with ghp_ or github_pat_)
-    if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-        console.warn('⚠️ GitHub token format may be invalid - should start with ghp_ or github_pat_');
-    }
-    
-    // Don't encode the token - GitHub tokens don't need URL encoding
-    const owner = process.env.GITHUB_REPO_OWNER;
-    const repo = process.env.GITHUB_REPO_NAME;
-    
-    if (!owner || !repo) {
-        throw new Error('GITHUB_REPO_OWNER and GITHUB_REPO_NAME must be set');
-    }
-    
-    // Use milwrite as the username with the GitHub token (no encoding needed)
-    const url = `https://milwrite:${token}@github.com/${owner}/${repo}.git`;
-    
-    // Validate URL format without logging the actual token
-    if (!url.includes('@github.com') || !url.includes('.git')) {
-        throw new Error('Generated remote URL format is invalid');
-    }
-    
-    return url;
-}
+// Note: getEncodedRemoteUrl removed (migrated to GitHub API via services/gitHelper)
 
 // pushWithAuth removed - now using pushFileViaAPI from services/gitHelper.js
 // All git push operations use GitHub API instead of git CLI for Railway compatibility
