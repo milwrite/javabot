@@ -7,26 +7,9 @@ const { buildGame } = require('../agents/gameBuilder');
 const { testGame } = require('../agents/gameTester');
 const { documentGame, updateProjectMetadata } = require('../agents/gameScribe');
 const { writeBuildLog, getRecentPatternsSummary } = require('./buildLogs');
-const simpleGit = require('simple-git');
+const { pushMultipleFiles } = require('./gitHelper');
 const fsSync = require('fs');
-const { execSync } = require('child_process');
-
-// Find git binary - works on Railway (Linux) and macOS
-function findGitBinary() {
-    const candidates = ['/usr/bin/git', '/usr/local/bin/git', '/opt/homebrew/bin/git'];
-    try {
-        const gitPath = execSync('which git', { encoding: 'utf8' }).trim();
-        if (gitPath && fsSync.existsSync(gitPath)) return gitPath;
-    } catch (e) { /* continue to candidates */ }
-    for (const candidate of candidates) {
-        if (fsSync.existsSync(candidate)) return candidate;
-    }
-    return 'git';
-}
-
-const git = simpleGit({
-    binary: findGitBinary()
-});
+const path = require('path');
 
 /**
  * Run the complete game building pipeline
@@ -278,7 +261,7 @@ async function runGamePipeline({
 }
 
 /**
- * Commit game files to git
+ * Commit game files to git via GitHub API (Railway-compatible, no local git needed)
  * @param {object} result - Pipeline result
  * @param {string} customMessage - Optional custom commit message
  * @returns {boolean} Success
@@ -290,69 +273,57 @@ async function commitGameFiles(result, customMessage = null) {
     }
 
     try {
-        const files = [
+        const filePaths = [
             ...result.buildResult.files,
             'projectmetadata.json'
         ];
 
-        console.log('📦 staging files for git commit...');
+        console.log('📦 preparing files for git commit via API...');
         if (global.logToGUI) {
-            global.logToGUI('info', '📦 Staging files for git commit...', { files });
+            global.logToGUI('info', '📦 Preparing files for git commit...', { files: filePaths });
         }
-        await git.add(files);
+
+        // Read file contents from disk
+        const files = [];
+        for (const filePath of filePaths) {
+            const fullPath = path.resolve(process.cwd(), filePath);
+            if (fsSync.existsSync(fullPath)) {
+                const content = fsSync.readFileSync(fullPath, 'utf8');
+                files.push({ path: filePath, content });
+            } else {
+                console.warn(`⚠️ File not found, skipping: ${filePath}`);
+            }
+        }
+
+        if (files.length === 0) {
+            console.log('⚠️  No files to commit');
+            return true;
+        }
 
         // Create safe commit message (max 100 chars per user requirements)
         let message = customMessage || `add ${result.plan.metadata.title.toLowerCase()}`;
         if (message.length > 100) {
             message = message.substring(0, 97) + '...';
         }
-        console.log('💾 creating git commit...');
+
+        console.log('💾 pushing commit via GitHub API...');
         if (global.logToGUI) {
-            global.logToGUI('info', '💾 Creating git commit...', { message });
-        }
-        
-        // Check git status before committing
-        const status = await git.status();
-        if (status.files.length === 0) {
-            console.log('⚠️  No changes to commit');
-            return true; // Not an error - just nothing to commit
+            global.logToGUI('info', '💾 Pushing commit via GitHub API...', { message, fileCount: files.length });
         }
 
-        await git.commit(message);
-        console.log(`✅ Committed: ${message}`);
+        const commitSha = await pushMultipleFiles(files, message);
+
+        console.log(`✅ Committed via API: ${message} (${commitSha?.substring(0, 7) || 'unknown'})`);
         if (global.logToGUI) {
-            global.logToGUI('info', `✅ Committed: ${message}`, { message });
+            global.logToGUI('info', `✅ Committed: ${message}`, { message, sha: commitSha });
         }
         return true;
-        
+
     } catch (error) {
         console.error('❌ Git commit failed:', error.message);
-        
-        // Check if this is a HEAD parsing issue
-        if (error.message.includes('could not parse HEAD') || error.message.includes('bad object HEAD')) {
-            console.log('🔧 Attempting to fix corrupted git HEAD...');
-            try {
-                // Try to reset to remote
-                await git.fetch('origin');
-                await git.reset(['--hard', 'origin/main']);
-                console.log('✅ Git HEAD fixed, retrying commit...');
-                
-                // Retry the commit
-                await git.add(files);
-                let retryMessage = customMessage || `add ${result.plan.metadata.title.toLowerCase()}`;
-                if (retryMessage.length > 100) {
-                    retryMessage = retryMessage.substring(0, 97) + '...';
-                }
-                await git.commit(retryMessage);
-                console.log(`✅ Committed after HEAD fix: ${retryMessage}`);
-                return true;
-                
-            } catch (retryError) {
-                console.error('❌ Failed to fix git HEAD:', retryError.message);
-                return false;
-            }
+        if (global.logToGUI) {
+            global.logToGUI('error', `❌ Git commit failed: ${error.message}`, { error: error.message });
         }
-        
         return false;
     }
 }
