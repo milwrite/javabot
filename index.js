@@ -24,7 +24,6 @@ const { deepResearch, formatForDiscord: formatDeepResearchForDiscord, generateRe
 // Modular imports (Phase 1 extraction)
 const { getBotResponse, botResponses } = require('./personality/botResponses');
 const { DEFAULT_SYSTEM_PROMPT } = require('./personality/systemPrompt');
-const { getStylePreset } = require('./styles/presets');
 
 // Site inventory system
 const { generateSiteInventory } = require('./scripts/generateSiteInventory.js');
@@ -3930,40 +3929,6 @@ async function handleButtonInteraction(interaction) {
                     components: [] 
                 });
             }
-        } else if (action === 'style') {
-            if (type === 'confirm') {
-                // Get stored style data
-                const styleData = global.stylePendingData?.get(interaction.user.id);
-                if (!styleData) {
-                    await interaction.reply({ content: 'Style data expired. Please run the command again.', flags: 64 }); // MessageFlags.Ephemeral
-                    return;
-                }
-                
-                // Acknowledge the button click
-                await interaction.deferUpdate();
-                
-                // Execute the style update
-                await executeStyleUpdate(interaction, styleData);
-                
-                // Clean up
-                global.stylePendingData?.delete(interaction.user.id);
-                
-            } else if (type === 'cancel') {
-                // Clean up and show cancellation
-                global.stylePendingData?.delete(interaction.user.id);
-                
-                const cancelEmbed = new EmbedBuilder()
-                    .setTitle('❌ Style Update Cancelled')
-                    .setDescription('No changes were made to the website styling.')
-                    .setColor(0xFF6B6B)
-                    .setTimestamp();
-                    
-                await interaction.update({ 
-                    content: '', 
-                    embeds: [cancelEmbed], 
-                    components: [] 
-                });
-            }
         } else if (action === 'mention') {
             if (type === 'commit') {
                 // Get stored mention commit data
@@ -4340,108 +4305,6 @@ async function executeMentionCommit(interaction, commitData) {
             errorMessage += ' Nothing to commit.';
         } else if (error.message.includes('remote')) {
             errorMessage += ' Trouble reaching the remote repository.';
-        } else {
-            errorMessage += ` ${error.message}`;
-        }
-        
-        await interaction.editReply(errorMessage);
-    }
-}
-
-// New function to handle the actual style update process
-async function executeStyleUpdate(interaction, styleData) {
-    try {
-        // Update status with progress
-        await interaction.editReply({ content: 'Generating new styles...', embeds: [], components: [] });
-
-        let newCSS = '';
-
-        const preset = styleData.preset;
-        const customDescription = styleData.customDescription;
-
-        // Style presets imported from ./styles/presets.js (see line 26)
-        // Use getStylePreset(presetName) to retrieve CSS
-
-        if (preset !== 'custom' && !getStylePreset(preset)) {
-            await interaction.editReply(`Unknown preset: ${preset}. Available: soft-arcade, neon-arcade, dark-minimal, retro-terminal`);
-            return;
-        }
-
-        // Use preset CSS (from styles/presets.js) or generate custom CSS
-        if (preset === 'custom') {
-            if (!customDescription) {
-                await interaction.editReply("hey man, you gotta provide a description for custom styles...");
-                return;
-            }
-
-            // Use AI to generate custom CSS
-            const cssPrompt = `Generate a complete CSS stylesheet for a retro arcade-style website homepage based on this description: "${customDescription}"
-
-The CSS must include styles for these elements:
-- body (with background, font-family, colors)
-- .container (max-width: 1200px)
-- header, h1, .tagline
-- .projects-grid (CSS grid layout)
-- .project-card (card design with hover effects)
-- .project-icon, .project-title, .project-description
-- .add-project (variant of project-card)
-- footer, footer a, footer code
-- .refresh-btn (button styling)
-
-Use Press Start 2P font from Google Fonts for retro feel, or another retro/monospace font if the description suggests different styling.
-Output ONLY the CSS code, no explanations.`;
-
-            const cssResult = await getLLMResponse(cssPrompt, []);
-            newCSS = cssResult.text;
-
-            // Clean up the response
-            newCSS = newCSS.replace(/```css\n?/g, '').replace(/```\n?/g, '').trim();
-
-        } else {
-            newCSS = getStylePreset(preset);
-        }
-
-        // Write the new CSS to style.css
-        await fs.writeFile('./style.css', newCSS);
-
-        // Commit and push via GitHub API
-        const { pushFileViaAPI } = require('./services/gitHelper');
-        const commitMessage = `update style to ${preset === 'custom' ? 'custom: ' + customDescription : preset}`;
-        
-        try {
-            const sha = await pushFileViaAPI('style.css', newCSS, commitMessage, 'main');
-            console.log(`[UPDATE_STYLE] Pushed style.css: ${sha?.slice(0,7) || 'no-sha'}`);
-        } catch (pushError) {
-            throw pushError;
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('🎨 Style Updated & Pushed')
-            .setDescription(getBotResponse('success') + '\n\n**Note:** Changes pushed! Site will update in 1-2 minutes.')
-            .addFields(
-                { name: 'Style', value: preset === 'custom' ? 'Custom AI-generated' : preset, inline: true },
-                { name: 'File', value: 'style.css', inline: true },
-                { name: 'Deployment', value: '⏳ Deploying... Please be patient (1-2 min)', inline: false },
-                { name: 'Live Site', value: '[View Changes](https://bot.inference-arcade.com/)', inline: false }
-            )
-            .setColor(0x9b59b6)
-            .setTimestamp();
-
-        if (preset === 'custom') {
-            embed.addFields({ name: 'Description', value: customDescription, inline: false });
-        }
-
-        await interaction.editReply({ embeds: [embed] });
-
-    } catch (error) {
-        console.error('Style update execution error:', error);
-        
-        let errorMessage = getBotResponse('errors');
-        
-        if (error.message.includes('permission')) {
-            errorMessage += ' Permission issue writing files.';
-        } else if (error.message.includes('git')) {
-            errorMessage += ' Git operation failed.';
         } else {
             errorMessage += ` ${error.message}`;
         }

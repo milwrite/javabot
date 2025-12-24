@@ -266,7 +266,6 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 | `/search <query>` | `handleSearch` | Web search via OpenRouter |
 | `/set-model <model>` | `handleSetModel` | Switch AI model at runtime |
 | `/set-prompt <action> [content]` | `handleSetPrompt` | Modify bot personality/system prompt at runtime |
-| `/update-style <preset> [description]` | `handleUpdateStyle` | Update website styling with presets or AI-generated custom CSS |
 | `/poll <question>` | `handlePoll` | Yes/no poll with reactions |
 
 ### AI Function Calling System
@@ -301,7 +300,6 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 
 **Configuration Tools**:
 - `set_model(model)` - Switch AI model: glm, kimi, gemini, qwen (equivalent to `/set-model`)
-- `update_style(preset, description)` - Change website theme (equivalent to `/update-style`)
 
 **Web Search**:
 - `web_search(query)` - Search internet for current information (via Perplexity Sonar)
@@ -350,8 +348,6 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - **Economical design**: Small start buttons, tight spacing (5-8px margins)
 - **Layout hierarchy**: Controls → Start → Instructions (always in this order)
 - Prompts optimized for token efficiency with inline examples
-
-**`/update-style`**: Updates website theme with presets (noir-terminal, neon-arcade, dark-minimal, retro-terminal) or AI-generated custom CSS. Modifies embedded CSS in `index.html`.
 
 **Bot Sportello Narrator (TTS Component)**:
 When generating story pages or content that should be read aloud, use the reusable TTS component:
