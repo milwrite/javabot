@@ -212,7 +212,7 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 - 10,000 token output limit for detailed responses
 - Automatic 402 error recovery (reduces max_tokens when credits low)
 - Automatic 500 error fallback (switches to alternate ZDR model after 2 failures)
-- Conversation history fetched from Discord API (20 messages with reactions)
+- Conversation history fetched from Discord API (5 messages, with reactions, on-demand per channel)
 
 **Noir Terminal Frontend Styling**:
 - **Main page**: `index.html` with embedded CSS (self-contained, no external stylesheet)
@@ -243,7 +243,7 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 | File/Directory | Purpose | Format | Lifecycle |
 |---|---|---|---|
 | **projectmetadata.json** | Canonical page registry (index) | JSON: {collections, projects} | Persistent; updated on each page creation |
-| **Discord API** | Conversation context (direct from channel) | Fetched via channel.messages.fetch() | 60-second cache; 20 messages with reactions |
+| **Discord API** | Conversation context (direct from channel) | Fetched via channel.messages.fetch() | 60-second cache; 5 messages on-demand |
 | **build-logs/{id}.json** | Per-build pipeline execution logs | JSON array with stages, plans, test results | One per build; kept for history |
 | **responses/{timestamp}.txt** | Long responses >2000 chars (Discord limit) | Text with timestamp header | One per response; kept for audit trail |
 | **session-logs/*.json/.md** | Bot session reports (failure/success analysis) | JSON + Markdown summaries | One per bot session run; via run-bot.sh |
@@ -439,10 +439,9 @@ errorTracker.set(`${userId}-${commandName}`, {
 ### Message History System
 
 **Discord-Native Context** (replaces agents.md):
-- Fetches last 20 messages directly from Discord API via `channel.messages.fetch()`
-- Includes reaction data for community sentiment awareness: `[reactions: 👍(3) ❤️(1)]`
+- Fetches last 5 messages from Discord API via `channel.messages.fetch()` on-demand
+- Context only activated when Bot Sportello receives input in a channel (no startup prefetch)
 - 60-second cache per channel prevents rate limiting
-- Context fetched on bot startup for immediate availability after restart
 - Managed by `DiscordContextManager` class with `buildContextForChannel()` function
 
 **Multi-Channel Monitoring**:
@@ -542,8 +541,8 @@ const CONFIG = {
     PUSH_TIMEOUT: 60000,             // Git push timeout
     API_TIMEOUT: 60000,              // API request timeout
     // Discord Context Settings
-    DISCORD_FETCH_LIMIT: 20,         // Max messages to fetch per request
-    DISCORD_CONTEXT_LIMIT: 20,       // Messages to include in LLM context
+    DISCORD_FETCH_LIMIT: 5,          // Max messages to fetch per request
+    DISCORD_CONTEXT_LIMIT: 5,        // Messages to include in LLM context
     DISCORD_CACHE_TTL: 60000,        // Cache duration (1 minute)
     INCLUDE_REACTIONS: true          // Add reaction data to context
 };

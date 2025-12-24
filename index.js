@@ -106,8 +106,8 @@ const CONFIG = {
     PUSH_TIMEOUT: 60000,
     API_TIMEOUT: 60000,
     // Discord Context Settings (replaces agents.md)
-    DISCORD_FETCH_LIMIT: 20,      // Max messages to fetch per Discord API request
-    DISCORD_CONTEXT_LIMIT: 20,    // Messages to include in LLM context
+    DISCORD_FETCH_LIMIT: 5,       // Max messages to fetch per Discord API request
+    DISCORD_CONTEXT_LIMIT: 5,     // Messages to include in LLM context
     DISCORD_CACHE_TTL: 60000,     // Cache duration (1 minute)
     INCLUDE_REACTIONS: true       // Add reaction data to context
 };
@@ -3051,21 +3051,7 @@ client.once('clientReady', async () => {
     contextManager = new DiscordContextManager(client);
     console.log('✅ Discord context manager initialized');
 
-    // Fetch initial message history for configured channels
-    if (CHANNEL_IDS.length > 0) {
-        console.log('📜 Fetching initial message history from Discord...');
-        for (const channelId of CHANNEL_IDS) {
-            try {
-                const channel = await client.channels.fetch(channelId);
-                if (channel) {
-                    await contextManager.fetchChannelHistory(channel, CONFIG.DISCORD_FETCH_LIMIT);
-                    console.log(`✅ Fetched history for #${channel.name || channelId}`);
-                }
-            } catch (error) {
-                console.warn(`⚠️ Could not fetch history for ${channelId}:`, error.message);
-            }
-        }
-    }
+    // Context fetched on-demand when Bot Sportello receives input (no startup prefetch)
 
     // Sync index.html with all HTML files in /src
     try {
