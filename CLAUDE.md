@@ -153,6 +153,7 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 - `gamePipeline.js` - Game building pipeline
 - `llmClient.js` - OpenRouter API client with role-specific prompts
 - `requestClassifier.js` - Request classification
+- `postgres.js` - PostgreSQL logging service (Railway database)
 
 **Config Modules** (`/config/`):
 - `models.js` - MODEL_PRESETS, OPENROUTER_URL, reasoning config
@@ -247,6 +248,30 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 | **index.html** | Main page (project hub) | HTML with embedded CSS | Persistent; manually edited theme |
 | **page-theme.css** | Shared noir styling (all pages) | CSS with color vars + mobile breakpoints | Persistent; theme source of truth |
 | **/src/*.html** | Generated pages (games, pages, features) | Self-contained HTML + inline CSS/JS | Created by `/add-page`, `/build-game`, etc. |
+| **PostgreSQL (Railway)** | Long-term event logging | Tables: bot_events, tool_calls, build_stages | Persistent; queryable via `/logs` command |
+
+### PostgreSQL Logging
+
+Optional long-term logging to Railway PostgreSQL database. Enables querying of historical events via `/logs` command.
+
+**Tables:**
+- `bot_events` - All events (mentions, tool calls, file changes, errors, agent loops)
+- `tool_calls` - Detailed tool execution logs with arguments and results
+- `build_stages` - Game pipeline build stages
+
+**Logged Events:**
+- Mentions (user, content, channel)
+- Tool calls (name, args, result, duration, iteration)
+- File changes (action, path, preview)
+- Agent loops (command, tools used, result, duration)
+- Errors (type, category, message, stack)
+
+**Query via Discord:**
+- `/logs recent [type] [limit]` - View recent events
+- `/logs errors [period]` - Error statistics (1h, 24h, 7d)
+- `/logs stats [days]` - Activity summary
+
+**Non-blocking**: All logging is fire-and-forget to avoid impacting bot performance.
 
 ### Available Slash Commands
 
@@ -262,6 +287,7 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 | `/set-model <model>` | `handleSetModel` | Switch AI model at runtime |
 | `/set-prompt <action> [content]` | `handleSetPrompt` | Modify bot personality/system prompt at runtime |
 | `/poll <question>` | `handlePoll` | Yes/no poll with reactions |
+| `/logs <subcommand>` | `handleLogs` | Query PostgreSQL logs (recent, errors, stats) |
 
 ### AI Function Calling System
 
@@ -415,6 +441,11 @@ GITHUB_REPO_NAME       # Repository name (javabot)
 GITHUB_REPO_URL        # Full repository URL
 CHANNEL_ID             # Comma-separated Discord channel IDs
 OPENROUTER_API_KEY     # OpenRouter API key
+```
+
+Optional:
+```
+DATABASE_URL           # PostgreSQL connection string for long-term logging (Railway)
 ```
 
 **Discord Bot Setup**:

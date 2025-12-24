@@ -31,6 +31,7 @@ Repo: `https://github.com/milwrite/javabot/`
   - `CHANNEL_ID` — optional, comma‑separated channel IDs to restrict handling
   - `GUI_PORT` — optional, GUI port (default `3001`)
   - `NO_GUI` — set to `true` to disable the GUI
+  - `DATABASE_URL` — PostgreSQL connection string for long-term logging (Railway)
 
 Install and run:
 - `npm install`
@@ -46,6 +47,7 @@ Install and run:
   - `gamePipeline.js` — plans → builds → tests → docs (returns files + live URL)
   - `buildLogs.js` — structured logs per build; summarizes recurrent issues
   - `requestClassifier.js` — LLM classifier (create vs fix vs edit vs read‑only)
+  - `postgres.js` — PostgreSQL logging service (events, tool calls, errors)
 - `agents/` — role prompts and logic wrappers used by the pipeline
   - `gameArchitect.js`, `gameBuilder.js`, `gameTester.js`, `gameScribe.js`
 - `gui-server.js` + `gui/` — Express + Socket.IO dashboard with panels for logs, tool calls, file changes, agent loops
@@ -131,6 +133,7 @@ AI & utilities:
 - `/set-prompt <view|reset|add|replace> [content]` — system prompt controls.
 - `/update-style <preset> [description]` — preset or “custom” guidance.
 - `/poll <question>` — quick yes/no reactions.
+- `/logs <recent|errors|stats>` — query PostgreSQL logs (requires DATABASE_URL).
 
 ## Frontend Site
 

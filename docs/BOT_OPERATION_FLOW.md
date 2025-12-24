@@ -17,6 +17,7 @@ The system operates as a **multi-pipeline agent** driven by a central classifier
 | **Game Pipeline** | `services/gamePipeline.js` | Orchestrates Architect→Builder→Tester→Scribe |
 | **LLM Client** | `services/llmClient.js` | Centralized API calls with role-specific prompts |
 | **Git Helper** | `services/gitHelper.js` | GitHub API operations (Railway-compatible) |
+| **PostgreSQL Logger** | `services/postgres.js` | Long-term event logging (Railway database) |
 | **Model Config** | `config/models.js` | Single source of truth for model presets |
 | **HTML Templates** | `config/templates.js` | Scaffolds for games, stories, utilities |
 | **Agent Modules** | `agents/*.js` | Architect, Builder, Tester, Scribe agents |
@@ -36,7 +37,8 @@ javabot/
 │   ├── gitHelper.js
 │   ├── filesystem.js
 │   ├── buildLogs.js
-│   └── deepResearch.js
+│   ├── deepResearch.js
+│   └── postgres.js
 ├── agents/
 │   ├── gameArchitect.js
 │   ├── gameBuilder.js
@@ -318,6 +320,7 @@ SportelloNarrator.init({
 | `responses/{ts}.txt` | Long responses | One per oversized response |
 | `session-logs/*.json` | Bot session reports | One per run via run-bot.sh |
 | Discord API | Conversation context | 5 messages, 60s cache |
+| PostgreSQL (Railway) | Long-term event logs | Queryable via `/logs` command |
 
 ---
 
@@ -335,6 +338,7 @@ SportelloNarrator.init({
 | `/set-model` | `handleSetModel` | Switch AI model |
 | `/set-prompt` | `handleSetPrompt` | Modify system prompt |
 | `/poll` | `handlePoll` | Yes/no poll (no defer) |
+| `/logs` | `handleLogs` | Query PostgreSQL logs (recent, errors, stats) |
 
 ---
 
@@ -381,6 +385,7 @@ CLASSIFIER_USE_LLM      # "true" to enable LLM classification
 CLASSIFIER_MODEL        # Model for classifier (default: glm)
 CLASSIFIER_TIMEOUT_MS   # Timeout in ms (default: 3500)
 NO_GUI                  # "true" to disable dashboard
+DATABASE_URL            # PostgreSQL connection string (Railway)
 ```
 
 ---

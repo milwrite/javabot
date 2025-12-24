@@ -51,9 +51,10 @@ This document highlights gaps observed during the README refactor and suggests t
 - `sync-index` backfills `projectmetadata.json` from `src/*.html`. If collection names change, backfill defaults to `unsorted`.
 - Improvement: Provide `/sync-index --reflow` to re-balance collections by rules (or prompt the user via Discord with choices).
 
-**⏳ PENDING: Long responses and storage**
+**🔄 IN PROGRESS: Long responses and storage**
 - Long messages are saved to `responses/` with a timestamp. Good for auditability, but the directory can grow unbounded.
-- Improvement: Add rotation or a cleanup command, and emit a GUI metric for `responses/` size.
+- **Update (Dec 2025)**: PostgreSQL logging added via `services/postgres.js`. All events now logged to Railway database with queryable `/logs` command.
+- Remaining: Add file rotation or cleanup for `responses/` directory.
 
 **⏳ PENDING: DEVLOG watcher**
 - `fs.watchFile` on `DEVLOG.md` regenerates `SITE_INVENTORY.md`. Works, but has no shutdown hook.
@@ -85,9 +86,9 @@ This document highlights gaps observed during the README refactor and suggests t
 ## Summary
 
 **Total Items:** 16
-- ✅ **RESOLVED:** 2 items (Classifier fallback, Mobile-first design)
-- 🔄 **IN PROGRESS:** 4 items (Discord ready event, OpenRouter models, Remote URL handling, Error loop tracker)
-- ⏳ **PENDING:** 10 items (Tool API mismatch, Style presets, Global MODEL leak, Duplication, CORS, Index sync, Long responses, DEVLOG watcher, Docs, Testing/CI)
+- ✅ **RESOLVED:** 3 items (Classifier fallback, Mobile-first design, Remote URL handling)
+- 🔄 **IN PROGRESS:** 4 items (Discord ready event, OpenRouter models, Long responses/PostgreSQL, Error loop tracker)
+- ⏳ **PENDING:** 9 items (Tool API mismatch, Style presets, Global MODEL leak, Duplication, CORS, Index sync, DEVLOG watcher, Docs, Testing/CI)
 
 **Priority Order for Next Sprint:**
 1. Tool API mismatches (affects all searches)
