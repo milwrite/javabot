@@ -296,7 +296,7 @@
         <div class="power-controls">
             <button class="power-btn" id="powerDown">−</button>
             <div class="power-display">
-                <span>Power: </span><span id="powerValue">50</span>%
+                <span>Power: </span><span id="powerValue">65</span>%
             </div>
             <button class="power-btn" id="powerUp">+</button>
         </div>
@@ -323,23 +323,23 @@
             score: 0,
             shots: 0,
             streak: 0,
-            angle: 45,
-            power: 50,
+            angle: 55,
+            power: 65,
             ballInPlay: false,
             paused: false,
-            playerX: 200,
+            playerX: 100,
             ball: null,
             messageText: '',
             messageTime: 0
         };
 
         // Physics constants
-        const GRAVITY = 0.5;
+        const GRAVITY = 0.35;
         const COURT_Y = 500;
-        const BASKET_X = 350;
-        const BASKET_Y = 120;
-        const BASKET_WIDTH = 60;
-        const BASKET_HEIGHT = 8;
+        const BASKET_X = 320;
+        const BASKET_Y = 150;
+        const BASKET_WIDTH = 70;
+        const BASKET_HEIGHT = 10;
 
         // DOM elements
         const elements = {
@@ -359,55 +359,83 @@
                 this.y = y;
                 this.vx = vx;
                 this.vy = vy;
-                this.radius = 8;
+                this.radius = 12;
                 this.scored = false;
+                this.passedThroughRim = false;
             }
 
             update() {
                 // Apply gravity
                 this.vy += GRAVITY;
 
+                // Apply air resistance
+                this.vx *= 0.995;
+                this.vy *= 0.995;
+
                 // Update position
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // Boundary collision (left/right)
+                // Boundary collision (left/right walls)
                 if (this.x - this.radius < 0) {
                     this.x = this.radius;
-                    this.vx *= -0.8;
+                    this.vx *= -0.7;
                 } else if (this.x + this.radius > canvas.width) {
                     this.x = canvas.width - this.radius;
-                    this.vx *= -0.8;
+                    this.vx *= -0.7;
                 }
 
-                // Rim collision
+                // Rim collision detection
                 const rimLeft = BASKET_X - BASKET_WIDTH / 2;
                 const rimRight = BASKET_X + BASKET_WIDTH / 2;
-                const rimTop = BASKET_Y;
-                const rimBottom = BASKET_Y + BASKET_HEIGHT;
+                const rimY = BASKET_Y;
 
-                // Check collision with rim
-                if (
-                    this.x > rimLeft && this.x < rimRight &&
-                    this.y > rimTop - 15 && this.y < rimBottom + 5 &&
-                    this.vy > 0
-                ) {
-                    // Check if ball is in basket zone
-                    if (this.x > rimLeft + 5 && this.x < rimRight - 5 && this.y > rimTop + 10) {
-                        if (!this.scored) {
+                // Left rim edge collision
+                const distToLeftRim = Math.hypot(this.x - rimLeft, this.y - rimY);
+                if (distToLeftRim < this.radius + 4) {
+                    const angle = Math.atan2(this.y - rimY, this.x - rimLeft);
+                    this.x = rimLeft + Math.cos(angle) * (this.radius + 5);
+                    this.y = rimY + Math.sin(angle) * (this.radius + 5);
+                    this.vx *= -0.5;
+                    this.vy *= 0.6;
+                }
+
+                // Right rim edge collision
+                const distToRightRim = Math.hypot(this.x - rimRight, this.y - rimY);
+                if (distToRightRim < this.radius + 4) {
+                    const angle = Math.atan2(this.y - rimY, this.x - rimRight);
+                    this.x = rimRight + Math.cos(angle) * (this.radius + 5);
+                    this.y = rimY + Math.sin(angle) * (this.radius + 5);
+                    this.vx *= -0.5;
+                    this.vy *= 0.6;
+                }
+
+                // Backboard collision
+                const backboardX = BASKET_X + BASKET_WIDTH / 2 + 5;
+                if (this.x + this.radius > backboardX && this.x < backboardX + 8 &&
+                    this.y > BASKET_Y - 70 && this.y < BASKET_Y + 10) {
+                    this.x = backboardX - this.radius;
+                    this.vx *= -0.7;
+                }
+
+                // Score detection - ball passes through the hoop going down
+                if (!this.scored && this.vy > 0) {
+                    if (this.x > rimLeft + 8 && this.x < rimRight - 8) {
+                        if (this.y > rimY && this.y < rimY + 30 && !this.passedThroughRim) {
+                            this.passedThroughRim = true;
+                        }
+                        if (this.passedThroughRim && this.y > rimY + 30) {
                             this.scored = true;
                             return 'scored';
                         }
-                    } else {
-                        // Bounce off rim
-                        this.vy *= -0.6;
-                        this.vx *= 0.9;
-                        this.y = rimTop - 10;
                     }
                 }
 
-                // Ball goes off screen
-                if (this.y > canvas.height + 100 || this.x < -50 || this.x > canvas.width + 50) {
+                // Ball goes off screen or hits ground
+                if (this.y > COURT_Y - this.radius) {
+                    return 'miss';
+                }
+                if (this.x < -50 || this.x > canvas.width + 50 || this.y > canvas.height + 50) {
                     return 'miss';
                 }
 
@@ -415,16 +443,38 @@
             }
 
             draw() {
+                // Ball shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.beginPath();
+                ctx.ellipse(this.x + 3, this.y + 3, this.radius, this.radius * 0.8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Main ball
                 ctx.fillStyle = '#ff6b00';
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fill();
 
-                ctx.strokeStyle = '#ff9600';
-                ctx.lineWidth = 2;
+                // Ball lines
+                ctx.strokeStyle = '#cc4400';
+                ctx.lineWidth = 1.5;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(this.x - this.radius, this.y);
+                ctx.lineTo(this.x + this.radius, this.y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y - this.radius);
+                ctx.lineTo(this.x, this.y + this.radius);
+                ctx.stroke();
+
+                // Highlight
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(this.x - 3, this.y - 3, this.radius * 0.3, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
 
@@ -465,24 +515,40 @@
 
             // Backboard
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(340, 80, 8, 50);
+            ctx.fillRect(BASKET_X + BASKET_WIDTH / 2 + 5, BASKET_Y - 70, 8, 80);
 
             // Rim (hoop)
             ctx.strokeStyle = '#ff6b00';
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 5;
             ctx.beginPath();
             ctx.moveTo(BASKET_X - BASKET_WIDTH / 2, BASKET_Y);
             ctx.lineTo(BASKET_X + BASKET_WIDTH / 2, BASKET_Y);
             ctx.stroke();
 
+            // Rim endpoints (visual dots)
+            ctx.fillStyle = '#ff6b00';
+            ctx.beginPath();
+            ctx.arc(BASKET_X - BASKET_WIDTH / 2, BASKET_Y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(BASKET_X + BASKET_WIDTH / 2, BASKET_Y, 4, 0, Math.PI * 2);
+            ctx.fill();
+
             // Net
-            ctx.strokeStyle = 'rgba(200, 200, 200, 0.7)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
             ctx.lineWidth = 1;
-            for (let i = 0; i < 6; i++) {
-                const x = BASKET_X - BASKET_WIDTH / 2 + (i * BASKET_WIDTH / 5);
+            for (let i = 0; i <= 6; i++) {
+                const x = BASKET_X - BASKET_WIDTH / 2 + (i * BASKET_WIDTH / 6);
                 ctx.beginPath();
-                ctx.moveTo(x, BASKET_Y);
-                ctx.lineTo(x + 3, BASKET_Y + 25);
+                ctx.moveTo(x, BASKET_Y + 2);
+                ctx.bezierCurveTo(x - 2, BASKET_Y + 15, x + 2, BASKET_Y + 25, x, BASKET_Y + 35);
+                ctx.stroke();
+            }
+            // Horizontal net lines
+            for (let j = 1; j <= 3; j++) {
+                ctx.beginPath();
+                ctx.moveTo(BASKET_X - BASKET_WIDTH / 2, BASKET_Y + j * 10);
+                ctx.lineTo(BASKET_X + BASKET_WIDTH / 2, BASKET_Y + j * 10);
                 ctx.stroke();
             }
 
@@ -494,8 +560,8 @@
             if (!game.ballInPlay && !game.paused) {
                 const angle = (game.angle * Math.PI) / 180;
                 const power = game.power / 100;
-                const vx = Math.cos(angle) * power * 12;
-                const vy = -Math.sin(angle) * power * 12;
+                const initVx = Math.cos(angle) * power * 15;
+                const initVy = -Math.sin(angle) * power * 15;
 
                 ctx.strokeStyle = 'rgba(255, 107, 0, 0.6)';
                 ctx.lineWidth = 2;
@@ -505,15 +571,14 @@
 
                 let x = game.playerX;
                 let y = COURT_Y + 20;
-                for (let i = 0; i < 40; i++) {
-                    x += vx * 0.8;
-                    y += vy * 0.8;
-                    vy += GRAVITY * 0.8;
-                    if (i === 0) {
-                        ctx.lineTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
+                let simVx = initVx;
+                let simVy = initVy;
+                for (let i = 0; i < 50; i++) {
+                    x += simVx;
+                    y += simVy;
+                    simVy += GRAVITY;
+                    ctx.lineTo(x, y);
+                    if (y > canvas.height) break;
                 }
                 ctx.stroke();
                 ctx.setLineDash([]);
@@ -536,8 +601,8 @@
 
             const angle = (game.angle * Math.PI) / 180;
             const power = game.power / 100;
-            const vx = Math.cos(angle) * power * 12;
-            const vy = -Math.sin(angle) * power * 12;
+            const vx = Math.cos(angle) * power * 15;
+            const vy = -Math.sin(angle) * power * 15;
 
             game.ball = new Ball(game.playerX, COURT_Y + 20, vx, vy);
             updateStats();
@@ -598,10 +663,10 @@
             game.shots = 0;
             game.streak = 0;
             game.ballInPlay = false;
-            game.angle = 45;
-            game.power = 50;
+            game.angle = 55;
+            game.power = 65;
             game.paused = false;
-            game.playerX = 200;
+            game.playerX = 100;
             game.ball = null;
             showMessage('RESET!');
             updateStats();

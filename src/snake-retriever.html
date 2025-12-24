@@ -424,6 +424,8 @@
         const mobileControls = document.getElementById('mobileControls');
         const dpadBtns = document.querySelectorAll('.dpad-btn[data-direction]');
 
+        let gameLoopTimeout = null;
+
         let state = {
             snake: [{x: 10, y: 10}],
             direction: {x: 1, y: 0},
@@ -657,13 +659,18 @@
         }
 
         function gameLoop() {
+            if (!state.gameRunning) return;
             update();
             draw();
-            setTimeout(gameLoop, 1000 / state.currentSpeed);
+            gameLoopTimeout = setTimeout(gameLoop, 1000 / state.currentSpeed);
         }
 
         function startGame() {
             if (!state.gameRunning) {
+                if (gameLoopTimeout) {
+                    clearTimeout(gameLoopTimeout);
+                    gameLoopTimeout = null;
+                }
                 state.gameRunning = true;
                 state.gamePaused = false;
                 pauseBtn.disabled = false;
@@ -681,6 +688,10 @@
         }
 
         function endGame() {
+            if (gameLoopTimeout) {
+                clearTimeout(gameLoopTimeout);
+                gameLoopTimeout = null;
+            }
             state.gameRunning = false;
             state.gamePaused = false;
             startBtn.textContent = 'START MISSION';
