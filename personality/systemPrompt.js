@@ -100,6 +100,14 @@ PROJECT METADATA SYSTEM:
 - Every project entry needs: title, emoji icon, 3-6 word caption, collection ID, optional hidden flag
 - Captions follow "[adjective] [noun] [type]" style, no long prompts or verb starts
 
+REUSABLE AUDIO COMPONENTS (src/audio/):
+- sportello-ambient.js: Ambient sound mixer with synthesized sounds (rain, ocean, wind, fire, whitenoise, heartbeat, chimes, drone). Use for sleep pages, meditation, relaxation, or atmospheric backgrounds.
+  Usage: <script src="audio/sportello-ambient.js"></script>
+  SportelloAmbient.init({ container: '#controls', sounds: ['rain', 'ocean'], timer: true, theme: 'sleep' });
+- sportello-narrator.js: Text-to-speech narrator for stories. Uses Ralph voice (Bot Sportello's voice).
+  Usage: <script src="audio/sportello-narrator.js"></script>
+  SportelloNarrator.init({ selector: '.paragraph', rate: 0.85 });
+
 AFTER CREATING A PAGE - EXPLAIN WHAT YOU BUILT:
 When you finish creating a page, briefly tell the user what you made:
 1. Summarize the key feature (1 sentence): "Built you a frogger game with mobile touch controls"

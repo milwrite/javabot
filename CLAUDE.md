@@ -349,33 +349,43 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - **Layout hierarchy**: Controls → Start → Instructions (always in this order)
 - Prompts optimized for token efficiency with inline examples
 
-**Bot Sportello Narrator (TTS Component)**:
-When generating story pages or content that should be read aloud, use the reusable TTS component:
+**Reusable Audio Components** (`src/audio/`):
 
+Two reusable audio components are available for Bot Sportello pages:
+
+**SportelloAmbient** - Ambient sound mixer with Web Audio synthesis:
 ```html
-<!-- Add container where you want controls to appear -->
-<div id="narrator-controls"></div>
-
-<!-- Include the narrator script -->
-<script src="sportello-narrator.js"></script>
-
-<!-- Initialize with options -->
+<div id="ambient-controls"></div>
+<script src="audio/sportello-ambient.js"></script>
 <script>
-SportelloNarrator.init({
-    voice: 'Ralph',           // Bot Sportello's voice (Ralph only)
-    selector: '.paragraph',   // CSS selector for text to read
-    titleSelector: '.chapter-title',  // Optional: chapter titles
-    rate: 0.85,              // Speech rate (slower for noir atmosphere)
-    pitch: 0.9,              // Slightly deeper pitch
-    narratorName: 'Bot Sportello'  // Display name in controls
+SportelloAmbient.init({
+    container: '#ambient-controls',
+    sounds: ['rain', 'ocean', 'wind', 'whitenoise', 'heartbeat', 'chimes'],
+    timer: true,
+    theme: 'sleep'  // 'sleep' (lavender) or 'noir' (cyan/red)
 });
 </script>
 ```
+- Available sounds: rain, ocean, wind, fire, whitenoise, pinknoise, heartbeat, chimes, drone
+- Auto-injects styled controls matching theme
+- Sleep timer with fade-out
+- Programmatic API: `.play()`, `.stop()`, `.toggle(name)`, `.setVolume(name, 0-1)`
 
-- Located at `src/sportello-narrator.js`
-- Auto-injects noir-styled control panel CSS
+**SportelloNarrator** - Text-to-speech for stories:
+```html
+<div id="narrator-controls"></div>
+<script src="audio/sportello-narrator.js"></script>
+<script>
+SportelloNarrator.init({
+    voice: 'Ralph',           // Bot Sportello's voice
+    selector: '.paragraph',
+    rate: 0.85,
+    pitch: 0.9
+});
+</script>
+```
 - Uses Ralph voice exclusively (Bot Sportello's voice)
-- Includes play/pause/stop, voice selector, reading progress
+- Auto-injects noir-styled control panel
 - Highlights current paragraph with red left-border
 - Mobile-responsive controls
 

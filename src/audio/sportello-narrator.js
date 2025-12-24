@@ -1,9 +1,10 @@
 /**
  * Bot Sportello Narrator - TTS Component
  * Reusable text-to-speech narration for Bot Sportello pages
+ * Location: src/audio/sportello-narrator.js
  *
- * Usage:
- * 1. Include this script: <script src="sportello-narrator.js"></script>
+ * Usage (from src/*.html):
+ * 1. Include this script: <script src="audio/sportello-narrator.js"></script>
  * 2. Add container: <div id="narrator-controls"></div>
  * 3. Call: SportelloNarrator.init({ voice: 'Ralph', selector: '.paragraph' });
  */

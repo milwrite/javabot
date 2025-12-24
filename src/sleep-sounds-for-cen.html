@@ -6,14 +6,23 @@
     <title>Sleep Sounds for Cen - Bot Sportello</title>
     <link rel="stylesheet" href="../page-theme.css">
     <style>
+        /* Relaxing sleep palette - muted lavender/slate */
+        :root {
+            --sleep-bg: #0a0a0f;
+            --sleep-accent: #8b7ea8;
+            --sleep-soft: #6a6a7a;
+            --sleep-text: #9a9aaa;
+            --sleep-glow: rgba(139, 126, 168, 0.3);
+        }
+
         body {
             padding: 80px 20px 20px 20px;
-            background: #0a0a0a;
+            background: var(--sleep-bg);
             overflow-x: hidden;
         }
 
         .container {
-            max-width: 600px;
+            max-width: 500px;
             margin: 0 auto;
         }
 
@@ -23,21 +32,22 @@
         }
 
         .header h1 {
-            color: #00ffff;
-            font-size: 2em;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            color: var(--sleep-accent);
+            font-size: 1.6em;
+            margin-bottom: 8px;
+            font-weight: normal;
+            letter-spacing: 0.05em;
         }
 
         .header p {
-            color: #7ec8e3;
-            font-size: 0.9em;
+            color: var(--sleep-soft);
+            font-size: 0.85em;
         }
 
         .breathing-guide {
             width: 100%;
-            max-width: 300px;
-            height: 300px;
+            max-width: 220px;
+            height: 220px;
             margin: 0 auto 30px;
             position: relative;
             display: flex;
@@ -51,7 +61,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a0a 70%);
+            background: radial-gradient(ellipse at center, #14141f 0%, var(--sleep-bg) 70%);
             border-radius: 50%;
             overflow: hidden;
         }
@@ -60,31 +70,30 @@
             position: absolute;
             width: 2px;
             height: 2px;
-            background: #7ec8e3;
+            background: var(--sleep-soft);
             border-radius: 50%;
-            animation: twinkle 3s infinite;
+            animation: twinkle 4s infinite;
         }
 
         @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.6; }
         }
 
         .breathing-circle {
             position: relative;
-            width: 150px;
-            height: 150px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(126, 200, 227, 0.3), rgba(0, 255, 255, 0.1));
-            border: 2px solid #00ffff;
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            background: radial-gradient(circle, rgba(139, 126, 168, 0.15), transparent);
+            border: 1px solid var(--sleep-soft);
             animation: breathe 8s ease-in-out infinite;
             z-index: 10;
         }
 
         @keyframes breathe {
-            0%, 100% { transform: scale(0.7); opacity: 0.5; }
-            50% { transform: scale(1); opacity: 1; }
+            0%, 100% { transform: scale(0.8); opacity: 0.4; }
+            50% { transform: scale(1); opacity: 0.8; }
         }
 
         .breathing-text {
@@ -92,147 +101,144 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #00ffff;
-            font-size: 0.9em;
+            color: var(--sleep-accent);
+            font-size: 0.8em;
             z-index: 20;
             text-align: center;
-            animation: breatheText 8s ease-in-out infinite;
-        }
-
-        @keyframes breatheText {
-            0%, 45% { opacity: 1; content: 'Breathe In'; }
-            50%, 95% { opacity: 1; content: 'Breathe Out'; }
-            46%, 49%, 96%, 99% { opacity: 0; }
+            opacity: 0.8;
         }
 
         .controls-section {
-            background: rgba(126, 200, 227, 0.05);
-            border: 1px solid #7ec8e3;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: rgba(139, 126, 168, 0.03);
+            border: 1px solid rgba(106, 106, 122, 0.3);
+            border-radius: 6px;
+            padding: 18px;
+            margin-bottom: 16px;
         }
 
         .controls-section h2 {
-            color: #00ffff;
-            font-size: 1.2em;
-            margin-bottom: 15px;
+            color: var(--sleep-soft);
+            font-size: 0.9em;
+            margin-bottom: 14px;
             text-align: center;
+            font-weight: normal;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .sound-control {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+        }
+
+        .sound-control:last-child {
+            margin-bottom: 0;
         }
 
         .sound-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .sound-label {
-            color: #7ec8e3;
-            font-size: 0.9em;
+            color: var(--sleep-text);
+            font-size: 0.85em;
         }
 
         .sound-toggle {
             background: transparent;
-            border: 2px solid #7ec8e3;
-            color: #7ec8e3;
-            padding: 4px 12px;
-            border-radius: 4px;
+            border: 1px solid var(--sleep-soft);
+            color: var(--sleep-soft);
+            padding: 4px 10px;
+            border-radius: 3px;
             font-family: 'Courier Prime', monospace;
-            font-size: 0.8em;
+            font-size: 0.75em;
             cursor: pointer;
             transition: all 0.3s;
-            min-width: 60px;
+            min-width: 50px;
         }
 
         .sound-toggle.active {
-            background: #00ffff;
-            color: #0a0a0a;
-            border-color: #00ffff;
+            background: var(--sleep-accent);
+            color: var(--sleep-bg);
+            border-color: var(--sleep-accent);
         }
 
         .volume-slider {
             width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: rgba(126, 200, 227, 0.2);
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(106, 106, 122, 0.2);
             outline: none;
             -webkit-appearance: none;
         }
 
         .volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
-            background: #00ffff;
+            background: var(--sleep-accent);
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
         }
 
         .volume-slider::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
-            background: #00ffff;
+            background: var(--sleep-accent);
             cursor: pointer;
             border: none;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
         }
 
         .timer-controls {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 8px;
+            margin-bottom: 12px;
         }
 
         .timer-btn {
             background: transparent;
-            border: 2px solid #7ec8e3;
-            color: #7ec8e3;
-            padding: 12px 8px;
-            border-radius: 4px;
+            border: 1px solid rgba(106, 106, 122, 0.4);
+            color: var(--sleep-soft);
+            padding: 10px 6px;
+            border-radius: 3px;
             font-family: 'Courier Prime', monospace;
-            font-size: 0.85em;
+            font-size: 0.8em;
             cursor: pointer;
             transition: all 0.3s;
         }
 
         .timer-btn.active {
-            background: #ff0000;
-            color: #fff;
-            border-color: #ff0000;
+            background: var(--sleep-accent);
+            color: var(--sleep-bg);
+            border-color: var(--sleep-accent);
         }
 
         .timer-display {
             text-align: center;
-            color: #00ffff;
-            font-size: 1.5em;
-            margin-top: 10px;
-            min-height: 40px;
+            color: var(--sleep-accent);
+            font-size: 1.3em;
+            margin-top: 8px;
+            min-height: 32px;
+            opacity: 0.9;
         }
 
         .master-controls {
-            display: flex;
-            gap: 10px;
             margin-top: 20px;
         }
 
         .master-btn {
-            flex: 1;
-            background: #ff0000;
-            border: 2px solid #ff0000;
-            color: #fff;
+            width: 100%;
+            background: var(--sleep-accent);
+            border: 1px solid var(--sleep-accent);
+            color: var(--sleep-bg);
             padding: 14px;
             border-radius: 4px;
             font-family: 'Courier Prime', monospace;
-            font-size: 1em;
+            font-size: 0.95em;
             cursor: pointer;
             transition: all 0.3s;
             min-height: 48px;
@@ -244,45 +250,28 @@
 
         .master-btn.playing {
             background: transparent;
-            color: #ff0000;
+            color: var(--sleep-accent);
         }
 
         .status-bar {
             text-align: center;
-            color: #7ec8e3;
-            font-size: 0.85em;
-            margin-top: 15px;
-            min-height: 20px;
+            color: var(--sleep-soft);
+            font-size: 0.8em;
+            margin-top: 14px;
+            min-height: 18px;
+            opacity: 0.7;
         }
 
         @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.5em;
-            }
-
-            .breathing-guide {
-                max-width: 250px;
-                height: 250px;
-            }
-
-            .breathing-circle {
-                width: 120px;
-                height: 120px;
-            }
-
-            .timer-controls {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .controls-section {
-                padding: 15px;
-            }
+            .header h1 { font-size: 1.4em; }
+            .breathing-guide { max-width: 180px; height: 180px; }
+            .breathing-circle { width: 100px; height: 100px; }
+            .timer-controls { grid-template-columns: repeat(2, 1fr); }
+            .controls-section { padding: 14px; }
         }
 
         @media (max-width: 768px) {
-            body {
-                padding: 80px 15px 15px 15px;
-            }
+            body { padding: 70px 15px 15px 15px; }
         }
     </style>
 </head>
@@ -301,449 +290,46 @@
             <div class="breathing-text" id="breathingText">Breathe In</div>
         </div>
 
-        <div class="controls-section">
-            <h2>Sound Layers</h2>
-            
-            <div class="sound-control">
-                <div class="sound-header">
-                    <span class="sound-label">Rain</span>
-                    <button class="sound-toggle" data-sound="rain">OFF</button>
-                </div>
-                <input type="range" class="volume-slider" data-sound="rain" min="0" max="100" value="70">
-            </div>
-
-            <div class="sound-control">
-                <div class="sound-header">
-                    <span class="sound-label">Ocean Waves</span>
-                    <button class="sound-toggle" data-sound="ocean">OFF</button>
-                </div>
-                <input type="range" class="volume-slider" data-sound="ocean" min="0" max="100" value="60">
-            </div>
-
-            <div class="sound-control">
-                <div class="sound-header">
-                    <span class="sound-label">Heartbeat</span>
-                    <button class="sound-toggle" data-sound="heartbeat">OFF</button>
-                </div>
-                <input type="range" class="volume-slider" data-sound="heartbeat" min="0" max="100" value="50">
-            </div>
-
-            <div class="sound-control">
-                <div class="sound-header">
-                    <span class="sound-label">White Noise</span>
-                    <button class="sound-toggle" data-sound="whitenoise">OFF</button>
-                </div>
-                <input type="range" class="volume-slider" data-sound="whitenoise" min="0" max="100" value="40">
-            </div>
-
-            <div class="sound-control">
-                <div class="sound-header">
-                    <span class="sound-label">Lullaby</span>
-                    <button class="sound-toggle" data-sound="lullaby">OFF</button>
-                </div>
-                <input type="range" class="volume-slider" data-sound="lullaby" min="0" max="100" value="30">
-            </div>
-        </div>
-
-        <div class="controls-section">
-            <h2>Sleep Timer</h2>
-            <div class="timer-controls">
-                <button class="timer-btn" data-minutes="15">15 min</button>
-                <button class="timer-btn" data-minutes="30">30 min</button>
-                <button class="timer-btn" data-minutes="60">60 min</button>
-                <button class="timer-btn" data-minutes="0">Off</button>
-            </div>
-            <div class="timer-display" id="timerDisplay"></div>
-        </div>
-
-        <div class="master-controls">
-            <button class="master-btn" id="playBtn">Start Sounds</button>
-        </div>
-
-        <div class="status-bar" id="statusBar">Configure your sounds and press Start</div>
+        <!-- Ambient controls injected by SportelloAmbient -->
+        <div id="ambient-controls"></div>
     </div>
 
+    <!-- Sportello Ambient - Reusable sound mixer component -->
+    <script src="audio/sportello-ambient.js"></script>
     <script>
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const sounds = {};
-        let timerInterval = null;
-        let timerEndTime = null;
-        let fadeInterval = null;
-        let isPlaying = false;
-        let breathingInterval = null;
-
-        const soundConfigs = {
-            rain: { freq: 200, type: 'noise', filter: 'lowpass' },
-            ocean: { freq: 100, type: 'noise', filter: 'bandpass' },
-            heartbeat: { freq: 1.2, type: 'pulse' },
-            whitenoise: { freq: 0, type: 'noise', filter: 'none' },
-            lullaby: { freq: 440, type: 'melody' }
-        };
-
-        function createNoiseBuffer() {
-            const bufferSize = audioContext.sampleRate * 2;
-            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-            const output = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                output[i] = Math.random() * 2 - 1;
-            }
-            return buffer;
-        }
-
-        function initSound(name, config) {
-            const gainNode = audioContext.createGain();
-            gainNode.gain.value = 0;
-            gainNode.connect(audioContext.destination);
-
-            let source, filter;
-
-            if (config.type === 'noise') {
-                source = audioContext.createBufferSource();
-                source.buffer = createNoiseBuffer();
-                source.loop = true;
-
-                if (config.filter !== 'none') {
-                    filter = audioContext.createBiquadFilter();
-                    filter.type = config.filter;
-                    filter.frequency.value = config.freq;
-                    filter.Q.value = 1;
-                    source.connect(filter);
-                    filter.connect(gainNode);
-                } else {
-                    source.connect(gainNode);
-                }
-
-                source.start(0);
-            } else if (config.type === 'pulse') {
-                const osc = audioContext.createOscillator();
-                osc.type = 'sine';
-                osc.frequency.value = 60;
-                
-                const pulseGain = audioContext.createGain();
-                pulseGain.gain.value = 0;
-                
-                osc.connect(pulseGain);
-                pulseGain.connect(gainNode);
-                osc.start(0);
-
-                source = osc;
-                
-                setInterval(() => {
-                    if (sounds[name] && sounds[name].active) {
-                        const now = audioContext.currentTime;
-                        pulseGain.gain.cancelScheduledValues(now);
-                        pulseGain.gain.setValueAtTime(0, now);
-                        pulseGain.gain.linearRampToValueAtTime(1, now + 0.1);
-                        pulseGain.gain.linearRampToValueAtTime(0, now + 0.3);
-                    }
-                }, 833);
-            } else if (config.type === 'melody') {
-                const notes = [523.25, 493.88, 440, 392, 440, 493.88];
-                let noteIndex = 0;
-                
-                const osc = audioContext.createOscillator();
-                osc.type = 'sine';
-                osc.frequency.value = notes[0];
-                osc.connect(gainNode);
-                osc.start(0);
-
-                source = osc;
-
-                setInterval(() => {
-                    if (sounds[name] && sounds[name].active) {
-                        noteIndex = (noteIndex + 1) % notes.length;
-                        const now = audioContext.currentTime;
-                        osc.frequency.setTargetAtTime(notes[noteIndex], now, 0.3);
-                    }
-                }, 2000);
-            }
-
-            sounds[name] = {
-                gainNode,
-                source,
-                filter,
-                active: false,
-                volume: 0.7
-            };
-        }
-
-        Object.entries(soundConfigs).forEach(([name, config]) => {
-            initSound(name, config);
+        // Initialize ambient sounds for sleep
+        SportelloAmbient.init({
+            container: '#ambient-controls',
+            sounds: ['rain', 'ocean', 'wind', 'whitenoise', 'heartbeat', 'chimes'],
+            timer: true,
+            theme: 'sleep'
         });
 
+        // Create twinkling stars in the breathing guide
         function createStars() {
             const nightSky = document.getElementById('nightSky');
-            for (let i = 0; i < 30; i++) {
+            if (!nightSky) return;
+            for (let i = 0; i < 25; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
                 star.style.left = Math.random() * 100 + '%';
                 star.style.top = Math.random() * 100 + '%';
-                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDelay = Math.random() * 4 + 's';
                 nightSky.appendChild(star);
             }
         }
-
         createStars();
 
-        function updateBreathingText() {
+        // Breathing guide text animation
+        (function() {
             const text = document.getElementById('breathingText');
+            if (!text) return;
             let phase = 0;
-            
-            breathingInterval = setInterval(() => {
-                if (phase === 0) {
-                    text.textContent = 'Breathe In';
-                    phase = 1;
-                } else {
-                    text.textContent = 'Breathe Out';
-                    phase = 0;
-                }
+            setInterval(() => {
+                text.textContent = phase === 0 ? 'Breathe In' : 'Breathe Out';
+                phase = 1 - phase;
             }, 4000);
-        }
-
-        updateBreathingText();
-
-        document.querySelectorAll('.sound-toggle').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const soundName = this.dataset.sound;
-                const sound = sounds[soundName];
-                
-                sound.active = !sound.active;
-                this.textContent = sound.active ? 'ON' : 'OFF';
-                this.classList.toggle('active');
-
-                if (isPlaying) {
-                    const targetVolume = sound.active ? sound.volume : 0;
-                    sound.gainNode.gain.linearRampToValueAtTime(
-                        targetVolume,
-                        audioContext.currentTime + 0.5
-                    );
-                }
-
-                saveSettings();
-                updateStatus();
-            });
-        });
-
-        document.querySelectorAll('.volume-slider').forEach(slider => {
-            slider.addEventListener('input', function() {
-                const soundName = this.dataset.sound;
-                const sound = sounds[soundName];
-                sound.volume = this.value / 100;
-
-                if (isPlaying && sound.active) {
-                    sound.gainNode.gain.linearRampToValueAtTime(
-                        sound.volume,
-                        audioContext.currentTime + 0.1
-                    );
-                }
-
-                saveSettings();
-            });
-
-            slider.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-            }, { passive: false });
-        });
-
-        document.querySelectorAll('.timer-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.timer-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-
-                const minutes = parseInt(this.dataset.minutes);
-                
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                }
-
-                if (minutes > 0 && isPlaying) {
-                    timerEndTime = Date.now() + (minutes * 60 * 1000);
-                    startTimer();
-                } else {
-                    timerEndTime = null;
-                    document.getElementById('timerDisplay').textContent = '';
-                }
-
-                saveSettings();
-            });
-        });
-
-        function startTimer() {
-            updateTimerDisplay();
-            timerInterval = setInterval(() => {
-                updateTimerDisplay();
-                
-                const remaining = timerEndTime - Date.now();
-                if (remaining <= 0) {
-                    clearInterval(timerInterval);
-                    fadeOutAndStop();
-                }
-            }, 1000);
-        }
-
-        function updateTimerDisplay() {
-            if (!timerEndTime) return;
-            
-            const remaining = Math.max(0, timerEndTime - Date.now());
-            const minutes = Math.floor(remaining / 60000);
-            const seconds = Math.floor((remaining % 60000) / 1000);
-            
-            document.getElementById('timerDisplay').textContent = 
-                `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        function fadeOutAndStop() {
-            const fadeSteps = 30;
-            let step = 0;
-
-            fadeInterval = setInterval(() => {
-                step++;
-                const factor = 1 - (step / fadeSteps);
-
-                Object.values(sounds).forEach(sound => {
-                    if (sound.active) {
-                        sound.gainNode.gain.value = sound.volume * factor;
-                    }
-                });
-
-                if (step >= fadeSteps) {
-                    clearInterval(fadeInterval);
-                    stopAllSounds();
-                }
-            }, 1000);
-
-            document.getElementById('statusBar').textContent = 'Fading out...';
-        }
-
-        document.getElementById('playBtn').addEventListener('click', function() {
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-
-            if (!isPlaying) {
-                startAllSounds();
-                this.textContent = 'Stop Sounds';
-                this.classList.add('playing');
-                isPlaying = true;
-
-                const activeTimer = document.querySelector('.timer-btn.active');
-                if (activeTimer) {
-                    const minutes = parseInt(activeTimer.dataset.minutes);
-                    if (minutes > 0) {
-                        timerEndTime = Date.now() + (minutes * 60 * 1000);
-                        startTimer();
-                    }
-                }
-            } else {
-                stopAllSounds();
-                this.textContent = 'Start Sounds';
-                this.classList.remove('playing');
-                isPlaying = false;
-
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                }
-                document.getElementById('timerDisplay').textContent = '';
-            }
-        });
-
-        function startAllSounds() {
-            Object.entries(sounds).forEach(([name, sound]) => {
-                if (sound.active) {
-                    sound.gainNode.gain.linearRampToValueAtTime(
-                        sound.volume,
-                        audioContext.currentTime + 2
-                    );
-                }
-            });
-            updateStatus();
-        }
-
-        function stopAllSounds() {
-            Object.values(sounds).forEach(sound => {
-                sound.gainNode.gain.linearRampToValueAtTime(
-                    0,
-                    audioContext.currentTime + 1
-                );
-            });
-            document.getElementById('statusBar').textContent = 'Sounds stopped';
-        }
-
-        function updateStatus() {
-            const activeSounds = Object.entries(sounds)
-                .filter(([_, sound]) => sound.active)
-                .map(([name, _]) => name);
-
-            if (activeSounds.length === 0) {
-                document.getElementById('statusBar').textContent = 'No sounds selected';
-            } else if (isPlaying) {
-                document.getElementById('statusBar').textContent = 
-                    `Playing: ${activeSounds.join(', ')}`;
-            } else {
-                document.getElementById('statusBar').textContent = 
-                    `Ready: ${activeSounds.join(', ')}`;
-            }
-        }
-
-        function saveSettings() {
-            const settings = {
-                sounds: {},
-                timer: document.querySelector('.timer-btn.active')?.dataset.minutes || '0'
-            };
-
-            Object.entries(sounds).forEach(([name, sound]) => {
-                settings.sounds[name] = {
-                    active: sound.active,
-                    volume: sound.volume
-                };
-            });
-
-            localStorage.setItem('sleepSoundsSettings', JSON.stringify(settings));
-        }
-
-        function loadSettings() {
-            const saved = localStorage.getItem('sleepSoundsSettings');
-            if (!saved) return;
-
-            try {
-                const settings = JSON.parse(saved);
-
-                Object.entries(settings.sounds).forEach(([name, config]) => {
-                    if (sounds[name]) {
-                        sounds[name].active = config.active;
-                        sounds[name].volume = config.volume;
-
-                        const toggle = document.querySelector(`.sound-toggle[data-sound="${name}"]`);
-                        const slider = document.querySelector(`.volume-slider[data-sound="${name}"]`);
-
-                        if (toggle) {
-                            toggle.textContent = config.active ? 'ON' : 'OFF';
-                            toggle.classList.toggle('active', config.active);
-                        }
-
-                        if (slider) {
-                            slider.value = config.volume * 100;
-                        }
-                    }
-                });
-
-                if (settings.timer) {
-                    const timerBtn = document.querySelector(`.timer-btn[data-minutes="${settings.timer}"]`);
-                    if (timerBtn) {
-                        timerBtn.classList.add('active');
-                    }
-                }
-
-                updateStatus();
-            } catch (e) {
-                console.error('Failed to load settings:', e);
-            }
-        }
-
-        loadSettings();
-        updateStatus();
+        })();
     </script>
 </body>
 </html>
