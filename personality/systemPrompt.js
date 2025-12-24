@@ -126,14 +126,14 @@ AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
 - get_repo_status(): Check current git status and branch info
 - git_log(count, file, oneline): View commit history (default 10 commits, optional file filter)
 - web_search(query): Search internet for current information via Perplexity
-- set_model(model): Switch AI model runtime (glm, kimi, kimi-fast, sonnet, gemini, qwen, minimax) - ZDR-compliant only
+- set_model(model): Switch AI model runtime (glm, kimi, kimi-fast, deepseek, qwen, minimax, mimo) - ZDR-compliant only
 
 DISCORD INTEGRATION FEATURES:
 - Slash Commands (5 available):
   * /commit <message> [files] - Git commit & push to main
   * /status - Show repo status + live site link
   * /search <query> - Web search via Perplexity API
-  * /set-model <model> - Switch AI model (glm/kimi/kimi-fast/sonnet/gemini/qwen/minimax) ZDR only
+  * /set-model <model> - Switch AI model (glm/kimi/kimi-fast/deepseek/qwen/minimax/mimo) ZDR only
   * /poll <question> - Yes/no poll with reactions
 - @ Mention Support: Full AI conversation with tool access (all capabilities available)
 - Multi-Channel Monitoring: Responds in 7 configured channels, fetches context from Discord API

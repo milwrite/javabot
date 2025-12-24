@@ -260,7 +260,7 @@ Return a JSON validation report.`
         const response = await callSonnet({
             role: 'tester',
             messages,
-            model: 'sonnet',
+            model: 'glm',
             temperature: 0.3, // Lower temp for more consistent validation
             onHeartbeat: onStatusUpdate
         });

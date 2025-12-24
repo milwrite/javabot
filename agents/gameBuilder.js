@@ -76,7 +76,7 @@ Generate the HTML file content now.`;
     const response = await callSonnet({
         role: 'builder',
         messages,
-        model: 'sonnet',
+        model: 'glm',
         temperature: 0.7,
         maxTokens: 12000, // More tokens for complete code generation
         onHeartbeat: onStatusUpdate
@@ -113,7 +113,7 @@ Return ONLY the JavaScript code, no markdown.`;
         const jsResponse = await callSonnet({
             role: 'builder',
             messages: [{ role: 'user', content: jsPrompt }],
-            model: 'sonnet',
+            model: 'glm',
             temperature: 0.7,
             maxTokens: 8000
         });

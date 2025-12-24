@@ -106,7 +106,7 @@ Agent loop details:
 ## Third‑Party Integrations
 
 - Discord: `discord.js` v14 (slash commands, buttons, embeds; intents include Guilds, Messages, Reactions, Message Content).
-- OpenRouter: `chat/completions` with model presets (Haiku/Sonnet/GPT‑5.1 Codex/Gemini/Kimi/GLM); axios‑retry, timeouts, structured tool calls.
+- OpenRouter: `chat/completions` with model presets (GLM/Kimi/DeepSeek/Qwen/MiMo/Minimax); axios‑retry, timeouts, structured tool calls.
 - GitHub: `simple-git` for add/commit/push; GitHub Pages deploys from `main`. Remote URL is set with a tokenized HTTPS on push.
 - Perplexity: `perplexity/sonar` model via OpenRouter for web search.
 - GUI: Express + Socket.IO server at `http://localhost:${GUI_PORT||3001}` (disable with `NO_GUI=true`).
@@ -127,7 +127,7 @@ Repo & admin:
 AI & utilities:
 - `/chat <message>` — chat with full repo tool access.
 - `/search <query>` — web search via Perplexity (saved to `responses/` if long).
-- `/set-model <model>` — `haiku|sonnet|kimi|gpt5|gemini|glm`.
+- `/set-model <model>` — `glm|kimi|deepseek|qwen|mimo|minimax`.
 - `/set-prompt <view|reset|add|replace> [content]` — system prompt controls.
 - `/update-style <preset> [description]` — preset or “custom” guidance.
 - `/poll <question>` — quick yes/no reactions.

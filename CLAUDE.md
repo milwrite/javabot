@@ -202,12 +202,12 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 - **Zero Data Retention (ZDR) ENFORCED** - all requests use `provider.data_collection: 'deny'`
 - Only ZDR-compliant models allowed (no OpenAI - they don't support ZDR on OpenRouter)
 - Swappable models via `MODEL_PRESETS` (ZDR-compliant only)
-- Default: `z-ai/glm-4.6:exacto`
-- Available: GLM 4.6, Kimi K2, Gemini 2.5, Qwen 3
-- `set_model(model)` - Switch AI model: glm, kimi, gemini, qwen (equivalent to `/set-model`)
-- `glm` - GLM 4.6 (default, exacto)
+- Default: `z-ai/glm-4.7`
+- Available: GLM 4.7, Kimi K2, DeepSeek V3.1, Qwen 3, MiMo
+- `set_model(model)` - Switch AI model: glm, kimi, deepseek, qwen, mimo (equivalent to `/set-model`)
+- `glm` - GLM 4.7 (default)
 - `kimi` - K2 (with reasoning)
-- `gemini` - Gemini 2.5 Pro
+- `deepseek` - DeepSeek V3.1 Terminus
 - Function calling support (filesystem tools, web search)
 - 10,000 token output limit for detailed responses
 - Automatic 402 error recovery (reduces max_tokens when credits low)
@@ -299,7 +299,7 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - `get_repo_status()` - Check current git status (equivalent to `/status`)
 
 **Configuration Tools**:
-- `set_model(model)` - Switch AI model: glm, kimi, gemini, qwen (equivalent to `/set-model`)
+- `set_model(model)` - Switch AI model: glm, kimi, deepseek, qwen, mimo (equivalent to `/set-model`)
 
 **Web Search**:
 - `web_search(query)` - Search internet for current information (via Perplexity Sonar)
@@ -513,10 +513,12 @@ MODEL = MODEL_PRESETS[modelChoice];
 ```
 
 Available presets (ZDR-compliant only):
-- `glm` - GLM 4.6 (default, exacto)
+- `glm` - GLM 4.7 (default)
 - `kimi` - Kimi K2 Thinking (reasoning)
-- `gemini` - Gemini 2.5 Pro (Google)
+- `deepseek` - DeepSeek V3.1 Terminus
 - `qwen` - Qwen 3 Coder (Alibaba)
+- `mimo` - MiMo V2 Flash (Xiaomi)
+- `minimax` - Minimax M2.1
 
 **Note**: OpenAI models removed - they don't support Zero Data Retention on OpenRouter.
 

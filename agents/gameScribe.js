@@ -40,7 +40,7 @@ Return as JSON.`
     const response = await callSonnet({
         role: 'scribe',
         messages,
-        model: 'sonnet',
+        model: 'glm',
         temperature: 0.8, // Slightly higher for creative captions
         onHeartbeat: onStatusUpdate
     });

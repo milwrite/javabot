@@ -32,7 +32,7 @@ Plan a simple, mobile-first game/page that satisfies this request. Return a comp
     const response = await callSonnet({
         role: 'architect',
         messages,
-        model: 'sonnet',
+        model: 'glm',
         temperature: 0.7,
         onHeartbeat: onStatusUpdate
     });

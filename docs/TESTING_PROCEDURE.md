@@ -82,11 +82,11 @@ Execute each command in Discord and verify expected behavior.
 
 | Input | Expected |
 |-------|----------|
-| `/set-model haiku` | Switches to Claude Haiku 4.5 |
-| `/set-model sonnet` | Switches to Claude Sonnet 4.5 |
+| `/set-model glm` | Switches to GLM 4.7 (default) |
 | `/set-model kimi` | Switches to Kimi K2 Thinking |
-| `/set-model gemini` | Switches to Gemini 2.5 Pro |
-| `/set-model glm` | Switches to GLM 4.6 |
+| `/set-model deepseek` | Switches to DeepSeek V3.1 Terminus |
+| `/set-model qwen` | Switches to Qwen 3 Coder |
+| `/set-model mimo` | Switches to MiMo V2 Flash |
 
 **Verification:** Console logs model change, subsequent AI calls use new model.
 
@@ -235,7 +235,7 @@ All slash command functionality should also work via @mentions.
 - No file modifications
 
 ### 3.8 Model Switching via Mention
-**Input:** `@Bot Sportello switch to sonnet model`
+**Input:** `@Bot Sportello switch to deepseek model`
 **Expected:**
 - Uses `set_model` tool
 - Confirms model change

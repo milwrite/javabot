@@ -671,27 +671,19 @@ axiosRetry(axios, {
     shouldResetTimeout: true
 });
 
-// Import model configuration from config module
-const { MODEL_PRESETS, DEFAULT_MODEL: DEFAULT_MODEL_CONFIG, REASONING_CONFIG, OPENROUTER_URL, getReasoningConfig, formatThinkingForDiscord, formatThinkingForGUI } = require('./config/models');
+// Import model configuration from config module (SINGLE SOURCE OF TRUTH)
+const {
+    MODEL_PRESETS,
+    DEFAULT_MODEL,
+    OPENROUTER_URL,
+    getReasoningConfig,
+    formatThinkingForDiscord,
+    formatThinkingForGUI,
+    getModelDisplayName,
+    getModelChoices
+} = require('./config/models');
 
-// Override local model definitions with imported ones
-const MODEL_PRESETS_LOCAL = {
-    'glm': 'z-ai/glm-4.6:exacto',
-    'kimi': 'moonshotai/kimi-k2-thinking',
-    'kimi-fast': 'moonshotai/kimi-k2-0905:exacto',
-    'sonnet': 'anthropic/claude-sonnet-4.5',
-    'qwen': 'qwen/qwen3-coder',
-    'gemini': 'google/gemini-2.5-pro',
-    'minimax': 'minimax/minimax-m2'
-};
-
-// SINGLE SOURCE OF TRUTH: Default model for all operations
-const DEFAULT_MODEL = 'glm';
 let MODEL = MODEL_PRESETS[DEFAULT_MODEL];
-
-// Note: REASONING_CONFIG and getReasoningConfig are imported from config/models.js
-
-// Note: formatThinkingForDiscord and formatThinkingForGUI are imported from config/models.js
 
 // Get final text-only response (consolidated helper to reduce duplicate API calls)
 async function getFinalTextResponse(messages, tools, options = {}) {
@@ -2529,14 +2521,14 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'set_model',
-                    description: 'Switch the AI model used for responses. ZDR-compliant models: glm (default), kimi, kimi-fast, sonnet, gemini, qwen',
+                    description: 'Switch the AI model used for responses. ZDR-compliant models: glm (default), kimi, kimi-fast, deepseek, qwen, minimax, mimo',
                     parameters: {
                         type: 'object',
                         properties: {
                             model: {
                                 type: 'string',
-                                description: 'Model preset name. glm = GLM-4.6 (default), kimi = with reasoning, kimi-fast = without.',
-                                enum: ['glm', 'kimi', 'kimi-fast', 'sonnet', 'gemini', 'qwen', 'minimax']
+                                description: 'Model preset name. glm = GLM-4.7 (default), kimi = with reasoning, kimi-fast = without.',
+                                enum: ['glm', 'kimi', 'kimi-fast', 'deepseek', 'qwen', 'minimax', 'mimo']
                             }
                         },
                         required: ['model']
@@ -2945,18 +2937,12 @@ const commands = [
                 .setDescription('Model to use (or enter custom model name)')
                 .setRequired(true)
                 .addChoices(
-                    { name: 'GLM-4.6 Exacto (Default)', value: 'glm' },
-                    { name: 'Kimi K2 Thinking (Reasoning)', value: 'kimi' },
-                    { name: 'Kimi K2 Fast (No Reasoning)', value: 'kimi-fast' },
-                    { name: 'Claude Sonnet 4.5 (Balanced)', value: 'sonnet' },
-                    { name: 'Qwen 3 Coder (Alibaba)', value: 'qwen' },
-                    { name: 'Gemini 2.5 Pro (Google)', value: 'gemini' },
-                    { name: 'Minimax M2 (MiniMax)', value: 'minimax' },
+                    ...getModelChoices(),
                     { name: 'Custom Model (enter name)', value: 'custom' }
                 ))
         .addStringOption(option =>
             option.setName('custom_model')
-                .setDescription('Custom model name (e.g. anthropic/claude-3-5-sonnet-20241022)')
+                .setDescription('Custom model name (e.g. deepseek/deepseek-v3.1-terminus:exacto)')
                 .setRequired(false)),
 
     new SlashCommandBuilder()
@@ -4119,22 +4105,15 @@ async function handleSetModel(interaction) {
             MODEL = MODEL_PRESETS[modelChoice];
         }
 
-        const modelNames = {
-            'glm': 'GLM-4.6 Exacto',
-            'kimi': 'Kimi K2 Thinking',
-            'kimi-fast': 'Kimi K2 Fast',
-            'sonnet': 'Claude Sonnet 4.5',
-            'qwen': 'Qwen 3 Coder',
-            'gemini': 'Gemini 2.5 Pro',
-            'minimax': 'Minimax M2',
-            'custom': customModel || 'Custom Model'
-        };
+        const displayName = modelChoice === 'custom'
+            ? (customModel || 'Custom Model')
+            : getModelDisplayName(modelChoice);
 
         const embed = new EmbedBuilder()
             .setTitle('🤖 Model Changed')
             .setDescription(getBotResponse('success'))
             .addFields(
-                { name: 'New Model', value: modelNames[modelChoice] || 'Custom Model', inline: true },
+                { name: 'New Model', value: displayName, inline: true },
                 { name: 'Model ID', value: MODEL, inline: false }
             )
             .setColor(0xe74c3c)

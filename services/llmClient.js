@@ -23,18 +23,18 @@ const API_KEY = process.env.OPENROUTER_API_KEY;
 
 // Model presets (ZDR-compliant only - no OpenAI)
 const MODEL_PRESETS = {
-    'haiku': 'anthropic/claude-haiku-4.5',
-    'sonnet': 'anthropic/claude-sonnet-4.5',
+    'glm': 'z-ai/glm-4.7',
     'kimi': 'moonshotai/kimi-k2-0905:exacto',
-    'gemini': 'google/gemini-2.5-pro',
-    'glm': 'z-ai/glm-4.6:exacto'
+    'deepseek': 'deepseek/deepseek-v3.1-terminus:exacto',
+    'qwen': 'qwen/qwen3-coder:exacto',
+    'mimo': 'xiaomi/mimo-v2-flash'
 };
 
 // Fallback models for 500 error recovery (ZDR-compliant only)
 const FALLBACK_MODELS = [
-    'anthropic/claude-haiku-4.5',
-    'google/gemini-2.5-flash-preview-05-20',
-    'moonshotai/kimi-k2-0905:exacto'
+    'moonshotai/kimi-k2-0905:exacto',
+    'qwen/qwen3-coder:exacto',
+    'xiaomi/mimo-v2-flash'
 ];
 
 // Track 500 errors per model for fallback decisions
@@ -120,13 +120,13 @@ RELEASE NOTES: "yeah built you [thing] with [feature] - [interaction], classic n
 };
 
 /**
- * Call Claude Sonnet via OpenRouter with role-specific prompting
+ * Call LLM via OpenRouter with role-specific prompting
  * @param {object} options - Call options
  * @param {string} options.role - Agent role: 'architect' | 'builder' | 'tester' | 'scribe'
  * @param {string} options.systemPrompt - Optional custom system prompt (overrides role default)
  * @param {Array} options.messages - Conversation messages
  * @param {Array} options.tools - Optional function tools
- * @param {string} options.model - Model to use (default: sonnet)
+ * @param {string} options.model - Model to use (default: glm)
  * @param {number} options.maxTokens - Max output tokens (default: 10000)
  * @param {number} options.temperature - Temperature (default: 0.7)
  * @param {Function} options.onHeartbeat - Optional callback for progress updates during long calls
@@ -137,7 +137,7 @@ async function callSonnet({
     systemPrompt = null,
     messages,
     tools = [],
-    model = 'sonnet',
+    model = 'glm',
     maxTokens = 10000,
     temperature = 0.7,
     onHeartbeat = null
