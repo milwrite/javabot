@@ -414,6 +414,17 @@ async function editFile(filePath, oldString = null, newString = null, instructio
             const occurrences = currentContent.split(oldString).length - 1;
 
             if (occurrences === 0) {
+                // Diagnostic logging for debugging
+                console.error(`[EDIT_FILE] String not found diagnostic:`);
+                console.error(`  Search string length: ${oldString.length} chars`);
+                console.error(`  Search string (escaped): ${JSON.stringify(oldString).slice(0, 300)}`);
+
+                // Check if match exists with normalized whitespace
+                const normalized = oldString.replace(/\s+/g, ' ').trim();
+                if (currentContent.replace(/\s+/g, ' ').includes(normalized)) {
+                    console.error(`  HINT: Match exists with different whitespace!`);
+                }
+
                 throw new Error(`String not found in file. The exact string to replace was not found. Make sure to use the EXACT string from the file, including all whitespace and indentation.`);
             }
 
@@ -497,8 +508,9 @@ Return ONLY the complete updated file content. No explanations, no markdown code
             console.log(`[EDIT_FILE] Pushed: ${filePath} (${sha?.slice(0,7) || 'no-sha'}) in ${totalTime}s`);
             return `File edited and pushed: ${filePath}. ${changeDescription} - now live`;
         } catch (apiErr) {
-            console.error(`[EDIT_FILE] Push failed: ${apiErr.message}`);
-            return `Error editing file: ${apiErr.message}`;
+            const detail = apiErr.response?.data?.message || apiErr.message;
+            console.error(`[EDIT_FILE] Push failed: ${detail}`, apiErr.response?.data || '');
+            return `Error editing file: GitHub push failed - ${detail}`;
         }
     } catch (error) {
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);

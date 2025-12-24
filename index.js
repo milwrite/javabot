@@ -2704,6 +2704,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 }
 
                 let result;
+                const toolStartTime = Date.now();
                 if (functionName === 'list_files') {
                     result = await listFiles(args.path || './src');
                 } else if (functionName === 'file_exists') {
@@ -2784,8 +2785,13 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                     result = await setModel(args.model);
                 }
 
-                // Log tool call to GUI dashboard
-                logToolCall(functionName, args, result);
+                // Log tool call to GUI dashboard and PostgreSQL
+                logToolCall(functionName, args, result, null, {
+                    durationMs: Date.now() - toolStartTime,
+                    iteration,
+                    channelId: discordContext.channelId,
+                    userId: discordContext.userId
+                });
 
                 toolResults.push({
                     role: 'tool',

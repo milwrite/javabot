@@ -206,6 +206,26 @@ function fallbackClassification(prompt, meta = {}) {
         };
     }
 
+    // Simple edit indicators (text/content changes without fix/bug keywords)
+    // Must check BEFORE functionality fix to catch "change X to Y" patterns
+    const simpleEditPatterns = [
+        /\b(change|replace|update|set)\b.+\b(to|with)\b/i,
+        /\b(title|text|heading|label|name)\b.+\b(should be|says?|to)\b/i,
+        /\bedit\b.*\b(file|page|content)\b/i,
+        /\bin\s+src\/.*\b(change|replace|update)\b/i
+    ];
+    if (simpleEditPatterns.some(re => re.test(lowerPrompt))) {
+        return {
+            type: 'SIMPLE_EDIT',
+            isEdit: true,
+            isCreate: false,
+            isCommit: false,
+            isReadOnly: false,
+            isConversation: false,
+            method: meta.method || 'fallback'
+        };
+    }
+
     // Functionality fix indicators (route to tool-enabled flow)
     if (/(\bfix\b|\bbug\b|\bbroken\b|\berror\b|\bnot working\b|css|style|responsive|mobile|layout|button|align|center|font|color)/.test(lowerPrompt)) {
         return {
