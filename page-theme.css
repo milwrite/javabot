@@ -178,7 +178,7 @@ a.home-link {
     border-radius: 22px;
     border: 1px solid rgba(126, 200, 227, 0.35);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-    background: rgba(0, 0, 0, 0.4);
+    background: #0a0a0a;
     display: flex;
     align-items: center;
     justify-content: center;
