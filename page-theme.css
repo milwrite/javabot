@@ -317,6 +317,8 @@ body.story-page {
 .story-container {
     max-width: 720px;
     width: 100%;
+    margin-left: auto;
+    margin-right: auto;
     position: relative;
 }
 
@@ -328,6 +330,10 @@ body.story-page {
     color: var(--color-accent-secondary);
     font-size: 1.6em;
     margin-bottom: 20px;
+}
+
+.story-container p {
+    max-width: none;
 }
 
 .story-container .paragraph {

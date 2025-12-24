@@ -536,6 +536,25 @@
         let isPaused = false;
         let paragraphs = [];
         let currentParagraphIndex = 0;
+        let resumeTimer = null;
+
+        // Chrome desktop bug fix: periodically resume to prevent 15s timeout
+        function startResumeTimer() {
+            stopResumeTimer();
+            resumeTimer = setInterval(() => {
+                if (isPlaying && !isPaused && synth.speaking) {
+                    synth.pause();
+                    synth.resume();
+                }
+            }, 10000); // Resume every 10 seconds
+        }
+
+        function stopResumeTimer() {
+            if (resumeTimer) {
+                clearInterval(resumeTimer);
+                resumeTimer = null;
+            }
+        }
 
         // Preferred voices in order (noir detective style)
         const PREFERRED_VOICES = ['Ralph', 'Daniel', 'Tom', 'Alex', 'Fred'];
@@ -688,12 +707,29 @@
             const btn = document.getElementById('playBtn');
 
             if (!isPlaying) {
+                // Cancel any stuck speech state first
+                synth.cancel();
+
+                // Ensure voices are loaded
+                if (voices.length === 0) {
+                    voices = synth.getVoices();
+                    selectedVoice = findBestVoice(voices);
+                }
+
                 // Start playing
                 isPlaying = true;
                 isPaused = false;
                 paragraphs = getStoryText();
+
+                if (paragraphs.length === 0) {
+                    document.getElementById('audioStatus').textContent = 'No text found';
+                    isPlaying = false;
+                    return;
+                }
+
                 btn.textContent = 'Pause';
                 btn.className = 'audio-btn pause';
+                startResumeTimer();
                 speakParagraph(currentParagraphIndex);
             } else if (isPaused) {
                 // Resume
@@ -701,11 +737,13 @@
                 synth.resume();
                 btn.textContent = 'Pause';
                 btn.className = 'audio-btn pause';
+                startResumeTimer();
                 document.getElementById('audioStatus').textContent = 'Resumed';
             } else {
                 // Pause
                 isPaused = true;
                 synth.pause();
+                stopResumeTimer();
                 btn.textContent = 'Resume';
                 btn.className = 'audio-btn play';
                 document.getElementById('audioStatus').textContent = 'Paused';
@@ -714,6 +752,7 @@
 
         function stopNarration() {
             synth.cancel();
+            stopResumeTimer();
             isPlaying = false;
             isPaused = false;
             currentParagraphIndex = 0;
