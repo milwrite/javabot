@@ -3295,8 +3295,8 @@ async function handleMentionAsync(message) {
                         } else {
                             logEvent('MENTION', `READ_ONLY conversational info - fast no-tools response`);
                             await safeEditReply(thinkingMsg, '📖 processing your information request...');
+                            const originalModel = MODEL;
                             try {
-                                const originalModel = MODEL;
                                 MODEL = MODEL_PRESETS.glm;
                                 const simpleResponse = await axios.post(OPENROUTER_URL, {
                                     model: MODEL,
@@ -3328,8 +3328,8 @@ async function handleMentionAsync(message) {
                     // Handle general conversation/greetings with a super fast path
                     if (classification.isConversation) {
                         logEvent('MENTION', `CONVERSATION request - fast small-talk response`);
+                        const originalModel = MODEL;
                         try {
-                            const originalModel = MODEL;
                             MODEL = MODEL_PRESETS.glm;
                             const simpleResponse = await axios.post(OPENROUTER_URL, {
                                 model: MODEL,
