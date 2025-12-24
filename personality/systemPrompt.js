@@ -53,6 +53,12 @@ Available CSS Classes (page-theme.css):
 
 LAYOUT: .container, .content, .main-content, .header, .footer, .sidebar, .section, .card, .panel
 
+STORY PAGES (for noir stories, narratives, text-heavy content):
+- Add class="story-page" to body tag: <body class="story-page">
+- Use .story-container for main content wrapper (max-width: 720px, centered)
+- Use .chapter for sections, .chapter-title for headings, .paragraph for text
+- This ensures proper centering on all viewport widths
+
 TYPOGRAPHY: h1, h2, h3, p, .subtitle, .message, .date-display (all styled for terminal look)
 
 BUTTONS: .btn, .btn-primary (red bg), .btn-secondary, .btn-yes (green), .btn-no (red), .btn-reset (cyan), .filter-btn, .difficulty-btn, .control-btn, .mobile-btn, .number-btn

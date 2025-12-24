@@ -23,64 +23,17 @@ const SportelloAmbient = (function() {
     let timerEndTime = null;
     let initialized = false;
 
-    // Sound presets with better synthesis parameters
+    // Sound presets: type, filterType, filterFreq, filterQ, modulation{freq,depth}, baseFreq, bpm, interval, crackleRate
     const SOUND_PRESETS = {
-        rain: {
-            label: 'Rain',
-            type: 'filtered-noise',
-            filterType: 'lowpass',
-            filterFreq: 400,
-            filterQ: 0.5,
-            modulation: { type: 'lfo', freq: 0.1, depth: 100 }
-        },
-        ocean: {
-            label: 'Ocean Waves',
-            type: 'filtered-noise',
-            filterType: 'bandpass',
-            filterFreq: 150,
-            filterQ: 0.7,
-            modulation: { type: 'lfo', freq: 0.08, depth: 80 }
-        },
-        wind: {
-            label: 'Wind',
-            type: 'filtered-noise',
-            filterType: 'bandpass',
-            filterFreq: 800,
-            filterQ: 2,
-            modulation: { type: 'lfo', freq: 0.15, depth: 400 }
-        },
-        fire: {
-            label: 'Crackling Fire',
-            type: 'crackle',
-            baseFreq: 200,
-            crackleRate: 8
-        },
-        whitenoise: {
-            label: 'White Noise',
-            type: 'noise'
-        },
-        pinknoise: {
-            label: 'Pink Noise',
-            type: 'filtered-noise',
-            filterType: 'lowpass',
-            filterFreq: 1000,
-            filterQ: 0.5
-        },
-        heartbeat: {
-            label: 'Heartbeat',
-            type: 'heartbeat',
-            bpm: 60
-        },
-        chimes: {
-            label: 'Wind Chimes',
-            type: 'chimes',
-            interval: 3000
-        },
-        drone: {
-            label: 'Deep Drone',
-            type: 'drone',
-            baseFreq: 55
-        }
+        rain:       { label: 'Rain',        type: 'filtered-noise', filterType: 'lowpass',  filterFreq: 400,  filterQ: 0.5, modulation: {freq: 0.1, depth: 100} },
+        ocean:      { label: 'Ocean Waves', type: 'filtered-noise', filterType: 'bandpass', filterFreq: 150,  filterQ: 0.7, modulation: {freq: 0.08, depth: 80} },
+        wind:       { label: 'Wind',        type: 'filtered-noise', filterType: 'bandpass', filterFreq: 800,  filterQ: 2,   modulation: {freq: 0.15, depth: 400} },
+        fire:       { label: 'Fire',        type: 'crackle', baseFreq: 200, crackleRate: 8 },
+        whitenoise: { label: 'White Noise', type: 'noise' },
+        pinknoise:  { label: 'Pink Noise',  type: 'filtered-noise', filterType: 'lowpass', filterFreq: 1000, filterQ: 0.5 },
+        heartbeat:  { label: 'Heartbeat',   type: 'heartbeat', bpm: 60 },
+        chimes:     { label: 'Chimes',      type: 'chimes', interval: 3000 },
+        drone:      { label: 'Drone',       type: 'drone', baseFreq: 55 }
     };
 
     // Create noise buffer
@@ -96,29 +49,33 @@ const SportelloAmbient = (function() {
         return buffer;
     }
 
-    // Create a sound layer
+    // Create a sound layer (deferred - no audio nodes until user gesture)
     function createSound(name, preset) {
-        const gain = audioContext.createGain();
-        gain.gain.value = 0;
-        gain.connect(masterGain);
-
-        const soundObj = {
+        return {
             name,
             preset,
-            gain,
+            gain: null,      // Created on first play
             volume: 0.5,
             active: false,
             nodes: [],
             intervals: []
         };
+    }
 
-        return soundObj;
+    // Initialize gain node for a sound (called after user gesture)
+    function ensureGainNode(soundObj) {
+        if (!soundObj.gain && audioContext) {
+            soundObj.gain = audioContext.createGain();
+            soundObj.gain.gain.value = 0;
+            soundObj.gain.connect(masterGain);
+        }
     }
 
     // Start a sound
     function startSound(soundObj) {
         const preset = soundObj.preset;
         stopSound(soundObj); // Clean up any existing nodes
+        ensureGainNode(soundObj); // Create gain node if needed
 
         if (preset.type === 'noise') {
             const source = audioContext.createBufferSource();
@@ -400,11 +357,11 @@ const SportelloAmbient = (function() {
                     this.textContent = sound.active ? 'ON' : 'OFF';
                     this.classList.toggle('active', sound.active);
 
-                    if (isPlaying) {
+                    if (isPlaying && audioContext) {
                         if (sound.active) {
                             startSound(sound);
                             sound.gain.gain.linearRampToValueAtTime(sound.volume, audioContext.currentTime + 0.5);
-                        } else {
+                        } else if (sound.gain) {
                             sound.gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
                             setTimeout(() => stopSound(sound), 600);
                         }
@@ -421,7 +378,7 @@ const SportelloAmbient = (function() {
                     if (!sound) return;
 
                     sound.volume = this.value / 100;
-                    if (isPlaying && sound.active) {
+                    if (isPlaying && sound.active && sound.gain && audioContext) {
                         sound.gain.gain.linearRampToValueAtTime(sound.volume, audioContext.currentTime + 0.1);
                     }
                 });
@@ -496,14 +453,14 @@ const SportelloAmbient = (function() {
             Object.values(sounds).forEach(sound => {
                 if (sound.active) {
                     startSound(sound);
-                    sound.gain.gain.linearRampToValueAtTime(sound.volume, audioContext.currentTime + 2);
+                    if (sound.gain) sound.gain.gain.linearRampToValueAtTime(sound.volume, audioContext.currentTime + 2);
                 }
             });
         },
 
         stopAll: function() {
             Object.values(sounds).forEach(sound => {
-                sound.gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
+                if (sound.gain) sound.gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
                 setTimeout(() => stopSound(sound), 1100);
             });
         },
@@ -535,7 +492,7 @@ const SportelloAmbient = (function() {
             if (status) status.textContent = 'Fading out...';
 
             Object.values(sounds).forEach(sound => {
-                if (sound.active) {
+                if (sound.active && sound.gain && audioContext) {
                     sound.gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 30);
                 }
             });
@@ -578,7 +535,7 @@ const SportelloAmbient = (function() {
                 sound.volume = Math.max(0, Math.min(1, vol));
                 const slider = document.querySelector(`.sa-slider[data-sound="${name}"]`);
                 if (slider) slider.value = sound.volume * 100;
-                if (isPlaying && sound.active && audioContext) {
+                if (isPlaying && sound.active && sound.gain && audioContext) {
                     sound.gain.gain.linearRampToValueAtTime(sound.volume, audioContext.currentTime + 0.1);
                 }
             }

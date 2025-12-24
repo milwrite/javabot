@@ -307,6 +307,34 @@ a.home-link:focus::before {
     padding: 20px;
 }
 
+/* Story page layout - centered content on all viewport widths */
+body.story-page {
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.story-container {
+    max-width: 720px;
+    width: 100%;
+    position: relative;
+}
+
+.story-container .chapter {
+    margin-bottom: 60px;
+}
+
+.story-container .chapter-title {
+    color: var(--color-accent-secondary);
+    font-size: 1.6em;
+    margin-bottom: 20px;
+}
+
+.story-container .paragraph {
+    margin-bottom: 18px;
+    font-size: 1.05em;
+}
+
 /* Input section container */
 .input-section {
     background: rgba(26, 0, 0, 0.4);
