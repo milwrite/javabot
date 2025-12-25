@@ -3225,6 +3225,7 @@ async function handleMentionAsync(message) {
                             logEvent('MENTION', `OpenRouter response received`);
                             let response = cleanBotResponse(simpleResponse.data.choices[0].message.content || '');
                             if (!response) response = getBotResponse('confirmations');
+                            logEvent('MENTION', `Sending reply: ${response.substring(0, 50)}`);
                             await safeEditReply(thinkingMsg, response);
                             addToHistory(username, content, false);
                             addToHistory('Bot Sportello', response, true);
