@@ -3085,11 +3085,11 @@ async function handleMentionAsync(message) {
             thinkingMessage = '🔍 looking that up...';
         }
 
+        // Build conversation context BEFORE sending thinking message (avoids including it in context)
+        const conversationMessages = await buildContextForChannel(message.channel, CONFIG.DISCORD_CONTEXT_LIMIT);
+
         thinkingMsg = await message.reply(thinkingMessage);
         console.log(`[MENTION] Thinking message sent successfully`);
-
-        // Build conversation context for all processing loops
-        const conversationMessages = await buildContextForChannel(message.channel, CONFIG.DISCORD_CONTEXT_LIMIT);
         let processingAttempt = 1;
         const maxProcessingAttempts = 6; // Increased to support multiple model fallbacks
         let lastFailureReason = '';
@@ -3205,15 +3205,16 @@ async function handleMentionAsync(message) {
                         logEvent('MENTION', `CONVERSATION request - fast small-talk response`);
                         const originalModel = MODEL;
                         try {
-                            MODEL = MODEL_PRESETS.glm;
+                            MODEL = MODEL_PRESETS['kimi-fast'];
                             logEvent('MENTION', `Calling OpenRouter with model: ${MODEL}`);
                             const simpleResponse = await axios.post(OPENROUTER_URL, {
                                 model: MODEL,
                                 messages: [
                                     { role: 'system', content: 'You are Bot Sportello. Reply in one or two short friendly sentences. No tools, no files, no code.' },
+                                    ...conversationMessages.slice(-3),
                                     { role: 'user', content: content }
                                 ],
-                                max_tokens: 120,
+                                max_tokens: 100,
                                 temperature: 0.8
                             }, {
                                 headers: {
