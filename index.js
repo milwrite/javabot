@@ -3343,59 +3343,32 @@ async function handleMentionAsync(message) {
                         logEvent('MENTION', `SIMPLE_EDIT request - using streamlined edit loop`);
                         await safeEditReply(thinkingMsg, '✏️ making simple edit...');
                         
+                        // editService handles tool calls internally and returns { text, suggestNormalFlow?, needsClarification? }
                         let llmResult = await getEditResponse(content, conversationMessages);
                         let response = cleanBotResponse(llmResult.text);
-                        
-                        if (llmResult.toolCalls && llmResult.toolCalls.length > 0) {
-                            logEvent('EDIT_LOOP', `Iteration 1: ${llmResult.toolCalls.length} tools`);
 
-                            // Process tool calls and iterate up to 10 times
-                            for (let iteration = 1; iteration <= 10 && llmResult.toolCalls && llmResult.toolCalls.length > 0; iteration++) {
-                                const results = [];
+                        // If edit service suggests using normal flow, break out and let normal processing handle it
+                        if (llmResult.suggestNormalFlow) {
+                            logEvent('EDIT_LOOP', 'Edit service suggests normal flow - breaking out');
+                            break;
+                        }
 
-                                // Show user what tools are being executed
-                                const toolNames = llmResult.toolCalls.map(tc => tc.function?.name || 'unknown').join(', ');
-                                await safeEditReply(thinkingMsg, `✏️ step ${iteration}: ${toolNames}...`);
-
-                                for (const toolCall of llmResult.toolCalls) {
-                                    const result = await executeToolCall(toolCall);
-                                    results.push(result);
-                                }
-
-                                if (iteration < 10) {
-                                    llmResult = await getEditResponse(content, conversationMessages, results);
-                                    response = cleanBotResponse(llmResult.text);
-                                    if (llmResult.toolCalls && llmResult.toolCalls.length > 0) {
-                                        logEvent('EDIT_LOOP', `Iteration ${iteration + 1}: ${llmResult.toolCalls.length} tools`);
-                                    }
-                                }
-                            }
-
-                            // If we have a response from the AI, send it
-                            if (response) {
-                                await safeEditReply(thinkingMsg, response);
-                                addToHistory(username, content, false);
-                                addToHistory('Bot Sportello', response, true);
-                                return; // Success - exit
-                            }
-
-                            // Tools executed but AI didn't provide text - use in-character completion message
-                            const fallbackMsg = `${getBotResponse('success')} changes are live at https://bot.inference-arcade.com/`;
-                            await safeEditReply(thinkingMsg, fallbackMsg);
+                        // Send the response (edit service already processed tool calls internally)
+                        if (response) {
+                            await safeEditReply(thinkingMsg, response);
                             addToHistory(username, content, false);
-                            addToHistory('Bot Sportello', fallbackMsg, true);
-                            return; // Success - exit with fallback message
-                        } else {
-                            logEvent('EDIT_LOOP', 'No tool calls in response - AI may need more context');
+                            addToHistory('Bot Sportello', response, true);
+                            logEvent('EDIT_LOOP', 'Edit completed and response sent');
+                            return; // Success - exit
                         }
 
-                        // If edit loop didn't work, continue to fallback loops below
-                        processingAttempt++;
-                        if (processingAttempt <= maxProcessingAttempts) {
-                            await safeEditReply(thinkingMsg, 'hmm that didn\'t quite work... lemme try a different approach...');
-                            continue;
-                        }
-                        break;
+                        // Fallback if no response text
+                        const fallbackMsg = `${getBotResponse('success')} changes are live at https://bot.inference-arcade.com/`;
+                        await safeEditReply(thinkingMsg, fallbackMsg);
+                        addToHistory(username, content, false);
+                        addToHistory('Bot Sportello', fallbackMsg, true);
+                        logEvent('EDIT_LOOP', 'Edit completed with fallback message');
+                        return; // Success - exit with fallback message
                     }
 
                     // Break out to continue with remaining loops below
