@@ -330,6 +330,13 @@ async function writeFile(filePath, content, options = {}) {
  */
 async function editFile(filePath, oldString = null, newString = null, instructions = null, replacements = null, options = {}) {
     const { aiTemperature = DEFAULTS.AI_TEMPERATURE, onFileChange } = options;
+    // Anchor-range options (optional)
+    const startMarker = options.start_marker;
+    const endMarker = options.end_marker;
+    const newBlock = options.new_block;
+    const includeMarkers = !!options.include_markers;
+    const lineStart = Number.isInteger(options.line_start) ? options.line_start : null;
+    const lineEnd = Number.isInteger(options.line_end) ? options.line_end : null;
     const startTime = Date.now();
     console.log(`[EDIT_FILE] Starting edit for: ${filePath}`);
 
@@ -424,8 +431,34 @@ async function editFile(filePath, oldString = null, newString = null, instructio
                 if (currentContent.replace(/\s+/g, ' ').includes(normalized)) {
                     console.error(`  HINT: Match exists with different whitespace!`);
                 }
+                // Fallback: whitespace-tolerant unique match (strict)
+                const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const tokens = oldString.split(/\s+/).filter(Boolean).map(escapeRegex);
+                if (tokens.length >= 2) {
+                    const pattern = tokens.join('\\s+');
+                    let regex;
+                    try {
+                        regex = new RegExp(pattern, 'gs');
+                    } catch (reErr) {
+                        console.error(`[EDIT_FILE] Whitespace-tolerant regex build failed: ${reErr.message}`);
+                        throw new Error(`String not found in file. Tried a whitespace-tolerant match but failed to build regex.`);
+                    }
 
-                throw new Error(`String not found in file. The exact string to replace was not found. Make sure to use the EXACT string from the file, including all whitespace and indentation.`);
+                    const matches = currentContent.match(regex) || [];
+                    if (matches.length === 1) {
+                        // Unique tolerant match: apply replacement
+                        updatedContent = currentContent.replace(regex, () => newString);
+                        changeDescription = `Replaced (whitespace-tolerant) ${oldString.length} → ${newString.length} chars`;
+                        const replacementTime = ((Date.now() - startTime) / 1000).toFixed(2);
+                        console.log(`[EDIT_FILE] Exact not found; applied whitespace-tolerant replacement in ${replacementTime}s`);
+                    } else if (matches.length > 1) {
+                        throw new Error(`String not found exactly. A whitespace-tolerant match appears ${matches.length} times; please provide more unique context or use replace_all.`);
+                    } else {
+                        throw new Error(`String not found in file. The exact string to replace was not found, and no whitespace-tolerant match was found either.`);
+                    }
+                } else {
+                    throw new Error(`String not found in file. The exact string to replace was not found. Make sure to use the EXACT string from the file, including all whitespace and indentation.`);
+                }
             }
 
             if (occurrences > 1) {
@@ -433,11 +466,58 @@ async function editFile(filePath, oldString = null, newString = null, instructio
             }
 
             // Perform the replacement
-            updatedContent = currentContent.replace(oldString, newString);
-            changeDescription = `Replaced exact string (${oldString.length} → ${newString.length} chars)`;
+            if (!updatedContent) { // Not set by whitespace-tolerant fallback
+                updatedContent = currentContent.replace(oldString, newString);
+                changeDescription = `Replaced exact string (${oldString.length} → ${newString.length} chars)`;
+            }
 
             const replacementTime = ((Date.now() - startTime) / 1000).toFixed(2);
             console.log(`[EDIT_FILE] Exact replacement completed in ${replacementTime}s`);
+
+        // Mode 1b: Anchor-range replacement (deterministic multi-line edits)
+        } else if ((startMarker && endMarker && typeof newBlock === 'string') || (lineStart && lineEnd && typeof newBlock === 'string')) {
+            console.log('[EDIT_FILE] Using anchor-range replacement mode');
+            // Prefer marker-based when provided
+            if (startMarker && endMarker) {
+                const firstIdx = currentContent.indexOf(startMarker);
+                const lastIdx = currentContent.lastIndexOf(startMarker);
+                if (firstIdx === -1) {
+                    throw new Error(`Start marker not found: "${startMarker.slice(0, 80)}"`);
+                }
+                if (firstIdx !== lastIdx) {
+                    throw new Error('Start marker appears multiple times; provide a more specific marker.');
+                }
+                const endFirst = currentContent.indexOf(endMarker);
+                const endLast = currentContent.lastIndexOf(endMarker);
+                if (endFirst === -1) {
+                    throw new Error(`End marker not found: "${endMarker.slice(0, 80)}"`);
+                }
+                if (endFirst !== endLast) {
+                    throw new Error('End marker appears multiple times; provide a more specific marker.');
+                }
+                const startIdx = firstIdx;
+                const endIdx = endFirst;
+                if (endIdx < startIdx) {
+                    throw new Error('End marker appears before start marker.');
+                }
+                let replaceStart = includeMarkers ? startIdx : startIdx + startMarker.length;
+                let replaceEnd = includeMarkers ? endIdx + endMarker.length : endIdx;
+                if (replaceStart < 0 || replaceEnd > currentContent.length || replaceStart > replaceEnd) {
+                    throw new Error('Computed replacement range is invalid.');
+                }
+                updatedContent = currentContent.slice(0, replaceStart) + newBlock + currentContent.slice(replaceEnd);
+                changeDescription = `Replaced block between markers${includeMarkers ? ' (including markers)' : ''}`;
+            } else {
+                // Line-range replacement (1-based inclusive)
+                const lines = currentContent.split('\n');
+                if (!lineStart || !lineEnd || lineStart < 1 || lineEnd < lineStart || lineEnd > lines.length) {
+                    throw new Error('Invalid line range for replacement.');
+                }
+                const insertLines = newBlock.split('\n');
+                lines.splice(lineStart - 1, lineEnd - lineStart + 1, ...insertLines);
+                updatedContent = lines.join('\n');
+                changeDescription = `Replaced lines ${lineStart}-${lineEnd}`;
+            }
 
         // Mode 2: AI-based editing (SLOW - fallback for complex changes)
         } else if (instructions !== null) {

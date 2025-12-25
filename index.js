@@ -2139,7 +2139,7 @@ Do not use web search or create new content - only edit existing files.`
                 type: 'function',
                 function: {
                     name: 'edit_file',
-                    description: 'Edit an existing file using EXACT string replacement. Always use exact mode for speed. Supports batch mode for multiple replacements.',
+                    description: 'Edit an existing file via exact replace, batch, or anchor-range (markers or line range). Prefer exact; use anchor-range for multi-line changes.',
                     parameters: {
                         type: 'object',
                         properties: {
@@ -2157,8 +2157,15 @@ Do not use web search or create new content - only edit existing files.`
                                     },
                                     required: ['old', 'new']
                                 },
-                                description: 'Batch mode: array of replacements for multiple edits in one call'
-                            }
+                                description: 'BATCH MODE: array of replacements for multiple edits in one call'
+                            },
+                            // Anchor-range mode
+                            start_marker: { type: 'string', description: 'Unique start marker text (appears once)' },
+                            end_marker: { type: 'string', description: 'Unique end marker text (appears once, after start)' },
+                            new_block: { type: 'string', description: 'Replacement block to insert for marker or line range modes' },
+                            include_markers: { type: 'boolean', description: 'If true, replace including markers; else keep markers and replace only inner block (default: false)' },
+                            line_start: { type: 'integer', description: '1-based start line (inclusive) for line range mode' },
+                            line_end: { type: 'integer', description: '1-based end line (inclusive) for line range mode' }
                         },
                         required: ['path']
                     }
@@ -2229,8 +2236,8 @@ Do not use web search or create new content - only edit existing files.`
                     });
                     continue;
                 }
-
                 let result;
+                const toolStartTime = Date.now();
                 if (functionName === 'file_exists') {
                     result = await fileExists(args.path);
                 } else if (functionName === 'search_files') {
@@ -2240,13 +2247,41 @@ Do not use web search or create new content - only edit existing files.`
                 } else if (functionName === 'read_file') {
                     result = await readFile(args.path);
                 } else if (functionName === 'edit_file') {
-                    result = await editFileService(args.path, args.old_string, args.new_string, args.instructions, args.replacements, { onFileChange: logFileChange });
+                    result = await editFileService(
+                        args.path,
+                        args.old_string,
+                        args.new_string,
+                        args.instructions,
+                        args.replacements,
+                        {
+                            onFileChange: logFileChange,
+                            start_marker: args.start_marker,
+                            end_marker: args.end_marker,
+                            new_block: args.new_block,
+                            include_markers: args.include_markers,
+                            line_start: args.line_start,
+                            line_end: args.line_end
+                        }
+                    );
                     if (!result.startsWith('Error')) {
                         editCompleted = true;
                         logEvent('EDIT_LOOP', 'Edit completed successfully');
                     }
                 } else if (functionName === 'list_files') {
                     result = await listFiles(args.path || './src');
+                }
+
+                // Log tool call to DB/GUI for streamlined edit loop
+                try {
+                    const isError = typeof result === 'string' && /^Error\b/.test(result);
+                    logToolCall(functionName, args, result, isError ? result : null, {
+                        durationMs: Date.now() - toolStartTime,
+                        iteration,
+                        channelId: null,
+                        userId: null
+                    });
+                } catch (e) {
+                    // Non-fatal if logging fails
                 }
 
                 toolResults.push({
@@ -2434,14 +2469,14 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 type: 'function',
                 function: {
                     name: 'edit_file',
-                    description: 'Edit an existing file using EXACT string replacement (preferred), batch replacement, or natural language instructions (fallback). ALWAYS prefer exact replacement for speed and accuracy. Use batch mode for multiple edits in one call.',
+                    description: 'Edit a file via exact replace (preferred), batch, anchor-range (markers/line range), or instructions (last resort).',
                     parameters: {
                         type: 'object',
                         properties: {
                             path: { type: 'string', description: 'File path to edit (e.g., "src/example.html", "index.html", "style.css")' },
-                            old_string: { type: 'string', description: 'EXACT string to replace (including all whitespace, indentation, newlines). Must be unique in the file. If not unique, provide more surrounding context to make it unique. PREFERRED METHOD - use this whenever possible for fast, deterministic edits.' },
-                            new_string: { type: 'string', description: 'New string to replace old_string with. Use with old_string parameter.' },
-                            instructions: { type: 'string', description: 'FALLBACK: Natural language instructions for complex edits (e.g., "change all background colors to blue"). Only use when exact replacement is not feasible. This mode is SLOW (requires AI processing).' },
+                            old_string: { type: 'string', description: 'EXACT string to replace (including all whitespace). Must be unique.' },
+                            new_string: { type: 'string', description: 'New string to replace old_string with.' },
+                            instructions: { type: 'string', description: 'FALLBACK: Natural language instructions (slow); avoid unless necessary.' },
                             replacements: {
                                 type: 'array',
                                 items: {
@@ -2453,8 +2488,15 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                                     },
                                     required: ['old', 'new']
                                 },
-                                description: 'BATCH MODE: Array of replacements for multiple edits in one call. Fastest for multiple changes.'
-                            }
+                                description: 'BATCH MODE: Array of replacements for multiple edits in one call.'
+                            },
+                            // Anchor-range mode
+                            start_marker: { type: 'string', description: 'Unique start marker text' },
+                            end_marker: { type: 'string', description: 'Unique end marker text (after start)' },
+                            new_block: { type: 'string', description: 'Replacement block for marker/line modes' },
+                            include_markers: { type: 'boolean', description: 'If true, replace including markers (default false)' },
+                            line_start: { type: 'integer', description: '1-based start line (inclusive) for line range mode' },
+                            line_end: { type: 'integer', description: '1-based end line (inclusive) for line range mode' }
                         },
                         required: ['path']
                     }
@@ -2738,7 +2780,22 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         logEvent('LLM', `Skipped redundant edit of ${args.path}`);
                     } else {
                         // Support both exact replacement (preferred) and AI-based instructions (fallback)
-                        result = await editFileService(args.path, args.old_string, args.new_string, args.instructions, args.replacements, { onFileChange: logFileChange });
+                        result = await editFileService(
+                            args.path,
+                            args.old_string,
+                            args.new_string,
+                            args.instructions,
+                            args.replacements,
+                            {
+                                onFileChange: logFileChange,
+                                start_marker: args.start_marker,
+                                end_marker: args.end_marker,
+                                new_block: args.new_block,
+                                include_markers: args.include_markers,
+                                line_start: args.line_start,
+                                line_end: args.line_end
+                            }
+                        );
                         editedFiles.add(args.path);
                         if (!result.startsWith('Error')) {
                             completedActions++;
@@ -2785,13 +2842,16 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                     result = await setModel(args.model);
                 }
 
-                // Log tool call to GUI dashboard and PostgreSQL
-                logToolCall(functionName, args, result, null, {
-                    durationMs: Date.now() - toolStartTime,
-                    iteration,
-                    channelId: discordContext.channelId,
-                    userId: discordContext.userId
-                });
+                // Log tool call to GUI dashboard and PostgreSQL (mark errors when result indicates failure)
+                try {
+                    const isError = typeof result === 'string' && /^Error\b/.test(result);
+                    logToolCall(functionName, args, result, isError ? result : null, {
+                        durationMs: Date.now() - toolStartTime,
+                        iteration,
+                        channelId: discordContext.channelId,
+                        userId: discordContext.userId
+                    });
+                } catch (_) { /* ignore logging failure */ }
 
                 toolResults.push({
                     role: 'tool',

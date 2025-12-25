@@ -206,13 +206,28 @@ function fallbackClassification(prompt, meta = {}) {
         };
     }
 
+    // Treat URL+edit intent as SIMPLE_EDIT (e.g., bot.inference-arcade.com/src/... edit ...)
+    const mentionsSrcUrl = /(bot\.inference-arcade\.com\/src\/|(^|\s)src\/[^\s]+\.(html|js|css)\b)/i.test(lowerPrompt);
+    const hasEditVerb = /\b(edit|change|replace|update|set|make)\b/i.test(lowerPrompt);
+    if (mentionsSrcUrl && hasEditVerb) {
+        return {
+            type: 'SIMPLE_EDIT',
+            isEdit: true,
+            isCreate: false,
+            isCommit: false,
+            isReadOnly: false,
+            isConversation: false,
+            method: meta.method || 'fallback'
+        };
+    }
+
     // Simple edit indicators (text/content changes without fix/bug keywords)
     // Must check BEFORE functionality fix to catch "change X to Y" patterns
     const simpleEditPatterns = [
-        /\b(change|replace|update|set)\b.+\b(to|with)\b/i,
-        /\b(title|text|heading|label|name)\b.+\b(should be|says?|to)\b/i,
-        /\bedit\b.*\b(file|page|content)\b/i,
-        /\bin\s+src\/.*\b(change|replace|update)\b/i
+        /\b(change|replace|update|set|make)\b.+\b(to|with|instead of)\b/i,
+        /\b(title|text|heading|label|name|unit|units)\b.+\b(should be|says?|to)\b/i,
+        /\bedit\b.*\b(file|page|webpage|content|html)\b/i,
+        /\bin\s+src\/.*\b(change|replace|update|edit)\b/i
     ];
     if (simpleEditPatterns.some(re => re.test(lowerPrompt))) {
         return {
