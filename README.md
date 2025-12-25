@@ -72,15 +72,18 @@ Install and run:
 
 **@ Mentions**
 - `messageCreate` tracks history and routes mentions to `handleMentionAsync`.
-- `requestClassifier` categorizes intent (CREATE_NEW, SIMPLE_EDIT, FUNCTIONALITY_FIX, etc.)
-- `llmRouter` generates structured routing plans with tool sequences and parameter hints:
+- **LLM Router runs FIRST** (`llmRouter.js`) - generates structured routing plans:
   - Outputs: `{ intent, toolSequence, parameterHints, confidence, reasoning }`
   - Enforces prerequisites (e.g., `file_exists` → `read_file` → `edit_file`)
   - Uses Gemma 3 12B for fast, accurate routing (~2-4s)
+- `requestClassifier` runs as backup - keyword-based fast path gating
+- **Fast paths require BOTH to agree**: Router `intent='chat'` + Classifier `isConversation` → fast path
+- If router says `intent='create'|'edit'|'build'` → full agent with tools (regardless of classifier)
 - Routing paths:
-  - CREATE_NEW → `runGamePipeline(...)` (Architect → Builder → Tester → Scribe)
-  - FUNCTIONALITY_FIX or SIMPLE_EDIT → agent loop with routing guidance
-  - READ_ONLY → direct LLM answer (no file edits)
+  - `intent=create|build` → `runGamePipeline(...)` (Architect → Builder → Tester → Scribe)
+  - `intent=edit` or FUNCTIONALITY_FIX → agent loop with routing guidance
+  - `intent=read` → direct LLM answer (no file edits)
+  - `intent=chat` (high confidence) + classifier agrees → fast small-talk response
 - Long answers are truncated in Discord and saved fully to `responses/`.
 
 **Content pipeline (services/gamePipeline.js)**
@@ -160,6 +163,11 @@ AI & utilities:
 - Build logs: `build-logs/<id>.json` with stage-by-stage entries; summaries inform the architect prompt.
 - Long outputs: written under `responses/` and linked from Discord.
 - Memory file: `agents.md` (recent messages + optional summary).
+
+**Production Logs (Railway PostgreSQL):**
+- Via Discord: `/logs recent`, `/logs errors`, `/logs stats`
+- Via CLI: `source .env && psql "$DATABASE_URL" -c "SELECT * FROM bot_events WHERE timestamp > NOW() - INTERVAL '2 hours' ORDER BY timestamp DESC LIMIT 30;"`
+- Note: `railway logs` shows PostgreSQL database logs, not bot application logs
 
 ## Security Notes
 

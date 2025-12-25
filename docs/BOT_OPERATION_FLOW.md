@@ -61,15 +61,21 @@ graph TD
     %% INPUT PHASE
     User([User @mention or /command]) --> Discord[Discord Interface]
     Discord --> Context[Context Manager<br/>5 messages, 60s cache]
-    Context --> Classifier{Request Classifier}
+    Context --> Router{LLM Router<br/>Gemma 3 12B}
+    Router --> Classifier{Keyword Classifier}
 
-    %% CLASSIFICATION (Keyword-based by default)
-    Classifier -- "CREATE_NEW" --> Pipeline(Game Pipeline)
-    Classifier -- "SIMPLE_EDIT" --> EditLoop(Edit Loop)
-    Classifier -- "FUNCTIONALITY_FIX" --> AgenticLoop(Agentic Loop)
-    Classifier -- "COMMIT" --> GitOps(Git Operations)
-    Classifier -- "READ_ONLY" --> FastRead(Fast Path: Info Query)
-    Classifier -- "CONVERSATION" --> FastChat(Fast Path: Small Talk)
+    %% ROUTING DECISION (Router + Classifier must agree for fast paths)
+    Router -- "intent=chat + high conf" --> ChatCheck{Classifier agrees?}
+    ChatCheck -- "Yes" --> FastChat(Fast Path: Small Talk)
+    ChatCheck -- "No" --> AgenticLoop
+
+    Router -- "intent=create" --> Pipeline(Game Pipeline)
+    Router -- "intent=edit" --> EditLoop(Edit Loop)
+    Router -- "intent=commit" --> GitOps(Git Operations)
+    Router -- "intent=read" --> FastRead(Fast Path: Info Query)
+    Router -- "intent=build" --> Pipeline
+
+    Classifier -- "Fallback" --> AgenticLoop(Agentic Loop)
 
     %% FAST PATHS (No tool calling)
     FastRead --> SimpleResponse[Simple LLM Response]
@@ -116,24 +122,11 @@ graph TD
 
 ## 3. Component Breakdown
 
-### A. The Brain (Request Classifier + LLM Router)
+### A. The Brain (LLM Router + Request Classifier)
 
-**Stage 1: Request Classifier** (`services/requestClassifier.js`)
+**Stage 1: LLM Router** (`services/llmRouter.js`) - **RUNS FIRST**
 
-Keyword-based classification (no API call, instant) into buckets:
-
-| Type | Trigger | Route |
-|------|---------|-------|
-| `CREATE_NEW` | "create", "build", "generate", "new" | Game Pipeline |
-| `SIMPLE_EDIT` | Simple text replacements | Edit Loop |
-| `FUNCTIONALITY_FIX` | "fix", "bug", "css", "responsive" | Agentic Loop |
-| `COMMIT` | "commit this", "push changes", "save" | Git Operations |
-| `READ_ONLY` | "show", "list", "find", "what", "search" | Fast Path |
-| `CONVERSATION` | Greetings, short messages (<20 chars) | Fast Path |
-
-**Stage 2: LLM Router** (`services/llmRouter.js`)
-
-After classification, generates a structured routing plan using Gemma 3 12B (~2-4s):
+The router analyzes requests BEFORE fast path decisions using Gemma 3 12B (~2-4s):
 
 ```json
 {
@@ -151,7 +144,24 @@ After classification, generates a structured routing plan using Gemma 3 12B (~2-
 - **Parameter Extraction**: Pre-extracts file paths, patterns from user request
 - **Graceful Fallback**: Falls back to pattern matching if LLM fails
 
-**Fast Paths**: `READ_ONLY` and `CONVERSATION` requests bypass tool calling entirely for speed.
+**Stage 2: Request Classifier** (`services/requestClassifier.js`) - **BACKUP**
+
+Keyword-based classification (no API call, instant) - used as backup and for fast path gating:
+
+| Type | Trigger | Route |
+|------|---------|-------|
+| `CREATE_NEW` | "create", "build", "generate", "new" | Game Pipeline |
+| `SIMPLE_EDIT` | Simple text replacements | Edit Loop |
+| `FUNCTIONALITY_FIX` | "fix", "bug", "css", "responsive" | Agentic Loop |
+| `COMMIT` | "commit this", "push changes", "save" | Git Operations |
+| `READ_ONLY` | "show", "list", "find", "what", "search" | Fast Path |
+| `CONVERSATION` | Greetings, short messages (<20 chars) | Fast Path |
+
+**Router + Classifier Interaction:**
+- Fast paths (CONVERSATION, READ_ONLY) only trigger if **BOTH** agree
+- Router `intent='chat'` with `confidence >= 0.6` + classifier `isConversation=true` → fast path
+- If router says `intent='create'|'edit'|'build'` → full agent with tools (regardless of classifier)
+- This prevents the classifier from incorrectly routing tool-requiring requests to conversation fast path
 
 ### B. The Factory (Game Pipeline)
 
@@ -340,6 +350,28 @@ SportelloNarrator.init({
 | `session-logs/*.json` | Bot session reports | One per run via run-bot.sh |
 | Discord API | Conversation context | 5 messages, 60s cache |
 | PostgreSQL (Railway) | Long-term event logs | Queryable via `/logs` command |
+
+### Debugging Production Logs
+
+**Via Discord:**
+- `/logs recent [type] [limit]` - View recent events
+- `/logs errors [period]` - Error statistics (1h, 24h, 7d)
+- `/logs stats [days]` - Activity summary
+
+**Via CLI (for debugging production issues):**
+```bash
+# Railway logs shows PostgreSQL, not bot application logs
+railway logs
+
+# Query bot events directly from PostgreSQL
+source .env && psql "$DATABASE_URL" -c "SELECT event_type, to_char(timestamp, 'HH24:MI:SS') as time, payload::text FROM bot_events WHERE timestamp > NOW() - INTERVAL '2 hours' ORDER BY timestamp DESC LIMIT 30;"
+
+# Check recent tool calls
+source .env && psql "$DATABASE_URL" -c "SELECT tool_name, to_char(timestamp, 'HH24:MI:SS') as time, SUBSTRING(arguments::text FROM 1 FOR 200) as args FROM tool_calls WHERE timestamp > NOW() - INTERVAL '2 hours' ORDER BY timestamp DESC LIMIT 20;"
+
+# Check for errors
+source .env && psql "$DATABASE_URL" -c "SELECT to_char(timestamp, 'HH24:MI:SS') as time, SUBSTRING(payload::text FROM 1 FOR 400) as payload FROM bot_events WHERE event_type = 'error' AND timestamp > NOW() - INTERVAL '3 hours' ORDER BY timestamp DESC LIMIT 15;"
+```
 
 ---
 

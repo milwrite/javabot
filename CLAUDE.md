@@ -148,13 +148,20 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 8. Message tracking, @ mention responses, and bot ready event
 
 **Services Modules** (`/services/`):
-- `llmRouter.js` - LLM-based intelligent routing (generates tool sequence plans, uses Gemma 3 12B)
+- `llmRouter.js` - **Primary request router** (LLM-based, runs BEFORE fast paths, uses Gemma 3 12B)
+- `requestClassifier.js` - Backup keyword classifier (only used if router fails or for fast path gating)
 - `filesystem.js` - File operations (listFiles, fileExists, readFile, writeFile, editFile, searchFiles)
 - `gitHelper.js` - GitHub API operations (octokit, pushFileViaAPI, getExistingFileSha)
 - `gamePipeline.js` - Game building pipeline
 - `llmClient.js` - OpenRouter API client with role-specific prompts
-- `requestClassifier.js` - Request classification (keyword-based, fast path)
 - `postgres.js` - PostgreSQL logging service (Railway database)
+
+**Request Routing Flow** (for @mentions):
+1. `generateRoutingPlan()` runs FIRST - LLM analyzes request, returns `{intent, toolSequence, confidence}`
+2. Keyword classifier runs as backup
+3. Fast paths check: only trigger if BOTH router and classifier agree (e.g., `intent='chat' + confidence>=0.6`)
+4. If router says `intent='create'|'edit'|'build'` etc., request goes to full agent with tools
+5. This prevents keyword classifier from incorrectly routing tool-requiring requests to conversation fast path
 
 **Config Modules** (`/config/`):
 - `models.js` - MODEL_PRESETS, OPENROUTER_URL, reasoning config
@@ -271,6 +278,21 @@ Optional long-term logging to Railway PostgreSQL database. Enables querying of h
 - `/logs recent [type] [limit]` - View recent events
 - `/logs errors [period]` - Error statistics (1h, 24h, 7d)
 - `/logs stats [days]` - Activity summary
+
+**Query via CLI (for debugging production issues):**
+```bash
+# Get Railway logs (shows PostgreSQL, not bot logs)
+railway logs
+
+# Query PostgreSQL directly for bot events
+source .env && psql "$DATABASE_URL" -c "SELECT event_type, to_char(timestamp, 'HH24:MI:SS') as time, payload::text FROM bot_events WHERE timestamp > NOW() - INTERVAL '2 hours' ORDER BY timestamp DESC LIMIT 30;"
+
+# Check recent tool calls
+source .env && psql "$DATABASE_URL" -c "SELECT tool_name, to_char(timestamp, 'HH24:MI:SS') as time, SUBSTRING(arguments::text FROM 1 FOR 200) as args FROM tool_calls WHERE timestamp > NOW() - INTERVAL '2 hours' ORDER BY timestamp DESC LIMIT 20;"
+
+# Check for errors
+source .env && psql "$DATABASE_URL" -c "SELECT to_char(timestamp, 'HH24:MI:SS') as time, SUBSTRING(payload::text FROM 1 FOR 400) as payload FROM bot_events WHERE event_type = 'error' AND timestamp > NOW() - INTERVAL '3 hours' ORDER BY timestamp DESC LIMIT 15;"
+```
 
 **Non-blocking**: All logging is fire-and-forget to avoid impacting bot performance.
 

@@ -1,3 +1,25 @@
+## 2025-12-25
+
+### Fix: LLM Router Now Runs Before Fast Paths
+
+**Issue:** Bot was not following instructions - requests like "tell a story about cen's dreams" were being classified as CONVERSATION and routed to a fast path without tool access, even though they required content creation.
+
+**Root Cause:** The keyword-based `requestClassifier` ran BEFORE the LLM router, and its fallback (line 275-284) defaulted unknown requests to `isConversation: true`. This triggered the conversation fast path, which bypassed the full agent with tools.
+
+**Fix:** Moved `generateRoutingPlan()` to run FIRST (before fast path checks). The conversation fast path now only triggers if BOTH:
+1. Router says `intent='chat'` with `confidence >= 0.6`
+2. Classifier says `isConversation=true`
+
+If the router identifies a non-chat intent (create, edit, build, etc.), the request goes to the full agent with tools regardless of what the keyword classifier says.
+
+### Files Modified
+- `index.js` - Moved router generation before while loop, added router gating for conversation fast path
+- `CLAUDE.md` - Added CLI log queries, documented router flow
+- `README.md` - Updated @ Mentions section to show router-first architecture
+- `docs/BOT_OPERATION_FLOW.md` - Updated mermaid diagram and component breakdown
+
+---
+
 ## 2025-12-24
 
 ### Feature: LLM-Based Intelligent Routing
