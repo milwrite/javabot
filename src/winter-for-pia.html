@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winter for Pia - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        :root {
+            --noir-bg: #0a0a0a;
+            --noir-accent: #7ec8e3;
+            --noir-header: #00ffff;
+            --noir-btn: #ff0000;
+        }
+
+        body {
+            background-color: var(--noir-bg);
+            color: var(--noir-accent);
+            font-family: 'Courier Prime', monospace;
+            padding-top: 80px;
+            margin: 0;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--noir-header);
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px var(--noir-header);
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 20px;
+            text-align: center;
+            max-width: 90%;
+        }
+
+        #viz-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 60vh;
+            min-height: 400px;
+            border: 1px solid var(--noir-header);
+            background: #000;
+            overflow: hidden;
+            touch-action: none; /* Prevent scrolling while interacting */
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #fog-layer {
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        #snow-layer {
+            z-index: 1;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        button {
+            background-color: var(--noir-bg);
+            color: var(--noir-btn);
+            border: 2px solid var(--noir-btn);
+            padding: 12px 24px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            min-height: 48px; /* Touch target */
+            transition: all 0.2s ease;
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.2);
+        }
+
+        button:active {
+            background-color: var(--noir-btn);
+            color: var(--noir-bg);
+            box-shadow: 0 0 15px var(--noir-btn);
+        }
+
+        .instruction {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--noir-header);
+            pointer-events: none;
+            text-align: center;
+            z-index: 5;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border: 1px dashed var(--noir-header);
+            transition: opacity 0.5s;
+        }
+
+        .hidden {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link" aria-label="Back to home"></a>
+
+    <h1>Winter for Pia</h1>
+    <p class="subtitle">System: Visualization // Status: Frozen</p>
+
+    <div id="viz-container">
+        <canvas id="snow-layer"></canvas>
+        <canvas id="fog-layer"></canvas>
+        <div id="instruction" class="instruction">TAP TO REVEAL</div>
+    </div>
+
+    <div class="controls">
+        <button id="sound-toggle" aria-label="Toggle Ambient Sound">Enable Audio</button>
+        <button id="reset-fog" aria-label="Reset Fog">Reset Fog</button>
+    </div>
+
+    <script>
+        /**
+         * VISUALIZATION: Winter for Pia
+         * Type: Canvas Animation / Tap Reveal
+         * Theme: Noir
+         */
+
+        const container = document.getElementById('viz-container');
+        const snowCanvas = document.getElementById('snow-layer');
+        const fogCanvas = document.getElementById('fog-layer');
+        const sCtx = snowCanvas.getContext('2d');
+        const fCtx = fogCanvas.getContext('2d');
+        const instruction = document.getElementById('instruction');
+        const soundBtn = document.getElementById('sound-toggle');
+        const resetBtn = document.getElementById('reset-fog');
+
+        let width, height;
+        let audioCtx;
+        let isAudioPlaying = false;
+        let windNode = null;
+        let gainNode = null;
+
+        // Resize Handling
+        function resize() {
+            width = container.clientWidth;
+            height = container.clientHeight;
+            
+            snowCanvas.width = width;
+            snowCanvas.height = height;
+            fogCanvas.width = width;
+            fogCanvas.height = height;
+
+            fillFog();
+        }
+
+        // --- SNOW SYSTEM ---
+        const snowflakes = [];
+        const flakeCount = 150;
+
+        class Snowflake {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * -height; // Start above
+                this.speed = Math.random() * 2 + 1;
+                this.size = Math.random() * 2 + 0.5;
+                this.opacity = Math.random() * 0.5 + 0.1;
+                this.drift = (Math.random() - 0.5) * 0.5;
+            }
+
+            update() {
+                this.y += this.speed;
+                this.x += this.drift;
+
+                if (this.y > height) {
+                    this.reset();
+                }
+                if (this.x > width || this.x < 0) {
+                    this.x = (this.x + width) % width;
+                }
+            }
+
+            draw() {
+                sCtx.beginPath();
+                sCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                sCtx.fillStyle = `rgba(126, 200, 227, ${this.opacity})`; // #7ec8e3
+                sCtx.fill();
+            }
+        }
+
+        function initSnow() {
+            for(let i=0; i<flakeCount; i++) {
+                snowflakes.push(new Snowflake());
+            }
+        }
+
+        function animateSnow() {
+            sCtx.clearRect(0, 0, width, height);
+            
+            // Draw a subtle gradient background for the snow layer
+            const grad = sCtx.createLinearGradient(0, 0, 0, height);
+            grad.addColorStop(0, '#000000');
+            grad.addColorStop(1, '#0a0a0a');
+            sCtx.fillStyle = grad;
+            sCtx.fillRect(0, 0, width, height);
+
+            snowflakes.forEach(flake => {
+                flake.update();
+                flake.draw();
+            });
+            requestAnimationFrame(animateSnow);
+        }
+
+        // --- FOG REVEAL SYSTEM ---
+        function fillFog() {
+            fCtx.globalCompositeOperation = 'source-over';
+            fCtx.fillStyle = '#0a0a0a'; // Solid black matching theme
+            fCtx.fillRect(0, 0, width, height);
+            
+            // Add some texture/noise to the fog so it's not flat
+            fCtx.fillStyle = '#111';
+            for(let i=0; i<1000; i++) {
+                fCtx.fillRect(Math.random()*width, Math.random()*height, 2, 2);
+            }
+        }
+
+        function reveal(x, y) {
+            // Create a "flashlight" or "heat" effect
+            const radius = 80;
+            
+            fCtx.globalCompositeOperation = 'destination-out';
+            
+            // Create a soft gradient for the hole
+            const gradient = fCtx.createRadialGradient(x, y, 10, x, y, radius);
+            gradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            fCtx.fillStyle = gradient;
+            fCtx.beginPath();
+            fCtx.arc(x, y, radius, 0, Math.PI * 2);
+            fCtx.fill();
+
+            // Add a cyan glow ring on the snow layer momentarily (visual feedback)
+            sCtx.globalCompositeOperation = 'source-over';
+            sCtx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+            sCtx.lineWidth = 2;
+            sCtx.beginPath();
+            sCtx.arc(x, y, radius - 10, 0, Math.PI * 2);
+            sCtx.stroke();
+        }
+
+        function handleInput(e) {
+            e.preventDefault();
+            instruction.classList.add('hidden');
+            
+            const rect = fogCanvas.getBoundingClientRect();
+            let clientX, clientY;
+
+            if (e.changedTouches) {
+                clientX = e.changedTouches[0].clientX;
+                clientY = e.changedTouches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+
+            reveal(x, y);
+
+            // Attempt to resume audio context on first interaction if enabled
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        fogCanvas.addEventListener('mousedown', handleInput);
+        fogCanvas.addEventListener('touchstart', handleInput, { passive: false });
+
+        // --- AUDIO SYSTEM (White Noise / Wind) ---
+        function createWindBuffer() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            const bufferSize = audioCtx.sampleRate * 2; // 2 seconds buffer
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < bufferSize; i++) {
+                // Pink noise approximation
+                const white = Math.random() * 2 - 1;
+                data[i] = (lastOut + (0.02 * white)) / 1.02;
+                lastOut = data[i];
+                data[i] *= 3.5; 
+            }
+            return buffer;
+        }
+
+        let lastOut = 0;
+
+        function toggleSound() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (isAudioPlaying) {
+                if (gainNode) gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+                setTimeout(() => {
+                    if(windNode) windNode.stop();
+                    windNode = null;
+                }, 500);
+                soundBtn.textContent = "Enable Audio";
+                soundBtn.style.backgroundColor = "var(--noir-bg)";
+                soundBtn.style.color = "var(--noir-btn)";
+                isAudioPlaying = false;
+            } else {
+                // Start Wind
+                const buffer = createWindBuffer();
+                windNode = audioCtx.createBufferSource();
+                windNode.buffer = buffer;
+                windNode.loop = true;
+
+                // Lowpass filter to make it sound like wind/howling
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 400;
+
+                gainNode = audioCtx.createGain();
+                gainNode.gain.value = 0.001;
+
+                windNode.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                windNode.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.15, audioCtx.currentTime + 1); // Fade in
+
+                // Modulate filter for dynamic wind effect
+                setInterval(() => {
+                    if(isAudioPlaying && filter) {
+                        const time = audioCtx.currentTime;
+                        filter.frequency.setValueAtTime(400, time);
+                        filter.frequency.linearRampToValueAtTime(800 + Math.random() * 400, time + 2);
+                    }
+                }, 2000);
+
+                soundBtn.textContent = "Disable Audio";
+                soundBtn.style.backgroundColor = "var(--noir-btn)";
+                soundBtn.style.color = "var(--noir-bg)";
+                isAudioPlaying = true;
+            }
+        }
+
+        soundBtn.addEventListener('click', toggleSound);
+        resetBtn.addEventListener('click', () => {
+            fillFog();
+            instruction.classList.remove('hidden');
+        });
+
+        // --- INIT ---
+        window.addEventListener('resize', resize);
+        resize();
+        initSnow();
+        animateSnow();
+
+    </script>
+</body>
+</html>

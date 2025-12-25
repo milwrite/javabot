@@ -452,6 +452,13 @@
       "description": "responsive noir dream story",
       "collection": "stories-content",
       "hidden": false
+    },
+    "winter-for-pia": {
+      "title": "Winter for Pia",
+      "icon": "📊",
+      "description": "moody winter canvas viz",
+      "collection": "utilities-apps",
+      "hidden": false
     }
   }
 }
