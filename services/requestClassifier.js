@@ -37,7 +37,7 @@ async function classifyRequest(prompt, options = {}) {
         const classificationPrompt = `Classify the following user request into ONE of these categories:
 
 1. **SIMPLE_EDIT** - Simple text replacement or small content changes (e.g., "change the title to X", "replace this text with that")
-2. **FUNCTIONALITY_FIX** - Fixing bugs, CSS issues, JavaScript problems, or improving functionality (e.g., "fix the button", "make mobile responsive", "add CSS styling")
+2. **FUNCTIONALITY_FIX** - Fixing bugs, debugging, CSS issues, JavaScript problems, or improving functionality (e.g., "fix the button", "debug this", "make mobile responsive", "isn't working")
 3. **CREATE_NEW** - User wants to create something new from scratch (new page, game, feature, content, etc.)
 4. **COMMIT** - Git operations like committing, pushing, saving changes (e.g., "commit this", "save this", "push changes")
 5. **READ_ONLY** - User wants information, wants to see/list/find something, or is asking a question without requesting changes
@@ -55,7 +55,7 @@ Analyze the intent carefully:
 
 CRITICAL: 
 - Requests involving "commit", "save", "push", "git" are COMMIT operations
-- Requests involving "fix", "CSS", "JS", "styling", "responsive", "mobile", "button issues" are FUNCTIONALITY_FIX, not SIMPLE_EDIT
+- Requests involving "fix", "debug", "not working", "CSS", "JS", "styling", "responsive", "mobile" are FUNCTIONALITY_FIX, not SIMPLE_EDIT
 
 Respond with ONLY one of these exact words: SIMPLE_EDIT, FUNCTIONALITY_FIX, CREATE_NEW, COMMIT, READ_ONLY, or CONVERSATION`;
 
@@ -242,7 +242,7 @@ function fallbackClassification(prompt, meta = {}) {
     }
 
     // Functionality fix indicators (route to tool-enabled flow)
-    if (/(\bfix\b|\bbug\b|\bbroken\b|\berror\b|\bnot working\b|css|style|responsive|mobile|layout|button|align|center|font|color)/.test(lowerPrompt)) {
+    if (/(\bfix\b|\bbug\b|\bbroken\b|\berror\b|\bdebug\b|\bnot working\b|\bisn'?t working\b|css|style|responsive|mobile|layout|button|align|center|font|color)/.test(lowerPrompt)) {
         return {
             type: 'FUNCTIONALITY_FIX',
             isEdit: false,
