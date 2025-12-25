@@ -389,10 +389,13 @@ async function editFile(filePath, oldString = null, newString = null, instructio
             const results = [];
 
             for (let i = 0; i < replacements.length; i++) {
-                const { old: oldStr, new: newStr, replace_all: replaceAll } = replacements[i];
+                // Accept both 'old'/'new' (preferred) AND 'old_string'/'new_string' (common LLM mistake)
+                const oldStr = replacements[i].old ?? replacements[i].old_string;
+                const newStr = replacements[i].new ?? replacements[i].new_string;
+                const replaceAll = replacements[i].replace_all;
 
                 if (!oldStr || newStr === undefined) {
-                    throw new Error(`Batch edit ${i + 1}: missing 'old' or 'new' property`);
+                    throw new Error(`Batch edit ${i + 1}: missing 'old'/'new' (or 'old_string'/'new_string') property`);
                 }
 
                 const occurrences = updatedContent.split(oldStr).length - 1;

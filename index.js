@@ -2224,13 +2224,13 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                                 items: {
                                     type: 'object',
                                     properties: {
-                                        old: { type: 'string', description: 'String to find' },
-                                        new: { type: 'string', description: 'Replacement string' },
+                                        old: { type: 'string', description: 'EXACT string to find (use old_string as alias)' },
+                                        new: { type: 'string', description: 'Replacement string (use new_string as alias)' },
                                         replace_all: { type: 'boolean', description: 'Replace all occurrences (default: false)' }
                                     },
                                     required: ['old', 'new']
                                 },
-                                description: 'BATCH MODE: Array of replacements for multiple edits in one call.'
+                                description: 'BATCH MODE: Array of replacements. IMPORTANT: read_file first to verify exact strings exist!'
                             },
                             // Anchor-range mode
                             start_marker: { type: 'string', description: 'Unique start marker text' },
