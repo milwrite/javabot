@@ -224,9 +224,14 @@ OUTPUT FORMAT (JSON only, no markdown):
 function buildRoutingPrompt(userMessage, context) {
     let prompt = `USER REQUEST: "${userMessage}"`;
 
-    // Add context about recent files
+    // Add context about recently created/modified files (CRITICAL for follow-up requests)
     if (context.recentFiles?.length) {
-        prompt += `\n\nRECENT FILES MENTIONED: ${context.recentFiles.join(', ')}`;
+        prompt += `\n\nRECENTLY CREATED/MODIFIED FILES (use these for "it", "the page", "isn't working" references): ${context.recentFiles.join(', ')}`;
+    }
+
+    // Add action summary for more context
+    if (context.actionSummary) {
+        prompt += `\n\nRECENT BOT ACTIONS: ${context.actionSummary}`;
     }
 
     // Add context about files in src/

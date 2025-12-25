@@ -1294,22 +1294,22 @@ async function fileExists(filePath) {
     }
 }
 
-async function readFile(filePath) {
+async function readFile(filePath, channelId = null) {
     try {
         // Handle multiple files (array input)
         if (Array.isArray(filePath)) {
             const allResults = [];
             let totalChars = 0;
-            
+
             for (const singleFile of filePath) {
                 if (totalChars >= CONFIG.FILE_READ_LIMIT) {
                     allResults.push(`**[Truncated]** - File limit reached`);
                     break;
                 }
-                
-                const result = await readFile(singleFile);
+
+                const result = await readFile(singleFile, channelId);
                 const remaining = CONFIG.FILE_READ_LIMIT - totalChars;
-                
+
                 if (!result.startsWith('Error')) {
                     const truncated = result.length > remaining ? result.substring(0, remaining) : result;
                     allResults.push(`**${singleFile}:**\n${truncated}`);
@@ -1318,7 +1318,7 @@ async function readFile(filePath) {
                     allResults.push(`**${singleFile}:** ${result}`);
                 }
             }
-            
+
             return allResults.join('\n\n---\n\n');
         }
 
@@ -3146,8 +3146,18 @@ async function handleMentionAsync(message) {
         // Generate LLM routing plan FIRST - this is the smart decision maker
         let routingPlan = null;
         try {
+            // Extract recent files from action cache for context
+            const recentActions = getRecentActions(message.channel.id);
+            const recentFiles = recentActions
+                .filter(a => a.file)
+                .map(a => a.file)
+                .filter((f, i, arr) => arr.indexOf(f) === i); // dedupe
+
             const routerContext = {
-                recentFiles: [],
+                recentFiles,
+                actionSummary: recentActions.length > 0
+                    ? recentActions.map(a => `${a.type}: ${a.file}`).join(', ')
+                    : null,
                 conversationSummary: conversationMessages.length > 0
                     ? `${conversationMessages.length} previous messages in conversation`
                     : null
@@ -3461,6 +3471,7 @@ async function handleMentionAsync(message) {
                 let llmResult;
                 const discordContext = {
                     user: message.author.username,
+                    userId: message.author.id,  // For PostgreSQL logging
                     channel: message.channel.name || message.channel.id,
                     channelId: message.channel.id  // For action cache keying
                 };
