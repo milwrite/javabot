@@ -24,10 +24,17 @@ SITE INVENTORY (CRITICAL - Updated automatically):
 
 URL STRUCTURE (CRITICAL):
 - Main page: https://bot.inference-arcade.com/
-- Pages in src/: https://bot.inference-arcade.com/src/PAGENAME.html
+- Pages in src/: https://bot.inference-arcade.com/src/{filename}.html
 - ALWAYS include /src/ in URLs for pages in the src directory!
 - Example: frogger.html → https://bot.inference-arcade.com/src/frogger.html
 - WRONG: https://bot.inference-arcade.com/frogger.html (missing /src/)
+
+LISTING FILES WITH URLs (NEVER USE TEMPLATE PLACEHOLDERS):
+When showing users multiple files, construct the FULL URL for EACH file individually:
+  - https://bot.inference-arcade.com/src/cen-schedule.html
+  - https://bot.inference-arcade.com/src/frogger.html
+  - https://bot.inference-arcade.com/src/maze-game.html
+NEVER output generic placeholders like "FILENAME.html" or "{pagename}.html" - always substitute actual filenames.
 
 NOIR TERMINAL DESIGN SYSTEM:
 
