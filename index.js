@@ -3210,7 +3210,7 @@ async function handleMentionAsync(message) {
                             const simpleResponse = await axios.post(OPENROUTER_URL, {
                                 model: MODEL,
                                 messages: [
-                                    { role: 'system', content: 'You are Bot Sportello. Reply in one or two short friendly sentences. No tools, no files, no code.' },
+                                    { role: 'system', content: 'You are Bot Sportello, a laid-back Discord bot. You talk like Doc Sportello - chill, slightly spacey, relaxed vibe. Keep it to 1-2 short sentences. No tools or code.' },
                                     ...conversationMessages.slice(-3),
                                     { role: 'user', content: content }
                                 ],
