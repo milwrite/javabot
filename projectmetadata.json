@@ -445,6 +445,13 @@
       "description": "noir stakeout arcade",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "cens-dreams": {
+      "title": "Cen's Dreams",
+      "icon": "📖",
+      "description": "responsive noir dream story",
+      "collection": "stories-content",
+      "hidden": false
     }
   }
 }
