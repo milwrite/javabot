@@ -2217,6 +2217,20 @@ Do not use web search or create new content - only edit existing files.`
             lastResponse = response.data.choices[0].message;
 
             if (!lastResponse.tool_calls || lastResponse.tool_calls.length === 0) {
+                // Log when AI doesn't use tools - helps diagnose silent failures
+                logEvent('EDIT_LOOP', `Iteration ${iteration}: No tool calls returned by AI (text response only)`);
+                if (iteration === 1) {
+                    // First iteration with no tools is suspicious for edit requests
+                    postgres.logError({
+                        category: 'edit_no_tools',
+                        errorType: 'NoToolsReturned',
+                        message: 'AI returned text without using tools on first edit iteration',
+                        context: {
+                            userMessage: userMessage?.substring(0, 200),
+                            aiResponse: lastResponse?.content?.substring(0, 200)
+                        }
+                    });
+                }
                 break;
             }
 
@@ -2328,7 +2342,18 @@ Do not use web search or create new content - only edit existing files.`
         };
 
     } catch (error) {
-        console.error('Edit LLM Error:', error.response?.data || error.message);
+        const errorDetails = error.response?.data || error.message;
+        console.error('Edit LLM Error:', errorDetails);
+
+        // Log to PostgreSQL for visibility in database queries
+        postgres.logError({
+            category: 'edit_llm',
+            errorType: error.code || 'LLMError',
+            message: typeof errorDetails === 'string' ? errorDetails : JSON.stringify(errorDetails),
+            stack: error.stack,
+            context: { userMessage: userMessage?.substring(0, 200), iteration }
+        });
+
         return { text: getBotResponse('errors'), searchContext: null };
     }
 }

@@ -33,6 +33,19 @@ async function main() {
   const targetPath = process.env.TARGET_PATH || 'src/super-flu-thermometer.html';
 
   const tasks = [
+    run('edit_errors_7d', `
+      SELECT
+        to_char(timestamp, 'YYYY-MM-DD HH24:MI:SS') AS ts,
+        error_category,
+        payload->>'message' AS message,
+        SUBSTRING(payload->'context'->>'userMessage' FROM 1 FOR 100) AS user_request
+      FROM bot_events
+      WHERE event_type = 'error'
+        AND error_category IN ('edit_llm', 'edit_no_tools')
+        AND timestamp > NOW() - ($1::text)::interval
+      ORDER BY timestamp DESC
+      LIMIT 15
+    `, [since]),
     run('counts_7d', `
       SELECT 
         COUNT(*)::int AS total,
