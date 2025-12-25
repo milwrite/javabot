@@ -15,6 +15,7 @@ const axiosRetry = require('axios-retry').default;
 const { runGamePipeline, commitGameFiles, isGameRequest, isEditRequest } = require('./services/gamePipeline');
 const { getRecentPatternsSummary } = require('./services/buildLogs');
 const { classifyRequest } = require('./services/requestClassifier');
+const { generateRoutingPlan, buildRoutingGuidance, filterToolsForPlan } = require('./services/llmRouter');
 
 // Filesystem and Git tools (Phase 2 extraction)
 const { listFiles: listFilesService, fileExists: fileExistsService, readFile: readFileService, writeFile: writeFileService, editFile: editFileService, searchFiles: searchFilesService } = require('./services/filesystem');
@@ -2063,7 +2064,7 @@ async function getEditResponse(userMessage, conversationMessages = []) {
 }
 
 // Enhanced LLM response with tool calling
-async function getLLMResponse(userMessage, conversationMessages = [], discordContext = {}, onStatusUpdate = null) {
+async function getLLMResponse(userMessage, conversationMessages = [], discordContext = {}, onStatusUpdate = null, routingPlan = null) {
     try {
         // Start agent loop tracking for GUI
         startAgentLoop(
@@ -2071,7 +2072,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             discordContext.user || 'AI',
             discordContext.channel || 'Direct'
         );
-        
+
         // Build the full messages array for the API
         const messages = [
             {
@@ -2091,6 +2092,18 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                     content: actionSummary
                 });
                 console.log(`[ACTION_CACHE] Injected action context for channel ${discordContext.channelId}`);
+            }
+        }
+
+        // Inject routing guidance if a routing plan was generated
+        if (routingPlan && routingPlan.toolSequence?.length > 0) {
+            const routingGuidance = buildRoutingGuidance(routingPlan);
+            if (routingGuidance) {
+                messages.push({
+                    role: 'system',
+                    content: routingGuidance
+                });
+                console.log(`[ROUTER] Injected routing guidance: ${routingPlan.intent} → [${routingPlan.toolSequence.join('→')}]`);
             }
         }
 
@@ -3397,7 +3410,33 @@ async function handleMentionAsync(message) {
         }
         let finalResponse = '';
         let finalSearchContext = null;
-        
+
+        // Generate LLM routing plan for smarter tool selection
+        let routingPlan = null;
+        try {
+            // Build context for router (recent files, available files, etc.)
+            const routerContext = {
+                recentFiles: [],
+                conversationSummary: conversationMessages.length > 0
+                    ? `${conversationMessages.length} previous messages in conversation`
+                    : null
+            };
+
+            // Try to get list of src files for context (non-blocking)
+            try {
+                const srcFiles = await listFilesService('./src');
+                if (srcFiles.success && srcFiles.files) {
+                    routerContext.availableFiles = srcFiles.files.slice(0, 30);
+                }
+            } catch (e) { /* ignore */ }
+
+            routingPlan = await generateRoutingPlan(content, routerContext);
+            logEvent('ROUTER', `Plan: ${routingPlan.intent} → [${routingPlan.toolSequence?.join('→') || 'none'}] (confidence: ${routingPlan.confidence}, method: ${routingPlan.method})`);
+        } catch (routerError) {
+            console.error('[ROUTER] Failed to generate routing plan:', routerError.message);
+            // Continue without routing plan - system works fine without it
+        }
+
         while (processingAttempt <= maxProcessingAttempts && !finalResponse) {
             try {
                 logEvent('MENTION', `Final LLM attempt ${processingAttempt}/${maxProcessingAttempts}${lastFailureReason ? ` (prev: ${lastFailureReason})` : ''}`);
@@ -3409,9 +3448,9 @@ async function handleMentionAsync(message) {
                     channel: message.channel.name || message.channel.id,
                     channelId: message.channel.id  // For action cache keying
                 };
-                
+
                 if (processingAttempt === 1) {
-                    // Full LLM with all tools
+                    // Full LLM with all tools + routing guidance
                     await safeEditReply(thinkingMsg, '🤖 processing with AI tools...');
                     llmResult = await getLLMResponse(content, conversationMessages, discordContext, async (status) => {
                         try {
@@ -3419,14 +3458,14 @@ async function handleMentionAsync(message) {
                         } catch (err) {
                             console.error('Status update error:', err.message);
                         }
-                    });
+                    }, routingPlan);
                 } else if (processingAttempt === 2) {
                     // Retry with GLM model and reduced context
                     await safeEditReply(thinkingMsg, `${getBotResponse('thinking')} (trying faster model...)`);
                     const originalModel = MODEL;
                     MODEL = MODEL_PRESETS.glm; // Switch to GLM for reliability
                     try {
-                        llmResult = await getLLMResponse(content, conversationMessages.slice(-10), discordContext);
+                        llmResult = await getLLMResponse(content, conversationMessages.slice(-10), discordContext, null, routingPlan);
                     } finally {
                         MODEL = originalModel; // Restore original model
                     }
@@ -3436,7 +3475,7 @@ async function handleMentionAsync(message) {
                     const originalModel = MODEL;
                     MODEL = MODEL_PRESETS.kimi;
                     try {
-                        llmResult = await getLLMResponse(content, [], discordContext);
+                        llmResult = await getLLMResponse(content, [], discordContext, null, routingPlan);
                     } finally {
                         MODEL = originalModel;
                     }
@@ -3449,7 +3488,7 @@ async function handleMentionAsync(message) {
                         } catch (err) {
                             console.error('Status update error:', err.message);
                         }
-                    });
+                    }, routingPlan);
                 } else {
                     // Final attempt: GLM with absolute minimal constraints and no tools
                     await safeEditReply(thinkingMsg, `${getBotResponse('thinking')} (final simplified attempt...)`);
