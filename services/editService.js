@@ -288,14 +288,12 @@ async function getEditResponse(userMessage, conversationMessages = [], context =
                     result = await listFiles(args.path || './src');
                 }
 
-                // Log tool call
+                // Log tool call (context is injected by the wrapper from index.js)
                 try {
                     const isError = typeof result === 'string' && /^Error\b/.test(result);
                     logToolCall(functionName, args, result, isError ? result : null, {
                         durationMs: Date.now() - toolStartTime,
-                        iteration,
-                        channelId: null,
-                        userId: null
+                        iteration
                     });
                 } catch (e) {
                     // Non-fatal if logging fails

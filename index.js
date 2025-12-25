@@ -2050,14 +2050,22 @@ async function setModel(modelChoice) {
 }
 
 // Lightweight edit-only LLM response (delegated to editService)
-async function getEditResponse(userMessage, conversationMessages = []) {
+async function getEditResponse(userMessage, conversationMessages = [], discordContext = {}) {
     return getEditResponseService(userMessage, conversationMessages, {
         systemPrompt: SYSTEM_PROMPT,
         model: MODEL,
         getApiKey: getOpenRouterKey,
         logEvent,
-        logToolCall,
-        logFileChange,
+        // Wrap logToolCall to include discord context
+        logToolCall: (toolName, args, result, error, options = {}) =>
+            logToolCall(toolName, args, result, error, {
+                ...options,
+                channelId: discordContext.channelId,
+                userId: discordContext.userId
+            }),
+        // Wrap logFileChange to include discord context
+        logFileChange: (action, path, content, oldContent) =>
+            logFileChange(action, path, content, oldContent, discordContext.channelId),
         getFinalTextResponse,
         getBotResponse
     });
@@ -3108,7 +3116,10 @@ async function handleMentionAsync(message) {
                 if (false && processingAttempt <= 2 && isEditRequest(content, conversationMessages)) {
                     logEvent('MENTION', `Attempt ${processingAttempt}: Detected edit request - using streamlined edit loop`);
 
-                    let llmResult = await getEditResponse(content, conversationMessages);
+                    let llmResult = await getEditResponse(content, conversationMessages, {
+                        channelId: message.channel.id,
+                        userId: message.author.id
+                    });
                     let response = cleanBotResponse(llmResult.text);
 
                     // Check if edit loop suggests using normal flow instead
@@ -3412,7 +3423,10 @@ async function handleMentionAsync(message) {
                         await safeEditReply(thinkingMsg, '✏️ making simple edit...');
                         
                         // editService handles tool calls internally and returns { text, suggestNormalFlow?, needsClarification? }
-                        let llmResult = await getEditResponse(content, conversationMessages);
+                        let llmResult = await getEditResponse(content, conversationMessages, {
+                            channelId: message.channel.id,
+                            userId: message.author.id
+                        });
                         let response = cleanBotResponse(llmResult.text);
 
                         // If edit service suggests using normal flow, break out and let normal processing handle it
