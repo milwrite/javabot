@@ -438,6 +438,13 @@
       "description": "animated flu thermometer viz",
       "collection": "utilities-apps",
       "hidden": false
+    },
+    "sportellos-stakeout": {
+      "title": "Sportello's Stakeout",
+      "icon": "🕹️",
+      "description": "noir stakeout arcade",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }

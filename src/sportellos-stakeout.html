@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sportello's Stakeout - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        /* Game specific styles to complement page-theme.css */
+        :root {
+            --noir-bg: #0a0a0a;
+            --noir-accent: #7ec8e3;
+            --noir-danger: #ff0000;
+            --noir-header: #00ffff;
+            --font-main: 'Courier Prime', monospace;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--noir-bg);
+            color: var(--noir-header);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-top: 80px; /* Required spacing */
+        }
+
+        main {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 10px 20px 10px;
+            box-sizing: border-box;
+        }
+
+        .game-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--noir-accent);
+            padding-bottom: 5px;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border: 2px solid var(--noir-accent);
+            background-color: #000;
+            box-shadow: 0 0 15px rgba(126, 200, 227, 0.2);
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .overlay h2 {
+            color: var(--noir-header);
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+            text-shadow: 0 0 5px var(--noir-header);
+        }
+
+        .overlay p {
+            color: var(--noir-accent);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .action-btn {
+            background-color: var(--noir-danger);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-family: var(--font-main);
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px var(--noir-danger);
+            transition: transform 0.1s;
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Mobile Controls Styling */
+        .mobile-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 240px;
+            margin-top: 10px;
+        }
+
+        .control-btn {
+            background-color: #1a1a1a;
+            border: 2px solid var(--noir-accent);
+            color: var(--noir-header);
+            font-size: 1.5rem;
+            height: 60px; /* Touch target > 44px */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            border-radius: 4px;
+            box-shadow: 0 4px 0 #000;
+        }
+
+        .control-btn:active, .control-btn.active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #000;
+            background-color: var(--noir-accent);
+            color: #000;
+        }
+
+        .control-btn.empty {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            pointer-events: none;
+        }
+
+        /* Instructions */
+        .instructions {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        /* Keyboard hint for desktop users */
+        @media (min-width: 768px) {
+            .mobile-controls {
+                display: none; /* Hide touch controls on larger screens if keyboard preferred, though prompt says Mobile First, keeping them visible is often safer for hybrid devices, but standard practice is hide on desktop. I will keep them visible as 'arcade' buttons are fun, or hide them. Let's keep them visible for touch laptops/tablets */
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link" aria-label="Back to home"></a>
+
+    <main>
+        <div class="game-header">
+            <span>Score: <span id="score">0</span></span>
+            <span>Intel: <span id="intel">0</span>/5</span>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            
+            <div id="startScreen" class="overlay">
+                <h2>STAKEOUT</h2>
+                <p>Collect 5 pieces of Intel (Blue).<br>Avoid the Spotlights (Red).</p>
+                <button class="action-btn" id="startBtn">Begin Watch</button>
+            </div>
+
+            <div id="gameOverScreen" class="overlay hidden">
+                <h2 id="endTitle">BUSTED</h2>
+                <p id="endReason">You were caught in the light.</p>
+                <button class="action-btn" id="restartBtn">Retry</button>
+            </div>
+        </div>
+
+        <div class="instructions">
+            Use D-Pad or Arrow Keys to move.
+        </div>
+
+        <div class="mobile-controls">
+            <div class="control-btn empty"></div>
+            <button class="control-btn" data-dir="up">▲</button>
+            <div class="control-btn empty"></div>
+            <button class="control-btn" data-dir="left">◀</button>
+            <button class="control-btn" data-dir="down">▼</button>
+            <button class="control-btn" data-dir="right">▶</button>
+        </div>
+    </main>
+
+    <script>
+        // Game Constants
+        const CANVAS_SIZE = 400;
+        const PLAYER_SIZE = 20;
+        const PLAYER_SPEED = 4; // pixels per frame
+        const INTEL_SIZE = 15;
+        const TOTAL_INTEL = 5;
+        const LIGHT_HEIGHT = 40;
+        const LIGHT_SPEED_BASE = 2;
+
+        // Game State
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const intelEl = document.getElementById('intel');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const endTitle = document.getElementById('endTitle');
+        const endReason = document.getElementById('endReason');
+
+        let animationId;
+        let gameActive = false;
+        let score = 0;
+        let intelCollected = 0;
+        let frameCount = 0;
+
+        // Input State
+        const keys = {
+            ArrowUp: false,
+            ArrowDown: false,
+            ArrowLeft: false,
+            ArrowRight: false
+        };
+
+        // Entities
+        const player = {
+            x: CANVAS_SIZE / 2 - PLAYER_SIZE / 2,
+            y: CANVAS_SIZE - 50,
+            w: PLAYER_SIZE,
+            h: PLAYER_SIZE,
+            color: '#7ec8e3' // Accent
+        };
+
+        let intel = {
+            x: 0,
+            y: 0,
+            active: false
+        };
+
+        let lights = [];
+
+        // --- Input Handling ---
+
+        // Keyboard
+        window.addEventListener('keydown', (e) => {
+            if (keys.hasOwnProperty(e.code)) keys[e.code] = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (keys.hasOwnProperty(e.code)) keys[e.code] = false;
+        });
+
+        // Touch / Mobile Controls
+        // Map the data-dir to our keys object
+        const dirMap = {
+            'up': 'ArrowUp',
+            'down': 'ArrowDown',
+            'left': 'ArrowLeft',
+            'right': 'ArrowRight'
+        };
+
+        // REQUIRED TEMPLATE SNIPPET
+        document.querySelectorAll('.control-btn[data-dir]').forEach(btn => {
+            btn.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                const dir = btn.dataset.dir;
+                if(dirMap[dir]) keys[dirMap[dir]] = true;
+                btn.classList.add('active');
+            }, { passive: false });
+            
+            // Added touchend to stop movement (required for gameplay flow)
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                const dir = btn.dataset.dir;
+                if(dirMap[dir]) keys[dirMap[dir]] = false;
+                btn.classList.remove('active');
+            }, { passive: false });
+
+            // Mouse support for testing on desktop with mouse
+            btn.addEventListener('mousedown', (e) => {
+                const dir = btn.dataset.dir;
+                if(dirMap[dir]) keys[dirMap[dir]] = true;
+                btn.classList.add('active');
+            });
+            btn.addEventListener('mouseup', (e) => {
+                const dir = btn.dataset.dir;
+                if(dirMap[dir]) keys[dirMap[dir]] = false;
+                btn.classList.remove('active');
+            });
+            btn.addEventListener('mouseleave', (e) => {
+                const dir = btn.dataset.dir;
+                if(dirMap[dir]) keys[dirMap[dir]] = false;
+                btn.classList.remove('active');
+            });
+        });
+
+        // --- Game Logic ---
+
+        function spawnIntel() {
+            const padding = 30;
+            intel.x = padding + Math.random() * (CANVAS_SIZE - padding * 2);
+            intel.y = padding + Math.random() * (CANVAS_SIZE - padding * 2);
+            intel.active = true;
+        }
+
+        function spawnLight() {
+            const isHorizontal = Math.random() > 0.5;
+            const speed = LIGHT_SPEED_BASE + Math.random() * 2 + (intelCollected * 0.5); // Gets harder
+            
+            let light = {
+                x: 0,
+                y: 0,
+                w: 0,
+                h: LIGHT_HEIGHT,
+                speed: speed,
+                dir: 1 // 1 for down/right, -1 for up/left
+            };
+
+            if (isHorizontal) {
+                light.y = Math.random() * CANVAS_SIZE;
+                light.w = 60 + Math.random() * 40;
+                light.h = LIGHT_HEIGHT;
+                if (Math.random() > 0.5) {
+                    light.x = -light.w; // Start left
+                    light.dir = 1;
+                } else {
+                    light.x = CANVAS_SIZE; // Start right
+                    light.dir = -1;
+                }
+            } else {
+                // Vertical lights (rare but tricky)
+                light.x = Math.random() * CANVAS_SIZE;
+                light.w = LIGHT_HEIGHT;
+                light.h = 60 + Math.random() * 40;
+                if (Math.random() > 0.5) {
+                    light.y = -light.h;
+                    light.dir = 1;
+                } else {
+                    light.y = CANVAS_SIZE;
+                    light.dir = -1;
+                }
+            }
+            lights.push(light);
+        }
+
+        function resetGame() {
+            player.x = CANVAS_SIZE / 2 - PLAYER_SIZE / 2;
+            player.y = CANVAS_SIZE - 50;
+            score = 0;
+            intelCollected = 0;
+            lights = [];
+            scoreEl.innerText = score;
+            intelEl.innerText = intelCollected;
+            spawnIntel();
+            gameActive = true;
+            frameCount = 0;
+            
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            
+            cancelAnimationFrame(animationId);
+            loop();
+        }
+
+        function gameOver(won) {
+            gameActive = false;
+            if (won) {
+                endTitle.innerText = "CASE CLOSED";
+                endTitle.style.color = "#7ec8e3";
+                endReason.innerText = `Intel secured. Final Score: ${score}`;
+            } else {
+                endTitle.innerText = "BUSTED";
+                endTitle.style.color = "#ff0000";
+                endReason.innerText = "Caught in the spotlight.";
+            }
+            gameOverScreen.classList.remove('hidden');
+        }
+
+        function update() {
+            if (!gameActive) return;
+
+            // Move Player
+            if (keys.ArrowUp && player.y > 0) player.y -= PLAYER_SPEED;
+            if (keys.ArrowDown && player.y < CANVAS_SIZE - player.h) player.y += PLAYER_SPEED;
+            if (keys.ArrowLeft && player.x > 0) player.x -= PLAYER_SPEED;
+            if (keys.ArrowRight && player.x < CANVAS_SIZE - player.w) player.x += PLAYER_SPEED;
+
+            // Check Intel Collision
+            if (intel.active &&
+                player.x < intel.x + INTEL_SIZE &&
+                player.x + player.w > intel.x &&
+                player.y < intel.y + INTEL_SIZE &&
+                player.y + player.h > intel.y) {
+                
+                intelCollected++;
+                score += 100;
+                intelEl.innerText = intelCollected;
+                scoreEl.innerText = score;
+                
+                if (intelCollected >= TOTAL_INTEL) {
+                    gameOver(true);
+                    return;
+                }
+                spawnIntel();
+            }
+
+            // Manage Lights
+            frameCount++;
+            // Spawn rate increases as you collect more
+            const spawnRate = Math.max(30, 90 - (intelCollected * 10));
+            
+            if (frameCount % spawnRate === 0) {
+                spawnLight();
+            }
+
+            for (let i = lights.length - 1; i >= 0; i--) {
+                let l = lights[i];
+                l.x += l.speed * l.dir;
+                if (l.h > LIGHT_HEIGHT) l.y += l.speed * l.dir; // Vertical movement logic fix
+
+                // Remove off-screen lights
+                if ((l.dir === 1 && l.x > CANVAS_SIZE && l.y > CANVAS_SIZE) || 
+                    (l.dir === -1 && l.x + l.w < 0 && l.y + l.h < 0)) {
+                    lights.splice(i, 1);
+                    score += 10; // Survival points
+                    scoreEl.innerText = score;
+                    continue;
+                }
+
+                // Collision Detection (AABB)
+                if (player.x < l.x + l.w &&
+                    player.x + player.w > l.x &&
+                    player.y < l.y + l.h &&
+                    player.y + player.h > l.y) {
+                    
+                    gameOver(false);
+                    return;
+                }
+            }
+        }
+
+        function draw() {
+            // Clear Background
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+            // Draw Grid (Noir effect)
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for(let i=0; i<=CANVAS_SIZE; i+=40) {
+                ctx.moveTo(i, 0); ctx.lineTo(i, CANVAS_SIZE);
+                ctx.moveTo(0, i); ctx.lineTo(CANVAS_SIZE, i);
+            }
+            ctx.stroke();
+
+            // Draw Intel
+            if (intel.active) {
+                ctx.fillStyle = '#7ec8e3'; // Accent
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#7ec8e3';
+                ctx.beginPath();
+                ctx.arc(intel.x + INTEL_SIZE/2, intel.y + INTEL_SIZE/2, INTEL_SIZE/2, 0, Math.PI*2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            // Draw Player
+            ctx.fillStyle = '#00ffff'; // Header color
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = '#00ffff';
+            ctx.fillRect(player.x, player.y, player.w, player.h);
+            ctx.shadowBlur = 0;
+
+            // Draw Lights
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.6)'; // Danger with transparency
+            lights.forEach(l => {
+                ctx.fillRect(l.x, l.y, l.w, l.h);
+                
+                // Bright core
+                ctx.fillStyle = 'rgba(255, 200, 200, 0.8)';
+                ctx.fillRect(l.x + 5, l.y + 5, l.w - 10, l.h - 10);
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
+            });
+        }
+
+        function loop() {
+            if (gameActive) {
+                update();
+                draw();
+                animationId = requestAnimationFrame(loop);
+            }
+        }
+
+        // --- Init ---
+        document.getElementById('startBtn').addEventListener('click', resetGame);
+        document.getElementById('restartBtn').addEventListener('click', resetGame);
+
+        // Initial Draw to show something before start
+        draw();
+
+    </script>
+</body>
+</html>
