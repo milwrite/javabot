@@ -4,8 +4,8 @@
 
 const axios = require('axios');
 
-// Fast model for routing decisions - Kimi K2 Fast (ZDR-compliant, no reasoning overhead)
-const ROUTER_MODEL = process.env.ROUTER_MODEL || 'moonshotai/kimi-k2-0905:exacto';
+// Fast model for routing decisions - Gemma 3 12B (fast, accurate structured output)
+const ROUTER_MODEL = process.env.ROUTER_MODEL || 'google/gemma-3-12b-it';
 const ROUTER_TIMEOUT_MS = Number(process.env.ROUTER_TIMEOUT_MS || 4000);
 
 /**
