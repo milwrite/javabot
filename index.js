@@ -3142,22 +3142,50 @@ async function handleMentionAsync(message) {
 
         // Continue with additional processing loops
         processingAttempt = Math.max(processingAttempt, 1); // Reset if needed
-        
-        // Cache classification so we only do it once per mention
+
+        // Generate LLM routing plan FIRST - this is the smart decision maker
+        let routingPlan = null;
+        try {
+            const routerContext = {
+                recentFiles: [],
+                conversationSummary: conversationMessages.length > 0
+                    ? `${conversationMessages.length} previous messages in conversation`
+                    : null
+            };
+            // Try to get list of src files for context (non-blocking)
+            try {
+                const srcFiles = await listFilesService('./src');
+                if (srcFiles.success && srcFiles.files) {
+                    routerContext.availableFiles = srcFiles.files.slice(0, 30);
+                }
+            } catch (e) { /* ignore */ }
+
+            routingPlan = await generateRoutingPlan(content, routerContext);
+            logEvent('ROUTER', `Plan: ${routingPlan.intent} → [${routingPlan.toolSequence?.join('→') || 'none'}] (confidence: ${routingPlan.confidence}, method: ${routingPlan.method})`);
+        } catch (routerError) {
+            console.error('[ROUTER] Failed to generate routing plan:', routerError.message);
+            // Continue without routing plan - will fall back to classifier
+        }
+
+        // Cache classification as backup (only used if router fails or for specific fast paths)
         let classificationResult = null;
         let classificationTried = false;
 
         while (processingAttempt <= maxProcessingAttempts) {
             try {
-                // Use LLM classifier to determine request type (replaces keyword-based detection)
+                // Use routing plan intent if available, fall back to classifier
                 if (processingAttempt <= 3) {
                     if (!classificationTried) {
                         classificationResult = await classifyRequest(content);
                         classificationTried = true;
                     }
                     const classification = classificationResult;
-                    logEvent('MENTION', `Attempt ${processingAttempt}: LLM classified as ${classification.type}${classification?.method ? ` (${classification.method})` : ''}`);
-                    
+
+                    // Router takes precedence - only use classifier fast paths if router agrees or failed
+                    const routerIntent = routingPlan?.intent || null;
+                    const routerConfidence = routingPlan?.confidence || 0;
+                    logEvent('MENTION', `Attempt ${processingAttempt}: Router=${routerIntent}(${routerConfidence.toFixed(2)}) Classifier=${classification.type}(${classification.method})`);
+
                     // Handle READ_ONLY requests immediately (like "print the site inventory")
                     if (classification.isReadOnly) {
                         // If the read-only request clearly involves repository browsing (files, src/, commits),
@@ -3201,8 +3229,10 @@ async function handleMentionAsync(message) {
                     }
 
                     // Handle general conversation/greetings with a super fast path
-                    if (classification.isConversation) {
-                        logEvent('MENTION', `CONVERSATION request - fast small-talk response`);
+                    // ONLY use fast path if router also thinks it's chat (or router failed)
+                    const routerAgreesChatOrFailed = !routingPlan || (routerIntent === 'chat' && routerConfidence >= 0.6);
+                    if (classification.isConversation && routerAgreesChatOrFailed) {
+                        logEvent('MENTION', `CONVERSATION request (router: ${routerIntent || 'none'}) - fast small-talk response`);
                         const originalModel = MODEL;
                         try {
                             MODEL = MODEL_PRESETS['kimi-fast'];
@@ -3421,31 +3451,7 @@ async function handleMentionAsync(message) {
         let finalResponse = '';
         let finalSearchContext = null;
 
-        // Generate LLM routing plan for smarter tool selection
-        let routingPlan = null;
-        try {
-            // Build context for router (recent files, available files, etc.)
-            const routerContext = {
-                recentFiles: [],
-                conversationSummary: conversationMessages.length > 0
-                    ? `${conversationMessages.length} previous messages in conversation`
-                    : null
-            };
-
-            // Try to get list of src files for context (non-blocking)
-            try {
-                const srcFiles = await listFilesService('./src');
-                if (srcFiles.success && srcFiles.files) {
-                    routerContext.availableFiles = srcFiles.files.slice(0, 30);
-                }
-            } catch (e) { /* ignore */ }
-
-            routingPlan = await generateRoutingPlan(content, routerContext);
-            logEvent('ROUTER', `Plan: ${routingPlan.intent} → [${routingPlan.toolSequence?.join('→') || 'none'}] (confidence: ${routingPlan.confidence}, method: ${routingPlan.method})`);
-        } catch (routerError) {
-            console.error('[ROUTER] Failed to generate routing plan:', routerError.message);
-            // Continue without routing plan - system works fine without it
-        }
+        // routingPlan was already generated earlier - reuse it here
 
         while (processingAttempt <= maxProcessingAttempts && !finalResponse) {
             try {
