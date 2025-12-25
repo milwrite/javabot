@@ -1363,8 +1363,8 @@ async function readFile(filePath, channelId = null) {
 
         const truncatedContent = content.substring(0, CONFIG.FILE_READ_LIMIT);
 
-        // Log file read to GUI dashboard
-        logFileChange('read', normalizedPath, truncatedContent);
+        // Log file read to GUI dashboard and PostgreSQL
+        logFileChange('read', normalizedPath, truncatedContent, null, channelId);
 
         return truncatedContent;
     } catch (error) {
@@ -1372,7 +1372,7 @@ async function readFile(filePath, channelId = null) {
     }
 }
 
-async function writeFile(filePath, content) {
+async function writeFile(filePath, content, channelId = null) {
     try {
         // Create directory if it doesn't exist
         const dir = path.dirname(filePath);
@@ -1382,8 +1382,8 @@ async function writeFile(filePath, content) {
         await fs.writeFile(filePath, content, 'utf8');
         console.log(`[WRITE_FILE] Written: ${filePath} (${content.length} bytes)`);
 
-        // Log file creation to GUI dashboard
-        logFileChange('create', filePath, content);
+        // Log file creation to GUI dashboard and PostgreSQL
+        logFileChange('create', filePath, content, null, channelId);
 
         // Auto-push via GitHub API (no git CLI needed - Railway compatible)
         console.log(`[WRITE_FILE] Auto-pushing to remote via GitHub API...`);
@@ -2499,9 +2499,9 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         filePattern: args.file_pattern || null
                     });
                 } else if (functionName === 'read_file') {
-                    result = await readFile(args.path);
+                    result = await readFile(args.path, discordContext.channelId);
                 } else if (functionName === 'write_file') {
-                    result = await writeFile(args.path, args.content);
+                    result = await writeFile(args.path, args.content, discordContext.channelId);
                     if (!result.startsWith('Error')) {
                         completedActions++;
                         actionCompletedThisIteration = true;
@@ -2529,7 +2529,9 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                             args.instructions,
                             args.replacements,
                             {
-                                onFileChange: logFileChange,
+                                // Wrap logFileChange to include channelId from context
+                                onFileChange: (action, path, content, oldContent) =>
+                                    logFileChange(action, path, content, oldContent, discordContext.channelId),
                                 start_marker: args.start_marker,
                                 end_marker: args.end_marker,
                                 new_block: args.new_block,
@@ -2614,8 +2616,11 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             }
 
             // Track read-only iterations to prevent over-searching on info requests
+            // BUT: Skip this cap for edit/create intents - they NEED to read before writing
             const allToolsReadOnly = lastResponse.tool_calls.every(tc => READ_ONLY_TOOLS.has(tc.function.name));
-            if (allToolsReadOnly && !actionCompletedThisIteration) {
+            const isWriteIntent = ['edit', 'create', 'build'].includes(routingPlan?.intent);
+
+            if (allToolsReadOnly && !actionCompletedThisIteration && !isWriteIntent) {
                 readOnlyIterations++;
                 if (readOnlyIterations >= MAX_READONLY_ITERATIONS) {
                     logEvent('LLM', `Read-only cap reached (${readOnlyIterations} iterations) - forcing final response`);
@@ -2626,7 +2631,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
 
                     break; // Exit loop - we have enough info
                 }
-            } else {
+            } else if (!allToolsReadOnly) {
                 readOnlyIterations = 0; // Reset if we did a write action
             }
 
