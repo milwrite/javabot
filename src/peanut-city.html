@@ -3,87 +3,734 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Peanut City - Bot Sportello</title>
+    <title>Peanut City - Bot Sportello Noir</title>
     <link rel="stylesheet" href="../page-theme.css">
     <style>
-        /* Story-specific typography adjustments */
         body {
-            padding-top: 80px;
+            padding: 50px 20px 20px 20px;
+            background: #0a0a0a;
+            line-height: 1.7;
         }
+
         .story-container {
-            max-width: 700px;
             margin: 0 auto;
-            padding: 20px;
-            line-height: 1.8;
-            font-family: 'Courier Prime', monospace;
         }
-        h1 {
+
+        .chapter {
+            margin-bottom: 60px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .chapter.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .chapter-number {
             color: #00ffff;
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
+            font-size: 0.8em;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
             text-transform: uppercase;
-            border-bottom: 2px solid #7ec8e3;
-            padding-bottom: 10px;
-            display: inline-block;
         }
-        p {
-            margin-bottom: 1.5rem;
-            font-size: 1.1rem;
-            color: #e0e0e0;
+
+        .chapter-title {
+            color: #00ffff;
+            font-size: 1.6em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
         }
-        .accent {
-            color: #7ec8e3;
-            font-weight: bold;
+
+        .paragraph {
+            margin-bottom: 18px;
+            font-size: 1.05em;
         }
-        .danger {
+
+        .emphasis {
             color: #ff0000;
             font-weight: bold;
         }
-        blockquote {
-            border-left: 4px solid #ff0000;
-            margin: 2rem 0;
-            padding-left: 1rem;
+
+        .whisper {
             font-style: italic;
-            color: #aaa;
-            background: rgba(255, 0, 0, 0.05);
-            padding: 1rem;
+            color: #5a9fb0;
+            font-size: 0.95em;
         }
-        /* Mobile adjustments */
+
+        .divider {
+            text-align: center;
+            margin: 35px 0;
+            color: #00ffff;
+            font-size: 1.3em;
+            letter-spacing: 8px;
+        }
+
+        .twist-reveal {
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a0a0a 50%, #0a0a0a 100%);
+            padding: 40px 25px;
+            margin: 50px -20px 30px -20px;
+            border-top: 2px solid #ff0000;
+            border-bottom: 2px solid #ff0000;
+            text-align: center;
+        }
+
+        .twist-reveal .reveal-text {
+            font-size: 1.15em;
+            color: #ff0000;
+            text-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+            animation: pulse 2s infinite;
+            line-height: 1.8;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .epilogue {
+            margin-top: 50px;
+            padding: 25px;
+            border: 1px solid #00ffff;
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .signature {
+            text-align: right;
+            margin-top: 25px;
+            color: #00ffff;
+            font-style: italic;
+        }
+
+        .progress-indicator {
+            position: fixed;
+            top: 50px;
+            right: 15px;
+            width: 3px;
+            height: 150px;
+            background: rgba(126, 200, 227, 0.2);
+            border-radius: 2px;
+            z-index: 100;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 0%;
+            background: #00ffff;
+            border-radius: 2px;
+            transition: height 0.3s ease;
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+        }
+
+        /* Audio Controls - Noir Style */
+        .audio-controls {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid #00ffff;
+            border-radius: 6px;
+            padding: 12px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            z-index: 1000;
+            font-family: 'Courier Prime', monospace;
+            min-width: 180px;
+        }
+
+        .audio-controls h4 {
+            font-size: 10px;
+            color: #00ffff;
+            margin: 0 0 6px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .narrator-name {
+            color: #ff0000;
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 8px rgba(255, 0, 0, 0.3);
+        }
+
+        .audio-btn {
+            padding: 6px 12px;
+            margin: 2px;
+            border: 1px solid;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Courier Prime', monospace;
+            font-size: 11px;
+            transition: all 0.2s;
+            background: transparent;
+            touch-action: manipulation;
+        }
+
+        .audio-btn.play {
+            border-color: #00ff41;
+            color: #00ff41;
+        }
+
+        .audio-btn.play:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
+        }
+
+        .audio-btn.pause {
+            border-color: #ffaa00;
+            color: #ffaa00;
+        }
+
+        .audio-btn.pause:hover {
+            background: rgba(255, 170, 0, 0.2);
+        }
+
+        .audio-btn.stop {
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .audio-btn.stop:hover {
+            background: rgba(255, 0, 0, 0.2);
+        }
+
+        .audio-status {
+            font-size: 10px;
+            color: #5a9fb0;
+            margin-top: 6px;
+        }
+
+        .voice-select {
+            width: 100%;
+            padding: 5px;
+            margin-top: 6px;
+            border: 1px solid #00ffff;
+            border-radius: 4px;
+            font-size: 10px;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .voice-select option {
+            background: #0a0a0a;
+            color: #7ec8e3;
+        }
+
+        /* Reading highlight - noir style */
+        .reading {
+            background: rgba(255, 0, 0, 0.08);
+            border-left: 2px solid #ff0000;
+            padding-left: 12px;
+            margin-left: -14px;
+            transition: all 0.3s;
+        }
+
         @media (max-width: 768px) {
-            h1 { font-size: 2rem; }
-            .story-container { padding: 15px; }
+            body {
+                padding: 45px 15px 15px 15px;
+            }
+
+            .chapter-title {
+                font-size: 1.4em;
+            }
+
+            .paragraph {
+                font-size: 1em;
+            }
+
+            .chapter {
+                margin-bottom: 45px;
+            }
+
+            .twist-reveal {
+                margin: 35px -15px 25px -15px;
+                padding: 30px 15px;
+            }
+
+            .twist-reveal .reveal-text {
+                font-size: 1em;
+            }
+
+            .progress-indicator {
+                display: none;
+            }
+
+            .audio-controls {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 40px 12px 12px 12px;
+            }
+
+            .chapter-title {
+                font-size: 1.25em;
+            }
+
+            .paragraph {
+                font-size: 0.95em;
+                margin-bottom: 14px;
+            }
+
+            .chapter {
+                margin-bottom: 35px;
+            }
+
+            .epilogue {
+                padding: 18px;
+                margin-top: 35px;
+            }
         }
     </style>
 </head>
-<body>
-    <a href="../index.html" class="home-link" aria-label="Back to home"></a>
-    
-    <main class="story-container">
-        <h1>Peanut City</h1>
-        
-        <p>The rain in Peanut City didn't wash the streets clean; it just made the grime glisten. Like a polished shell. I was nursing a lukewarm drink at <span class="accent">The Shell Breaker</span> when she walked in. Tall, leggy, smelling of roasted cashews and cheap danger.</p>
+<body class="story-page">
+    <a href="../index.html" class="home-link">←</a>
 
-        <p>"Are you Sportello?" she asked. Her voice was smooth, like creamy peanut butter, but her eyes were hard—salted and roasted.</p>
+    <div class="progress-indicator">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
 
-        <p>"I don't take cases involving legumes," I grunted, staring at the neon reflection in my glass. The sign outside buzzed, a fly trapped in the zapper of urban decay.</p>
+    <div class="story-container">
+        <header style="text-align: center; margin-bottom: 40px;">
+            <h1 style="color: #ff0000; font-size: 2.5em; text-shadow: 0 0 15px rgba(255, 0, 0, 0.4); margin-bottom: 8px;">PEANUT CITY</h1>
+            <p style="color: #00ffff; font-size: 1.1em; letter-spacing: 2px;">A Tale of Shells and Secrets</p>
+        </header>
 
-        <p>"This isn't about legumes, detective. It's about the Salt. The <span class="danger">Big Salt</span>."</p>
+        <div class="chapter" data-chapter="1">
+            <div class="chapter-number">Chapter One</div>
+            <h2 class="chapter-title">The Arrival</h2>
+            <p class="paragraph">
+                They called it <span class="emphasis">Peanut City</span>, though nobody remembered why. The sign at the edge of town had long since faded, its letters peeling like sunburned skin. I rolled in on a Tuesday, the kind of Tuesday that tastes like dust and regret.
+            </p>
+            <p class="paragraph">
+                The streets were lined with shells. Not metaphorical shells—actual peanut shells, ankle-deep in some places, crunching under every footstep like tiny bones. The locals didn't seem to notice. They walked through them like snow, their faces blank as fresh paper.
+            </p>
+            <p class="paragraph whisper">
+                "You're not from around here," the gas station attendant said. It wasn't a question.
+            </p>
+            <p class="paragraph">
+                I paid for my coffee with exact change and asked about lodging. He pointed down Main Street with a finger stained the color of roasted nuts. "The Legume Hotel. Only place in town. Tell Martha that Earl sent you."
+            </p>
+        </div>
 
-        <p>That got my attention. In Peanut City, salt was worth more than gold. More than blood. It was the only thing that kept the flavor of life from turning rancid.</p>
 
-        <p>"Talk," I said, turning to face her.</p>
+        <div class="chapter" data-chapter="2">
+            <div class="chapter-number">Chapter Two</div>
+            <h2 class="chapter-title">The Legume Hotel</h2>
+            <p class="paragraph">
+                Martha was exactly what you'd expect: seventy years of hard living wrapped in a floral housedress. She took my money without counting it and handed me a key attached to a wooden peanut.
+            </p>
+            <p class="paragraph">
+                "Room 237," she said. "Don't mind the smell."
+            </p>
+            <p class="paragraph">
+                The smell was <span class="emphasis">peanut butter</span>. Everything smelled like peanut butter. The wallpaper, the bedsheets, the air itself—all of it thick with that cloying, nutty sweetness. I opened the window but the breeze that came in only brought more of it.
+            </p>
+            <p class="paragraph">
+                That's when I noticed the factory. Massive and dark against the evening sky, its smokestacks pumping out clouds that looked too thick to be steam. The <span class="emphasis">Peanut City Processing Plant</span>, according to the faded letters on its side.
+            </p>
+            <p class="paragraph whisper">
+                Everyone in this town works there, I thought. Everyone.
+            </p>
+        </div>
 
-        <p>"The Mayor's private stash is gone. The premium sea salt flakes. Vanished from the high-security pantry." She leaned in closer, the shadows dancing across her face. "They say it was an inside job. Someone cracked the safe.</p>
 
-        <blockquote>"If the squirrels are involved, I'm out. I don't do business with bushy-tailed anarchists."</blockquote>
+        <div class="chapter" data-chapter="3">
+            <div class="chapter-number">Chapter Three</div>
+            <h2 class="chapter-title">The Night Shift</h2>
+            <p class="paragraph">
+                Sleep didn't come easy. Around midnight, I heard them—the workers, marching in perfect unison down Main Street. Their footsteps synchronized, crushing shells in rhythmic waves. I watched from my window as they filed into the factory, hundreds of them, all wearing the same blank expression.
+            </p>
+            <p class="paragraph">
+                One of them looked up. Our eyes met. For a moment, I thought I saw recognition, maybe even fear. Then her face smoothed over like water, and she disappeared inside with the others.
+            </p>
+            <p class="paragraph">
+                I had to know. I pulled on my coat and followed.
+            </p>
+        </div>
 
-        <p>"No squirrels," she whispered, her voice dropping an octave. "It was the Elephants."</p>
 
-        <p>The Elephants. The heavy mob. They never forgot a debt, and they never forgot a nut. They controlled the docks, the shipments, the very ground we walked on.</p>
+        <div class="chapter" data-chapter="4">
+            <div class="chapter-number">Chapter Four</div>
+            <h2 class="chapter-title">Inside the Shell</h2>
+            <p class="paragraph">
+                The factory doors were unlocked. Inside, the machinery hummed with a sound that was almost musical—a low, droning note that vibrated in my chest. The workers stood at their stations, moving with mechanical precision, sorting, shelling, processing.
+            </p>
+            <p class="paragraph">
+                But they weren't processing peanuts.
+            </p>
+            <p class="paragraph">
+                They were processing <span class="emphasis">themselves</span>.
+            </p>
+            <p class="paragraph">
+                I watched in horror as one worker stepped onto a conveyor belt. The machinery whirred to life, and she began to... compact. Fold. Compress. Until she was the size and shape of a peanut shell. The belt carried her to a bin where thousands of others lay, identical and hollow.
+            </p>
+            <p class="paragraph whisper">
+                The streets, I realized. The shells in the streets. They weren't peanuts at all.
+            </p>
+        </div>
 
-        <p>I slammed my glass down. "Double my rate," I said. "And keep the shells."</p>
 
-        <p>She nodded, sliding a manila folder across the sticky table. I grabbed my coat. The night was young, and the city was hungry. Time to see if the Elephants liked their peanuts salty.</p>
-    </main>
+        <div class="chapter" data-chapter="5">
+            <div class="chapter-number">Chapter Five</div>
+            <h2 class="chapter-title">The Truth</h2>
+            <p class="paragraph">
+                I ran. Through corridors that smelled of oil and salt, past rooms filled with bins of shells, each one a person who'd walked into this town and never left. The factory was a labyrinth, but I found the center—a control room with walls covered in monitors.
+            </p>
+            <p class="paragraph">
+                On the screens: other towns. Dozens of them. All identical. All called <span class="emphasis">Peanut City</span>. All with their own factories, their own workers, their own streets of shells.
+            </p>
+            <p class="paragraph">
+                And in the center of the room, a figure sat at a console. When it turned, I saw its face—or rather, the absence of one. Just smooth, polished wood carved into the shape of a peanut.
+            </p>
+            <p class="paragraph whisper">
+                "Welcome," it said, its voice like rustling paper. "We've been expecting you."
+            </p>
+        </div>
+
+        <div class="twist-reveal">
+            <p class="reveal-text">
+                THERE IS NO ESCAPE FROM PEANUT CITY.<br>
+                THERE NEVER WAS.<br>
+                YOU WERE ALWAYS PART OF THE PROCESS.
+            </p>
+        </div>
+
+        <div class="chapter" data-chapter="6">
+            <div class="chapter-number">Epilogue</div>
+            <h2 class="chapter-title">The Shell Game</h2>
+            <div class="epilogue">
+                    <p class="paragraph">
+                        I write this from Room 237 of The Legume Hotel. My hands are steady. My mind is clear. Tomorrow, I'll join the night shift at the factory. I'll take my place on the line with the others.
+                    </p>
+                    <p class="paragraph">
+                        The peanut-faced thing explained it all. <span class="emphasis">Peanut City</span> isn't a place—it's a process. A transformation. We arrive as individuals, complex and messy, and we leave as something simpler. Cleaner. More efficient.
+                    </p>
+                    <p class="paragraph">
+                        The shells in the streets? They're not discarded husks. They're <span class="emphasis">seeds</span>. Each one will blow to a new town, take root, and grow into another Peanut City. The cycle continues. The harvest never ends.
+                    </p>
+                    <p class="paragraph whisper">
+                        And you know what the funny thing is?
+                    </p>
+                    <p class="paragraph">
+                        I don't mind anymore. The smell of peanut butter doesn't bother me. The blank faces make sense now. We're all just nuts in the end, waiting to be cracked open and consumed by something larger than ourselves.
+                    </p>
+                    <p class="paragraph">
+                        If you're reading this, you've probably already arrived. You've probably already checked into your room. You've probably already noticed the smell.
+                    </p>
+                    <p class="paragraph" style="color: #ff0000; font-size: 1.2em; text-align: center; margin-top: 40px;">
+                        Welcome to Peanut City.
+                    </p>
+                    <p class="paragraph" style="color: #ff0000; text-align: center;">
+                        Population: You.
+                    </p>
+                    <div class="signature">
+                        — A Former Traveler<br>
+                        Now and Forever a Resident
+                    </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 50px 0 30px 0; color: #00ffff; font-size: 0.85em; letter-spacing: 2px;">
+            THE END<br>
+            <span style="font-size: 0.9em; opacity: 0.7;">(OR IS IT THE BEGINNING?)</span>
+        </div>
+    </div>
+
+    <!-- Audio Controls - Bot Sportello Narrator -->
+    <div class="audio-controls" id="audioControls">
+        <h4>Narration</h4>
+        <div class="narrator-name">Bot Sportello</div>
+        <div>
+            <button class="audio-btn play" id="playBtn" onclick="toggleNarration()">Play</button>
+            <button class="audio-btn stop" onclick="stopNarration()">Stop</button>
+        </div>
+        <select class="voice-select" id="voiceSelect" onchange="changeVoice()">
+            <option value="">Loading voices...</option>
+        </select>
+        <div class="audio-status" id="audioStatus">Ready to play</div>
+    </div>
+
+    <script>
+        // Scroll-triggered reveal animations
+        const chapters = document.querySelectorAll('.chapter');
+        const progressBar = document.getElementById('progressBar');
+
+        function isElementInViewport(el) {
+            const rect = el.getBoundingClientRect();
+            return (
+                rect.top <= (window.innerHeight || document.documentElement.clientHeight) * 0.75
+            );
+        }
+
+        function checkChapters() {
+            chapters.forEach(chapter => {
+                if (isElementInViewport(chapter) && !chapter.classList.contains('revealed')) {
+                    chapter.classList.add('revealed');
+                }
+            });
+        }
+
+        // Progress indicator
+        function updateProgress() {
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight - windowHeight;
+            const scrolled = window.pageYOffset;
+            const progress = (scrolled / documentHeight) * 100;
+            progressBar.style.height = `${Math.min(progress, 100)}%`;
+        }
+
+        // Scroll event listeners
+        let ticking = false;
+
+        function onScroll() {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    checkChapters();
+                    updateProgress();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', checkChapters, { passive: true });
+
+        // Initial check
+        checkChapters();
+        updateProgress();
+
+        // Typewriter effect for title
+        const title = document.querySelector('h1');
+        if (title && window.innerWidth > 768) {
+            const text = title.textContent;
+            title.textContent = '';
+            let i = 0;
+
+            function typeWriter() {
+                if (i < text.length) {
+                    title.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 100);
+                }
+            }
+
+            setTimeout(typeWriter, 500);
+        }
+
+        // ========================================
+        // Web Speech API TTS - Bot Sportello Voice
+        // ========================================
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let selectedVoice = null;
+        let currentUtterance = null;
+        let isPlaying = false;
+        let isPaused = false;
+        let paragraphs = [];
+        let currentParagraphIndex = 0;
+
+        // Preferred voices in order (noir detective style)
+        const PREFERRED_VOICES = ['Ralph', 'Daniel', 'Tom', 'Alex', 'Fred'];
+
+        // Get all story text in document order
+        function getStoryText() {
+            const texts = [];
+            const storyContainer = document.querySelector('.story-container');
+
+            // Get all readable elements in order
+            const elements = storyContainer.querySelectorAll('.chapter-title, .paragraph, .reveal-text');
+
+            elements.forEach(el => {
+                let text = el.textContent.trim();
+                if (text) {
+                    // Clean up line breaks in reveal text
+                    text = text.replace(/\s+/g, ' ');
+                    texts.push({ element: el, text: text });
+                }
+            });
+
+            return texts;
+        }
+
+        // Find best available voice
+        function findBestVoice(voiceList) {
+            if (!voiceList || voiceList.length === 0) return null;
+
+            // Try preferred voices in order
+            for (const name of PREFERRED_VOICES) {
+                const match = voiceList.find(v =>
+                    v.name.includes(name) && v.lang.startsWith('en')
+                );
+                if (match) return match;
+            }
+
+            // Fallback: any English male-sounding voice
+            const englishVoices = voiceList.filter(v => v.lang.startsWith('en'));
+            if (englishVoices.length > 0) {
+                // Prefer voices that sound more "noir" (lower/male names)
+                const maleNames = ['David', 'James', 'John', 'Mark', 'Paul'];
+                for (const name of maleNames) {
+                    const match = englishVoices.find(v => v.name.includes(name));
+                    if (match) return match;
+                }
+                return englishVoices[0];
+            }
+
+            // Last resort: any voice
+            return voiceList[0];
+        }
+
+        // Load and populate voices
+        function loadVoices() {
+            voices = synth.getVoices();
+            const select = document.getElementById('voiceSelect');
+            if (!select) return;
+
+            select.innerHTML = '';
+
+            if (voices.length === 0) {
+                select.innerHTML = '<option value="">Loading...</option>';
+                return;
+            }
+
+            // Find best voice
+            selectedVoice = findBestVoice(voices);
+
+            // Populate dropdown with English voices
+            const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+            englishVoices.forEach((voice, idx) => {
+                const option = document.createElement('option');
+                option.value = idx;
+                option.textContent = `${voice.name}`;
+                if (voice === selectedVoice) option.selected = true;
+                select.appendChild(option);
+            });
+
+            const voiceName = selectedVoice ? selectedVoice.name.split(' ')[0] : 'Default';
+            document.getElementById('audioStatus').textContent = `Voice: ${voiceName}`;
+        }
+
+        // Initialize voices
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = loadVoices;
+        }
+        // Try loading immediately and after a delay (browser quirk)
+        loadVoices();
+        setTimeout(loadVoices, 100);
+
+        function changeVoice() {
+            const select = document.getElementById('voiceSelect');
+            const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+            const idx = parseInt(select.value);
+            if (!isNaN(idx) && englishVoices[idx]) {
+                selectedVoice = englishVoices[idx];
+                document.getElementById('audioStatus').textContent = `Voice: ${selectedVoice.name.split(' ')[0]}`;
+            }
+        }
+
+        function getSelectedVoice() {
+            return selectedVoice || findBestVoice(voices);
+        }
+
+        function highlightParagraph(element) {
+            // Remove previous highlights
+            document.querySelectorAll('.reading').forEach(el => el.classList.remove('reading'));
+            // Add highlight to current
+            if (element) {
+                element.classList.add('reading');
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function speakParagraph(index) {
+            if (index >= paragraphs.length) {
+                stopNarration();
+                document.getElementById('audioStatus').textContent = 'Finished';
+                return;
+            }
+
+            const { element, text } = paragraphs[index];
+            highlightParagraph(element);
+
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.voice = getSelectedVoice();
+
+            // Detective voice settings - slower, deeper
+            currentUtterance.rate = 0.85;   // Slower for noir atmosphere
+            currentUtterance.pitch = 0.9;   // Slightly deeper
+            currentUtterance.volume = 1;
+
+            currentUtterance.onend = () => {
+                if (isPlaying && !isPaused) {
+                    currentParagraphIndex++;
+                    speakParagraph(currentParagraphIndex);
+                }
+            };
+
+            currentUtterance.onerror = (e) => {
+                console.error('Speech error:', e);
+                document.getElementById('audioStatus').textContent = 'Error occurred';
+            };
+
+            synth.speak(currentUtterance);
+            document.getElementById('audioStatus').textContent = `Reading...`;
+        }
+
+        function toggleNarration() {
+            const btn = document.getElementById('playBtn');
+
+            if (!isPlaying) {
+                // Start playing
+                isPlaying = true;
+                isPaused = false;
+                paragraphs = getStoryText();
+                btn.textContent = 'Pause';
+                btn.className = 'audio-btn pause';
+                speakParagraph(currentParagraphIndex);
+            } else if (isPaused) {
+                // Resume
+                isPaused = false;
+                synth.resume();
+                btn.textContent = 'Pause';
+                btn.className = 'audio-btn pause';
+                document.getElementById('audioStatus').textContent = 'Resumed';
+            } else {
+                // Pause
+                isPaused = true;
+                synth.pause();
+                btn.textContent = 'Resume';
+                btn.className = 'audio-btn play';
+                document.getElementById('audioStatus').textContent = 'Paused';
+            }
+        }
+
+        function stopNarration() {
+            synth.cancel();
+            isPlaying = false;
+            isPaused = false;
+            currentParagraphIndex = 0;
+
+            const btn = document.getElementById('playBtn');
+            btn.textContent = 'Play';
+            btn.className = 'audio-btn play';
+
+            document.querySelectorAll('.reading').forEach(el => el.classList.remove('reading'));
+            document.getElementById('audioStatus').textContent = 'Ready to play';
+        }
+
+        // Check for speech synthesis support
+        if (!('speechSynthesis' in window)) {
+            document.getElementById('audioControls').innerHTML =
+                '<p style="color: #ff0000; font-size: 11px;">Voice narration not supported in this browser.</p>';
+        }
+    </script>
 </body>
 </html>

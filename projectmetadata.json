@@ -67,10 +67,9 @@
     },
     "peanut-city": {
       "title": "Peanut City",
-      "icon": "📖",
-      "description": "shadowy peanut city story",
-      "collection": "stories-content",
-      "hidden": false
+      "description": "Noir detective horror tale",
+      "icon": "🥜",
+      "collection": "featured"
     },
     "terminal-memory": {
       "title": "Terminal Memory",
