@@ -1,3 +1,33 @@
+## 2025-12-24
+
+### Feature: LLM-Based Intelligent Routing
+
+Added a new routing layer that uses an LLM to generate structured routing plans before tool execution, replacing coarse-grained keyword classification with nuanced tool sequencing.
+
+### Changes Made
+- Created `services/llmRouter.js` with LLM-based routing plan generation
+- Router outputs structured plans: intent, toolSequence, parameterHints, confidence, reasoning
+- Integrated routing guidance injection into `getLLMResponse()` system prompt
+- Added prerequisite enforcement (e.g., `file_exists` → `read_file` → `edit_file`)
+- Graceful fallback to pattern matching if LLM routing fails
+
+### Technical Details
+- Router model: `google/gemma-3-12b-it` (best accuracy/speed tradeoff)
+- Latency: ~2-4s per routing decision
+- 100% LLM routing success rate in testing (4/4 test cases)
+- Tool catalog with speed/cost metadata for intelligent sequencing
+
+### Files Modified
+- `services/llmRouter.js` (NEW - 490 lines)
+- `index.js` (import router, inject guidance into LLM calls)
+
+### Testing
+- Tested edit, search, build, and chat routing scenarios
+- Compared Kimi K2, GLM 4.5 Air, Gemma 3 12B, Gemma 3n E4B
+- Gemma 3 12B selected for best accuracy with acceptable latency
+
+---
+
 ## 2025-12-14
 
 ### Issue:

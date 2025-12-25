@@ -148,11 +148,12 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 8. Message tracking, @ mention responses, and bot ready event
 
 **Services Modules** (`/services/`):
+- `llmRouter.js` - LLM-based intelligent routing (generates tool sequence plans, uses Gemma 3 12B)
 - `filesystem.js` - File operations (listFiles, fileExists, readFile, writeFile, editFile, searchFiles)
 - `gitHelper.js` - GitHub API operations (octokit, pushFileViaAPI, getExistingFileSha)
 - `gamePipeline.js` - Game building pipeline
 - `llmClient.js` - OpenRouter API client with role-specific prompts
-- `requestClassifier.js` - Request classification
+- `requestClassifier.js` - Request classification (keyword-based, fast path)
 - `postgres.js` - PostgreSQL logging service (Railway database)
 
 **Config Modules** (`/config/`):

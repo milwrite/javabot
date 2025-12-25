@@ -13,7 +13,8 @@ The system operates as a **multi-pipeline agent** driven by a central classifier
 | Component | Location | Purpose |
 |-----------|----------|---------|
 | **Discord Interface** | `index.js` | Handles slash commands, @mentions, message events |
-| **Request Classifier** | `services/requestClassifier.js` | Categorizes user intent (keyword or LLM-based) |
+| **LLM Router** | `services/llmRouter.js` | Generates structured routing plans with tool sequences (Gemma 3 12B) |
+| **Request Classifier** | `services/requestClassifier.js` | Categorizes user intent (keyword-based, fast path) |
 | **Game Pipeline** | `services/gamePipeline.js` | Orchestrates Architect→Builder→Tester→Scribe |
 | **LLM Client** | `services/llmClient.js` | Centralized API calls with role-specific prompts |
 | **Git Helper** | `services/gitHelper.js` | GitHub API operations (Railway-compatible) |
@@ -31,6 +32,7 @@ javabot/
 │   ├── models.js         # Model presets, reasoning config
 │   └── templates.js      # HTML scaffolds by content type
 ├── services/
+│   ├── llmRouter.js          # LLM-based routing plans
 │   ├── requestClassifier.js
 │   ├── gamePipeline.js
 │   ├── llmClient.js
@@ -114,14 +116,11 @@ graph TD
 
 ## 3. Component Breakdown
 
-### A. The Brain (Request Classifier)
+### A. The Brain (Request Classifier + LLM Router)
 
-Located in `services/requestClassifier.js`.
+**Stage 1: Request Classifier** (`services/requestClassifier.js`)
 
-**Default Mode: Keyword-based** (no API call, instant classification)
-- Set `CLASSIFIER_USE_LLM=true` in env to enable LLM classification
-
-**Classification Buckets:**
+Keyword-based classification (no API call, instant) into buckets:
 
 | Type | Trigger | Route |
 |------|---------|-------|
@@ -132,7 +131,27 @@ Located in `services/requestClassifier.js`.
 | `READ_ONLY` | "show", "list", "find", "what", "search" | Fast Path |
 | `CONVERSATION` | Greetings, short messages (<20 chars) | Fast Path |
 
-**Fast Paths** (NEW): `READ_ONLY` and `CONVERSATION` requests bypass tool calling entirely for speed. Simple LLM response with no function calls.
+**Stage 2: LLM Router** (`services/llmRouter.js`)
+
+After classification, generates a structured routing plan using Gemma 3 12B (~2-4s):
+
+```json
+{
+  "intent": "edit",
+  "toolSequence": ["file_exists", "read_file", "edit_file"],
+  "parameterHints": { "path": "src/game.html" },
+  "confidence": 0.95,
+  "reasoning": "Edit request with explicit path"
+}
+```
+
+**Key Features:**
+- **Tool Sequencing**: Orders tools optimally (e.g., check exists → read → edit)
+- **Prerequisite Enforcement**: Automatically inserts required steps
+- **Parameter Extraction**: Pre-extracts file paths, patterns from user request
+- **Graceful Fallback**: Falls back to pattern matching if LLM fails
+
+**Fast Paths**: `READ_ONLY` and `CONVERSATION` requests bypass tool calling entirely for speed.
 
 ### B. The Factory (Game Pipeline)
 

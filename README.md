@@ -43,10 +43,11 @@ Install and run:
 **Top‑level**
 - `index.js` — Discord orchestrator, tool implementations, agent loop, command handlers, git and OpenRouter wiring.
 - `services/` — integrations + pipeline orchestrators:
+  - `llmRouter.js` — LLM-based intelligent routing (generates tool sequence plans before execution)
   - `llmClient.js` — OpenRouter client + role prompts (Architect/Builder/Tester/Scribe)
   - `gamePipeline.js` — plans → builds → tests → docs (returns files + live URL)
   - `buildLogs.js` — structured logs per build; summarizes recurrent issues
-  - `requestClassifier.js` — LLM classifier (create vs fix vs edit vs read‑only)
+  - `requestClassifier.js` — request classifier (create vs fix vs edit vs read‑only)
   - `postgres.js` — PostgreSQL logging service (events, tool calls, errors)
 - `agents/` — role prompts and logic wrappers used by the pipeline
   - `gameArchitect.js`, `gameBuilder.js`, `gameTester.js`, `gameScribe.js`
@@ -71,10 +72,15 @@ Install and run:
 
 **@ Mentions**
 - `messageCreate` tracks history and routes mentions to `handleMentionAsync`.
-- `requestClassifier` calls OpenRouter to decide the path:
-  - CREATE_NEW → `runGamePipeline(...)` (Architect → Builder → Tester → Scribe).
-  - FUNCTIONALITY_FIX or SIMPLE_EDIT → normal agent loop with repo tools.
-  - READ_ONLY → direct LLM answer (no file edits).
+- `requestClassifier` categorizes intent (CREATE_NEW, SIMPLE_EDIT, FUNCTIONALITY_FIX, etc.)
+- `llmRouter` generates structured routing plans with tool sequences and parameter hints:
+  - Outputs: `{ intent, toolSequence, parameterHints, confidence, reasoning }`
+  - Enforces prerequisites (e.g., `file_exists` → `read_file` → `edit_file`)
+  - Uses Gemma 3 12B for fast, accurate routing (~2-4s)
+- Routing paths:
+  - CREATE_NEW → `runGamePipeline(...)` (Architect → Builder → Tester → Scribe)
+  - FUNCTIONALITY_FIX or SIMPLE_EDIT → agent loop with routing guidance
+  - READ_ONLY → direct LLM answer (no file edits)
 - Long answers are truncated in Discord and saved fully to `responses/`.
 
 **Content pipeline (services/gamePipeline.js)**
