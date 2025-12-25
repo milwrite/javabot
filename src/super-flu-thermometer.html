@@ -332,7 +332,7 @@
                         statusText.textContent = "CRITICAL WARNING";
                         statusText.style.color = "#ff0000";
                     }
-                    tempDisplay.textContent = currentTemp.toFixed(1) + "°C";
+                    tempDisplay.textContent = (currentTemp * 9/5 + 32).toFixed(1) + "°F";
                 }, 100);
             }
 
