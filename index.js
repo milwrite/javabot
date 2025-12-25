@@ -3206,6 +3206,7 @@ async function handleMentionAsync(message) {
                         const originalModel = MODEL;
                         try {
                             MODEL = MODEL_PRESETS.glm;
+                            logEvent('MENTION', `Calling OpenRouter with model: ${MODEL}`);
                             const simpleResponse = await axios.post(OPENROUTER_URL, {
                                 model: MODEL,
                                 messages: [
@@ -3221,12 +3222,19 @@ async function handleMentionAsync(message) {
                                 },
                                 timeout: 20000
                             });
+                            logEvent('MENTION', `OpenRouter response received`);
                             let response = cleanBotResponse(simpleResponse.data.choices[0].message.content || '');
                             if (!response) response = getBotResponse('confirmations');
                             await safeEditReply(thinkingMsg, response);
                             addToHistory(username, content, false);
                             addToHistory('Bot Sportello', response, true);
                             return; // Done
+                        } catch (convError) {
+                            console.error('[CONVERSATION] Error:', convError.message);
+                            logEvent('ERROR', `CONVERSATION failed: ${convError.message}`);
+                            // Fallback response
+                            await safeEditReply(thinkingMsg, getBotResponse('errors') || "sorry man, brain froze for a sec there");
+                            return;
                         } finally {
                             MODEL = originalModel;
                         }
