@@ -145,7 +145,7 @@ Do not use web search or create new content - only edit existing files.`;
  * @param {string} userMessage - The user's edit request
  * @param {Array} conversationMessages - Previous conversation context
  * @param {Object} context - Runtime context with dependencies
- * @returns {Object} { text, suggestNormalFlow?, searchContext? }
+ * @returns {Object} { text, suggestNormalFlow?, searchContext?, needsClarification? }
  */
 async function getEditResponse(userMessage, conversationMessages = [], context = {}) {
     const {
@@ -161,6 +161,10 @@ async function getEditResponse(userMessage, conversationMessages = [], context =
 
     let iteration = 0;
     const MAX_ITERATIONS = 3;
+
+    // Track search failures to provide helpful clarification
+    const searchFailures = [];
+    const searchPatterns = [];
 
     try {
         const messages = [
@@ -240,6 +244,14 @@ async function getEditResponse(userMessage, conversationMessages = [], context =
                     result = await searchFiles(args.pattern, args.path || './src', {
                         caseInsensitive: args.case_insensitive || false
                     });
+                    // Track search patterns and failures for clarification
+                    searchPatterns.push(args.pattern);
+                    if (result.includes('No matches found')) {
+                        searchFailures.push({
+                            pattern: args.pattern,
+                            path: args.path || './src'
+                        });
+                    }
                 } else if (functionName === 'read_file') {
                     result = await readFile(args.path);
                 } else if (functionName === 'edit_file') {
@@ -308,6 +320,51 @@ async function getEditResponse(userMessage, conversationMessages = [], context =
                 return {
                     text: "hmm, this seems like it might be better suited for the full conversation flow rather than file editing. let me handle this differently...",
                     suggestNormalFlow: true
+                };
+            }
+
+            // If we had search failures, try to find alternatives and ask for clarification
+            if (searchFailures.length > 0) {
+                logEvent('EDIT_LOOP', `Search failures detected: ${searchFailures.length} patterns not found`);
+
+                // Search across ALL files for the pattern to find alternatives
+                const pattern = searchPatterns[0] || searchFailures[0]?.pattern;
+                let alternativeFiles = [];
+
+                if (pattern) {
+                    try {
+                        const globalSearch = await searchFiles(pattern, './src', { caseInsensitive: true });
+                        if (!globalSearch.includes('No matches found')) {
+                            // Extract file names from search results
+                            const fileMatches = globalSearch.match(/### src\/([^\n]+)/g);
+                            if (fileMatches) {
+                                alternativeFiles = fileMatches
+                                    .map(m => m.replace('### ', ''))
+                                    .slice(0, 3);
+                            }
+                        }
+                    } catch (e) {
+                        // Ignore search errors
+                    }
+                }
+
+                // Build clarification message
+                const failedFile = searchFailures[0]?.path || 'the specified file';
+                const failedPattern = searchFailures[0]?.pattern || 'the requested content';
+
+                let clarificationText = `hmm, i couldn't find "${failedPattern}" in ${failedFile}.`;
+
+                if (alternativeFiles.length > 0) {
+                    clarificationText += ` but i did find it in: ${alternativeFiles.join(', ')}. did you mean one of those?`;
+                } else {
+                    clarificationText += ` could you double-check the file name or tell me exactly what text you want me to change?`;
+                }
+
+                logEvent('EDIT_LOOP', 'Returning clarification request');
+                return {
+                    text: clarificationText,
+                    needsClarification: true,
+                    searchFailures
                 };
             }
 
