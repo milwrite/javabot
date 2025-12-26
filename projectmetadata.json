@@ -459,6 +459,13 @@
       "description": "moody winter canvas viz",
       "collection": "utilities-apps",
       "hidden": false
+    },
+    "noir-simon": {
+      "title": "Noir Simon",
+      "icon": "🕹️",
+      "description": "noir memory arcade",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }

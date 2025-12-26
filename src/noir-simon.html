@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noir Simon - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --noir-bg: #0a0a0a;
+            --noir-red: #ff0000;
+            --noir-cyan: #00ffff;
+            --noir-blue: #7ec8e3;
+            --noir-white: #ffffff;
+        }
+
+        body {
+            font-family: 'Courier Prime', monospace;
+            background-color: var(--noir-bg);
+            color: var(--noir-cyan);
+            padding-top: 80px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-wrapper {
+            width: 100%;
+            max-width: 400px;
+            padding: 0 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hud {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px var(--noir-cyan);
+        }
+
+        canvas {
+            background-color: #000;
+            border: 2px solid var(--noir-blue);
+            box-shadow: 0 0 15px rgba(126, 200, 227, 0.2);
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            display: block;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .instructions {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: var(--noir-blue);
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        /* Mobile Controls Styling */
+        .mobile-controls {
+            margin-top: 25px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 240px;
+        }
+
+        .control-btn {
+            height: 60px; /* Touch target >= 44px */
+            background-color: #111;
+            border: 1px solid var(--noir-blue);
+            color: var(--noir-cyan);
+            font-size: 24px;
+            font-family: 'Courier Prime', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .control-btn:active, .control-btn.active {
+            background-color: var(--noir-cyan);
+            color: #000;
+            box-shadow: 0 0 15px var(--noir-cyan);
+            border-color: var(--noir-cyan);
+            transform: scale(0.95);
+        }
+
+        .control-btn.empty {
+            border: none;
+            background: transparent;
+            pointer-events: none;
+        }
+
+        @media (min-width: 768px) {
+            .game-wrapper {
+                padding-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link" aria-label="Back to home"></a>
+
+    <div class="game-wrapper">
+        <div class="hud">
+            <span id="score-display">SCORE: 0</span>
+            <span id="status-display">WAITING</span>
+        </div>
+
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+        <div class="mobile-controls">
+            <div class="control-btn empty"></div>
+            <button class="control-btn" data-dir="up">▲</button>
+            <div class="control-btn empty"></div>
+            <button class="control-btn" data-dir="left">◀</button>
+            <button class="control-btn" data-dir="down">▼</button>
+            <button class="control-btn" data-dir="right">▶</button>
+        </div>
+
+        <div class="instructions">
+            TAP CANVAS TO START<br>
+            MEMORIZE THE PATTERN
+        </div>
+    </div>
+
+    <script>
+        // Game Constants
+        const COLORS = {
+            0: '#ff0000', // Top Left (Red)
+            1: '#00ffff', // Top Right (Cyan)
+            2: '#7ec8e3', // Bottom Right (Blue)
+            3: '#ffffff'  // Bottom Left (White)
+        };
+        
+        // Mapping D-pad to Quadrants
+        // Up -> TL (0), Right -> TR (1), Down -> BR (2), Left -> BL (3)
+        const DIR_MAP = {
+            'up': 0,
+            'right': 1,
+            'down': 2,
+            'left': 3
+        };
+
+        const STATE = {
+            IDLE: 'WAITING',
+            PLAYING: 'WATCH',
+            INPUT: 'REPEAT',
+            GAMEOVER: 'GAME OVER'
+        };
+
+        // Game State
+        let sequence = [];
+        let playerIndex = 0;
+        let score = 0;
+        let gameState = STATE.IDLE;
+        let activeQuadrant = -1;
+        let flashTimeout = null;
+        let audioCtx = null;
+
+        // DOM Elements
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score-display');
+        const statusDisplay = document.getElementById('status-display');
+        const controlBtns = document.querySelectorAll('.control-btn');
+
+        // Audio System (Simple Oscillator)
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(index) {
+            if (!audioCtx) initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            const freqs = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+            osc.frequency.value = freqs[index];
+            osc.type = 'square'; // Noir synth vibe
+
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function playErrorSound() {
+            if (!audioCtx) initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.value = 110;
+            osc.type = 'sawtooth';
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        // Drawing Functions
+        function draw() {
+            const w = canvas.width;
+            const h = canvas.height;
+            const hw = w / 2;
+            const hh = h / 2;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw Quadrants
+            drawQuadrant(0, 0, hw, hh, 0); // TL
+            drawQuadrant(hw, 0, hw, hh, 1); // TR
+            drawQuadrant(hw, hh, hw, hh, 2); // BR
+            drawQuadrant(0, hh, hw, hh, 3); // BL
+
+            // Draw Center Overlay
+            ctx.beginPath();
+            ctx.arc(hw, hh, 30, 0, Math.PI * 2);
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fill();
+            ctx.strokeStyle = '#7ec8e3';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw Text in Center
+            ctx.fillStyle = '#00ffff';
+            ctx.font = '16px "Courier Prime"';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(gameState === STATE.IDLE ? "START" : score, hw, hh);
+        }
+
+        function drawQuadrant(x, y, w, h, index) {
+            ctx.beginPath();
+            
+            // Determine shape based on quadrant
+            if (index === 0) { // TL
+                ctx.moveTo(x + w, y);
+                ctx.arcTo(x, y, x, y + h, 20);
+                ctx.lineTo(x, y + h);
+                ctx.lineTo(x + w, y);
+            } else if (index === 1) { // TR
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + w, y);
+                ctx.lineTo(x + w, y + h);
+                ctx.arcTo(x + w, y, x, y, 20);
+            } else if (index === 2) { // BR
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + w, y);
+                ctx.arcTo(x + w, y + h, x, y + h, 20);
+                ctx.lineTo(x, y + h);
+            } else { // BL
+                ctx.moveTo(x, y);
+                ctx.arcTo(x, y + h, x + w, y + h, 20);
+                ctx.lineTo(x + w, y + h);
+                ctx.lineTo(x, y);
+            }
+
+            ctx.closePath();
+
+            // Fill Logic
+            const isActive = activeQuadrant === index;
+            const baseColor = COLORS[index];
+            
+            ctx.fillStyle = isActive ? lightenColor(baseColor, 50) : adjustOpacity(baseColor, 0.3);
+            ctx.fill();
+
+            // Stroke Logic
+            ctx.strokeStyle = baseColor;
+            ctx.lineWidth = isActive ? 4 : 2;
+            
+            if (isActive) {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = baseColor;
+            } else {
+                ctx.shadowBlur = 0;
+            }
+            
+            ctx.stroke();
+            ctx.shadowBlur = 0; // Reset
+        }
+
+        // Color Helpers
+        function adjustOpacity(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function lightenColor(hex, amount) {
+            return hex; // Simplification: keeping full color for flash
+        }
+
+        // Game Logic
+        function startGame() {
+            initAudio();
+            sequence = [];
+            score = 0;
+            updateScore();
+            nextRound();
+        }
+
+        function nextRound() {
+            playerIndex = 0;
+            gameState = STATE.PLAYING;
+            statusDisplay.textContent = "WATCH";
+            statusDisplay.style.color = "#ff0000";
+            
+            // Add random step
+            sequence.push(Math.floor(Math.random() * 4));
+            
+            // Calculate speed based on score (Progressive Difficulty)
+            const speed = Math.max(300, 800 - (score * 30));
+            
+            playSequence(0, speed);
+        }
+
+        function playSequence(index, speed) {
+            if (index >= sequence.length) {
+                gameState = STATE.INPUT;
+                statusDisplay.textContent = "REPEAT";
+                statusDisplay.style.color = "#00ffff";
+                return;
+            }
+
+            const step = sequence[index];
+            
+            setTimeout(() => {
+                activateQuadrant(step);
+                playTone(step);
+                
+                setTimeout(() => {
+                    deactivateQuadrant();
+                    playSequence(index + 1, speed);
+                }, speed * 0.6); // Light duration
+            }, speed * 0.4); // Gap duration
+        }
+
+        function handleInput(direction) {
+            if (gameState !== STATE.INPUT) return;
+
+            const quadrantIndex = DIR_MAP[direction];
+            
+            // Visual Feedback
+            activateQuadrant(quadrantIndex);
+            playTone(quadrantIndex);
+            setTimeout(deactivateQuadrant, 200);
+
+            // Logic
+            if (quadrantIndex === sequence[playerIndex]) {
+                playerIndex++;
+                if (playerIndex >= sequence.length) {
+                    score++;
+                    updateScore();
+                    setTimeout(nextRound, 500);
+                }
+            } else {
+                gameOver();
+            }
+        }
+
+        function activateQuadrant(index) {
+            activeQuadrant = index;
+            draw();
+            
+            // Highlight corresponding control button
+            const dirMapRev = {0: 'up', 1: 'right', 2: 'down', 3: 'left'};
+            const btn = document.querySelector(`.control-btn[data-dir="${dirMapRev[index]}"]`);
+            if(btn) btn.classList.add('active');
+        }
+
+        function deactivateQuadrant() {
+            activeQuadrant = -1;
+            draw();
+            controlBtns.forEach(btn => btn.classList.remove('active'));
+        }
+
+        function gameOver() {
+            gameState = STATE.GAMEOVER;
+            statusDisplay.textContent = "FAILED";
+            statusDisplay.style.color = "#ff0000";
+            playErrorSound();
+            
+            // Flash all red
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+            ctx.fillRect(0,0, canvas.width, canvas.height);
+        }
+
+        function updateScore() {
+            scoreDisplay.textContent = `SCORE: ${score}`;
+        }
+
+        // Input Handling
+        function handleDirection(dir) {
+            handleInput(dir);
+        }
+
+        // Touch Events (Required Template)
+        document.querySelectorAll('.control-btn[data-dir]').forEach(btn => {
+            btn.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                handleDirection(btn.dataset.dir); 
+            }, { passive: false });
+            
+            // Add mouse support for desktop testing
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                handleDirection(btn.dataset.dir);
+            });
+        });
+
+        // Canvas Start Interaction
+        canvas.addEventListener('click', () => {
+            if (gameState === STATE.IDLE || gameState === STATE.GAMEOVER) {
+                startGame();
+            }
+        });
+
+        // Initial Draw
+        draw();
+
+    </script>
+</body>
+</html>
