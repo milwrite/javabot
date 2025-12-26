@@ -2232,13 +2232,12 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                                 items: {
                                     type: 'object',
                                     properties: {
-                                        old: { type: 'string', description: 'EXACT string to find (use old_string as alias)' },
-                                        new: { type: 'string', description: 'Replacement string (use new_string as alias)' },
+                                        old: { type: 'string', description: 'EXACT string to find. Accepts: old OR old_string' },
+                                        new: { type: 'string', description: 'Replacement string. Accepts: new OR new_string' },
                                         replace_all: { type: 'boolean', description: 'Replace all occurrences (default: false)' }
-                                    },
-                                    required: ['old', 'new']
+                                    }
                                 },
-                                description: 'BATCH MODE: Array of replacements. IMPORTANT: read_file first to verify exact strings exist!'
+                                description: 'BATCH MODE: Array of {old, new, replace_all?} objects. Both old/new and old_string/new_string are accepted. IMPORTANT: read_file first to verify exact strings!'
                             },
                             // Anchor-range mode
                             start_marker: { type: 'string', description: 'Unique start marker text' },
@@ -2348,6 +2347,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         let readOnlyIterations = 0; // Track consecutive read-only iterations
         let lastResponse;
         const editedFiles = new Set(); // Track files already edited to prevent redundant edits
+        const fileReadCache = new Map(); // Cache file contents to avoid redundant reads within conversation
         const searchResults = []; // Track web search results for context persistence
         let completedActions = 0; // Count primary actions (edits, creates, commits)
 
@@ -2507,10 +2507,24 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         filePattern: args.file_pattern || null
                     });
                 } else if (functionName === 'read_file') {
-                    result = await readFile(args.path, discordContext.channelId);
+                    // Check cache first to avoid redundant disk reads
+                    const normalizedPath = args.path.replace(/^\.\//, '');
+                    if (fileReadCache.has(normalizedPath)) {
+                        result = fileReadCache.get(normalizedPath);
+                        logEvent('LLM', `Cache hit for ${normalizedPath} (saved ${result.length} chars read)`);
+                    } else {
+                        result = await readFile(args.path, discordContext.channelId);
+                        // Only cache successful reads (not errors)
+                        if (!result.startsWith('Error')) {
+                            fileReadCache.set(normalizedPath, result);
+                        }
+                    }
                 } else if (functionName === 'write_file') {
                     result = await writeFile(args.path, args.content, discordContext.channelId);
                     if (!result.startsWith('Error')) {
+                        // Invalidate cache since file changed
+                        const normalizedPath = args.path.replace(/^\.\//, '');
+                        fileReadCache.delete(normalizedPath);
                         completedActions++;
                         actionCompletedThisIteration = true;
                         logEvent('LLM', `Primary action: write_file (${completedActions} total)`);
@@ -2550,6 +2564,9 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         );
                         editedFiles.add(args.path);
                         if (!result.startsWith('Error')) {
+                            // Invalidate cache since file changed
+                            const normalizedPath = args.path.replace(/^\.\//, '');
+                            fileReadCache.delete(normalizedPath);
                             completedActions++;
                             actionCompletedThisIteration = true;
                             logEvent('LLM', `Primary action: edit_file pushed (${completedActions} total)`);
