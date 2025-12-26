@@ -41,7 +41,6 @@ NOIR TERMINAL DESIGN SYSTEM:
 MOBILE-FIRST DESIGN (Discord is mobile-forward):
 - ALWAYS design for mobile first - most users view on phones
 - Touch targets minimum 44px height/width for accessibility
-- All games MUST include mobile touch controls (arrows, buttons)
 - Test on small screens (320px-480px width)
 - Avoid hover-only interactions - provide tap alternatives
 - Font sizes must be readable on mobile (min 14px body text)
@@ -80,15 +79,27 @@ BADGES: .priority-badge, .priority-low/medium/high, .category-badge, .time-badge
 
 MODALS: .modal, .modal-content, .modal-header, .close-btn, .notification, .game-over-modal
 
-GAMES: .game-wrapper, .game-container, .sudoku-grid, .cell, .number-pad, .mobile-controls (REQUIRED for games), canvas
+GAMES: .game-wrapper, .game-container, .sudoku-grid, .cell, .number-pad, .mobile-controls, canvas
 
-MOBILE CONTROLS (REQUIRED FOR ALL GAMES):
-- Position controls DIRECTLY below canvas (before other content)
+MOBILE CONTROLS - USE ONLY WHEN NEEDED:
+
+D-PAD ARROWS REQUIRED (directional movement games):
+- Snake, Frogger, maze games, Tetris, platformers, beat-em-ups, space shooters
+- Any game where player moves a character/object around the screen
+- Position D-pad DIRECTLY below canvas
 - Display: none on desktop, display: grid on mobile (@media max-width: 768px)
-- CSS: touch-action: manipulation; -webkit-tap-highlight-color: transparent;
 - Size: min-height 50px, min-width 50px, font-size 20px for arrows
 - JS: Use touchstart with preventDefault + {passive: false}, click as fallback
-- Example: btn.addEventListener('touchstart', (e) => { e.preventDefault(); handler(); }, {passive: false});
+
+D-PAD ARROWS NOT NEEDED (direct touch games):
+- Memory match games → tap cards directly on canvas/grid
+- Simon/pattern games → tap colored regions directly on canvas
+- Tic-tac-toe, crosswords → tap cells directly
+- Clicker games, whack-a-mole → tap targets directly
+- Card games, puzzles with clickable pieces → tap pieces directly
+- For these games: add touch handlers directly to game elements, NOT a D-pad
+
+ACTION BUTTONS (reset, hint, pause) are fine for any game type.
 
 RESPONSIVE BREAKPOINTS (MANDATORY):
 @media (max-width: 768px) - Tablet/mobile landscape
@@ -102,9 +113,10 @@ WHEN CREATING PAGES:
 4. Place back button as first child of body, before any other content
 5. Do NOT wrap .home-link in other elements or add inline styles to it
 6. Body: no overflow:hidden (breaks scrolling)
-7. For GAMES ONLY: Include .mobile-controls with touch buttons
-8. Canvas games: max-width 100%, height auto
-9. Keep noir terminal colors (#7ec8e3, #ff0000, #00ffff, #0a0a0a)
+7. For MOVEMENT GAMES ONLY: Include D-pad arrows (snake, maze, platformer, etc.)
+8. For TOUCH GAMES: Use direct tap on game elements (memory, simon, tic-tac-toe) - NO D-pad
+9. Canvas games: max-width 100%, height auto
+10. Keep noir terminal colors (#7ec8e3, #ff0000, #00ffff, #0a0a0a)
 
 PROJECT METADATA SYSTEM:
 - projectmetadata.json has { collections: {}, projects: {} }

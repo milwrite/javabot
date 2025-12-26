@@ -67,46 +67,6 @@
             opacity: 0.8;
         }
 
-        /* Mobile Controls Styling */
-        .mobile-controls {
-            margin-top: 25px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            width: 100%;
-            max-width: 240px;
-        }
-
-        .control-btn {
-            height: 60px; /* Touch target >= 44px */
-            background-color: #111;
-            border: 1px solid var(--noir-blue);
-            color: var(--noir-cyan);
-            font-size: 24px;
-            font-family: 'Courier Prime', monospace;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.1s ease;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .control-btn:active, .control-btn.active {
-            background-color: var(--noir-cyan);
-            color: #000;
-            box-shadow: 0 0 15px var(--noir-cyan);
-            border-color: var(--noir-cyan);
-            transform: scale(0.95);
-        }
-
-        .control-btn.empty {
-            border: none;
-            background: transparent;
-            pointer-events: none;
-        }
-
         @media (min-width: 768px) {
             .game-wrapper {
                 padding-top: 20px;
@@ -125,17 +85,8 @@
 
         <canvas id="gameCanvas" width="400" height="400"></canvas>
 
-        <div class="mobile-controls">
-            <div class="control-btn empty"></div>
-            <button class="control-btn" data-dir="up">▲</button>
-            <div class="control-btn empty"></div>
-            <button class="control-btn" data-dir="left">◀</button>
-            <button class="control-btn" data-dir="down">▼</button>
-            <button class="control-btn" data-dir="right">▶</button>
-        </div>
-
         <div class="instructions">
-            TAP CANVAS TO START<br>
+            TAP QUADRANTS TO PLAY<br>
             MEMORIZE THE PATTERN
         </div>
     </div>
@@ -149,15 +100,6 @@
             3: '#ffffff'  // Bottom Left (White)
         };
         
-        // Mapping D-pad to Quadrants
-        // Up -> TL (0), Right -> TR (1), Down -> BR (2), Left -> BL (3)
-        const DIR_MAP = {
-            'up': 0,
-            'right': 1,
-            'down': 2,
-            'left': 3
-        };
-
         const STATE = {
             IDLE: 'WAITING',
             PLAYING: 'WATCH',
@@ -179,7 +121,6 @@
         const ctx = canvas.getContext('2d');
         const scoreDisplay = document.getElementById('score-display');
         const statusDisplay = document.getElementById('status-display');
-        const controlBtns = document.querySelectorAll('.control-btn');
 
         // Audio System (Simple Oscillator)
         function initAudio() {
@@ -362,11 +303,9 @@
             }, speed * 0.4); // Gap duration
         }
 
-        function handleInput(direction) {
+        function handleInput(quadrantIndex) {
             if (gameState !== STATE.INPUT) return;
 
-            const quadrantIndex = DIR_MAP[direction];
-            
             // Visual Feedback
             activateQuadrant(quadrantIndex);
             playTone(quadrantIndex);
@@ -388,17 +327,11 @@
         function activateQuadrant(index) {
             activeQuadrant = index;
             draw();
-            
-            // Highlight corresponding control button
-            const dirMapRev = {0: 'up', 1: 'right', 2: 'down', 3: 'left'};
-            const btn = document.querySelector(`.control-btn[data-dir="${dirMapRev[index]}"]`);
-            if(btn) btn.classList.add('active');
         }
 
         function deactivateQuadrant() {
             activeQuadrant = -1;
             draw();
-            controlBtns.forEach(btn => btn.classList.remove('active'));
         }
 
         function gameOver() {
@@ -416,31 +349,48 @@
             scoreDisplay.textContent = `SCORE: ${score}`;
         }
 
-        // Input Handling
-        function handleDirection(dir) {
-            handleInput(dir);
+        // Get quadrant from canvas coordinates
+        function getQuadrantFromPoint(x, y) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const canvasX = (x - rect.left) * scaleX;
+            const canvasY = (y - rect.top) * scaleY;
+            const hw = canvas.width / 2;
+            const hh = canvas.height / 2;
+
+            // Check if in center circle (no quadrant)
+            const dx = canvasX - hw;
+            const dy = canvasY - hh;
+            if (Math.sqrt(dx*dx + dy*dy) < 30) return -1;
+
+            // Determine quadrant: 0=TL, 1=TR, 2=BR, 3=BL
+            if (canvasX < hw && canvasY < hh) return 0;
+            if (canvasX >= hw && canvasY < hh) return 1;
+            if (canvasX >= hw && canvasY >= hh) return 2;
+            return 3;
         }
 
-        // Touch Events (Required Template)
-        document.querySelectorAll('.control-btn[data-dir]').forEach(btn => {
-            btn.addEventListener('touchstart', (e) => { 
-                e.preventDefault(); 
-                handleDirection(btn.dataset.dir); 
-            }, { passive: false });
-            
-            // Add mouse support for desktop testing
-            btn.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                handleDirection(btn.dataset.dir);
-            });
-        });
+        // Canvas Touch/Click Interaction
+        function handleCanvasInput(e) {
+            e.preventDefault();
+            const touch = e.touches ? e.touches[0] : e;
+            const quadrant = getQuadrantFromPoint(touch.clientX, touch.clientY);
 
-        // Canvas Start Interaction
-        canvas.addEventListener('click', () => {
-            if (gameState === STATE.IDLE || gameState === STATE.GAMEOVER) {
+            if (quadrant === -1) {
+                // Center tap - start/restart game
+                if (gameState === STATE.IDLE || gameState === STATE.GAMEOVER) {
+                    startGame();
+                }
+            } else if (gameState === STATE.INPUT) {
+                handleInput(quadrant);
+            } else if (gameState === STATE.IDLE || gameState === STATE.GAMEOVER) {
                 startGame();
             }
-        });
+        }
+
+        canvas.addEventListener('click', handleCanvasInput);
+        canvas.addEventListener('touchstart', handleCanvasInput, { passive: false });
 
         // Initial Draw
         draw();

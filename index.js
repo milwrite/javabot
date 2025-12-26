@@ -1062,11 +1062,13 @@ function calculateQualityScore(htmlContent, issues, warnings, context) {
     if (htmlContent.includes('page-theme.css')) score += 5;
     if (htmlContent.includes('index.html')) score += 3;
 
-    // Game-specific bonuses
+    // Game-specific bonuses (touch OR mobile-controls, not both required)
     if (context.isGame) {
-        if (htmlContent.includes('mobile-controls')) score += 10;
+        // Award points for having EITHER touch handlers OR mobile controls
+        const hasTouchHandlers = htmlContent.includes('touchstart') || htmlContent.includes('touchend');
+        const hasMobileControls = htmlContent.includes('mobile-controls');
+        if (hasTouchHandlers || hasMobileControls) score += 10;
         if (htmlContent.includes('touch-action')) score += 5;
-        if (htmlContent.includes('touchstart')) score += 5;
     }
 
     return Math.max(0, Math.min(100, score));

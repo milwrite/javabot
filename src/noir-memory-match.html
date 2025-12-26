@@ -74,16 +74,6 @@
             outline: none;
         }
 
-        /* Selection highlight for D-pad navigation */
-        .card.selected::after {
-            content: '';
-            position: absolute;
-            top: -4px; left: -4px; right: -4px; bottom: -4px;
-            border: 2px solid var(--header-color);
-            z-index: 10;
-            pointer-events: none;
-            box-shadow: 0 0 10px var(--header-color);
-        }
 
         .card-inner {
             position: relative;
@@ -158,40 +148,6 @@
             opacity: 0.8;
         }
 
-        /* Mobile Controls D-Pad */
-        .mobile-controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            width: 180px;
-        }
-
-        .control-btn {
-            background-color: #1a1a1a;
-            border: 2px solid var(--header-color);
-            color: var(--header-color);
-            height: 50px;
-            width: 50px;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            user-select: none;
-            margin: 0 auto;
-        }
-
-        .control-btn:active {
-            background-color: var(--header-color);
-            color: #000;
-        }
-
-        .control-btn.empty {
-            border: none;
-            background: transparent;
-            pointer-events: none;
-        }
 
         /* Win Modal */
         .modal-overlay {
@@ -250,14 +206,6 @@
             <button class="reset-btn" id="reset-btn">System Reset</button>
         </div>
 
-        <div class="mobile-controls">
-            <div class="control-btn empty"></div>
-            <button class="control-btn" data-dir="up">▲</button>
-            <div class="control-btn empty"></div>
-            <button class="control-btn" data-dir="left">◀</button>
-            <button class="control-btn" data-dir="down">▼</button>
-            <button class="control-btn" data-dir="right">▶</button>
-        </div>
     </div>
 
     <div class="modal-overlay" id="win-modal">
@@ -279,7 +227,6 @@
         let timerInterval;
         let seconds = 0;
         let isLocked = false;
-        let selectedIndex = 0; // For D-pad navigation
 
         // DOM Elements
         const gameBoard = document.getElementById('game-board');
@@ -294,7 +241,6 @@
             shuffle(cards);
             createBoard();
             startTimer();
-            updateSelection();
         }
 
         // Shuffle Array (Fisher-Yates)
@@ -435,50 +381,9 @@
             shuffle(cards);
             createBoard();
             startTimer();
-            updateSelection();
         };
 
         resetBtn.addEventListener('click', window.resetGame);
-
-        // Mobile Controls (D-Pad) Logic
-        function handleDirection(dir) {
-            const totalCards = 16;
-            const row = Math.floor(selectedIndex / 4);
-            const col = selectedIndex % 4;
-            let newIndex = selectedIndex;
-
-            if (dir === 'up' && row > 0) newIndex -= 4;
-            if (dir === 'down' && row < 3) newIndex += 4;
-            if (dir === 'left' && col > 0) newIndex -= 1;
-            if (dir === 'right' && col < 3) newIndex += 1;
-
-            if (newIndex !== selectedIndex) {
-                selectedIndex = newIndex;
-                updateSelection();
-            }
-        }
-
-        function updateSelection() {
-            const allCards = document.querySelectorAll('.card');
-            allCards.forEach(c => c.classList.remove('selected'));
-            if (allCards[selectedIndex]) {
-                allCards[selectedIndex].classList.add('selected');
-                // Optional: Scroll into view if needed, though grid is usually visible
-            }
-        }
-
-        // Touch Event Binding for Controls (Required Template)
-        document.querySelectorAll('.control-btn[data-dir]').forEach(btn => {
-            btn.addEventListener('touchstart', (e) => { 
-                e.preventDefault(); 
-                handleDirection(btn.dataset.dir); 
-            }, { passive: false });
-            
-            // Add click fallback for mouse testing
-            btn.addEventListener('click', (e) => {
-                handleDirection(btn.dataset.dir);
-            });
-        });
 
         // Initialize on load
         initGame();

@@ -369,8 +369,8 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 2. AI generates HTML that links to `page-theme.css` (shared noir terminal theme)
 3. Prompt specifies: noir terminal colors, Courier Prime font, CSS classes to use
 4. Back button with `.home-link` class automatically included (CSS displays arrow only)
-5. Mobile-responsive with touch controls for games
-6. **Layout hierarchy enforced**: Canvas → Controls → Start Button → Instructions
+5. Mobile-responsive with appropriate touch controls (D-pad for movement games, direct touch for tap games)
+6. **Layout hierarchy enforced**: Canvas → Controls (if needed) → Start Button → Instructions
 7. **Economical spacing**: Tight margins (5-8px), smaller start buttons (0.85-0.95em)
 8. File saved to `src/{name}.html` and added to `projectmetadata.json`
 9. Live URL shown in Discord embed
@@ -388,7 +388,8 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - Color palette: terminal green (#00ff41), red (#ff0000), cyan (#00ffff), black (#0a0a0a)
 - Available CSS classes: `.container`, `.card`, `.btn`, `.panel`, `.home-link`, `.mobile-controls`, etc.
 - **Back button**: Use `<a class="home-link" href="../index.html"></a>` - CSS hides all text and shows only `←` arrow via pseudo-element
-- Games MUST include `.mobile-controls` with touch buttons (Discord is mobile-forward)
+- **Movement games** (snake, maze, platformer): Include D-pad `.mobile-controls` with arrow buttons
+- **Touch games** (memory match, simon, tic-tac-toe): Use direct touch on game elements, NO D-pad
 - **Economical design**: Small start buttons, tight spacing (5-8px margins)
 - **Layout hierarchy**: Controls → Start → Instructions (always in this order)
 - Prompts optimized for token efficiency with inline examples
