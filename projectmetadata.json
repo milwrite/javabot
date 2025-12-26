@@ -466,6 +466,19 @@
       "description": "noir memory arcade",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "memory-game": {
+      "title": "Memory Game",
+      "description": "Memory Game noir project",
+      "icon": "🎮",
+      "collection": "unsorted"
+    },
+    "noir-memory-match": {
+      "title": "Noir Memory Match",
+      "icon": "🃏",
+      "description": "Find the hidden pairs.",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }

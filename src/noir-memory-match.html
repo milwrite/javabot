@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noir Memory Match - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        :root {
+            --accent: #7ec8e3;
+            --btn-color: #ff0000;
+            --header-color: #00ffff;
+            --bg-color: #0a0a0a;
+            --card-back: #1a1a1a;
+            --card-front: #000000;
+        }
+
+        body {
+            font-family: 'Courier Prime', monospace;
+            background-color: var(--bg-color);
+            color: var(--header-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-top: 80px; /* Required spacing */
+        }
+
+        .game-wrapper {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            color: var(--accent);
+        }
+
+        .hud span {
+            font-weight: bold;
+        }
+
+        /* Game Grid */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+            aspect-ratio: 1;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: transparent;
+            perspective: 1000px;
+            cursor: pointer;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 60px; /* Ensures touch target size */
+        }
+
+        .card:focus {
+            outline: none;
+        }
+
+        /* Selection highlight for D-pad navigation */
+        .card.selected::after {
+            content: '';
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            border: 2px solid var(--header-color);
+            z-index: 10;
+            pointer-events: none;
+            box-shadow: 0 0 10px var(--header-color);
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched .card-front {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: inset 0 0 15px rgba(126, 200, 227, 0.3);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            border: 2px solid var(--btn-color);
+            border-radius: 4px;
+        }
+
+        .card-back {
+            background-color: var(--card-back);
+            color: var(--btn-color);
+        }
+
+        .card-front {
+            background-color: var(--card-front);
+            color: var(--header-color);
+            transform: rotateY(180deg);
+        }
+
+        /* Controls Area */
+        .controls-area {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .reset-btn {
+            background-color: var(--btn-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            width: 100%;
+            max-width: 200px;
+            transition: opacity 0.2s;
+        }
+
+        .reset-btn:active {
+            opacity: 0.8;
+        }
+
+        /* Mobile Controls D-Pad */
+        .mobile-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 180px;
+        }
+
+        .control-btn {
+            background-color: #1a1a1a;
+            border: 2px solid var(--header-color);
+            color: var(--header-color);
+            height: 50px;
+            width: 50px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            margin: 0 auto;
+        }
+
+        .control-btn:active {
+            background-color: var(--header-color);
+            color: #000;
+        }
+
+        .control-btn.empty {
+            border: none;
+            background: transparent;
+            pointer-events: none;
+        }
+
+        /* Win Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: var(--bg-color);
+            border: 2px solid var(--header-color);
+            padding: 30px;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .modal-content h2 {
+            color: var(--header-color);
+            margin-top: 0;
+        }
+
+        .modal-content p {
+            color: var(--accent);
+            margin: 20px 0;
+        }
+
+        @media (max-width: 480px) {
+            .game-board {
+                gap: 5px;
+            }
+            .card-front, .card-back {
+                border-width: 1px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link" aria-label="Back to home"></a>
+
+    <div class="game-wrapper">
+        <header class="hud">
+            <div>MOVES: <span id="move-count">0</span></div>
+            <div>TIME: <span id="timer">00:00</span></div>
+        </header>
+
+        <main class="game-board" id="game-board">
+            <!-- Cards generated by JS -->
+        </main>
+
+        <div class="controls-area">
+            <button class="reset-btn" id="reset-btn">System Reset</button>
+        </div>
+
+        <div class="mobile-controls">
+            <div class="control-btn empty"></div>
+            <button class="control-btn" data-dir="up">▲</button>
+            <div class="control-btn empty"></div>
+            <button class="control-btn" data-dir="left">◀</button>
+            <button class="control-btn" data-dir="down">▼</button>
+            <button class="control-btn" data-dir="right">▶</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="win-modal">
+        <div class="modal-content">
+            <h2>ACCESS GRANTED</h2>
+            <p>Sequence Complete.</p>
+            <p>Time: <span id="final-time"></span></p>
+            <button class="reset-btn" onclick="resetGame()">Reboot</button>
+        </div>
+    </div>
+
+    <script>
+        // Game Configuration
+        const symbols = ['Ω', 'Σ', 'π', 'µ', '¶', '§', '÷', '√'];
+        let cards = [...symbols, ...symbols];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let timerInterval;
+        let seconds = 0;
+        let isLocked = false;
+        let selectedIndex = 0; // For D-pad navigation
+
+        // DOM Elements
+        const gameBoard = document.getElementById('game-board');
+        const moveDisplay = document.getElementById('move-count');
+        const timerDisplay = document.getElementById('timer');
+        const resetBtn = document.getElementById('reset-btn');
+        const winModal = document.getElementById('win-modal');
+        const finalTimeDisplay = document.getElementById('final-time');
+
+        // Initialize Game
+        function initGame() {
+            shuffle(cards);
+            createBoard();
+            startTimer();
+            updateSelection();
+        }
+
+        // Shuffle Array (Fisher-Yates)
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Create Board
+        function createBoard() {
+            gameBoard.innerHTML = '';
+            cards.forEach((symbol, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.index = index;
+                card.dataset.symbol = symbol;
+                card.setAttribute('role', 'button');
+                card.setAttribute('aria-label', 'Card ' + (index + 1));
+                card.setAttribute('tabindex', '0'); // Make focusable
+
+                const inner = document.createElement('div');
+                inner.classList.add('card-inner');
+
+                const front = document.createElement('div');
+                front.classList.add('card-front');
+                front.textContent = symbol;
+
+                const back = document.createElement('div');
+                back.classList.add('card-back');
+                back.textContent = '?'; // Or a logo
+
+                inner.appendChild(front);
+                inner.appendChild(back);
+                card.appendChild(inner);
+
+                // Touch/Click Event
+                card.addEventListener('click', () => handleCardClick(card));
+                
+                // Keyboard support for accessibility
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleCardClick(card);
+                    }
+                });
+
+                gameBoard.appendChild(card);
+            });
+        }
+
+        // Handle Card Interaction
+        function handleCardClick(card) {
+            if (isLocked) return;
+            if (card === flippedCards[0]) return; // Can't click same card twice
+            if (card.classList.contains('matched')) return;
+
+            card.classList.add('flipped');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                moves++;
+                moveDisplay.textContent = moves;
+                checkForMatch();
+            }
+        }
+
+        // Check Match Logic
+        function checkForMatch() {
+            isLocked = true;
+            const [card1, card2] = flippedCards;
+            const isMatch = card1.dataset.symbol === card2.dataset.symbol;
+
+            if (isMatch) {
+                disableCards();
+            } else {
+                unflipCards();
+            }
+        }
+
+        function disableCards() {
+            flippedCards.forEach(card => card.classList.add('matched'));
+            matchedPairs++;
+            flippedCards = [];
+            isLocked = false;
+
+            if (matchedPairs === symbols.length) {
+                endGame();
+            }
+        }
+
+        function unflipCards() {
+            setTimeout(() => {
+                flippedCards.forEach(card => card.classList.remove('flipped'));
+                flippedCards = [];
+                isLocked = false;
+            }, 1000);
+        }
+
+        // Timer Logic
+        function startTimer() {
+            clearInterval(timerInterval);
+            seconds = 0;
+            timerDisplay.textContent = "00:00";
+            timerInterval = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // Game End
+        function endGame() {
+            stopTimer();
+            finalTimeDisplay.textContent = timerDisplay.textContent;
+            setTimeout(() => {
+                winModal.style.display = 'flex';
+            }, 500);
+        }
+
+        // Reset Game
+        window.resetGame = function() {
+            stopTimer();
+            matchedPairs = 0;
+            moves = 0;
+            flippedCards = [];
+            isLocked = false;
+            moveDisplay.textContent = '0';
+            winModal.style.display = 'none';
+            
+            // Reshuffle and rebuild
+            shuffle(cards);
+            createBoard();
+            startTimer();
+            updateSelection();
+        };
+
+        resetBtn.addEventListener('click', window.resetGame);
+
+        // Mobile Controls (D-Pad) Logic
+        function handleDirection(dir) {
+            const totalCards = 16;
+            const row = Math.floor(selectedIndex / 4);
+            const col = selectedIndex % 4;
+            let newIndex = selectedIndex;
+
+            if (dir === 'up' && row > 0) newIndex -= 4;
+            if (dir === 'down' && row < 3) newIndex += 4;
+            if (dir === 'left' && col > 0) newIndex -= 1;
+            if (dir === 'right' && col < 3) newIndex += 1;
+
+            if (newIndex !== selectedIndex) {
+                selectedIndex = newIndex;
+                updateSelection();
+            }
+        }
+
+        function updateSelection() {
+            const allCards = document.querySelectorAll('.card');
+            allCards.forEach(c => c.classList.remove('selected'));
+            if (allCards[selectedIndex]) {
+                allCards[selectedIndex].classList.add('selected');
+                // Optional: Scroll into view if needed, though grid is usually visible
+            }
+        }
+
+        // Touch Event Binding for Controls (Required Template)
+        document.querySelectorAll('.control-btn[data-dir]').forEach(btn => {
+            btn.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                handleDirection(btn.dataset.dir); 
+            }, { passive: false });
+            
+            // Add click fallback for mouse testing
+            btn.addEventListener('click', (e) => {
+                handleDirection(btn.dataset.dir);
+            });
+        });
+
+        // Initialize on load
+        initGame();
+
+    </script>
+</body>
+</html>
