@@ -13,12 +13,27 @@
         body {
             margin: 0;
             padding: 60px 5px 20px 5px;
-            background: #0a0a0a;
-            color: #7ec8e3;
+            background: #1a1410;
+            color: #d4c5b0;
             font-family: 'Courier Prime', monospace;
             overflow-x: hidden;
             overflow-y: auto;
             min-height: 100vh;
+        }
+
+        /* Canvas texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 0;
         }
 
         @media (min-width: 768px) {
@@ -31,176 +46,319 @@
             max-width: 500px;
             margin: 0 auto;
             text-align: center;
+            position: relative;
+            z-index: 1;
         }
 
         h1 {
-            color: #00ffff;
-            font-size: 2em;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px #00ffff;
+            color: #e8dcc8;
+            font-size: 1.6em;
+            margin-bottom: 5px;
+            letter-spacing: 0.3em;
+            font-weight: 400;
+            text-transform: uppercase;
         }
 
         .subtitle {
-            color: #7ec8e3;
-            font-size: 0.9em;
-            margin-bottom: 30px;
+            color: #8a7a66;
+            font-size: 0.8em;
+            margin-bottom: 25px;
+            font-style: italic;
+            letter-spacing: 0.1em;
         }
 
         .stats {
             display: flex;
             justify-content: center;
             gap: 30px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             flex-wrap: wrap;
         }
 
         .stat {
-            background: rgba(126, 200, 227, 0.1);
-            border: 2px solid #7ec8e3;
-            padding: 10px 20px;
-            border-radius: 4px;
+            background: transparent;
+            border: none;
+            padding: 8px 15px;
         }
 
         .stat-label {
-            font-size: 0.8em;
-            color: #7ec8e3;
-            margin-bottom: 5px;
+            font-size: 0.7em;
+            color: #6a5a46;
+            margin-bottom: 3px;
+            letter-spacing: 0.2em;
         }
 
         .stat-value {
-            font-size: 1.5em;
-            color: #00ffff;
-            font-weight: bold;
+            font-size: 1.8em;
+            color: #e8dcc8;
+            font-weight: 400;
         }
 
         .game-board {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            max-width: 400px;
-            margin: 30px auto;
+            gap: 20px;
+            max-width: 380px;
+            margin: 25px auto;
             padding: 0 10px;
         }
 
         @media (max-width: 480px) {
             .game-board {
-                gap: 10px;
+                gap: 15px;
+                max-width: 320px;
             }
         }
 
+        /* Abstract expressionist color field buttons */
         .color-button {
             aspect-ratio: 1;
-            border: 3px solid #0a0a0a;
-            border-radius: 8px;
+            border: none;
             cursor: pointer;
-            transition: all 0.1s ease;
             position: relative;
-            min-height: 120px;
+            min-height: 140px;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
+            background: transparent;
+            overflow: visible;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         @media (max-width: 480px) {
             .color-button {
-                min-height: 80px;
+                min-height: 110px;
             }
         }
 
         .color-button:active {
-            transform: scale(0.95);
-        }
-
-        .color-button.lit {
-            transform: scale(1.02);
+            transform: scale(0.92);
         }
 
         .color-button.disabled {
             cursor: not-allowed;
-            opacity: 0.5;
         }
 
-        .btn-red {
-            background: #8b0000;
-            border-color: #ff0000;
+        .color-button.disabled .field {
+            opacity: 0.4;
         }
 
-        .btn-red.lit {
-            background: #cc0000;
-            box-shadow: 0 0 25px #ff0000, inset 0 0 20px rgba(255, 0, 0, 0.4);
+        /* The color field - organic, Rothko-inspired shapes */
+        .field {
+            position: absolute;
+            inset: 5%;
+            border-radius: 8px 15px 10px 20px;
+            transition: all 0.4s ease;
+            filter: blur(0px);
         }
 
-        .btn-blue {
-            background: #00008b;
-            border-color: #0000ff;
+        /* Subtle breathing animation */
+        @keyframes breathe {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.02) rotate(0.5deg); }
         }
 
-        .btn-blue.lit {
-            background: #0044cc;
-            box-shadow: 0 0 25px #0066ff, inset 0 0 20px rgba(0, 100, 255, 0.4);
+        .color-button:not(.disabled) .field {
+            animation: breathe 4s ease-in-out infinite;
         }
 
-        .btn-green {
-            background: #006400;
-            border-color: #00ff00;
+        /* Individual color fields with painterly edges */
+        .btn-red .field {
+            background: linear-gradient(135deg,
+                #8b2020 0%,
+                #c73030 30%,
+                #e04545 50%,
+                #a82828 70%,
+                #6b1515 100%);
+            border-radius: 45% 55% 48% 52% / 52% 48% 55% 45%;
+            box-shadow:
+                inset 0 0 40px rgba(0,0,0,0.3),
+                0 8px 30px rgba(180, 50, 50, 0.3);
         }
 
-        .btn-green.lit {
-            background: #00aa00;
-            box-shadow: 0 0 25px #00ff00, inset 0 0 20px rgba(0, 255, 0, 0.4);
+        .btn-red.lit .field {
+            background: linear-gradient(135deg,
+                #ff3030 0%,
+                #ff5555 30%,
+                #ff7070 50%,
+                #ff4545 70%,
+                #ee2020 100%);
+            box-shadow:
+                inset 0 0 30px rgba(255,200,200,0.4),
+                0 0 60px rgba(255, 80, 80, 0.7),
+                0 0 100px rgba(255, 50, 50, 0.4);
+            transform: scale(1.08);
+            filter: brightness(1.3) saturate(1.2);
         }
 
-        .btn-yellow {
-            background: #8b8b00;
-            border-color: #ffff00;
+        .btn-blue .field {
+            background: linear-gradient(145deg,
+                #1a3a6b 0%,
+                #2855a0 30%,
+                #3570c8 50%,
+                #254890 70%,
+                #152848 100%);
+            border-radius: 52% 48% 55% 45% / 45% 55% 48% 52%;
+            box-shadow:
+                inset 0 0 40px rgba(0,0,0,0.3),
+                0 8px 30px rgba(50, 100, 180, 0.3);
         }
 
-        .btn-yellow.lit {
-            background: #ccaa00;
-            box-shadow: 0 0 25px #ffcc00, inset 0 0 20px rgba(255, 200, 0, 0.4);
+        .btn-blue.lit .field {
+            background: linear-gradient(145deg,
+                #3070e0 0%,
+                #4590ff 30%,
+                #60a8ff 50%,
+                #3888ff 70%,
+                #2060d0 100%);
+            box-shadow:
+                inset 0 0 30px rgba(200,220,255,0.4),
+                0 0 60px rgba(80, 140, 255, 0.7),
+                0 0 100px rgba(50, 100, 255, 0.4);
+            transform: scale(1.08);
+            filter: brightness(1.3) saturate(1.2);
+        }
+
+        .btn-green .field {
+            background: linear-gradient(125deg,
+                #1a4528 0%,
+                #287040 30%,
+                #35904a 50%,
+                #256838 70%,
+                #153520 100%);
+            border-radius: 48% 52% 45% 55% / 55% 45% 52% 48%;
+            box-shadow:
+                inset 0 0 40px rgba(0,0,0,0.3),
+                0 8px 30px rgba(50, 140, 80, 0.3);
+        }
+
+        .btn-green.lit .field {
+            background: linear-gradient(125deg,
+                #30c050 0%,
+                #45e070 30%,
+                #60ff88 50%,
+                #40d868 70%,
+                #28b848 100%);
+            box-shadow:
+                inset 0 0 30px rgba(200,255,220,0.4),
+                0 0 60px rgba(80, 220, 120, 0.7),
+                0 0 100px rgba(50, 200, 100, 0.4);
+            transform: scale(1.08);
+            filter: brightness(1.3) saturate(1.2);
+        }
+
+        .btn-yellow .field {
+            background: linear-gradient(155deg,
+                #6b5515 0%,
+                #a08020 30%,
+                #c8a028 50%,
+                #907018 70%,
+                #483a10 100%);
+            border-radius: 55% 45% 52% 48% / 48% 52% 45% 55%;
+            box-shadow:
+                inset 0 0 40px rgba(0,0,0,0.3),
+                0 8px 30px rgba(180, 140, 50, 0.3);
+        }
+
+        .btn-yellow.lit .field {
+            background: linear-gradient(155deg,
+                #e0c030 0%,
+                #ffd845 30%,
+                #ffeb60 50%,
+                #f8d038 70%,
+                #d8b020 100%);
+            box-shadow:
+                inset 0 0 30px rgba(255,250,200,0.4),
+                0 0 60px rgba(255, 200, 80, 0.7),
+                0 0 100px rgba(255, 180, 50, 0.4);
+            transform: scale(1.08);
+            filter: brightness(1.3) saturate(1.2);
+        }
+
+        /* Paint drip effect on activation */
+        @keyframes drip {
+            0% { transform: scaleY(0) translateY(-50%); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: scaleY(1) translateY(0); opacity: 0; }
+        }
+
+        .color-button::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 30%;
+            width: 15%;
+            height: 40px;
+            background: inherit;
+            border-radius: 0 0 50% 50%;
+            transform: scaleY(0);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .btn-red::after { background: #e04545; }
+        .btn-blue::after { background: #4590ff; }
+        .btn-green::after { background: #45e070; }
+        .btn-yellow::after { background: #ffd845; }
+
+        .color-button.lit::after {
+            animation: drip 0.6s ease-out;
+        }
+
+        /* Splatter particles */
+        .splatter {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: splatter 0.5s ease-out forwards;
+        }
+
+        @keyframes splatter {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
         }
 
         .message {
             min-height: 40px;
-            margin: 20px 0;
-            font-size: 1.1em;
-            color: #00ffff;
+            margin: 15px 0;
+            font-size: 1em;
+            color: #c4b5a0;
+            letter-spacing: 0.05em;
         }
 
         .message.error {
-            color: #ff0000;
-            text-shadow: 0 0 10px #ff0000;
+            color: #c85050;
         }
 
         .message.success {
-            color: #00ff00;
-            text-shadow: 0 0 10px #00ff00;
+            color: #70a878;
         }
 
         .controls {
-            margin-top: 30px;
+            margin-top: 25px;
         }
 
         .btn {
-            background: #00ffff;
-            color: #0a0a0a;
-            border: 2px solid #00ffff;
-            padding: 12px 30px;
+            background: transparent;
+            color: #e8dcc8;
+            border: 1px solid #6a5a46;
+            padding: 12px 35px;
             font-family: 'Courier Prime', monospace;
-            font-size: 1em;
-            font-weight: bold;
+            font-size: 0.9em;
             cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s ease;
+            border-radius: 2px;
+            transition: all 0.3s ease;
             text-transform: uppercase;
+            letter-spacing: 0.2em;
             min-height: 44px;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
 
         .btn:hover {
-            background: #0a0a0a;
-            color: #00ffff;
-            box-shadow: 0 0 15px #00ffff;
+            background: rgba(232, 220, 200, 0.1);
+            border-color: #a89a86;
         }
 
         .btn:active {
@@ -208,45 +366,63 @@
         }
 
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
         }
 
         .instructions {
-            margin-top: 40px;
+            margin-top: 35px;
             padding: 20px;
-            background: rgba(126, 200, 227, 0.05);
-            border: 1px solid #7ec8e3;
-            border-radius: 4px;
+            background: rgba(40, 35, 28, 0.5);
+            border-left: 3px solid #6a5a46;
             text-align: left;
-            max-width: 400px;
+            max-width: 360px;
             margin-left: auto;
             margin-right: auto;
         }
 
         .instructions h2 {
-            color: #00ffff;
-            font-size: 1.2em;
+            color: #a89a86;
+            font-size: 0.9em;
             margin-top: 0;
+            letter-spacing: 0.15em;
+            font-weight: 400;
         }
 
         .instructions ul {
             margin: 10px 0;
-            padding-left: 20px;
+            padding-left: 15px;
+            list-style: none;
         }
 
         .instructions li {
             margin: 8px 0;
-            line-height: 1.5;
+            line-height: 1.6;
+            color: #8a7a66;
+            font-size: 0.85em;
+        }
+
+        .instructions li::before {
+            content: '—';
+            margin-right: 8px;
+            color: #5a4a36;
         }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50% { opacity: 0.6; }
         }
 
         .watching {
-            animation: pulse 1s ease-in-out infinite;
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+
+        /* Artist signature */
+        .signature {
+            margin-top: 40px;
+            font-size: 0.7em;
+            color: #4a3a26;
+            font-style: italic;
         }
     </style>
 </head>
@@ -254,8 +430,8 @@
     <a href="../index.html" class="home-link">←</a>
 
     <div class="game-container">
-        <h1>SEQUENCE RECALL</h1>
-        <p class="subtitle">Memory Protocol v2.1</p>
+        <h1>Sequence Recall</h1>
+        <p class="subtitle">after Rothko, 2024</p>
 
         <div class="stats">
             <div class="stat">
@@ -275,47 +451,66 @@
         <div class="message" id="message">Press START to begin</div>
 
         <div class="game-board">
-            <button class="color-button btn-red disabled" data-color="0" id="btn-0"></button>
-            <button class="color-button btn-blue disabled" data-color="1" id="btn-1"></button>
-            <button class="color-button btn-green disabled" data-color="2" id="btn-2"></button>
-            <button class="color-button btn-yellow disabled" data-color="3" id="btn-3"></button>
+            <button class="color-button btn-red disabled" data-color="0" id="btn-0">
+                <div class="field"></div>
+            </button>
+            <button class="color-button btn-blue disabled" data-color="1" id="btn-1">
+                <div class="field"></div>
+            </button>
+            <button class="color-button btn-green disabled" data-color="2" id="btn-2">
+                <div class="field"></div>
+            </button>
+            <button class="color-button btn-yellow disabled" data-color="3" id="btn-3">
+                <div class="field"></div>
+            </button>
         </div>
 
         <div class="controls">
-            <button class="btn" id="startBtn">Start Game</button>
+            <button class="btn" id="startBtn">Begin</button>
         </div>
 
         <div class="instructions">
-            <h2>HOW TO PLAY</h2>
+            <h2>How to Play</h2>
             <ul>
-                <li>Watch the sequence of colors light up</li>
-                <li>Repeat the sequence by tapping the buttons</li>
-                <li>Each round adds one more color to remember</li>
-                <li>One mistake ends the game</li>
-                <li>Build your streak and beat your best score</li>
+                <li>Observe the illuminated color fields</li>
+                <li>Reproduce the sequence from memory</li>
+                <li>Each round extends the composition</li>
+                <li>A single misstep ends the study</li>
             </ul>
         </div>
+
+        <p class="signature">Bot Sportello Arcade</p>
     </div>
 
     <script>
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const audioCtx = new AudioContext();
 
-        const frequencies = [329.63, 261.63, 392.00, 493.88];
+        // More mellow, painterly tones
+        const frequencies = [293.66, 349.23, 440.00, 523.25]; // D4, F4, A4, C5 - gentler intervals
 
-        function playTone(colorIndex, duration = 300) {
+        function playTone(colorIndex, duration = 400) {
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            
-            oscillator.connect(gainNode);
+            const filter = audioCtx.createBiquadFilter();
+
+            oscillator.connect(filter);
+            filter.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-            
+
             oscillator.frequency.value = frequencies[colorIndex];
             oscillator.type = 'sine';
-            
-            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+
+            // Warm filter
+            filter.type = 'lowpass';
+            filter.frequency.value = 800;
+            filter.Q.value = 1;
+
+            // Softer envelope
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.05);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
-            
+
             oscillator.start(audioCtx.currentTime);
             oscillator.stop(audioCtx.currentTime + duration / 1000);
         }
@@ -323,18 +518,47 @@
         function playErrorSound() {
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            
-            oscillator.connect(gainNode);
+            const filter = audioCtx.createBiquadFilter();
+
+            oscillator.connect(filter);
+            filter.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-            
-            oscillator.frequency.value = 100;
-            oscillator.type = 'sawtooth';
-            
-            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-            
+
+            oscillator.frequency.value = 130;
+            oscillator.type = 'sine';
+
+            filter.type = 'lowpass';
+            filter.frequency.value = 400;
+
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+
             oscillator.start(audioCtx.currentTime);
-            oscillator.stop(audioCtx.currentTime + 0.5);
+            oscillator.stop(audioCtx.currentTime + 0.8);
+        }
+
+        // Create paint splatter effect
+        function createSplatters(button, color) {
+            const rect = button.getBoundingClientRect();
+            const colors = {
+                0: '#ff5555',  // red
+                1: '#4590ff',  // blue
+                2: '#45e070',  // green
+                3: '#ffd845'   // yellow
+            };
+
+            for (let i = 0; i < 5; i++) {
+                const splatter = document.createElement('div');
+                splatter.className = 'splatter';
+                splatter.style.background = colors[color];
+                splatter.style.left = (30 + Math.random() * 40) + '%';
+                splatter.style.top = (30 + Math.random() * 40) + '%';
+                splatter.style.width = (5 + Math.random() * 8) + 'px';
+                splatter.style.height = splatter.style.width;
+                button.appendChild(splatter);
+
+                setTimeout(() => splatter.remove(), 500);
+            }
         }
 
         class SequenceGame {
@@ -346,29 +570,29 @@
                 this.best = parseInt(localStorage.getItem('sequenceRecallBest')) || 0;
                 this.isPlaying = false;
                 this.isWatching = false;
-                
+
                 this.buttons = Array.from(document.querySelectorAll('.color-button'));
                 this.startBtn = document.getElementById('startBtn');
                 this.messageEl = document.getElementById('message');
                 this.roundEl = document.getElementById('round');
                 this.streakEl = document.getElementById('streak');
                 this.bestEl = document.getElementById('best');
-                
+
                 this.init();
             }
-            
+
             init() {
                 this.updateDisplay();
-                
+
                 this.startBtn.addEventListener('click', () => this.startGame());
-                
+
                 this.buttons.forEach((btn, index) => {
                     btn.addEventListener('touchstart', (e) => {
                         e.preventDefault();
                         if (!this.isPlaying || this.isWatching) return;
                         this.handleButtonPress(index);
                     }, { passive: false });
-                    
+
                     btn.addEventListener('click', (e) => {
                         if (e.detail === 0) return;
                         if (!this.isPlaying || this.isWatching) return;
@@ -376,130 +600,132 @@
                     });
                 });
             }
-            
+
             startGame() {
                 if (audioCtx.state === 'suspended') {
                     audioCtx.resume();
                 }
-                
+
                 this.sequence = [];
                 this.playerSequence = [];
                 this.round = 1;
                 this.streak = 0;
                 this.isPlaying = true;
-                
+
                 this.startBtn.disabled = true;
-                this.startBtn.textContent = 'Playing...';
-                
+                this.startBtn.textContent = 'In Progress';
+
                 this.updateDisplay();
                 this.nextRound();
             }
-            
+
             nextRound() {
                 this.playerSequence = [];
                 this.sequence.push(Math.floor(Math.random() * 4));
-                
-                this.setMessage('Watch the sequence...', 'watching');
+
+                this.setMessage('Observe...', 'watching');
                 this.isWatching = true;
                 this.disableButtons();
-                
+
                 setTimeout(() => this.playSequence(), 1000);
             }
-            
+
             async playSequence() {
                 for (let i = 0; i < this.sequence.length; i++) {
                     await this.lightButton(this.sequence[i]);
-                    await this.wait(200);
+                    await this.wait(250);
                 }
-                
+
                 this.isWatching = false;
                 this.enableButtons();
-                this.setMessage('Your turn! Repeat the sequence', 'success');
+                this.setMessage('Reproduce the sequence', 'success');
             }
-            
+
             lightButton(index) {
                 return new Promise(resolve => {
                     const btn = this.buttons[index];
                     btn.classList.add('lit');
+                    createSplatters(btn, index);
                     playTone(index);
-                    
+
                     setTimeout(() => {
                         btn.classList.remove('lit');
                         resolve();
-                    }, 400);
+                    }, 500);
                 });
             }
-            
+
             handleButtonPress(index) {
                 const btn = this.buttons[index];
                 btn.classList.add('lit');
-                playTone(index, 200);
-                
+                createSplatters(btn, index);
+                playTone(index, 250);
+
                 setTimeout(() => {
                     btn.classList.remove('lit');
-                }, 200);
-                
+                }, 250);
+
                 this.playerSequence.push(index);
-                
+
                 const currentStep = this.playerSequence.length - 1;
-                
+
                 if (this.playerSequence[currentStep] !== this.sequence[currentStep]) {
                     this.gameOver();
                     return;
                 }
-                
+
                 if (this.playerSequence.length === this.sequence.length) {
                     this.roundComplete();
                 }
             }
-            
+
             roundComplete() {
                 this.streak++;
                 this.round++;
-                
+
                 if (this.streak > this.best) {
                     this.best = this.streak;
                     localStorage.setItem('sequenceRecallBest', this.best);
                 }
-                
+
                 this.updateDisplay();
                 this.disableButtons();
-                this.setMessage(`Round ${this.round - 1} complete! Get ready...`, 'success');
-                
-                setTimeout(() => this.nextRound(), 1500);
+                this.setMessage(`Composition ${this.round - 1} complete`, 'success');
+
+                setTimeout(() => this.nextRound(), 1800);
             }
-            
+
             gameOver() {
                 this.isPlaying = false;
                 playErrorSound();
                 this.disableButtons();
-                
-                this.setMessage(`Game Over! Final streak: ${this.streak}`, 'error');
-                
+
+                this.setMessage(`Study complete — ${this.streak} movements`, 'error');
+
                 this.startBtn.disabled = false;
-                this.startBtn.textContent = 'Play Again';
+                this.startBtn.textContent = 'Begin Again';
             }
-            
+
             enableButtons() {
                 this.buttons.forEach(btn => btn.classList.remove('disabled'));
             }
-            
+
             disableButtons() {
                 this.buttons.forEach(btn => btn.classList.add('disabled'));
             }
-            
+
             setMessage(text, type = '') {
                 this.messageEl.textContent = text;
                 this.messageEl.className = 'message';
                 if (type) this.messageEl.classList.add(type);
             }
-            
+
             updateDisplay() {
                 this.roundEl.textContent = this.round;
                 this.streakEl.textContent = this.streak;
                 this.bestEl.textContent = this.best;
             }
-            
+
             wait(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
