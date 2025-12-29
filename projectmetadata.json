@@ -507,6 +507,19 @@
       "description": "shadowy case file log",
       "collection": "stories-content",
       "hidden": false
+    },
+    "soccer-hop": {
+      "title": "Soccer Hop",
+      "description": "Soccer Hop noir project",
+      "icon": "🌐",
+      "collection": "unsorted"
+    },
+    "saber-duel": {
+      "title": "Saber Duel",
+      "icon": "🎮",
+      "description": "noir saber duel arcade",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }
