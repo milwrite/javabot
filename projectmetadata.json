@@ -486,6 +486,13 @@
       "description": "Neon pattern memory arcade",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "neural-pattern-memorize": {
+      "title": "Neural Pattern Memorize",
+      "icon": "🕹️",
+      "description": "neon memory grid arcade",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }
