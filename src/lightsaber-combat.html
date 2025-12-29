@@ -629,34 +629,36 @@
 
         function handleInput(dir) {
             if (gameState.status !== 'PLAYING') return;
-            if (player.state === 'attack' || player.state === 'counter') return; // Can't act while attacking
+            if (player.state !== 'idle' && player.state !== 'block') return;
 
             const speed = 20;
 
             if (dir === 'left') {
-                player.x = Math.max(20, player.x - speed);
+                player.x = Math.max(10, player.x - speed);
                 player.facing = -1;
             } else if (dir === 'right') {
-                player.x = Math.min(canvas.width - 40, player.x + speed);
+                player.x = Math.min(canvas.width - 30, player.x + speed);
                 player.facing = 1;
             } else if (dir === 'up') {
                 // Attack
                 player.state = 'attack';
-                player.stateTimer = 20;
+                player.stateTimer = 15;
 
+                // Hit detection
                 const dist = Math.abs(player.x - enemy.x);
-                if (dist < 70 && enemy.state !== 'block') {
-                    const damage = 20 + gameState.level * 2;
-                    enemy.hp -= damage;
-                    shake = 6;
-                    spawnParticles(enemy.x + 12, enemy.y + 25, enemy.color, 12);
-                    showCombo();
+                const inRange = dist < 60;
+
+                if (inRange && enemy.state !== 'block') {
+                    enemy.hp -= 20 + (gameState.level * 2);
+                    shake = 5;
+                    spawnParticles(enemy.x + 10, enemy.y + 25, enemy.color);
                     if (enemy.hp <= 0) endLevel(true);
-                } else if (dist < 70 && enemy.state === 'block') {
-                    spawnSparks((player.x + enemy.x) / 2, 200, 15);
-                    shake = 3;
+                } else if (inRange && enemy.state === 'block') {
+                    spawnParticles((player.x + enemy.x)/2, 200, '#fff', 5);
+                    shake = 2;
                 }
             } else if (dir === 'down') {
+                // Block
                 player.state = 'block';
                 player.stateTimer = 30;
             }
@@ -664,55 +666,55 @@
         }
 
         function handleInputUp(dir) {
-            // No longer using velocity-based movement
+            // Not used
         }
 
         function updateAI() {
             if (enemy.hp <= 0) return;
-            if (enemy.state !== 'idle') return; // Wait for current action to finish
 
             enemy.aiTimer--;
-            if (enemy.aiTimer > 0) return;
 
-            const dist = Math.abs(player.x - enemy.x);
+            if (enemy.state === 'idle') {
+                if (enemy.aiTimer <= 0) {
+                    const action = Math.random();
+                    const dist = Math.abs(player.x - enemy.x);
 
-            if (dist < 70) {
-                // In combat range
-                const action = Math.random();
-                if (action < 0.5) {
-                    // Attack
-                    enemy.state = 'attack';
-                    enemy.stateTimer = 25;
-
-                    // Check for hit after brief delay
-                    setTimeout(() => {
-                        if (gameState.status !== 'PLAYING' || enemy.hp <= 0) return;
-                        const currentDist = Math.abs(player.x - enemy.x);
-                        if (currentDist < 70 && player.state !== 'block') {
-                            const damage = 15 + gameState.level * 2;
-                            player.hp -= damage;
-                            shake = 6;
-                            gameState.combo = 0;
-                            spawnParticles(player.x + 12, player.y + 25, player.color, 10);
-                            if (player.hp <= 0) endLevel(false);
-                            updateUI();
-                        } else if (currentDist < 70 && player.state === 'block') {
-                            spawnSparks((player.x + enemy.x) / 2, 200, 12);
-                            shake = 2;
+                    if (dist < 60) {
+                        if (action < 0.6) {
+                            enemy.state = 'attack';
+                            enemy.stateTimer = 20;
+                            if (player.state !== 'block') {
+                                setTimeout(() => {
+                                    if (gameState.status === 'PLAYING') {
+                                        player.hp -= 10 + gameState.level;
+                                        shake = 5;
+                                        spawnParticles(player.x + 10, player.y + 25, player.color);
+                                        if (player.hp <= 0) endLevel(false);
+                                        updateUI();
+                                    }
+                                }, 10);
+                            } else {
+                                setTimeout(() => {
+                                    spawnParticles((player.x + enemy.x)/2, 200, '#fff', 5);
+                                    shake = 2;
+                                }, 10);
+                            }
+                        } else {
+                            enemy.state = 'block';
+                            enemy.stateTimer = 30;
                         }
-                    }, 150);
-                } else {
-                    // Block
-                    enemy.state = 'block';
-                    enemy.stateTimer = 30;
+                    } else {
+                        if (player.x < enemy.x) enemy.x -= 5;
+                        else enemy.x += 5;
+                        enemy.aiTimer = 20;
+                    }
+                    enemy.aiTimer = 30 + Math.random() * 30;
                 }
-                enemy.aiTimer = 40 + Math.random() * 30;
             } else {
-                // Move towards player
-                const moveDir = player.x < enemy.x ? -1 : 1;
-                enemy.x += moveDir * 3;
-                enemy.facing = moveDir;
-                enemy.aiTimer = 10;
+                enemy.stateTimer--;
+                if (enemy.stateTimer <= 0) {
+                    enemy.state = 'idle';
+                }
             }
         }
 
@@ -910,26 +912,11 @@
 
             // Update game state
             if (gameState.status === 'PLAYING') {
-                // State timers
+                // Player state timer
                 if (player.stateTimer > 0) {
                     player.stateTimer--;
                 } else if (player.state !== 'idle') {
                     player.state = 'idle';
-                }
-
-                if (enemy.stateTimer > 0) {
-                    enemy.stateTimer--;
-                } else if (enemy.state !== 'idle') {
-                    enemy.state = 'idle';
-                }
-
-                // Combo timer
-                if (gameState.comboTimer > 0) {
-                    gameState.comboTimer--;
-                    if (gameState.comboTimer <= 0) {
-                        gameState.combo = 0;
-                        updateUI();
-                    }
                 }
 
                 updateAI();
