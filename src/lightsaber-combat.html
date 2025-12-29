@@ -324,30 +324,33 @@
         }
 
         .mobile-controls {
-            margin: 15px auto 0 auto;
-            display: grid;
-            grid-template-columns: repeat(3, 54px);
-            gap: 6px;
-            width: fit-content;
-            padding: 0 20px 20px 20px;
-            box-sizing: border-box;
+            display: grid !important;
+            grid-template-columns: 50px 50px 50px !important;
+            gap: 8px !important;
+            width: 166px !important;
+            max-width: none !important;
+            margin: 15px auto 20px auto !important;
+            padding: 0 !important;
+            justify-content: center;
         }
 
         .control-btn {
-            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
-            border: 2px solid #333;
-            color: #00ffff;
-            height: 54px;
-            width: 54px;
+            width: 50px !important;
+            height: 50px !important;
+            min-height: 50px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%) !important;
+            border: 2px solid #333 !important;
             border-radius: 8px;
-            display: flex;
+            color: #00ffff;
+            display: flex !important;
             justify-content: center;
             align-items: center;
             user-select: none;
-            box-shadow: 0 4px 0 #000, 0 0 15px rgba(0, 255, 255, 0.1);
-            transition: all 0.1s;
+            box-shadow: 0 3px 0 #000;
             position: relative;
-            flex-shrink: 0;
+            font-size: 16px;
         }
 
         .control-btn::before {
@@ -382,17 +385,18 @@
         }
 
         .control-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 #000, 0 0 20px rgba(0, 255, 255, 0.3);
-            background: linear-gradient(180deg, #222 0%, #1a1a1a 100%);
-            border-color: #00ffff;
+            transform: translateY(3px) scale(0.95) !important;
+            box-shadow: 0 0 0 #000 !important;
+            background: linear-gradient(180deg, #222 0%, #1a1a1a 100%) !important;
+            border-color: #00ffff !important;
         }
 
         .control-btn.empty {
+            visibility: hidden !important;
             pointer-events: none;
-            border: none;
-            background: transparent;
-            box-shadow: none;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
         }
 
         .action-hint {
