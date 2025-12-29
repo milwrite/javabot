@@ -493,6 +493,13 @@
       "description": "neon memory grid arcade",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "jackson-fart-clicker": {
+      "title": "Jackson's Fart Counter",
+      "icon": "👾",
+      "description": "gassy clicker arcade",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }

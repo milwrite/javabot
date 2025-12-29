@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jackson's Fart Counter - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        :root {
+            --noir-bg: #0a0a0a;
+            --noir-accent: #7ec8e3;
+            --noir-red: #ff0000;
+            --noir-cyan: #00ffff;
+        }
+
+        body {
+            background-color: var(--noir-bg);
+            color: var(--noir-cyan);
+            font-family: 'Courier Prime', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-top: 80px;
+            margin: 0;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--noir-accent);
+            width: 100%;
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--noir-cyan);
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .score-display {
+            color: var(--noir-accent);
+        }
+
+        #game-canvas {
+            background: #111;
+            border: 2px solid var(--noir-accent);
+            box-shadow: 0 0 10px rgba(126, 200, 227, 0.2);
+            cursor: pointer;
+            touch-action: manipulation;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1;
+            display: block;
+        }
+
+        .controls-area {
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: 2px solid var(--noir-red);
+            color: var(--noir-red);
+            padding: 10px 20px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .toggle-btn:active, .toggle-btn.active {
+            background: var(--noir-red);
+            color: var(--noir-bg);
+        }
+
+        /* Mobile Controls Styling */
+        .mobile-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            width: 180px;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background: #1a1a1a;
+            border: 2px solid var(--noir-accent);
+            color: var(--noir-cyan);
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .control-btn:active {
+            background: var(--noir-accent);
+            color: var(--noir-bg);
+        }
+
+        .control-btn.empty {
+            border: none;
+            background: transparent;
+            pointer-events: none;
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.2rem; }
+            .control-btn { width: 50px; height: 50px; }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link" aria-label="Back to home"></a>
+
+    <div class="game-container">
+        <header>
+            <h1>Jackson's Fart Counter</h1>
+        </header>
+
+        <div class="stats-panel">
+            <span>COUNT: <span id="score" class="score-display">0</span></span>
+            <span>BEST: <span id="high-score" class="score-display">0</span></span>
+        </div>
+
+        <canvas id="game-canvas" width="400" height="400"></canvas>
+
+        <div class="controls-area">
+            <button id="sound-toggle" class="toggle-btn">Sound: ON</button>
+        </div>
+
+        <div class="mobile-controls">
+            <div class="control-btn empty"></div>
+            <button class="control-btn" data-dir="up">▲</button>
+            <div class="control-btn empty"></div>
+            <button class="control-btn" data-dir="left">◀</button>
+            <button class="control-btn" data-dir="down">▼</button>
+            <button class="control-btn" data-dir="right">▶</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Game State ---
+        const state = {
+            score: 0,
+            highScore: localStorage.getItem('jackson_fart_highscore') || 0,
+            soundEnabled: true,
+            particles: [],
+            isAnimating: true
+        };
+
+        // --- DOM Elements ---
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const highScoreEl = document.getElementById('high-score');
+        const soundBtn = document.getElementById('sound-toggle');
+
+        // --- Initialization ---
+        highScoreEl.textContent = state.highScore;
+
+        // --- Audio Synthesis (Web Audio API) ---
+        // Generates a synthesized sound to avoid external file dependencies
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playFartSound() {
+            if (!state.soundEnabled) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const t = audioCtx.currentTime;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(150, t);
+            oscillator.frequency.exponentialRampToValueAtTime(40, t + 0.3);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, t);
+            filter.frequency.linearRampToValueAtTime(100, t + 0.3);
+
+            gainNode.gain.setValueAtTime(0.5, t);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start(t);
+            oscillator.stop(t + 0.3);
+        }
+
+        // --- Visual System ---
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 20 + 10;
+                this.speedX = Math.random() * 4 - 2;
+                this.speedY = Math.random() * 4 - 2;
+                this.color = `hsla(${Math.random() * 60 + 80}, 100%, 50%,`; // Greens
+                this.alpha = 1;
+                this.decay = Math.random() * 0.02 + 0.01;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.size += 0.5;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color + this.alpha + ')';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function spawnParticles(x, y) {
+            for (let i = 0; i < 10; i++) {
+                state.particles.push(new Particle(x, y));
+            }
+        }
+
+        function drawGame() {
+            // Clear screen
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Button Target
+            ctx.strokeStyle = '#7ec8e3';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 80, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Draw Text inside Button
+            ctx.fillStyle = '#00ffff';
+            ctx.font = '20px Courier Prime';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('PRESS', canvas.width / 2, canvas.height / 2 - 10);
+            ctx.fillText('HERE', canvas.width / 2, canvas.height / 2 + 15);
+
+            // Draw Particles
+            state.particles.forEach((p, index) => {
+                p.update();
+                p.draw();
+                if (p.alpha <= 0) state.particles.splice(index, 1);
+            });
+
+            if (state.isAnimating) {
+                requestAnimationFrame(drawGame);
+            }
+        }
+
+        // --- Game Logic ---
+        function triggerFart(x, y) {
+            // Default center if no coords provided
+            const targetX = x || canvas.width / 2;
+            const targetY = y || canvas.height / 2;
+
+            state.score++;
+            scoreEl.textContent = state.score;
+
+            if (state.score > state.highScore) {
+                state.highScore = state.score;
+                highScoreEl.textContent = state.highScore;
+                localStorage.setItem('jackson_fart_highscore', state.highScore);
+            }
+
+            playFartSound();
+            spawnParticles(targetX, targetY);
+        }
+
+        // --- Event Listeners ---
+        
+        // Canvas Interaction (Desktop/Mobile Tap)
+        canvas.addEventListener('pointerdown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            // Calculate scale in case canvas is resized via CSS
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            
+            triggerFart(x, y);
+        });
+
+        // Sound Toggle
+        soundBtn.addEventListener('click', () => {
+            state.soundEnabled = !state.soundEnabled;
+            soundBtn.textContent = state.soundEnabled ? 'Sound: ON' : 'Sound: OFF';
+            soundBtn.classList.toggle('active', !state.soundEnabled);
+        });
+
+        // --- Mobile Controls (Required Template) ---
+        function handleDirection(dir) {
+            // For a clicker game, all directions trigger the action
+            // We randomize spawn position slightly based on direction
+            let x = canvas.width / 2;
+            let y = canvas.height / 2;
+            const offset = 60;
+
+            if (dir === 'up') y -= offset;
+            if (dir === 'down') y += offset;
+            if (dir === 'left') x -= offset;
+            if (dir === 'right') x += offset;
+
+            triggerFart(x, y);
+        }
+
+        document.querySelectorAll('.control-btn[data-dir]').forEach(btn => {
+            btn.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                handleDirection(btn.dataset.dir); 
+            }, { passive: false });
+        });
+
+        // Start Loop
+        drawGame();
+
+    </script>
+</body>
+</html>
