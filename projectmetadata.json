@@ -479,6 +479,13 @@
       "description": "Find the hidden pairs.",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "noir-memory-pattern": {
+      "title": "Neon Pattern Memory",
+      "icon": "🕹️",
+      "description": "Neon pattern memory arcade",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }

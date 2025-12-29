@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Pattern Memory - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        :root {
+            --noir-bg: #0a0a0a;
+            --noir-accent: #7ec8e3;
+            --noir-red: #ff0000;
+            --noir-cyan: #00ffff;
+            --neon-blue: #7ec8e3;
+            --neon-red: #ff0000;
+            --neon-yellow: #ffff00;
+            --neon-green: #39ff14;
+        }
+
+        body {
+            background-color: var(--noir-bg);
+            color: var(--noir-cyan);
+            font-family: 'Courier Prime', monospace;
+            padding-top: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            text-shadow: 0 0 5px var(--noir-cyan);
+        }
+
+        canvas {
+            background-color: #000;
+            border: 2px solid var(--noir-accent);
+            box-shadow: 0 0 15px var(--noir-accent);
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1/1;
+            border-radius: 4px;
+            cursor: pointer;
+            touch-action: none; /* Prevent scrolling on canvas touch */
+        }
+
+        .status-msg {
+            margin-top: 15px;
+            height: 24px;
+            text-align: center;
+            color: var(--noir-accent);
+            font-weight: bold;
+        }
+
+        /* Mobile Controls Styling */
+        .mobile-controls {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(2, 60px);
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background: transparent;
+            border: 1px solid var(--noir-accent);
+            color: var(--noir-accent);
+            font-size: 24px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 0 5px var(--noir-accent);
+            transition: all 0.1s;
+        }
+
+        .control-btn:active, .control-btn.active {
+            background: var(--noir-accent);
+            color: var(--noir-bg);
+            box-shadow: 0 0 15px var(--noir-accent);
+        }
+
+        .control-btn.empty {
+            border: none;
+            box-shadow: none;
+            pointer-events: none;
+        }
+
+        /* Breakpoints */
+        @media (max-width: 768px) {
+            .game-container {
+                max-width: 340px;
+            }
+            .stats-bar {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                max-width: 300px;
+                padding: 5px;
+            }
+            .mobile-controls {
+                grid-template-columns: repeat(3, 50px);
+                grid-template-rows: repeat(2, 50px);
+                gap: 5px;
+            }
+            .control-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link" aria-label="Back to home"></a>
+
+    <div class="game-container">
+        <div class="stats-bar">
+            <span id="scoreDisplay">Round: 1</span>
+            <span id="highScoreDisplay">Best: 0</span>
+        </div>
+        
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        
+        <div class="status-msg" id="statusMsg">TAP TO START</div>
+
+        <div class="mobile-controls">
+            <div class="control-btn empty"></div>
+            <button class="control-btn" data-dir="up">▲</button>
+            <div class="control-btn empty"></div>
+            <button class="control-btn" data-dir="left">◀</button>
+            <button class="control-btn" data-dir="down">▼</button>
+            <button class="control-btn" data-dir="right">▶</button>
+        </div>
+    </div>
+
+    <script>
+        // Game Constants
+        const COLORS = [
+            '#7ec8e3', // 0: Blue (Top Left)
+            '#ff0000', // 1: Red (Top Right)
+            '#ffff00', // 2: Yellow (Bottom Left)
+            '#39ff14'  // 3: Green (Bottom Right)
+        ];
+        const ACTIVE_COLORS = [
+            '#b3e5f7', // Lighter Blue
+            '#ff6666', // Lighter Red
+            '#ffff66', // Lighter Yellow
+            '#7aff7a'  // Lighter Green
+        ];
+        
+        // Game State
+        let sequence = [];
+        let playerSequence = [];
+        let round = 1;
+        let highScore = localStorage.getItem('noir-memory-highscore') || 0;
+        let isPlaying = false;
+        let isCpuTurn = false;
+        let activeButton = -1; // Currently lit button index
+
+        // DOM Elements
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const statusMsg = document.getElementById('statusMsg');
+
+        // Initialize High Score Display
+        highScoreDisplay.textContent = `Best: ${highScore}`;
+
+        // Canvas Drawing
+        function draw() {
+            const w = canvas.width;
+            const h = canvas.height;
+            const halfW = w / 2;
+            const halfH = h / 2;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw 4 Quadrants
+            // 0: Top Left
+            ctx.fillStyle = (activeButton === 0) ? ACTIVE_COLORS[0] : COLORS[0];
+            ctx.fillRect(0, 0, halfW - 5, halfH - 5);
+
+            // 1: Top Right
+            ctx.fillStyle = (activeButton === 1) ? ACTIVE_COLORS[1] : COLORS[1];
+            ctx.fillRect(halfW + 5, 0, halfW - 5, halfH - 5);
+
+            // 2: Bottom Left
+            ctx.fillStyle = (activeButton === 2) ? ACTIVE_COLORS[2] : COLORS[2];
+            ctx.fillRect(0, halfH + 5, halfW - 5, halfH - 5);
+
+            // 3: Bottom Right
+            ctx.fillStyle = (activeButton === 3) ? ACTIVE_COLORS[3] : COLORS[3];
+            ctx.fillRect(halfW + 5, halfH + 5, halfW - 5, halfH - 5);
+
+            // Draw Center Divider
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(halfW - 2.5, 0, 5, h);
+            ctx.fillRect(0, halfH - 2.5, w, 5);
+
+            // Neon Glow effect for active
+            if (activeButton !== -1) {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#ffffff';
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 4;
+                // Simple border highlight logic would go here, 
+                // but color change is sufficient for "Flash"
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // Input Handling
+        function handleInput(index) {
+            if (!isPlaying || isCpuTurn) return;
+
+            // Visual Feedback
+            flashButton(index);
+
+            // Logic
+            playerSequence.push(index);
+            const currentStep = playerSequence.length - 1;
+
+            if (playerSequence[currentStep] !== sequence[currentStep]) {
+                gameOver();
+                return;
+            }
+
+            if (playerSequence.length === sequence.length) {
+                round++;
+                scoreDisplay.textContent = `Round: ${round}`;
+                playerSequence = [];
+                isCpuTurn = true;
+                statusMsg.textContent = "WATCH...";
+                setTimeout(nextRound, 1000);
+            }
+        }
+
+        // Map D-Pad to Grid
+        // Up: Top-Left (0), Right: Top-Right (1), Down: Bottom-Right (3), Left: Bottom-Left (2)
+        function handleDirection(dir) {
+            let index = -1;
+            if (dir === 'up') index = 0;
+            if (dir === 'right') index = 1;
+            if (dir === 'down') index = 3;
+            if (dir === 'left') index = 2;
+
+            if (index !== -1) {
+                handleInput(index);
+            }
+        }
+
+        // Touch JS (Required Template)
+        document.querySelectorAll('.control-btn[data-dir]').forEach(btn => {
+            btn.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                handleDirection(btn.dataset.dir); 
+                // Add visual active state to button
+                btn.classList.add('active');
+                setTimeout(() => btn.classList.remove('active'), 150);
+            }, { passive: false });
+            
+            // Mouse fallback for testing on desktop
+            btn.addEventListener('mousedown', (e) => {
+                handleDirection(btn.dataset.dir);
+                btn.classList.add('active');
+                setTimeout(() => btn.classList.remove('active'), 150);
+            });
+        });
+
+        // Canvas Touch/Click Handling
+        function getCanvasIndex(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            const x = (clientX - rect.left) * scaleX;
+            const y = (clientY - rect.top) * scaleY;
+
+            if (x < canvas.width / 2 && y < canvas.height / 2) return 0; // TL
+            if (x >= canvas.width / 2 && y < canvas.height / 2) return 1; // TR
+            if (x < canvas.width / 2 && y >= canvas.height / 2) return 2; // BL
+            return 3; // BR
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (!isPlaying && !isCpuTurn) startGame();
+            else handleInput(getCanvasIndex(e));
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!isPlaying && !isCpuTurn) startGame();
+            else handleInput(getCanvasIndex(e));
+        }, { passive: false });
+
+
+        // Game Logic Functions
+        function flashButton(index) {
+            activeButton = index;
+            draw();
+            setTimeout(() => {
+                activeButton = -1;
+                draw();
+            }, 300);
+        }
+
+        function startGame() {
+            sequence = [];
+            playerSequence = [];
+            round = 1;
+            isPlaying = true;
+            isCpuTurn = true;
+            scoreDisplay.textContent = `Round: ${round}`;
+            statusMsg.textContent = "WATCH...";
+            nextRound();
+        }
+
+        function nextRound() {
+            sequence.push(Math.floor(Math.random() * 4));
+            playSequence();
+        }
+
+        function playSequence() {
+            let i = 0;
+            const interval = setInterval(() => {
+                flashButton(sequence[i]);
+                i++;
+                if (i >= sequence.length) {
+                    clearInterval(interval);
+                    isCpuTurn = false;
+                    statusMsg.textContent = "REPEAT";
+                }
+            }, 800); // Speed of playback
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            statusMsg.textContent = "GAME OVER - TAP TO RESTART";
+            statusMsg.style.color = '#ff0000';
+            
+            // Flash all red
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.fillRect(0,0, canvas.width, canvas.height);
+
+            if (round - 1 > highScore) {
+                highScore = round - 1;
+                localStorage.setItem('noir-memory-highscore', highScore);
+                highScoreDisplay.textContent = `Best: ${highScore}`;
+            }
+        }
+
+        // Initial Draw
+        draw();
+
+        // Handle Window Resize (Maintain canvas sharpness)
+        function resizeCanvas() {
+            // Keep internal resolution 400x400, CSS handles display size
+            draw();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+    </script>
+</body>
+</html>
