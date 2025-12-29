@@ -215,9 +215,9 @@
         <button class="start-btn" id="startBtn">START DUEL</button>
 
         <div class="instructions">
-            <strong>Controls:</strong> Arrow keys or D-pad to move<br>
-            Space or SWING button to attack<br>
-            Time your swings to clash sabers and counter!
+            <strong>Controls:</strong> Arrow keys / D-pad to move, Space / SWING to attack<br>
+            <strong>Counter:</strong> Swing AFTER enemy attacks to stagger them!<br>
+            ⚡ COUNTER = you recover fast | ⚡ BLOCKED = you're staggered
         </div>
     </div>
 
@@ -348,46 +348,74 @@
         function updateAI() {
             const dist = Math.abs(ai.x - player.x);
 
+            // React immediately to player attacks (interrupt normal thinking)
+            if (player.swinging && player.swingAngle < 20 && dist < 100) {
+                // Player just started swing - react fast!
+                ai.thinkTimer = 0;
+                ai.action = Math.random() > 0.4 ? 'counter' : 'evade';
+            }
+
             // AI thinking
             ai.thinkTimer--;
             if (ai.thinkTimer <= 0) {
-                ai.thinkTimer = 20 + Math.random() * 30;
+                ai.thinkTimer = 15 + Math.random() * 25;
 
                 // Decide action based on distance and player state
-                if (dist > 120) {
+                if (dist > 130) {
                     ai.action = 'approach';
-                } else if (dist < 80 && player.swinging) {
-                    ai.action = Math.random() > 0.3 ? 'counter' : 'retreat';
-                } else if (dist < 100) {
-                    ai.action = Math.random() > 0.4 ? 'attack' : 'dodge';
+                } else if (dist < 90 && player.swinging) {
+                    ai.action = Math.random() > 0.35 ? 'counter' : 'evade';
+                } else if (dist < 110 && !player.swinging) {
+                    ai.action = Math.random() > 0.45 ? 'attack' : 'feint';
+                } else if (dist < 70) {
+                    ai.action = 'retreat';
                 } else {
-                    ai.action = 'wait';
+                    ai.action = 'stalk';
                 }
             }
 
             // Execute action
             switch(ai.action) {
                 case 'approach':
-                    ai.x += (player.x < ai.x ? -3 : 3);
+                    ai.x += (player.x < ai.x ? -3.5 : 3.5);
                     break;
                 case 'retreat':
-                    ai.x += (player.x < ai.x ? 4 : -4);
+                    ai.x += (player.x < ai.x ? 5 : -5);
+                    break;
+                case 'stalk':
+                    // Circle at medium range
+                    ai.x += (player.x < ai.x ? -1.5 : 1.5);
+                    if (ai.grounded && Math.random() > 0.95) {
+                        ai.jumpVel = JUMP_POWER * 0.7;
+                        ai.grounded = false;
+                    }
                     break;
                 case 'attack':
-                    if (!ai.swinging && ai.hitCooldown <= 0 && dist < 110) {
+                    if (!ai.swinging && ai.hitCooldown <= 0 && dist < 115) {
                         ai.swinging = true;
                         ai.swingAngle = -60;
                     }
                     break;
                 case 'counter':
+                    // Time the counter to clash with player's swing
                     if (!ai.swinging && ai.hitCooldown <= 0) {
                         ai.swinging = true;
-                        ai.swingAngle = -60;
+                        ai.swingAngle = -60 + Math.random() * 20; // Slight delay variation
                     }
                     break;
-                case 'dodge':
-                    if (ai.grounded && Math.random() > 0.7) {
-                        ai.jumpVel = JUMP_POWER;
+                case 'feint':
+                    // Move in then back out
+                    if (Math.random() > 0.5) {
+                        ai.x += (player.x < ai.x ? -4 : 4);
+                    } else {
+                        ai.x += (player.x < ai.x ? 3 : -3);
+                    }
+                    break;
+                case 'evade':
+                    // Quick backward jump
+                    ai.x += (player.x < ai.x ? 6 : -6);
+                    if (ai.grounded && Math.random() > 0.5) {
+                        ai.jumpVel = JUMP_POWER * 0.8;
                         ai.grounded = false;
                     }
                     break;
@@ -428,40 +456,61 @@
             const aiSaberX = ai.x + Math.cos((180 - ai.swingAngle + 45) * Math.PI / 180) * SABER_LENGTH;
             const aiSaberY = ai.y - 30 + Math.sin((180 - ai.swingAngle + 45) * Math.PI / 180) * SABER_LENGTH;
 
-            // Saber clash
+            // Saber clash - timing matters! Later swing = counter advantage
             if (player.swinging && ai.swinging) {
                 const saberDist = Math.hypot(playerSaberX - aiSaberX, playerSaberY - aiSaberY);
-                if (saberDist < 30) {
-                    messageEl.textContent = '⚡ CLASH! ⚡';
-                    setTimeout(() => messageEl.textContent = '', 500);
+                if (saberDist < 35) {
+                    // Who started swinging later has the counter advantage
+                    const playerTiming = player.swingAngle; // lower = started later
+                    const aiTiming = ai.swingAngle;
+
                     player.swinging = false;
                     ai.swinging = false;
-                    player.hitCooldown = 25;
-                    ai.hitCooldown = 25;
-                    // Spark effect
                     drawSparks((playerSaberX + aiSaberX) / 2, (playerSaberY + aiSaberY) / 2);
+
+                    if (Math.abs(playerTiming - aiTiming) < 15) {
+                        // Equal timing - mutual stagger
+                        messageEl.textContent = '⚡ CLASH! ⚡';
+                        player.hitCooldown = 20;
+                        ai.hitCooldown = 20;
+                    } else if (playerTiming < aiTiming) {
+                        // Player countered - AI staggers longer
+                        messageEl.textContent = '⚡ COUNTER! ⚡';
+                        player.hitCooldown = 8;
+                        ai.hitCooldown = 35;
+                    } else {
+                        // AI countered - player staggers longer
+                        messageEl.textContent = '⚡ BLOCKED! ⚡';
+                        player.hitCooldown = 35;
+                        ai.hitCooldown = 8;
+                    }
+                    setTimeout(() => messageEl.textContent = '', 500);
                 }
             }
 
-            // Player hits AI
-            if (player.swinging && player.swingAngle > 20 && player.swingAngle < 50) {
+            // Player hits AI - wider window, no immunity for swinging
+            if (player.swinging && player.swingAngle > 0 && player.swingAngle < 55) {
                 const hitDist = Math.hypot(playerSaberX - ai.x, playerSaberY - (ai.y - 30));
-                if (hitDist < 35 && ai.hitCooldown <= 0 && !ai.swinging) {
-                    ai.health -= 15;
-                    ai.hitCooldown = 30;
+                if (hitDist < 40 && ai.hitCooldown <= 0) {
+                    ai.health -= 12;
+                    ai.hitCooldown = 25;
+                    ai.x += 15; // knockback
                     messageEl.textContent = 'HIT!';
                     setTimeout(() => messageEl.textContent = '', 400);
+                    drawSparks(playerSaberX, playerSaberY);
                 }
             }
 
-            // AI hits player
-            if (ai.swinging && ai.swingAngle > 20 && ai.swingAngle < 50) {
+            // AI hits player - same rules apply
+            if (ai.swinging && ai.swingAngle > 0 && ai.swingAngle < 55) {
                 const hitDist = Math.hypot(aiSaberX - player.x, aiSaberY - (player.y - 30));
-                if (hitDist < 35 && player.hitCooldown <= 0 && !player.swinging) {
+                if (hitDist < 40 && player.hitCooldown <= 0) {
                     player.health -= 12;
-                    player.hitCooldown = 30;
+                    player.hitCooldown = 25;
+                    player.x -= 15; // knockback
                     messageEl.textContent = 'OUCH!';
                     setTimeout(() => messageEl.textContent = '', 400);
+                    drawSparks(aiSaberX, aiSaberY);
                 }
             }
         }
