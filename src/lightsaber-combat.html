@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lightsaber Combat - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Courier Prime', monospace;
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            padding-top: 80px; /* REQUIRED */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Game Container */
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            background: #111;
+            border: 2px solid #333;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+
+        /* HUD */
+        #hud {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            background: #000;
+            font-size: 14px;
+        }
+
+        .bar-container {
+            width: 40%;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .hp-bar {
+            height: 10px;
+            background: #333;
+            width: 100%;
+            position: relative;
+        }
+
+        .hp-fill {
+            height: 100%;
+            background: #ff0000;
+            width: 100%;
+            transition: width 0.2s;
+        }
+
+        .hp-fill.enemy { background: #7ec8e3; }
+
+        .currency-display {
+            color: #00ffff;
+            font-weight: bold;
+        }
+
+        /* Canvas */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 300px;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            image-rendering: pixelated;
+        }
+
+        /* UI Overlays */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .hidden { display: none !important; }
+
+        h1, h2, h3 {
+            color: #00ffff;
+            margin: 0 0 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        p { margin-bottom: 20px; line-height: 1.4; }
+
+        button {
+            background: #ff0000;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            text-transform: uppercase;
+            min-height: 44px; /* Touch target */
+            min-width: 120px;
+            border: 1px solid #ff4444;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+        }
+
+        button:hover {
+            background: #cc0000;
+        }
+
+        button:disabled {
+            background: #333;
+            color: #666;
+            border-color: #444;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Shop Grid */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .skin-item {
+            border: 1px solid #333;
+            padding: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .skin-item.selected {
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .skin-preview {
+            width: 100%;
+            height: 20px;
+            margin-bottom: 5px;
+        }
+
+        .skin-price {
+            font-size: 10px;
+            color: #7ec8e3;
+        }
+
+        .skin-owned {
+            color: #0f0;
+            font-size: 10px;
+        }
+
+        /* Mobile Controls */
+        .mobile-controls {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 200px;
+            padding-bottom: 20px;
+        }
+
+        .control-btn {
+            background: #222;
+            border: 1px solid #444;
+            color: #00ffff;
+            height: 60px;
+            width: 60px;
+            border-radius: 8px;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            box-shadow: 0 4px 0 #000;
+        }
+
+        .control-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #000;
+            background: #333;
+        }
+
+        .control-btn.empty {
+            pointer-events: none;
+            border: none;
+            box-shadow: none;
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            #game-container {
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link" aria-label="Back to home"></a>
+
+    <div id="game-container">
+        <div id="hud">
+            <div class="bar-container">
+                <div class="hp-bar"><div id="player-hp" class="hp-fill"></div></div>
+                <span>YOU (LVL <span id="level-display">1</span>)</span>
+            </div>
+            <div class="currency-display">CR: <span id="credits-display">0</span></div>
+            <div class="bar-container" style="align-items: flex-end;">
+                <div class="hp-bar"><div id="enemy-hp" class="hp-fill enemy"></div></div>
+                <span>ENEMY</span>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="400" height="300"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="overlay">
+            <h1>Neon Duel</h1>
+            <p>Defeat the AI to earn Credits.<br>Unlock skins in the Shop.</p>
+            <p style="font-size: 12px; color: #888;">Controls:<br>Left/Right: Move<br>Up: Attack<br>Down: Block</p>
+            <button id="btn-start">Start Mission</button>
+            <button id="btn-shop">Equip Shop</button>
+        </div>
+
+        <!-- Shop Screen -->
+        <div id="shop-screen" class="overlay hidden">
+            <h2>Armory</h2>
+            <p>Balance: <span id="shop-credits">0</span> CR</p>
+            <div class="shop-grid" id="skin-grid">
+                <!-- Generated by JS -->
+            </div>
+            <button id="btn-close-shop">Back</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="overlay hidden">
+            <h2 id="end-title">VICTORY</h2>
+            <p id="end-msg">Enemy Defeated</p>
+            <p>Reward: <span id="reward-amt" style="color:#7ec8e3">50</span> CR</p>
+            <button id="btn-next">Next Level</button>
+            <button id="btn-restart" class="hidden">Retry</button>
+            <button id="btn-menu">Main Menu</button>
+        </div>
+    </div>
+
+    <div class="mobile-controls">
+        <div class="control-btn empty"></div>
+        <button class="control-btn" data-dir="up">▲</button>
+        <div class="control-btn empty"></div>
+        <button class="control-btn" data-dir="left">◀</button>
+        <button class="control-btn" data-dir="down">▼</button>
+        <button class="control-btn" data-dir="right">▶</button>
+    </div>
+
+    <script>
+        // --- Game Constants & State ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const SKINS = [
+            { id: 'red', color: '#ff0000', cost: 0, name: 'Standard' },
+            { id: 'blue', color: '#7ec8e3', cost: 100, name: 'Cyan' },
+            { id: 'green', color: '#00ff00', cost: 250, name: 'Toxic' },
+            { id: 'purple', color: '#bf00ff', cost: 500, name: 'Void' },
+            { id: 'gold', color: '#ffd700', cost: 1000, name: 'Royal' },
+            { id: 'white', color: '#ffffff', cost: 2000, name: 'Pure' }
+        ];
+
+        let gameState = {
+            credits: parseInt(localStorage.getItem('noir_saber_credits')) || 0,
+            unlockedSkins: JSON.parse(localStorage.getItem('noir_saber_skins')) || ['red'],
+            currentSkin: localStorage.getItem('noir_saber_current') || 'red',
+            level: 1,
+            status: 'START' // START, PLAYING, SHOP, GAMEOVER
+        };
+
+        let player = { x: 50, y: 200, w: 20, h: 50, hp: 100, maxHp: 100, facing: 1, state: 'idle', stateTimer: 0, color: '#ff0000' };
+        let enemy = { x: 300, y: 200, w: 20, h: 50, hp: 100, maxHp: 100, facing: -1, state: 'idle', stateTimer: 0, aiTimer: 0, color: '#7ec8e3' };
+        
+        let particles = [];
+        let shake = 0;
+
+        // --- DOM Elements ---
+        const ui = {
+            start: document.getElementById('start-screen'),
+            shop: document.getElementById('shop-screen'),
+            gameOver: document.getElementById('game-over-screen'),
+            playerHp: document.getElementById('player-hp'),
+            enemyHp: document.getElementById('enemy-hp'),
+            credits: document.getElementById('credits-display'),
+            level: document.getElementById('level-display'),
+            shopCredits: document.getElementById('shop-credits'),
+            skinGrid: document.getElementById('skin-grid'),
+            endTitle: document.getElementById('end-title'),
+            endMsg: document.getElementById('end-msg'),
+            reward: document.getElementById('reward-amt'),
+            btnNext: document.getElementById('btn-next'),
+            btnRestart: document.getElementById('btn-restart')
+        };
+
+        // --- Initialization ---
+        function init() {
+            player.color = SKINS.find(s => s.id === gameState.currentSkin).color;
+            updateUI();
+            renderShop();
+            gameLoop();
+        }
+
+        function saveGame() {
+            localStorage.setItem('noir_saber_credits', gameState.credits);
+            localStorage.setItem('noir_saber_skins', JSON.stringify(gameState.unlockedSkins));
+            localStorage.setItem('noir_saber_current', gameState.currentSkin);
+        }
+
+        function updateUI() {
+            ui.credits.textContent = gameState.credits;
+            ui.level.textContent = gameState.level;
+            ui.playerHp.style.width = `${(player.hp / player.maxHp) * 100}%`;
+            ui.enemyHp.style.width = `${(enemy.hp / enemy.maxHp) * 100}%`;
+        }
+
+        // --- Game Logic ---
+        function startLevel() {
+            gameState.status = 'PLAYING';
+            player.hp = player.maxHp;
+            player.x = 50;
+            player.state = 'idle';
+            
+            // Enemy scaling
+            enemy.maxHp = 100 + (gameState.level * 20);
+            enemy.hp = enemy.maxHp;
+            enemy.x = 300;
+            enemy.state = 'idle';
+            
+            ui.start.classList.add('hidden');
+            ui.shop.classList.add('hidden');
+            ui.gameOver.classList.add('hidden');
+            updateUI();
+        }
+
+        function spawnParticles(x, y, color, count = 10) {
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 1.0,
+                    color: color
+                });
+            }
+        }
+
+        function handleInput(dir) {
+            if (gameState.status !== 'PLAYING') return;
+            if (player.state !== 'idle' && player.state !== 'block') return;
+
+            const speed = 20;
+
+            if (dir === 'left') {
+                player.x = Math.max(10, player.x - speed);
+                player.facing = -1;
+            } else if (dir === 'right') {
+                player.x = Math.min(canvas.width - 30, player.x + speed);
+                player.facing = 1;
+            } else if (dir === 'up') {
+                // Attack
+                player.state = 'attack';
+                player.stateTimer = 15; // Frames
+                
+                // Hit detection
+                const dist = Math.abs(player.x - enemy.x);
+                const inRange = dist < 60;
+                
+                if (inRange && enemy.state !== 'block') {
+                    enemy.hp -= 20 + (gameState.level * 2); // Player dmg scaling slightly
+                    shake = 5;
+                    spawnParticles(enemy.x + 10, enemy.y + 25, enemy.color);
+                    if (enemy.hp <= 0) endLevel(true);
+                } else if (inRange && enemy.state === 'block') {
+                    spawnParticles((player.x + enemy.x)/2, 200, '#fff', 5);
+                    shake = 2;
+                }
+            } else if (dir === 'down') {
+                // Block
+                player.state = 'block';
+                player.stateTimer = 30;
+            }
+            updateUI();
+        }
+
+        function updateAI() {
+            if (enemy.hp <= 0) return;
+
+            enemy.aiTimer--;
+            
+            // Simple State Machine
+            if (enemy.state === 'idle') {
+                if (enemy.aiTimer <= 0) {
+                    const action = Math.random();
+                    const dist = Math.abs(player.x - enemy.x);
+
+                    if (dist < 60) {
+                        // Close combat
+                        if (action < 0.6) {
+                            enemy.state = 'attack';
+                            enemy.stateTimer = 20 + (gameState.level * 2); // Faster attacks later
+                            // Attack Logic
+                            if (player.state !== 'block') {
+                                setTimeout(() => {
+                                    if (gameState.status === 'PLAYING') {
+                                        player.hp -= 10 + gameState.level;
+                                        shake = 5;
+                                        spawnParticles(player.x + 10, player.y + 25, player.color);
+                                        if (player.hp <= 0) endLevel(false);
+                                        updateUI();
+                                    }
+                                }, 10); // Slight delay for visual swing
+                            } else {
+                                setTimeout(() => {
+                                    spawnParticles((player.x + enemy.x)/2, 200, '#fff', 5);
+                                    shake = 2;
+                                }, 10);
+                            }
+                        } else {
+                            enemy.state = 'block';
+                            enemy.stateTimer = 30;
+                        }
+                    } else {
+                        // Move towards player
+                        if (player.x < enemy.x) enemy.x -= 5;
+                        else enemy.x += 5;
+                        enemy.aiTimer = 20;
+                    }
+                    enemy.aiTimer = 30 + Math.random() * 30;
+                }
+            } else {
+                enemy.stateTimer--;
+                if (enemy.stateTimer <= 0) {
+                    enemy.state = 'idle';
+                }
+            }
+        }
+
+        function endLevel(victory) {
+            gameState.status = 'GAMEOVER';
+            setTimeout(() => {
+                ui.gameOver.classList.remove('hidden');
+                if (victory) {
+                    ui.endTitle.textContent = "VICTORY";
+                    ui.endTitle.style.color = "#00ffff";
+                    ui.endMsg.textContent = `Enemy Eliminated`;
+                    const reward = 50 + (gameState.level * 10);
+                    ui.reward.textContent = reward;
+                    gameState.credits += reward;
+                    gameState.level++;
+                    ui.btnNext.classList.remove('hidden');
+                    ui.btnRestart.classList.add('hidden');
+                } else {
+                    ui.endTitle.textContent = "DEFEAT";
+                    ui.endTitle.style.color = "#ff0000";
+                    ui.endMsg.textContent = "System Failure";
+                    ui.reward.textContent = "10";
+                    gameState.credits += 10; // Pity reward
+                    ui.btnNext.classList.add('hidden');
+                    ui.btnRestart.classList.remove('hidden');
+                }
+                saveGame();
+                updateUI();
+            }, 500);
+        }
+
+        // --- Rendering ---
+        function drawFighter(f, isPlayer) {
+            ctx.save();
+            ctx.translate(f.x + f.w/2, f.y + f.h/2);
+            if (f.facing === -1) ctx.scale(-1, 1);
+
+            // Body
+            ctx.fillStyle = '#000';
+            ctx.strokeStyle = isPlayer ? '#ff0000' : '#7ec8e3';
+            ctx.lineWidth = 2;
+
+            // Head
+            ctx.strokeRect(-5, -20, 10, 10);
+            
+            // Torso/Legs
+            ctx.beginPath();
+            ctx.moveTo(0, -10);
+            ctx.lineTo(0, 10);
+            ctx.moveTo(-5, 10);
+            ctx.lineTo(5, 10);
+            ctx.stroke();
+
+            // Lightsaber
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = f.color;
+            ctx.fillStyle = f.color;
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+
+            let saberX = 5;
+            let saberY = -5;
+            let extend = 0;
+
+            if (f.state === 'attack') {
+                saberY = -15;
+                extend = 25;
+                ctx.rotate(-0.5);
+            } else if (f.state === 'block') {
+                saberX = -5;
+                saberY = -15;
+                ctx.rotate(1.5);
+            }
+
+            // Hilt
+            ctx.fillStyle = '#333';
+            ctx.fillRect(saberX, saberY, 4, 12);
+            
+            // Blade
+            ctx.fillStyle = f.color;
+            ctx.shadowBlur = 15;
+            ctx.fillRect(saberX + 1, saberY - (30 + extend), 2, 30 + extend);
+
+            ctx.restore();
+        }
+
+        function gameLoop() {
+            // Clear
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid floor
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for(let i=0; i<canvas.width; i+=40) {
+                ctx.moveTo(i, 200);
+                ctx.lineTo(i - 100, 300);
+            }
+            ctx.stroke();
+
+            // Shake effect
+            if (shake > 0) {
+                ctx.save();
+                const dx = (Math.random() - 0.5) * shake;
+                const dy = (Math.random() - 0.5) * shake;
+                ctx.translate(dx, dy);
+                shake *= 0.9;
+                if (shake < 0.5) shake = 0;
+            }
+
+            // Update
+            if (gameState.status === 'PLAYING') {
+                updateAI();
+                if (player.stateTimer > 0) player.stateTimer--;
+                else player.state = 'idle';
+            }
+
+            // Draw Floor Line
+            ctx.strokeStyle = '#00ffff';
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = '#00ffff';
+            ctx.beginPath();
+            ctx.moveTo(0, 250);
+            ctx.lineTo(400, 250);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Draw Fighters
+            drawFighter(player, true);
+            drawFighter(enemy, false);
+
+            // Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.05;
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.fillRect(p.x, p.y, 3, 3);
+                ctx.globalAlpha = 1;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            if (shake > 0) ctx.restore();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- Shop System ---
+        function renderShop() {
+            ui.skinGrid.innerHTML = '';
+            ui.shopCredits.textContent = gameState.credits;
+
+            SKINS.forEach(skin => {
+                const el = document.createElement('div');
+                el.className = `skin-item ${gameState.currentSkin === skin.id ? 'selected' : ''}`;
+                
+                const owned = gameState.unlockedSkins.includes(skin.id);
+                
+                el.innerHTML = `
+                    <div class="skin-preview" style="background:${skin.color}; box-shadow: 0 0 5px ${skin.color}"></div>
+                    <div style="font-size:10px; color:#fff">${skin.name}</div>
+                    ${owned 
+                        ? `<div class="skin-owned">OWNED</div>` 
+                        : `<div class="skin-price">${skin.cost} CR</div>`
+                    }
+                `;
+
+                el.onclick = () => {
+                    if (owned) {
+                        gameState.currentSkin = skin.id;
+                        player.color = skin.color;
+                        saveGame();
+                        renderShop();
+                    } else if (gameState.credits >= skin.cost) {
+                        gameState.credits -= skin.cost;
+                        gameState.unlockedSkins.push(skin.id);
+                        gameState.currentSkin = skin.id;
+                        player.color = skin.color;
+                        saveGame();
+                        renderShop();
+                        updateUI();
+                    } else {
+                        // Feedback for no money
+                        el.style.borderColor = 'red';
+                        setTimeout(() => el.style.borderColor = '#333', 200);
+                    }
+                };
+                ui.skinGrid.appendChild(el);
+            });
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('btn-start').onclick = startLevel;
+        document.getElementById('btn-next').onclick = startLevel;
+        document.getElementById('btn-restart').onclick = startLevel;
+        
+        document.getElementById('btn-shop').onclick = () => {
+            ui.start.classList.add('hidden');
+            ui.shop.classList.remove('hidden');
+            renderShop();
+        };
+
+        document.getElementById('btn-close-shop').onclick = () => {
+            ui.shop.classList.add('hidden');
+            ui.start.classList.remove('hidden');
+        };
+
+        document.getElementById('btn-menu').onclick = () => {
+            ui.gameOver.classList.add('hidden');
+            ui.start.classList.remove('hidden');
+        };
+
+        // Keyboard
+        window.addEventListener('keydown', (e) => {
+            if (gameState.status !== 'PLAYING') return;
+            if (e.key === 'ArrowLeft' || e.key === 'a') handleInput('left');
+            if (e.key === 'ArrowRight' || e.key === 'd') handleInput('right');
+            if (e.key === 'ArrowUp' || e.key === 'w') handleInput('up');
+            if (e.key === 'ArrowDown' || e.key === 's') handleInput('down');
+        });
+
+        // Touch (Mobile Controls)
+        document.querySelectorAll('.control-btn[data-dir]').forEach(btn => {
+            btn.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                handleDirection(btn.dataset.dir); 
+            }, { passive: false });
+        });
+
+        // Helper for touch event
+        function handleDirection(dir) {
+            handleInput(dir);
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>

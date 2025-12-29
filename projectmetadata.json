@@ -527,6 +527,13 @@
       "description": "Fight AI with saber clashes",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "lightsaber-combat": {
+      "title": "Lightsaber Combat",
+      "icon": "🕹️",
+      "description": "neon saber dueling arcade",
+      "collection": "arcade-games",
+      "hidden": false
     }
   }
 }
