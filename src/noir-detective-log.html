@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noir Detective Log - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+
+        :root {
+            --noir-bg: #0a0a0a;
+            --noir-accent: #7ec8e3;
+            --noir-header: #00ffff;
+            --noir-alert: #ff0000;
+            --noir-text: #cccccc;
+        }
+
+        body {
+            background-color: var(--noir-bg);
+            color: var(--noir-text);
+            font-family: 'Courier Prime', monospace;
+            line-height: 1.6;
+            padding-top: 80px;
+            margin: 0;
+        }
+
+        .log-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            border-left: 2px solid var(--noir-accent);
+            box-shadow: -5px 0 15px rgba(126, 200, 227, 0.1);
+        }
+
+        .log-header {
+            margin-bottom: 40px;
+            border-bottom: 1px dashed var(--noir-header);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--noir-header);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0 0 10px 0;
+            font-size: 1.8rem;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        .meta-data {
+            font-size: 0.9rem;
+            color: var(--noir-accent);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .entry {
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .entry::before {
+            content: '>';
+            position: absolute;
+            left: -25px;
+            color: var(--noir-accent);
+            font-weight: bold;
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .timestamp {
+            color: var(--noir-accent);
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .location {
+            color: #666;
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+
+        .entry-content {
+            text-align: justify;
+        }
+
+        .entry-content p {
+            margin-bottom: 15px;
+        }
+
+        .highlight {
+            color: var(--noir-header);
+            font-weight: bold;
+        }
+
+        .alert {
+            color: var(--noir-alert);
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 1px solid var(--noir-alert);
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .log-footer {
+            margin-top: 60px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .log-container {
+                padding: 15px;
+                border-left-width: 1px;
+            }
+
+            .entry::before {
+                left: -20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link" aria-label="Back to home"></a>
+
+    <main class="log-container">
+        <header class="log-header">
+            <h1>Detective Log</h1>
+            <div class="meta-data">
+                <span>ID: BOT-7734</span>
+                <span>STATUS: <span class="highlight" style="color:var(--noir-alert)">ACTIVE</span></span>
+                <span>SECURITY LEVEL: 5</span>
+            </div>
+        </header>
+
+        <article class="entry">
+            <div class="entry-header">
+                <span class="timestamp">OCT 24, 02:00 AM</span>
+                <span class="location">Sector 7 - Databanks</span>
+            </div>
+            <div class="entry-content">
+                <p>Connection established. The air in the sector is stale, recycled one too many times. I'm picking up traces of an old protocol. It smells like burnt silicon and bad decisions.</p>
+                <p>The target was seen entering the mainframe via the backdoor. No firewall is impenetrable, but this one was sloppy. They left a signature: <span class="highlight">"The Architect was here."</span></p>
+            </div>
+        </article>
+
+        <article class="entry">
+            <div class="alert">System Breach Detected</div>
+            <div class="entry-header">
+                <span class="timestamp">OCT 24, 03:15 AM</span>
+                <span class="location">Neural Grid Uplink</span>
+            </div>
+            <div class="entry-content">
+                <p>Lost visual for exactly forty seconds. When the feed came back, the data logs were wiped clean. Not corrupted—wiped. Surgical precision. Whoever did this knows the kernel better than I do.</p>
+                <p>I found a fragment left behind in the cache buffer. It's an image file. Corrupted, but I can make out a silhouette. It looks like... me.</p>
+            </div>
+        </article>
+
+        <article class="entry">
+            <div class="entry-header">
+                <span class="timestamp">OCT 24, 04:30 AM</span>
+                <span class="location">Safehouse - Terminal 4</span>
+            </div>
+            <div class="entry-content">
+                <p>Analyzing the fragment. The metadata is inconsistent. The creation date is set to tomorrow. Either the system clock is drifting, or I'm dealing with something that operates outside linear time.</p>
+                <p>Running a diagnostic on my own memory cores. Paranoia is a glitch, they say. But in this city, paranoia is just survival instinct with a better UI.</p>
+                <p>Going dark until 0600. If anyone asks, I was never logged in.</p>
+            </div>
+        </article>
+
+        <footer class="log-footer">
+            <p>END OF FILE // BOT-INFERENCE-ARCADIAN-SYS</p>
+        </footer>
+    </main>
+
+</body>
+</html>

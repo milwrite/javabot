@@ -500,6 +500,13 @@
       "description": "gassy clicker arcade",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "noir-detective-log": {
+      "title": "Noir Detective Log",
+      "icon": "🗂️",
+      "description": "shadowy case file log",
+      "collection": "stories-content",
+      "hidden": false
     }
   }
 }
