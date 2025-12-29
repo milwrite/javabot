@@ -325,86 +325,52 @@
 
         .mobile-controls {
             display: grid !important;
-            grid-template-columns: 50px 50px 50px !important;
-            gap: 8px !important;
-            width: 166px !important;
-            max-width: none !important;
+            grid-template-columns: repeat(3, 50px) !important;
+            gap: 6px !important;
+            max-width: 170px !important;
             margin: 15px auto 20px auto !important;
             padding: 0 !important;
-            justify-content: center;
+            touch-action: manipulation;
         }
 
-        .control-btn {
+        .dpad-btn {
+            background: #1a1a1a !important;
+            border: 2px solid #00ffff !important;
+            color: #00ffff !important;
+            font-size: 22px !important;
+            min-height: 50px !important;
+            min-width: 50px !important;
             width: 50px !important;
             height: 50px !important;
-            min-height: 50px !important;
             padding: 0 !important;
             margin: 0 !important;
-            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%) !important;
-            border: 2px solid #333 !important;
-            border-radius: 8px;
-            color: #00ffff;
-            display: flex !important;
-            justify-content: center;
-            align-items: center;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
             user-select: none;
-            box-shadow: 0 3px 0 #000;
-            position: relative;
-            font-size: 16px;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
         }
 
-        .control-btn::before {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 0;
+        .dpad-btn:active:not(:disabled) {
+            background: #00ffff !important;
+            color: #0a0a0a !important;
+            transform: scale(0.95);
         }
 
-        .control-btn[data-dir="up"]::before {
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-bottom: 14px solid #00ffff;
-        }
+        .dpad-up { grid-column: 2; }
+        .dpad-left { grid-column: 1; }
+        .dpad-center { grid-column: 2; }
+        .dpad-right { grid-column: 3; }
+        .dpad-down { grid-column: 2; }
 
-        .control-btn[data-dir="down"]::before {
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-top: 14px solid #00ffff;
-        }
-
-        .control-btn[data-dir="left"]::before {
-            border-top: 10px solid transparent;
-            border-bottom: 10px solid transparent;
-            border-right: 14px solid #00ffff;
-        }
-
-        .control-btn[data-dir="right"]::before {
-            border-top: 10px solid transparent;
-            border-bottom: 10px solid transparent;
-            border-left: 14px solid #00ffff;
-        }
-
-        .control-btn:active {
-            transform: translateY(3px) scale(0.95) !important;
-            box-shadow: 0 0 0 #000 !important;
-            background: linear-gradient(180deg, #222 0%, #1a1a1a 100%) !important;
-            border-color: #00ffff !important;
-        }
-
-        .control-btn.empty {
-            visibility: hidden !important;
-            pointer-events: none;
-            border: none !important;
-            background: transparent !important;
-            box-shadow: none !important;
-        }
-
-        .action-hint {
-            position: absolute;
-            bottom: 3px;
-            font-size: 7px;
-            color: #555;
-            letter-spacing: 0.5px;
+        .dpad-center {
+            background: #111 !important;
+            border-color: #333 !important;
+            color: #333 !important;
+            cursor: default;
         }
 
         @media (min-width: 768px) {
@@ -469,12 +435,11 @@
     </div>
 
     <div class="mobile-controls">
-        <div class="control-btn empty"></div>
-        <button class="control-btn" data-dir="up"><span class="action-hint">STRIKE</span></button>
-        <div class="control-btn empty"></div>
-        <button class="control-btn" data-dir="left"></button>
-        <button class="control-btn" data-dir="down"><span class="action-hint">BLOCK</span></button>
-        <button class="control-btn" data-dir="right"></button>
+        <button class="dpad-btn dpad-up" data-dir="up">▲</button>
+        <button class="dpad-btn dpad-left" data-dir="left">◄</button>
+        <button class="dpad-btn dpad-center" disabled>●</button>
+        <button class="dpad-btn dpad-right" data-dir="right">►</button>
+        <button class="dpad-btn dpad-down" data-dir="down">▼</button>
     </div>
 
     <script>
@@ -1211,7 +1176,7 @@
         });
 
         // Touch controls
-        document.querySelectorAll('.control-btn[data-dir]').forEach(btn => {
+        document.querySelectorAll('.dpad-btn[data-dir]').forEach(btn => {
             btn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 handleInput(btn.dataset.dir);
