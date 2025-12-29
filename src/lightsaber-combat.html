@@ -973,7 +973,9 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Screen shake
+            let didShake = false;
             if (shake > 0) {
+                didShake = true;
                 ctx.save();
                 ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
                 shake *= 0.85;
@@ -1088,7 +1090,7 @@
                 flashAlpha *= 0.85;
             }
 
-            if (shake > 0) ctx.restore();
+            if (didShake) ctx.restore();
 
             requestAnimationFrame(gameLoop);
         }
