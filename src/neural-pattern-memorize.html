@@ -230,7 +230,7 @@
         let isInputLocked = true;
         let highScore = localStorage.getItem('neural-pattern-highscore') || 0;
         let flashTimeout = null;
-        let playbackSpeed = 600; // Starting speed in ms
+        let playbackSpeed = 1000; // Starting speed in ms (slower for easier play)
 
         // Initialize Display
         highScoreDisplay.textContent = highScore;
