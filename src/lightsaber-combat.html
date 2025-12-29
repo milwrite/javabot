@@ -629,166 +629,90 @@
 
         function handleInput(dir) {
             if (gameState.status !== 'PLAYING') return;
-            if (player.blockStun > 0) return;
+            if (player.state === 'attack' || player.state === 'counter') return; // Can't act while attacking
 
-            const speed = 4;
+            const speed = 20;
 
             if (dir === 'left') {
-                player.velocityX = -speed;
+                player.x = Math.max(20, player.x - speed);
                 player.facing = -1;
             } else if (dir === 'right') {
-                player.velocityX = speed;
+                player.x = Math.min(canvas.width - 40, player.x + speed);
                 player.facing = 1;
-            } else if (dir === 'up' && player.attackCooldown <= 0 && player.stamina >= 15) {
-                if (player.canCounter && player.counterWindow > 0) {
-                    // Counter attack - powerful!
-                    player.state = 'counter';
-                    player.stateTimer = 25;
-                    player.stamina -= 10;
-                    player.attackCooldown = 20;
+            } else if (dir === 'up') {
+                // Attack
+                player.state = 'attack';
+                player.stateTimer = 20;
 
-                    const dist = Math.abs(player.x - enemy.x);
-                    if (dist < 80) {
-                        const damage = 35 + gameState.level * 3;
-                        enemy.hp -= damage;
-                        enemy.blockStun = 30;
-                        shake = 12;
-                        slowMo = 8;
-                        flashAlpha = 0.4;
-                        spawnParticles(enemy.x + 12, enemy.y + 25, '#ffffff', 20, 12);
-                        spawnSparks((player.x + enemy.x) / 2, 200, 30);
-                        showCombo();
-                        if (enemy.hp <= 0) endLevel(true);
-                    }
-                    player.canCounter = false;
-                } else {
-                    // Normal attack
-                    player.state = 'attack';
-                    player.stateTimer = 18;
-                    player.stamina -= 15;
-                    player.attackCooldown = 25;
-
-                    setTimeout(() => {
-                        if (gameState.status !== 'PLAYING') return;
-                        const dist = Math.abs(player.x - enemy.x);
-                        if (dist < 70) {
-                            if (enemy.state === 'block' && enemy.stamina > 0) {
-                                // Blocked
-                                spawnSparks((player.x + enemy.x) / 2, 200, 15);
-                                shake = 3;
-                                enemy.stamina -= 20;
-                            } else {
-                                // Hit!
-                                const damage = 18 + Math.floor(gameState.combo * 2);
-                                enemy.hp -= damage;
-                                shake = 6;
-                                spawnParticles(enemy.x + 12, enemy.y + 25, enemy.color, 15);
-                                showCombo();
-                                if (enemy.hp <= 0) endLevel(true);
-                            }
-                        }
-                        updateUI();
-                    }, 80);
+                const dist = Math.abs(player.x - enemy.x);
+                if (dist < 70 && enemy.state !== 'block') {
+                    const damage = 20 + gameState.level * 2;
+                    enemy.hp -= damage;
+                    shake = 6;
+                    spawnParticles(enemy.x + 12, enemy.y + 25, enemy.color, 12);
+                    showCombo();
+                    if (enemy.hp <= 0) endLevel(true);
+                } else if (dist < 70 && enemy.state === 'block') {
+                    spawnSparks((player.x + enemy.x) / 2, 200, 15);
+                    shake = 3;
                 }
-            } else if (dir === 'down' && player.stamina >= 5) {
+            } else if (dir === 'down') {
                 player.state = 'block';
-                player.stateTimer = 25;
-                player.stamina -= 5;
+                player.stateTimer = 30;
             }
             updateUI();
         }
 
         function handleInputUp(dir) {
-            if (dir === 'left' && player.velocityX < 0) player.velocityX = 0;
-            if (dir === 'right' && player.velocityX > 0) player.velocityX = 0;
+            // No longer using velocity-based movement
         }
 
         function updateAI() {
-            if (enemy.hp <= 0 || enemy.blockStun > 0) return;
+            if (enemy.hp <= 0) return;
+            if (enemy.state !== 'idle') return; // Wait for current action to finish
 
             enemy.aiTimer--;
-
-            // Regenerate stamina
-            if (enemy.state === 'idle' && enemy.stamina < enemy.maxStamina) {
-                enemy.stamina = Math.min(enemy.maxStamina, enemy.stamina + 0.3);
-            }
+            if (enemy.aiTimer > 0) return;
 
             const dist = Math.abs(player.x - enemy.x);
-            const speedMod = 1 + gameState.level * 0.1;
 
-            if (enemy.state !== 'idle') {
-                enemy.stateTimer--;
-                if (enemy.stateTimer <= 0) {
-                    enemy.state = 'idle';
-                    enemy.aiTimer = 20 + Math.random() * 20;
-                }
-                return;
-            }
+            if (dist < 70) {
+                // In combat range
+                const action = Math.random();
+                if (action < 0.5) {
+                    // Attack
+                    enemy.state = 'attack';
+                    enemy.stateTimer = 25;
 
-            if (enemy.attackCooldown > 0) {
-                enemy.attackCooldown--;
-                return;
-            }
-
-            // Pattern-based AI
-            if (enemy.aiTimer <= 0) {
-                if (dist < 75) {
-                    // Combat range
-                    const patterns = [
-                        ['attack', 'attack', 'block'],
-                        ['block', 'attack', 'attack'],
-                        ['attack', 'block', 'attack']
-                    ];
-                    const pattern = patterns[enemy.pattern];
-                    const action = pattern[enemy.patternStep % pattern.length];
-
-                    if (player.state === 'attack' && Math.random() < 0.4 + gameState.level * 0.05) {
-                        // React to player attack
-                        enemy.state = 'block';
-                        enemy.stateTimer = 20;
-                        enemy.stamina -= 10;
-                    } else if (action === 'attack' && enemy.stamina >= 20) {
-                        enemy.state = 'attack';
-                        enemy.stateTimer = 22 - Math.min(8, gameState.level);
-                        enemy.stamina -= 20;
-                        enemy.attackCooldown = 30;
-
-                        setTimeout(() => {
-                            if (gameState.status !== 'PLAYING' || enemy.hp <= 0) return;
-                            const currentDist = Math.abs(player.x - enemy.x);
-                            if (currentDist < 75) {
-                                if (player.state === 'block' && player.stamina > 0) {
-                                    spawnSparks((player.x + enemy.x) / 2, 200, 15);
-                                    shake = 3;
-                                    player.stamina -= 15;
-                                    player.canCounter = true;
-                                    player.counterWindow = 20;
-                                } else if (player.state !== 'block') {
-                                    const damage = 12 + gameState.level * 2;
-                                    player.hp -= damage;
-                                    shake = 8;
-                                    gameState.combo = 0;
-                                    spawnParticles(player.x + 12, player.y + 25, player.color, 12);
-                                    if (player.hp <= 0) endLevel(false);
-                                }
-                                updateUI();
-                            }
-                        }, 100);
-                    } else if (action === 'block') {
-                        enemy.state = 'block';
-                        enemy.stateTimer = 25;
-                        enemy.stamina -= 10;
-                    }
-
-                    enemy.patternStep++;
-                    enemy.aiTimer = (35 - gameState.level * 2) + Math.random() * 20;
+                    // Check for hit after brief delay
+                    setTimeout(() => {
+                        if (gameState.status !== 'PLAYING' || enemy.hp <= 0) return;
+                        const currentDist = Math.abs(player.x - enemy.x);
+                        if (currentDist < 70 && player.state !== 'block') {
+                            const damage = 15 + gameState.level * 2;
+                            player.hp -= damage;
+                            shake = 6;
+                            gameState.combo = 0;
+                            spawnParticles(player.x + 12, player.y + 25, player.color, 10);
+                            if (player.hp <= 0) endLevel(false);
+                            updateUI();
+                        } else if (currentDist < 70 && player.state === 'block') {
+                            spawnSparks((player.x + enemy.x) / 2, 200, 12);
+                            shake = 2;
+                        }
+                    }, 150);
                 } else {
-                    // Approach
-                    const moveDir = player.x < enemy.x ? -1 : 1;
-                    enemy.x += moveDir * (2 + speedMod);
-                    enemy.facing = moveDir;
-                    enemy.aiTimer = 5;
+                    // Block
+                    enemy.state = 'block';
+                    enemy.stateTimer = 30;
                 }
+                enemy.aiTimer = 40 + Math.random() * 30;
+            } else {
+                // Move towards player
+                const moveDir = player.x < enemy.x ? -1 : 1;
+                enemy.x += moveDir * 3;
+                enemy.facing = moveDir;
+                enemy.aiTimer = 10;
             }
         }
 
@@ -986,34 +910,17 @@
 
             // Update game state
             if (gameState.status === 'PLAYING') {
-                // Player movement
-                player.x += player.velocityX * speedMult;
-                player.x = Math.max(20, Math.min(canvas.width - 40, player.x));
-
-                // Counter window
-                if (player.counterWindow > 0) {
-                    player.counterWindow--;
-                    if (player.counterWindow <= 0) player.canCounter = false;
-                }
-
-                // Stamina regen
-                if (player.state === 'idle' && player.stamina < player.maxStamina) {
-                    player.stamina = Math.min(player.maxStamina, player.stamina + 0.4);
-                }
-
-                // Block stun
-                if (player.blockStun > 0) player.blockStun--;
-                if (enemy.blockStun > 0) enemy.blockStun--;
-
-                // Attack cooldowns
-                if (player.attackCooldown > 0) player.attackCooldown--;
-                if (enemy.attackCooldown > 0) enemy.attackCooldown--;
-
                 // State timers
                 if (player.stateTimer > 0) {
                     player.stateTimer--;
                 } else if (player.state !== 'idle') {
                     player.state = 'idle';
+                }
+
+                if (enemy.stateTimer > 0) {
+                    enemy.stateTimer--;
+                } else if (enemy.state !== 'idle') {
+                    enemy.state = 'idle';
                 }
 
                 // Combo timer
@@ -1031,16 +938,6 @@
             // Draw fighters
             drawFighter(player, true);
             drawFighter(enemy, false);
-
-            // Counter indicator
-            if (player.canCounter && player.counterWindow > 0) {
-                ctx.fillStyle = '#ffff00';
-                ctx.globalAlpha = 0.5 + Math.sin(Date.now() * 0.02) * 0.3;
-                ctx.font = 'bold 12px Courier Prime';
-                ctx.textAlign = 'center';
-                ctx.fillText('COUNTER!', player.x + 12, player.y - 50);
-                ctx.globalAlpha = 1;
-            }
 
             // Particles
             for (let i = particles.length - 1; i >= 0; i--) {
