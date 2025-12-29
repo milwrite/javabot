@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soccer Hop - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #1a1a2e 0%, #0f3460 50%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-header {
+            width: 100%;
+            max-width: 600px;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            border-bottom: 2px solid #7ec8e3;
+        }
+
+        .score-display {
+            font-family: 'Courier Prime', monospace;
+            font-size: 24px;
+            color: #7ec8e3;
+            text-shadow: 0 0 10px #7ec8e3;
+        }
+
+        .high-score {
+            font-size: 14px;
+            color: #00ffff;
+        }
+
+        .combo-meter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .combo-bar {
+            width: 100px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .combo-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ff6600, #ffff00);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .combo-text {
+            font-family: 'Courier Prime', monospace;
+            font-size: 18px;
+            color: #ff6600;
+            font-weight: bold;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #gameCanvas {
+            border: 3px solid #7ec8e3;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(126, 200, 227, 0.3);
+            touch-action: none;
+        }
+
+        .game-over-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: rgba(26, 26, 46, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            border: 3px solid #ff0000;
+            text-align: center;
+            max-width: 90%;
+            animation: pulse 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .modal-title {
+            font-family: 'Courier Prime', monospace;
+            font-size: 36px;
+            color: #ff0000;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        .final-score {
+            font-size: 48px;
+            color: #7ec8e3;
+            margin: 20px 0;
+            text-shadow: 0 0 15px #7ec8e3;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: rgba(126, 200, 227, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #7ec8e3;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #00ffff;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            color: #7ec8e3;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .start-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            z-index: 100;
+        }
+
+        .start-title {
+            font-family: 'Courier Prime', monospace;
+            font-size: 42px;
+            color: #7ec8e3;
+            text-shadow: 0 0 20px #7ec8e3;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .start-instructions {
+            font-size: 16px;
+            color: #ffffff;
+            text-align: center;
+            max-width: 300px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .tap-instruction {
+            font-size: 24px;
+            color: #ff0000;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .feedback-text {
+            position: absolute;
+            font-family: 'Courier Prime', monospace;
+            font-size: 32px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: feedbackAnim 1s ease-out forwards;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        @keyframes feedbackAnim {
+            0% { transform: scale(0.5); opacity: 1; }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1) translateY(-50px); opacity: 0; }
+        }
+
+        .perfect { color: #00ff00; }
+        .great { color: #7ec8e3; }
+        .good { color: #ffff00; }
+        .miss { color: #ff0000; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link"></a>
+
+    <div class="game-header">
+        <div>
+            <div class="score-display">Score: <span id="score">0</span></div>
+            <div class="high-score">Best: <span id="highScore">0</span></div>
+        </div>
+        <div class="combo-meter">
+            <span class="combo-text" id="comboText">x1</span>
+            <div class="combo-bar">
+                <div class="combo-fill" id="comboFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div class="start-overlay" id="startOverlay">
+            <div class="start-title">⚽ SOCCER HOP</div>
+            <div class="start-instructions">
+                Tap anywhere to hop the ball through the goal holes!<br><br>
+                Time your taps perfectly<br>
+                Build combo multipliers<br>
+                How far can you go?
+            </div>
+            <div class="tap-instruction">TAP TO START</div>
+        </div>
+    </div>
+
+    <div class="game-over-modal" id="gameOverModal">
+        <div class="modal-content">
+            <div class="modal-title">GAME OVER</div>
+            <div class="final-score" id="finalScore">0</div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">NETS CLEARED</div>
+                    <div class="stat-value" id="netsCleared">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">BEST COMBO</div>
+                    <div class="stat-value" id="bestCombo">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">PERFECT SHOTS</div>
+                    <div class="stat-value" id="perfectShots">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">ACCURACY</div>
+                    <div class="stat-value" id="accuracy">0%</div>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="game.restart()">PLAY AGAIN</button>
+                <button class="btn btn-secondary" onclick="game.goHome()">HOME</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SoccerHopGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.setupCanvas();
+                this.initGame();
+                this.setupControls();
+                this.loadHighScore();
+                
+                this.gameLoop();
+            }
+
+            setupCanvas() {
+                const container = document.querySelector('.game-container');
+                const maxWidth = Math.min(600, window.innerWidth - 40);
+                const maxHeight = Math.min(700, window.innerHeight - 180);
+                
+                this.canvas.width = maxWidth;
+                this.canvas.height = maxHeight;
+            }
+
+            initGame() {
+                this.score = 0;
+                this.combo = 0;
+                this.bestCombo = 0;
+                this.perfectShots = 0;
+                this.totalShots = 0;
+                this.netsCleared = 0;
+                this.gameRunning = false;
+                this.gameOver = false;
+
+                // Ball properties
+                this.ball = {
+                    x: this.canvas.width / 2,
+                    y: this.canvas.height - 80,
+                    radius: 20,
+                    targetY: this.canvas.height - 80,
+                    hopping: false,
+                    hopProgress: 0,
+                    hopSpeed: 0.08
+                };
+
+                // Nets configuration
+                this.netHeight = 60;
+                this.netSpacing = 100;
+                this.nets = [];
+                this.holeRadius = 35;
+                this.baseHoleRadius = 35;
+
+                // Difficulty
+                this.difficulty = 1;
+                this.moveSpeed = 0;
+                this.moveDirection = 1;
+                this.holeOscillation = 0;
+
+                // Visual feedback
+                this.feedbackTexts = [];
+                this.particles = [];
+
+                // Audio context
+                this.audioCtx = null;
+
+                this.generateNets();
+            }
+
+            generateNets() {
+                this.nets = [];
+                const numNets = Math.ceil(this.canvas.height / this.netSpacing) + 2;
+                
+                for (let i = 0; i < numNets; i++) {
+                    this.nets.push({
+                        y: this.canvas.height - 150 - (i * this.netSpacing),
+                        holeX: this.canvas.width / 2 + (Math.random() - 0.5) * 50,
+                        holeMoving: this.difficulty >= 3,
+                        cleared: false
+                    });
+                }
+            }
+
+            setupControls() {
+                const handleTap = (e) => {
+                    e.preventDefault();
+                    if (this.gameOver) return;
+                    
+                    if (!this.gameRunning) {
+                        this.startGame();
+                        return;
+                    }
+
+                    if (!this.ball.hopping) {
+                        this.hop();
+                    }
+                };
+
+                this.canvas.addEventListener('touchstart', handleTap, { passive: false });
+                this.canvas.addEventListener('click', handleTap);
+            }
+
+            startGame() {
+                this.gameRunning = true;
+                document.getElementById('startOverlay').style.display = 'none';
+                this.initAudio();
+            }
+
+            initAudio() {
+                try {
+                    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Audio not supported');
+                }
+            }
+
+            playSound(type) {
+                if (!this.audioCtx) return;
+
+                const oscillator = this.audioCtx.createOscillator();
+                const gainNode = this.audioCtx.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioCtx.destination);
+
+                switch(type) {
+                    case 'hop':
+                        oscillator.frequency.setValueAtTime(300, this.audioCtx.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(500, this.audioCtx.currentTime + 0.1);
+                        gainNode.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.1);
+                        oscillator.start(this.audioCtx.currentTime);
+                        oscillator.stop(this.audioCtx.currentTime + 0.1);
+                        break;
+                    case 'perfect':
+                        oscillator.frequency.setValueAtTime(523, this.audioCtx.currentTime);
+                        oscillator.frequency.setValueAtTime(659, this.audioCtx.currentTime + 0.1);
+                        oscillator.frequency.setValueAtTime(784, this.audioCtx.currentTime + 0.2);
+                        gainNode.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+                        oscillator.start(this.audioCtx.currentTime);
+                        oscillator.stop(this.audioCtx.currentTime + 0.3);
+                        break;
+                    case 'miss':
+                        oscillator.type = 'sawtooth';
+                        oscillator.frequency.setValueAtTime(200, this.audioCtx.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(50, this.audioCtx.currentTime + 0.3);
+                        gainNode.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+                        oscillator.start(this.audioCtx.currentTime);
+                        oscillator.stop(this.audioCtx.currentTime + 0.3);
+                        break;
+                }
+            }
+
+            hop() {
+                if (this.ball.hopping) return;
+
+                this.ball.hopping = true;
+                this.ball.hopProgress = 0;
+                this.ball.startY = this.ball.y;
+                this.ball.targetY = this.ball.y - this.netSpacing;
+                
+                this.totalShots++;
+                this.playSound('hop');
+
+                // Check collision after hop completes
+                setTimeout(() => this.checkCollision(), 200);
+            }
+
+            checkCollision() {
+                let hitNet = null;
+                
+                for (let i = 0; i < this.nets.length; i++) {
+                    const net = this.nets[i];
+                    const netTop = net.y - this.netHeight / 2;
+                    const netBottom = net.y + this.netHeight / 2;
+                    
+                    if (this.ball.y >= netTop && this.ball.y <= netBottom) {
+                        hitNet = net;
+                        break;
+                    }
+                }
+
+                if (hitNet) {
+                    const distance = Math.abs(this.ball.x - hitNet.holeX);
+                    const maxDistance = this.holeRadius - this.ball.radius;
+                    
+                    if (distance <= maxDistance) {
+                        // Success!
+                        hitNet.cleared = true;
+                        this.combo++;
+                        this.netsCleared++;
+                        
+                        if (this.combo > this.bestCombo) {
+                            this.bestCombo = this.combo;
+                        }
+
+                        let points = 100 * this.combo;
+                        let quality = 'good';
+                        
+                        if (distance < maxDistance * 0.3) {
+                            points *= 2;
+                            quality = 'perfect';
+                            this.perfectShots++;
+                            this.playSound('perfect');
+                        } else if (distance < maxDistance * 0.6) {
+                            points *= 1.5;
+                            quality = 'great';
+                        }
+
+                        this.score += points;
+                        this.showFeedback(quality.toUpperCase(), this.ball.x, this.ball.y - 30);
+                        this.createParticles(this.ball.x, this.ball.y, quality);
+                        
+                        this.updateUI();
+                        this.increaseDifficulty();
+                    } else {
+                        // Miss!
+                        this.endGame();
+                        return;
+                    }
+                }
+
+                // Move nets down and generate new ones
+                this.shiftNets();
+            }
+
+            shiftNets() {
+                // Remove bottom cleared nets
+                while (this.nets.length > 0 && this.nets[0].y > this.canvas.height + this.netHeight) {
+                    this.nets.shift();
+                }
+
+                // Add new net at top
+                const topY = this.nets[this.nets.length - 1].y - this.netSpacing;
+                const newNet = {
+                    y: topY,
+                    holeX: this.canvas.width / 2 + (Math.random() - 0.5) * (80 + this.difficulty * 20),
+                    holeMoving: this.difficulty >= 3,
+                    cleared: false
+                };
+                this.nets.push(newNet);
+
+                // Shift all nets down
+                for (let net of this.nets) {
+                    net.y += this.netSpacing;
+                }
+
+                // Reset ball position
+                this.ball.y = this.canvas.height - 80;
+                this.ball.targetY = this.canvas.height - 80;
+                this.ball.hopping = false;
+            }
+
+            increaseDifficulty() {
+                // Increase difficulty every 5 nets
+                if (this.netsCleared % 5 === 0) {
+                    this.difficulty = Math.min(10, this.difficulty + 1);
+                    this.holeRadius = Math.max(20, this.baseHoleRadius - this.difficulty * 1.5);
+                    this.moveSpeed = Math.min(3, (this.difficulty - 2) * 0.5);
+                }
+            }
+
+            showFeedback(text, x, y) {
+                const feedback = document.createElement('div');
+                feedback.className = 'feedback-text';
+                feedback.textContent = text;
+                feedback.style.left = x + 'px';
+                feedback.style.top = y + 'px';
+                
+                if (text === 'PERFECT') feedback.classList.add('perfect');
+                else if (text === 'GREAT') feedback.classList.add('great');
+                else if (text === 'GOOD') feedback.classList.add('good');
+                else feedback.classList.add('miss');
+                
+                document.querySelector('.game-container').appendChild(feedback);
+                
+                setTimeout(() => feedback.remove(), 1000);
+            }
+
+            createParticles(x, y, quality) {
+                const colors = quality === 'perfect' ? ['#00ff00', '#7ec8e3', '#ffffff'] : 
+                              quality === 'great' ? ['#7ec8e3', '#00ffff'] : ['#ffff00', '#ffa500'];
+                
+                for (let i = 0; i < 15; i++) {
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 10,
+                        vy: (Math.random() - 0.5) * 10,
+                        life: 1,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        size: Math.random() * 6 + 2
+                    });
+                }
+            }
+
+            updateUI() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('comboText').textContent = 'x' + this.combo;
+                
+                const comboPercent = Math.min(100, (this.combo / 10) * 100);
+                document.getElementById('comboFill').style.width = comboPercent + '%';
+            }
+
+            endGame() {
+                this.gameRunning = false;
+                this.gameOver = true;
+                this.combo = 0;
+                this.playSound('miss');
+                this.showFeedback('MISS', this.ball.x, this.ball.y - 30);
+
+                setTimeout(() => {
+                    this.saveHighScore();
+                    this.showGameOver();
+                }, 500);
+            }
+
+            saveHighScore() {
+                const currentHigh = localStorage.getItem('soccerHopHighScore') || 0;
+                if (this.score > currentHigh) {
+                    localStorage.setItem('soccerHopHighScore', this.score);
+                    this.highScore = this.score;
+                }
+            }
+
+            loadHighScore() {
+                this.highScore = localStorage.getItem('soccerHopHighScore') || 0;
+                document.getElementById('highScore').textContent = this.highScore;
+            }
+
+            showGameOver() {
+                const accuracy = this.totalShots > 0 ? Math.round((this.perfectShots / this.totalShots) * 100) : 0;
+                
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('netsCleared').textContent = this.netsCleared;
+                document.getElementById('bestCombo').textContent = this.bestCombo;
+                document.getElementById('perfectShots').textContent = this.perfectShots;
+                document.getElementById('accuracy').textContent = accuracy + '%';
+                
+                document.getElementById('gameOverModal').style.display = 'flex';
+            }
+
+            restart() {
+                document.getElementById('gameOverModal').style.display = 'none';
+                document.getElementById('startOverlay').style.display = 'flex';
+                this.initGame();
+                this.updateUI();
+            }
+
+            goHome() {
+                window.location.href = '../index.html';
+            }
+
+            update() {
+                // Update ball hop animation
+                if (this.ball.hopping) {
+                    this.ball.hopProgress += this.ball.hopSpeed;
+                    
+                    if (this.ball.hopProgress >= 1) {
+                        this.ball.hopping = false;
+                        this.ball.hopProgress = 1;
+                    }
+
+                    // Parabolic arc
+                    const t = this.ball.hopProgress;
+                    const arcHeight = 50;
+                    const arcY = 4 * arcHeight * t * (1 - t);
+                    
+                    this.ball.y = this.ball.startY + (this.ball.targetY - this.ball.startY) * t - arcY;
+                }
+
+                // Update moving holes
+                this.holeOscillation += 0.05;
+                for (let net of this.nets) {
+                    if (net.holeMoving && this.moveSpeed > 0) {
+                        net.holeX += Math.sin(this.holeOscillation) * this.moveSpeed;
+                        net.holeX = Math.max(this.holeRadius + 20, Math.min(this.canvas.width - this.holeRadius - 20, net.holeX));
+                    }
+                }
+
+                // Update particles
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.3;
+                    p.life -= 0.02;
+                    
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+            }
+
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw field lines
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                this.ctx.lineWidth = 2;
+                for (let i = 0; i < this.canvas.width; i += 50) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(i, 0);
+                    this.ctx.lineTo(i, this.canvas.height);
+                    this.ctx.stroke();
+                }
+
+                // Draw nets
+                for (let net of this.nets) {
+                    this.drawNet(net);
+                }
+
+                // Draw particles
+                for (let p of this.particles) {
+                    this.ctx.globalAlpha = p.life;
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                this.ctx.globalAlpha = 1;
+
+                // Draw ball
+                this.drawBall();
+            }
+
+            drawNet(net) {
+                const netWidth = this.canvas.width - 40;
+                const netLeft = 20;
+                const netRight = this.canvas.width - 20;
+                const netTop = net.y - this.netHeight / 2;
+                const netBottom = net.y + this.netHeight / 2;
+
+                // Net posts
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.fillRect(netLeft - 8, netTop, 8, this.netHeight);
+                this.ctx.fillRect(netRight, netTop, 8, this.netHeight);
+
+                // Crossbar
+                this.ctx.fillRect(netLeft, netTop - 8, netWidth, 8);
+
+                // Net pattern
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                this.ctx.lineWidth = 1;
+                
+                for (let x = netLeft; x <= netRight; x += 15) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, netTop);
+                    this.ctx.lineTo(x, netBottom);
+                    this.ctx.stroke();
+                }
+                
+                for (let y = netTop; y <= netBottom; y += 15) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(netLeft, y);
+                    this.ctx.lineTo(netRight, y);
+                    this.ctx.stroke();
+                }
+
+                // Hole (cut out)
+                this.ctx.save();
+                this.ctx.globalCompositeOperation = 'destination-out';
+                this.ctx.beginPath();
+                this.ctx.arc(net.holeX, net.y, this.holeRadius, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.restore();
+
+                // Hole glow
+                const gradient = this.ctx.createRadialGradient(net.holeX, net.y, 0, net.holeX, net.y, this.holeRadius);
+                gradient.addColorStop(0, 'rgba(0, 255, 0, 0.3)');
+                gradient.addColorStop(1, 'rgba(0, 255, 0, 0)');
+                this.ctx.fillStyle = gradient;
+                this.ctx.beginPath();
+                this.ctx.arc(net.holeX, net.y, this.holeRadius, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+
+            drawBall() {
+                const x = this.ball.x;
+                const y = this.ball.y;
+                const r = this.ball.radius;
+
+                // Ball shadow
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                this.ctx.beginPath();
+                this.ctx.ellipse(x, y + r + 10, r * 0.8, r * 0.3, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Ball base
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, r, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Ball pattern (pentagons)
+                this.ctx.fillStyle = '#000000';
+                const pentagonSize = r * 0.4;
+                
+                // Center pentagon
+                this.drawPentagon(x, y, pentagonSize);
+                
+                // Surrounding pentagons
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * 72 - 90) * Math.PI / 180;
+                    const px = x + Math.cos(angle) * r * 0.7;
+                    const py = y + Math.sin(angle) * r * 0.7;
+                    this.drawPentagon(px, py, pentagonSize * 0.6);
+                }
+
+                // Ball highlight
+                const highlightGradient = this.ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+                highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+                highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
+                highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                this.ctx.fillStyle = highlightGradient;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, r, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+
+            drawPentagon(cx, cy, size) {
+                this.ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * 72 - 90) * Math.PI / 180;
+                    const x = cx + Math.cos(angle) * size;
+                    const y = cy + Math.sin(angle) * size;
+                    if (i === 0) {
+                        this.ctx.moveTo(x, y);
+                    } else {
+                        this.ctx.lineTo(x, y);
+                    }
+                }
+                this.ctx.closePath();
+                this.ctx.fill();
+            }
+
+            gameLoop() {
+                this.update();
+                this.draw();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        }
+
+        // Initialize game
+        const game = new SoccerHopGame();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            game.setupCanvas();
+            game.generateNets();
+        });
+    </script>
+</body>
+</html>
