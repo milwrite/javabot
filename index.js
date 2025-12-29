@@ -1890,6 +1890,22 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             }
         ];
 
+        // Helper to parse stringified arrays from LLM output
+        // LLMs sometimes output arrays as string literals like '["a", "b"]' instead of actual arrays
+        const parsePathArg = (pathArg) => {
+            if (!pathArg) return pathArg;
+            if (Array.isArray(pathArg)) return pathArg;
+            if (typeof pathArg === 'string' && pathArg.startsWith('[') && pathArg.endsWith(']')) {
+                try {
+                    const parsed = JSON.parse(pathArg);
+                    if (Array.isArray(parsed)) return parsed;
+                } catch (e) {
+                    // Not valid JSON, return as-is
+                }
+            }
+            return pathArg;
+        };
+
         // Agentic loop - allow multiple rounds of tool calling
         const MAX_ITERATIONS = 6; // Reasonable limit to prevent infinite loops
         const MAX_READONLY_ITERATIONS = 3; // Cap read-only tool loops to prevent over-searching
@@ -1897,6 +1913,8 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         let readOnlyIterations = 0; // Track consecutive read-only iterations
         let lastResponse;
         const editedFiles = new Set(); // Track files already edited to prevent redundant edits
+        const loopStartTime = Date.now(); // Track duration for logging
+        const allToolsUsed = []; // Track all tools used across iterations for logging
         const fileReadCache = new Map(); // Cache file contents to avoid redundant reads within conversation
         const searchResults = []; // Track web search results for context persistence
         let completedActions = 0; // Count primary actions (edits, creates, commits)
@@ -2048,11 +2066,11 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 let result;
                 const toolStartTime = Date.now();
                 if (functionName === 'list_files') {
-                    result = await listFilesService(args.path || './src');
+                    result = await listFilesService(parsePathArg(args.path) || './src');
                 } else if (functionName === 'file_exists') {
-                    result = await fileExistsService(args.path);
+                    result = await fileExistsService(parsePathArg(args.path));
                 } else if (functionName === 'search_files') {
-                    result = await searchFilesService(args.pattern, args.path || './src', {
+                    result = await searchFilesService(args.pattern, parsePathArg(args.path) || './src', {
                         caseInsensitive: args.case_insensitive || false,
                         filePattern: args.file_pattern || null
                     });
@@ -2190,10 +2208,13 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             messages.push(...toolResults);
             
             // Update agent loop with tools used and thinking (for GUI dashboard)
-            if (guiServer && lastResponse.tool_calls) {
+            if (lastResponse.tool_calls) {
                 const toolsUsed = lastResponse.tool_calls.map(tc => tc.function.name);
-                const thinkingForGUI = formatThinkingForGUI(reasoning);
-                updateAgentLoop(iteration, toolsUsed, thinkingForGUI);
+                allToolsUsed.push(...toolsUsed); // Track for PostgreSQL logging
+                if (guiServer) {
+                    const thinkingForGUI = formatThinkingForGUI(reasoning);
+                    updateAgentLoop(iteration, toolsUsed, thinkingForGUI);
+                }
             }
 
             // Track read-only iterations to prevent over-searching on info requests
@@ -2274,8 +2295,14 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         }
 
         // End agent loop tracking with success
-        endAgentLoop(content, null);
-        
+        endAgentLoop(content, null, {
+            command: userMessage.substring(0, 100),
+            toolsUsed: allToolsUsed,
+            durationMs: Date.now() - loopStartTime,
+            userId: discordContext.userId,
+            channelId: discordContext.channelId
+        });
+
         // Return response with search context for history persistence
         return {
             text: content,
@@ -2289,10 +2316,16 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             context: discordContext
         });
         errorLogger.track(errorEntry);
-        
+
         // End agent loop tracking with error
-        endAgentLoop(null, error.message);
-        
+        endAgentLoop(null, error.message, {
+            command: userMessage.substring(0, 100),
+            toolsUsed: allToolsUsed,
+            durationMs: Date.now() - loopStartTime,
+            userId: discordContext.userId,
+            channelId: discordContext.channelId
+        });
+
         // Provide specific error messages based on error type
         let errorMessage = getBotResponse('errors');
         if (error.message?.includes('timeout')) {
