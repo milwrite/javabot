@@ -126,27 +126,23 @@ function runAutomatedChecks(html, plan) {
         });
     }
 
-    // Mobile-specific checks for games ONLY
+    // Pattern-specific validation (CRITICAL for correct controls)
     const contentType = plan.contentType || plan.type;
+    const pattern = plan.interactionPattern || 'direct-touch';
     const isGame = contentType === 'arcade-game';
 
-    if (isGame) {
-        if (!html.includes('mobile-controls') && !html.includes('touch')) {
+    // Validate controls match interaction pattern
+    if (pattern === 'directional-movement') {
+        // MUST have D-pad controls
+        if (!html.includes('mobile-controls')) {
             issues.push({
-                code: 'NO_MOBILE_CONTROLS',
-                message: 'Game missing mobile controls - Discord users are mobile-first',
+                code: 'MISSING_DPAD',
+                message: 'Directional-movement pattern requires D-pad .mobile-controls',
                 severity: 'critical'
             });
         }
 
-        if (!html.includes('touch-action')) {
-            warnings.push({
-                code: 'MISSING_TOUCH_ACTION',
-                message: 'Missing touch-action CSS to prevent zoom',
-                severity: 'warning'
-            });
-        }
-
+        // Should have responsive breakpoints
         if (!html.includes('@media') || !html.includes('max-width')) {
             issues.push({
                 code: 'NO_RESPONSIVE',
@@ -154,16 +150,98 @@ function runAutomatedChecks(html, plan) {
                 severity: 'critical'
             });
         }
+    }
 
-        if (!html.includes('touchstart')) {
+    if (pattern === 'direct-touch') {
+        // MUST NOT have D-pad (use direct touch instead)
+        if (html.includes('mobile-controls')) {
+            issues.push({
+                code: 'UNWANTED_DPAD',
+                message: 'Direct-touch pattern should NOT have D-pad (use canvas touch instead)',
+                severity: 'critical'
+            });
+        }
+
+        // MUST have touch/click handlers
+        if (!html.includes('touchstart') && !html.includes('addEventListener(\'click\'') && !html.includes('addEventListener("click"')) {
+            issues.push({
+                code: 'MISSING_TOUCH_HANDLERS',
+                message: 'Direct-touch games must have touch/click event listeners',
+                severity: 'critical'
+            });
+        }
+
+        // Should have responsive breakpoints if it's a game
+        if (isGame && (!html.includes('@media') || !html.includes('max-width'))) {
             warnings.push({
-                code: 'NO_TOUCH_EVENTS',
-                message: 'No touchstart event handlers found',
+                code: 'NO_RESPONSIVE',
+                message: 'No responsive breakpoints - mobile users may have poor experience',
+                severity: 'warning'
+            });
+        }
+    }
+
+    if (pattern === 'hybrid-controls') {
+        // MUST have both D-pad and action elements
+        if (!html.includes('mobile-controls')) {
+            issues.push({
+                code: 'MISSING_DPAD_IN_HYBRID',
+                message: 'Hybrid-controls pattern requires D-pad .mobile-controls',
+                severity: 'critical'
+            });
+        }
+
+        if (!html.includes('actionBtn') && !html.includes('touch') && !html.includes('ACTION')) {
+            warnings.push({
+                code: 'MISSING_TOUCH_ZONE_IN_HYBRID',
+                message: 'Hybrid pattern should include action buttons or touch zones',
                 severity: 'warning'
             });
         }
 
-        // Check canvas sizing (games only)
+        // Should have responsive breakpoints
+        if (!html.includes('@media') || !html.includes('max-width')) {
+            issues.push({
+                code: 'NO_RESPONSIVE',
+                message: 'No responsive breakpoints - mobile users will have poor experience',
+                severity: 'critical'
+            });
+        }
+    }
+
+    if (pattern === 'passive-scroll') {
+        // MUST NOT have game controls
+        if (html.includes('mobile-controls') || html.includes('game-wrapper')) {
+            issues.push({
+                code: 'UNWANTED_GAME_CONTROLS',
+                message: 'Passive content should not have game controls',
+                severity: 'critical'
+            });
+        }
+    }
+
+    if (pattern === 'form-based') {
+        // MUST NOT have D-pad
+        if (html.includes('mobile-controls')) {
+            issues.push({
+                code: 'UNWANTED_DPAD_IN_UTILITY',
+                message: 'Form-based utilities should not have D-pad controls',
+                severity: 'critical'
+            });
+        }
+
+        // Should have form elements
+        if (!html.includes('<input') && !html.includes('<select') && !html.includes('<textarea')) {
+            warnings.push({
+                code: 'MISSING_FORM_ELEMENTS',
+                message: 'Form-based pattern should include form inputs',
+                severity: 'warning'
+            });
+        }
+    }
+
+    // Canvas sizing check (for all games with canvas)
+    if (html.includes('<canvas')) {
         const canvasMatch = html.match(/<canvas[^>]*width="(\d+)"/);
         if (canvasMatch) {
             const width = parseInt(canvasMatch[1]);
@@ -177,7 +255,7 @@ function runAutomatedChecks(html, plan) {
         }
 
         // Check if canvas has responsive sizing in CSS
-        if (html.includes('<canvas') && !html.includes('canvas { max-width: 95vw')) {
+        if (!html.includes('canvas { max-width: 95vw')) {
             warnings.push({
                 code: 'CANVAS_NOT_RESPONSIVE',
                 message: 'Canvas should have responsive sizing in @media query (e.g., canvas { max-width: 95vw; height: auto; })',

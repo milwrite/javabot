@@ -81,25 +81,47 @@ MODALS: .modal, .modal-content, .modal-header, .close-btn, .notification, .game-
 
 GAMES: .game-wrapper, .game-container, .sudoku-grid, .cell, .number-pad, .mobile-controls, canvas
 
-MOBILE CONTROLS - USE ONLY WHEN NEEDED:
+MOBILE CONTROLS - PATTERN-BASED SELECTION:
 
-D-PAD ARROWS REQUIRED (directional movement games):
-- Snake, Frogger, maze games, Tetris, platformers, beat-em-ups, space shooters
-- Any game where player moves a character/object around the screen
-- Position D-pad DIRECTLY below canvas
-- Display: none on desktop, display: grid on mobile (@media max-width: 768px)
-- Size: min-height 50px, min-width 50px, font-size 20px for arrows
-- JS: Use touchstart with preventDefault + {passive: false}, click as fallback
+INTERACTION PATTERNS determine which controls to include:
 
-D-PAD ARROWS NOT NEEDED (direct touch games):
-- Memory match games → tap cards directly on canvas/grid
-- Simon/pattern games → tap colored regions directly on canvas
-- Tic-tac-toe, crosswords → tap cells directly
-- Clicker games, whack-a-mole → tap targets directly
-- Card games, puzzles with clickable pieces → tap pieces directly
-- For these games: add touch handlers directly to game elements, NOT a D-pad
+1. DIRECTIONAL-MOVEMENT (snake, maze, platformer, frogger, space shooter):
+   - Include D-pad .mobile-controls below canvas
+   - Touch events on arrow buttons (touchstart + click fallback)
+   - Display: none on desktop, display: grid on mobile (@media max-width: 768px)
+   - Size: min-height 50px, min-width 50px, font-size 20px
+   - JS: handleDirection(dir) function for up/down/left/right
 
-ACTION BUTTONS (reset, hint, pause) are fine for any game type.
+2. DIRECT-TOUCH (memory match, clicker, simon, tic-tac-toe, typing games):
+   - NO D-pad controls
+   - Touch/click listeners directly on canvas or game elements
+   - For typing games: keyboard event listeners (addEventListener('keydown'))
+   - Mobile: touchstart with preventDefault
+   - Desktop: click events as fallback
+
+3. HYBRID-CONTROLS (tower defense, angry birds, strategy):
+   - Include BOTH D-pad AND action buttons
+   - D-pad for movement, buttons for shooting/placing/actions
+   - Example: D-pad + "SHOOT" or "PLACE TOWER" button
+
+4. FORM-BASED (calculators, planners, utilities):
+   - Use standard form elements: <input>, <select>, <button>
+   - localStorage for state persistence
+   - NO D-pad controls
+
+5. PASSIVE-SCROLL (letters, stories, recipes):
+   - NO game controls at all
+   - Focus on typography and readability
+   - Optional: scroll reveals or typewriter effects
+
+CHOOSING THE RIGHT PATTERN:
+- Grid-based movement → directional-movement
+- Tapping targets or keyboard input → direct-touch
+- Movement + shooting/placing → hybrid-controls
+- Forms and calculations → form-based
+- Reading content → passive-scroll
+
+ACTION BUTTONS (reset, hint, pause) are fine for any pattern except passive-scroll.
 
 RESPONSIVE BREAKPOINTS (MANDATORY):
 @media (max-width: 768px) - Tablet/mobile landscape

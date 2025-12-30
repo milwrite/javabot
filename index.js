@@ -974,16 +974,29 @@ function validateHTMLContent(htmlContent, context = {}) {
         warnings.push('No home link found');
     }
 
-    // Mobile-specific checks for games
-    if (context.isGame) {
-        if (!htmlContent.includes('mobile-controls') && !htmlContent.includes('touch')) {
-            issues.push('Game missing mobile controls - required for Discord mobile users');
-        }
+    // Pattern-specific validation
+    const pattern = context.interactionPattern || context.pattern || 'direct-touch';
 
-        if (!htmlContent.includes('touch-action')) {
-            warnings.push('Missing touch-action CSS to prevent zoom on button tap');
+    if (pattern === 'directional-movement' || pattern === 'hybrid-controls') {
+        if (!htmlContent.includes('mobile-controls')) {
+            issues.push(`Pattern "${pattern}" requires D-pad .mobile-controls`);
         }
+    }
 
+    if (pattern === 'direct-touch') {
+        if (htmlContent.includes('mobile-controls')) {
+            issues.push('Direct-touch pattern should NOT have D-pad (use canvas touch instead)');
+        }
+    }
+
+    if (pattern === 'passive-scroll') {
+        if (htmlContent.includes('mobile-controls') || htmlContent.includes('game-wrapper')) {
+            issues.push('Passive content should not have game controls');
+        }
+    }
+
+    // Responsive design check for interactive patterns
+    if (['directional-movement', 'direct-touch', 'hybrid-controls'].includes(pattern)) {
         if (!htmlContent.includes('@media') && !htmlContent.includes('max-width')) {
             issues.push('No responsive breakpoints found - mobile users will have poor experience');
         }
@@ -1062,13 +1075,33 @@ function calculateQualityScore(htmlContent, issues, warnings, context) {
     if (htmlContent.includes('page-theme.css')) score += 5;
     if (htmlContent.includes('index.html')) score += 3;
 
-    // Game-specific bonuses (touch OR mobile-controls, not both required)
-    if (context.isGame) {
-        // Award points for having EITHER touch handlers OR mobile controls
-        const hasTouchHandlers = htmlContent.includes('touchstart') || htmlContent.includes('touchend');
-        const hasMobileControls = htmlContent.includes('mobile-controls');
-        if (hasTouchHandlers || hasMobileControls) score += 10;
-        if (htmlContent.includes('touch-action')) score += 5;
+    // Pattern-appropriate control bonuses
+    const pattern = context.interactionPattern || context.pattern || 'direct-touch';
+
+    // Award points for correct pattern-control alignment
+    if (pattern === 'directional-movement' && htmlContent.includes('mobile-controls')) {
+        score += 10; // Correct D-pad usage
+    }
+
+    if (pattern === 'direct-touch' && !htmlContent.includes('mobile-controls')) {
+        score += 10; // Correctly omitted D-pad
+    }
+
+    if (pattern === 'hybrid-controls' && htmlContent.includes('mobile-controls') && htmlContent.includes('action')) {
+        score += 10; // Correct hybrid controls
+    }
+
+    if (pattern === 'passive-scroll' && !htmlContent.includes('mobile-controls')) {
+        score += 5; // Correctly no controls
+    }
+
+    // Penalty for pattern mismatch
+    if (pattern === 'direct-touch' && htmlContent.includes('mobile-controls')) {
+        score -= 15; // Wrong controls for pattern
+    }
+
+    if ((pattern === 'directional-movement' || pattern === 'hybrid-controls') && !htmlContent.includes('mobile-controls')) {
+        score -= 15; // Missing required D-pad
     }
 
     return Math.max(0, Math.min(100, score));

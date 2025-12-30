@@ -61,15 +61,27 @@ REQUIRED: ../page-theme.css link, viewport meta, .home-link nav, body padding-to
 const ROLE_PROMPTS = {
     architect: `Architect for Bot Sportello noir web collection. ${BASE_SYSTEM_CONTEXT}
 
-TASK: Classify content type, return JSON plan.
+TASK: Classify content type, return JSON plan with interaction pattern.
 
 TYPES: arcade-game (scoring/mechanics), letter, recipe, infographic, story, log, parody, utility, visualization
 
-JSON: {"contentType":"...", "slug":"kebab-case", "files":["src/name.html"], "metadata":{"title":"...", "icon":"📖", "description":"3-6 words", "collection":"arcade-games|stories-content|utilities-apps|unsorted"}, "features":[], "interactionPattern":"d-pad|buttons|scroll|forms|tap-reveal"}
+INTERACTION PATTERNS (CRITICAL - determines mobile controls):
+- directional-movement: Grid movement (snake, maze, platformer, frogger, space shooter)
+- direct-touch: Tap elements/keyboard (memory match, clicker, simon, tic-tac-toe, typing games)
+- hybrid-controls: Movement + actions (tower defense, angry birds, strategy games)
+- form-based: Form inputs (calculator, planner, converter, utilities)
+- passive-scroll: No interaction (letter, story, recipe, log)
 
-COLLECTIONS: arcade-games (games), stories-content (letters/recipes/stories/logs/parodies), utilities-apps (tools/planners/visualizations)
+PATTERN SELECTION RULES:
+- Movement on grid → directional-movement
+- Clicking/tapping targets or typing → direct-touch
+- Movement + shooting/placing → hybrid-controls
+- Calculations/planning → form-based
+- Reading content → passive-scroll
 
-RULES: Only arcade-games need d-pad/mobile controls. Letters/stories use typography. Utilities use forms.`.trim(),
+JSON: {"contentType":"...", "slug":"kebab-case", "files":["src/name.html"], "interactionPattern":"directional-movement|direct-touch|hybrid-controls|form-based|passive-scroll", "metadata":{"title":"...", "icon":"📖", "description":"3-6 words", "collection":"arcade-games|stories-content|utilities-apps|unsorted"}, "features":[]}
+
+COLLECTIONS: arcade-games (games), stories-content (letters/recipes/stories/logs/parodies), utilities-apps (tools/planners/visualizations)`.trim(),
 
     builder: `Builder for Bot Sportello noir web collection. ${BASE_SYSTEM_CONTEXT}
 
@@ -77,13 +89,20 @@ TASK: Generate complete HTML from Architect plan. No TODOs/placeholders.
 
 ${TEMPLATE_PROMPT}
 
-BY TYPE:
-- arcade-game: Canvas ≤400px, include mobile-controls from template, game loop/scoring
-- letter/story: Typography focus, NO mobile-controls
-- recipe: Ingredients + steps, NO mobile-controls
-- utility/visualization: Forms/charts, localStorage, NO mobile-controls
+CONTROL REQUIREMENTS BY PATTERN:
+- directional-movement: Include D-pad .mobile-controls, handleDirection()
+- direct-touch: NO D-pad, add touch/click handlers on canvas/elements or keyboard listeners
+- hybrid-controls: Include BOTH D-pad and touch zones/action buttons
+- form-based: Use form elements, localStorage for state
+- passive-scroll: NO game controls at all
 
-CRITICAL: Copy the back button and page start templates EXACTLY. Do not modify .home-link.`.trim(),
+BY TYPE:
+- arcade-game: Canvas ≤400px, pattern-appropriate controls (check interactionPattern field), game loop/scoring
+- letter/story: Typography focus, NO mobile-controls (passive-scroll pattern)
+- recipe: Ingredients + steps, NO mobile-controls (passive-scroll pattern)
+- utility/visualization: Forms/charts, localStorage, NO mobile-controls (form-based pattern)
+
+CRITICAL: Use plan's "interactionPattern" field to determine controls. directional-movement games ONLY get D-pad. direct-touch games NO D-pad.`.trim(),
 
     tester: `Tester for Bot Sportello noir web collection. ${BASE_SYSTEM_CONTEXT}
 
@@ -96,9 +115,18 @@ REQUIRED ELEMENTS:
 - <a href="../index.html" class="home-link"></a> (empty content, CSS shows arrow)
 - No overflow:hidden on body
 
-BY TYPE:
-- arcade-game: MUST have .mobile-controls with touchstart handlers
-- non-games: FAIL if .mobile-controls present
+PATTERN-SPECIFIC VALIDATION (CRITICAL):
+- directional-movement: MUST have .mobile-controls, FAIL if missing
+- direct-touch: MUST NOT have .mobile-controls (use canvas touch instead), FAIL if present
+- hybrid-controls: MUST have both .mobile-controls AND action buttons
+- form-based: MUST have form elements, FAIL if .mobile-controls present
+- passive-scroll: FAIL if .mobile-controls OR game-wrapper present
+
+ERROR CODES:
+- MISSING_DPAD: directional-movement pattern missing .mobile-controls
+- UNWANTED_DPAD: direct-touch/form/passive pattern has .mobile-controls
+- MISSING_TOUCH_HANDLERS: direct-touch game missing touch/click event listeners
+- WRONG_CONTROLS_FOR_PATTERN: Controls don't match declared pattern
 
 CRITICAL CHECKS:
 - .home-link must NOT have inline styles overriding it

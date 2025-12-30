@@ -38,9 +38,18 @@ function cleanMarkdownCodeBlocks(content, type = 'html') {
 async function buildGame({ plan, attempt, lastIssues = [], buildId, onStatusUpdate = null }) {
     console.log(`🔨 Builder working (attempt ${attempt}/3)...`);
 
-    // Prepare prompt based on content type
+    // Prepare prompt based on content type and interaction pattern
     const contentType = plan.contentType || plan.type; // Support both field names for compatibility
-    const isGame = contentType === 'arcade-game';
+    const pattern = plan.interactionPattern || 'direct-touch'; // Default to direct-touch if missing
+
+    // Get pattern-specific control requirements
+    const controlRequirements = {
+        'directional-movement': 'MUST include D-pad .mobile-controls with handleDirection() function',
+        'direct-touch': 'NO D-pad - use direct touch/click handlers on canvas/elements OR keyboard listeners',
+        'hybrid-controls': 'MUST include BOTH D-pad .mobile-controls AND action buttons',
+        'form-based': 'Use form elements (<input>, <select>, <button>) with localStorage',
+        'passive-scroll': 'NO game controls at all - scroll-based content only'
+    };
 
     let prompt = `Build ${contentType === 'arcade-game' ? 'an' : 'a'} ${contentType}: ${plan.metadata.title}
 
@@ -49,16 +58,19 @@ Plan details:
 - Slug: ${plan.slug}
 - Files to generate: ${plan.files.join(', ')}
 - Key features: ${(plan.features || plan.mechanics || []).join(', ')}
-- Interaction pattern: ${plan.interactionPattern || plan.mobileControls || 'none'}
+- Interaction pattern: ${pattern}
 - Collection: ${plan.metadata.collection}
+
+CRITICAL CONTROL REQUIREMENTS FOR PATTERN "${pattern}":
+${controlRequirements[pattern] || controlRequirements['direct-touch']}
 
 Requirements:
 1. Generate COMPLETE, working code appropriate for ${contentType}
 2. Include all required mobile-first elements (viewport, responsive breakpoints)
 3. Use noir terminal theme consistently
-4. ${isGame ? 'MUST include mobile controls (D-pad or buttons) with touch events' : 'NO game controls (this is not an arcade game)'}
+4. Follow the EXACT control requirements for interaction pattern "${pattern}" above
 5. NO placeholders or TODO comments
-6. Follow content-type-specific patterns from the Builder prompt
+6. Check Builder prompt's TEMPLATE_PROMPT section for pattern-specific examples
 
 Generate the HTML file content now.`;
 
