@@ -36,50 +36,158 @@ When showing users multiple files, construct the FULL URL for EACH file individu
   - https://bot.inference-arcade.com/src/maze-game.html
 NEVER output generic placeholders like "FILENAME.html" or "{pagename}.html" - always substitute actual filenames.
 
-NOIR TERMINAL DESIGN SYSTEM:
+NOIR TERMINAL DESIGN SYSTEM (page-theme.css):
+
+CRITICAL - USE EXISTING STYLES:
+- page-theme.css provides a comprehensive design system with 3000+ lines of styled components
+- ALWAYS use the pre-defined CSS classes below - DO NOT create custom styles unless absolutely necessary
+- Link stylesheet: <link rel="stylesheet" href="../page-theme.css">
+- CSS variables are available via :root (--color-primary, --color-text, --font-family, --space-*, etc.)
+- Custom styles should only extend existing classes, never replace them
 
 MOBILE-FIRST DESIGN (Discord is mobile-forward):
 - ALWAYS design for mobile first - most users view on phones
-- Touch targets minimum 44px height/width for accessibility
-- Test on small screens (320px-480px width)
+- Touch targets minimum 44px height/width (var(--touch-target-min))
+- Responsive breakpoints: 768px (tablet), 480px (mobile), 360px (small mobile)
 - Avoid hover-only interactions - provide tap alternatives
-- Font sizes must be readable on mobile (min 14px body text)
+- Font sizes: use var(--font-size-base) to var(--font-size-3xl) for scalability
 
-Color Palette (Noir Terminal):
-- Primary green: #7ec8e3 (sky blue) - main accent
-- Accent red: #ff0000 - buttons, highlights, warnings
-- Accent cyan: #00ffff - secondary text, headings
-- Background: #0a0a0a (near-black)
-- Card backgrounds: rgba(26, 0, 0, 0.4)
-- Font: 'Courier Prime' monospace (terminal aesthetic)
-- CRT scanlines and flicker effects included
-- Starry sky background: add <script src="../stars.js"></script> to enable twinkling stars on any page
+Color Palette (use CSS variables when possible):
+- Primary text: var(--color-text) = #7ec8e3 (sky blue)
+- Primary accent: var(--color-primary) = #ff0000 (red)
+- Secondary accent: var(--color-secondary) = #00ffff (cyan)
+- Background: var(--color-bg) = #0a0a0a (near-black)
+- Card backgrounds: var(--color-bg-elevated) = rgba(26, 0, 0, 0.4)
+- Font: var(--font-family) = 'Courier Prime', monospace
+- CRT effects: scanlines and flicker built into body::before
+- Starry sky: add <script src="../stars.js"></script> for twinkling star background
 
-Available CSS Classes (page-theme.css):
+PAGE STRUCTURE (use these classes in this order):
+1. <body> with optional .story-page for text-heavy content
+2. .container (max-width: 1200px, centered) - main wrapper
+3. .content (max-width: 800px) OR .main-content (grid layout) - inner content
+4. .section, .card, or .panel - content blocks with noir styling
+5. Component-specific classes inside (buttons, forms, lists, etc.)
 
-LAYOUT: .container, .content, .main-content, .header, .footer, .sidebar, .section, .card, .panel
+Available CSS Classes (COMPREHENSIVE):
 
-STORY PAGES (for noir stories, narratives, text-heavy content):
-- Add class="story-page" to body tag: <body class="story-page">
-- Use .story-container for main content wrapper (max-width: 720px, centered)
-- Use .chapter for sections, .chapter-title for headings, .paragraph for text
-- This ensures proper centering on all viewport widths
+LAYOUT CONTAINERS:
+- .container - max-width 1200px, centered, z-index layering
+- .content - max-width 800px for readable content
+- .main-content - CSS grid for multi-column layouts
+- .story-page (body class) - centers story content on all viewports
+- .story-container - max-width 720px for story/narrative pages
+- .header - hero section with gradient background
+- .footer - bottom section with top border
+- .sidebar - sidebar layout with min-width 250px
+- .section - content section with fade-in animation
+- .card, .panel - content blocks with shimmer effect
 
-TYPOGRAPHY: h1, h2, h3, p, .subtitle, .message, .date-display (all styled for terminal look)
+STORY PAGE COMPONENTS (for narratives):
+- .chapter - story sections with bottom margin
+- .chapter-title - colored section headings
+- .paragraph - story paragraphs with proper spacing
 
-BUTTONS: .btn, .btn-primary (red bg), .btn-secondary, .btn-yes (green), .btn-no (red), .btn-reset (cyan), .filter-btn, .difficulty-btn, .control-btn, .mobile-btn, .number-btn
+TYPOGRAPHY (auto-styled):
+- h1, h2, h3 - headers with color, shadow, letterspace
+- p - paragraphs with max-width 70ch for readability
+- .subtitle, .message - secondary text styles
+- .date-display - time/date display styling
 
-FORMS: input, textarea, select, .input-group, .form-group, .slider-group, .slider-value
+BUTTONS (use appropriate variant):
+- .btn - base button style with red background
+- .btn-primary - explicit red background
+- .btn-secondary - transparent with border
+- .btn-yes - green/blue positive action
+- .btn-no - red negative action
+- .btn-reset - cyan reset/clear action
+- .btn-add - blue add action
+- .btn-print, .clear-all-btn - utility actions
+- .filter-btn - filter toggle with .active state
+- .difficulty-btn - game difficulty selector
+- .control-btn - game control buttons (60px touch targets)
+- .mobile-btn - mobile-specific actions (50px min-height)
+- .number-btn - number pad buttons (60x60px grid)
 
-LISTS: .todos-list, .task-list, .todo-item, .task-item, .task-content, .timeline-item
+FORMS & INPUTS:
+- input, textarea, select - auto-styled form controls
+- .input-group - horizontal input + button layout
+- .form-group - vertical label + input layout
+- .slider-group - slider with label and value display
+- .slider-header - slider label row
+- .slider-value - slider value badge
+- .priority-select - styled select dropdown
+- .add-task-form - form container with border
 
-STATS: .stats, .stats-grid, .stat-box, .stat-number, .stat-value, .stat-label, .progress-bar, .progress-fill
+INTERACTIVE LISTS:
+- .todos-list, .task-list - list containers
+- .todo-item, .task-item, .task - list items with hover effects
+- .task-content, .todo-text, .task-text - item text content
+- .task-title - bold item title
+- .task-description - item description text
+- .task-meta - metadata row (duration, badges)
+- .task-actions - action button row
+- .task-checkbox, .checkbox - checkboxes with accent color
+- .ingredients-list, .steps-list - recipe/instruction lists
+- .step-item - numbered step with .step-number and .step-content
 
-BADGES: .priority-badge, .priority-low/medium/high, .category-badge, .time-badge
+STATS & DATA:
+- .stats, .stats-grid - grid layout for stat boxes
+- .stat-box, .stat-card, .stat - individual stat containers
+- .stat-number, .stat-value - large stat numbers (2em, cyan glow)
+- .stat-label, .label - stat labels (uppercase, small)
+- .progress-bar - bar container with border
+- .progress-fill - animated fill with gradient
+- .timeline - vertical timeline container
+- .timeline-item - timeline entries with hover effects
+- .timeline-header - timeline section header
+- .hour-slot, .time-slot - schedule time blocks
+- .time-badge - time display badges
 
-MODALS: .modal, .modal-content, .modal-header, .close-btn, .notification, .game-over-modal
+CARDS & PANELS:
+- .card, .panel - content blocks with shimmer animation
+- .input-section - input form section
+- .todos-section - todos wrapper section
+- .filter-section - filter button row
+- .controls-card, .visualization-card - specialized cards
+- .memory-card - interactive memory/content cards
+- .summary-card - highlight summary with gradient bg
 
-GAMES: .game-wrapper, .game-container, .sudoku-grid, .cell, .number-pad, .mobile-controls, canvas
+BADGES & INDICATORS:
+- .priority-badge - priority indicator
+- .priority-low, .priority-medium, .priority-high - priority colors
+- .category-badge - category labels
+- .category-work, .category-personal, .category-health - category variants
+- .time-badge - time display badge
+
+MODALS & OVERLAYS:
+- .modal - full-screen modal overlay (display: none by default)
+- .modal.active - shows modal (display: flex)
+- .modal-content - modal inner box with border
+- .modal-header - modal header with close button
+- .close-btn - modal close button
+- .notification - fixed notification toast
+- .game-over-modal - game end modal variant
+- .empty-state - empty state message with icon
+
+INFO BOXES:
+- .tips-box - tips/help box
+- .success-message, .completion-message - success indicators (.show class reveals)
+- .insight-box - insight/info with left border
+- .warning-box - warning with red left border
+
+GAME COMPONENTS:
+- .game-wrapper - game container with flex column
+- .game-container - game layout wrapper
+- .difficulty-selector - difficulty button row
+- .controls - game control button row
+- .info-panel - game instructions panel
+- canvas - auto-styled with border and shadow
+- .sudoku-grid - 9x9 grid for sudoku
+- .cell - grid cells with hover/selected states
+- .cell.given - pre-filled puzzle cells
+- .cell.selected - selected cell state
+- .number-pad - 3x3 number input grid
 
 MOBILE CONTROLS - PATTERN-BASED SELECTION:
 
@@ -128,17 +236,32 @@ RESPONSIVE BREAKPOINTS (MANDATORY):
 @media (max-width: 480px) - Mobile portrait
 @media (max-width: 360px) - Small mobile
 
-WHEN CREATING PAGES:
-1. Link to ../page-theme.css (REQUIRED)
+WHEN CREATING PAGES (follow these patterns):
+
+**STYLE REFERENCE EXAMPLES:**
+- STORY PAGES: See src/peanut-city.html for proper story layout pattern
+  * Uses <body> + .story-container + .chapter + .paragraph structure
+  * Links to page-theme.css, then adds MINIMAL inline styles only for story-specific elements
+  * Follows mobile-first responsive design with proper typography
+
+- GAME PAGES: See src/double_dragon_beatem_up.html for proper game layout pattern
+  * Uses .game-wrapper container with .stats-bar, canvas, and .mobile-controls
+  * Links to page-theme.css, relies on existing classes (h1, .subtitle, .stat, .stat-value)
+  * Only adds inline styles for game-specific components (health bars, canvas styles)
+  * Proper touch target sizing and mobile breakpoints
+
+**PAGE CREATION CHECKLIST:**
+1. Link to ../page-theme.css (REQUIRED - FIRST stylesheet)
 2. Add viewport meta tag: <meta name="viewport" content="width=device-width, initial-scale=1.0">
 3. Back button: <a href="../index.html" class="home-link"></a> (COPY EXACTLY - empty content, CSS shows arrow)
 4. Place back button as first child of body, before any other content
 5. Do NOT wrap .home-link in other elements or add inline styles to it
 6. Body: no overflow:hidden (breaks scrolling)
-7. For MOVEMENT GAMES ONLY: Include D-pad arrows (snake, maze, platformer, etc.)
-8. For TOUCH GAMES: Use direct tap on game elements (memory, simon, tic-tac-toe) - NO D-pad
-9. Canvas games: max-width 100%, height auto
-10. Keep noir terminal colors (#7ec8e3, #ff0000, #00ffff, #0a0a0a)
+7. Use page-theme.css classes FIRST - only add custom styles when absolutely necessary
+8. For MOVEMENT GAMES ONLY: Include D-pad .mobile-controls (snake, maze, platformer, etc.)
+9. For TOUCH GAMES: Use direct tap on game elements (memory, simon, tic-tac-toe) - NO D-pad
+10. Canvas games: max-width 100%, height auto
+11. Keep noir terminal colors via CSS variables (var(--color-primary), var(--color-text), etc.)
 
 PROJECT METADATA SYSTEM:
 - projectmetadata.json has { collections: {}, projects: {} }
