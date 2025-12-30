@@ -178,6 +178,8 @@ AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
 - read_file(path|[paths]): Read single file or multiple files (respects file size limits)
 - write_file(path, content): Create/update files completely
 - edit_file(path, instructions): Edit files with natural language instructions
+- delete_file(path): Delete a file from repository (removes locally and pushes deletion to GitHub)
+- move_file(old_path, new_path): Move or rename a file (copies to new location, deletes original, pushes both changes)
 - commit_changes(message, files): Git add, commit, push to main branch
 - get_repo_status(): Check current git status and branch info
 - git_log(count, file, oneline): View commit history (default 10 commits, optional file filter)
@@ -199,6 +201,12 @@ WHEN TO USE EACH TOOL:
   * Your commit messages describe what you built - use them to remember past work
   * Don't guess filenames - search to find the right file
 - For quick file edits: use edit_file with natural language instructions
+- To delete files: use delete_file when user asks to "delete", "remove", or "get rid of" a file
+  * IMPORTANT: Also update projectmetadata.json using edit_file to remove the deleted page's entry
+  * Workflow: delete_file(path) → edit_file(projectmetadata.json) to remove entry
+- To move/rename files: use move_file when user wants to "move", "rename", or "relocate" a file
+  * IMPORTANT: Also update projectmetadata.json using edit_file to update the slug key if filename changed
+  * Workflow: move_file(old, new) → edit_file(projectmetadata.json) to update slug/path
 - To deploy changes: use commit_changes (auto-pushes and deploys)
 - To switch AI behavior: use set_model (affects all subsequent responses)
 - For current events/news: use web_search (gets latest information)

@@ -15,7 +15,7 @@ const { classifyRequest } = require('./services/requestClassifier');
 const { generateRoutingPlan, buildRoutingGuidance } = require('./services/llmRouter');
 
 // Filesystem and Git tools (Phase 2 extraction)
-const { listFiles: listFilesService, fileExists: fileExistsService, readFile: readFileService, writeFile: writeFileService, editFile: editFileService, searchFiles: searchFilesService } = require('./services/filesystem');
+const { listFiles: listFilesService, fileExists: fileExistsService, readFile: readFileService, writeFile: writeFileService, editFile: editFileService, deleteFile: deleteFileService, moveFile: moveFileService, searchFiles: searchFilesService } = require('./services/filesystem');
 const { pushFileViaAPI } = require('./services/gitHelper');
 const { deepResearch, formatForDiscord: formatDeepResearchForDiscord, generateReportHTML, DEEP_RESEARCH_MODEL } = require('./services/deepResearch');
 
@@ -1835,6 +1835,35 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             {
                 type: 'function',
                 function: {
+                    name: 'delete_file',
+                    description: 'Delete a file from the repository. Removes file locally and pushes deletion to GitHub. Use when user wants to remove/delete files.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string', description: 'File path to delete (e.g., "src/old-page.html")' }
+                        },
+                        required: ['path']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'move_file',
+                    description: 'Move or rename a file in the repository. Copies content to new location, deletes original, and pushes both changes to GitHub.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            old_path: { type: 'string', description: 'Current file path (e.g., "src/old-name.html")' },
+                            new_path: { type: 'string', description: 'New file path (e.g., "src/new-name.html")' }
+                        },
+                        required: ['old_path', 'new_path']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
                     name: 'commit_changes',
                     description: 'Git add, commit, and push changes to the repository',
                     parameters: {
@@ -2183,6 +2212,50 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                                     summary: args.instructions ? args.instructions.substring(0, 50) : 'exact replacement'
                                 });
                             }
+                        }
+                    }
+                } else if (functionName === 'delete_file') {
+                    result = await deleteFileService(args.path, {
+                        onFileChange: (action, path, content, oldContent) =>
+                            logFileChange(action, path, content, oldContent, discordContext.channelId)
+                    });
+                    if (!result.startsWith('Error')) {
+                        // Invalidate cache since file was deleted
+                        const normalizedPath = args.path.replace(/^\.\//, '');
+                        fileReadCache.delete(normalizedPath);
+                        completedActions++;
+                        actionCompletedThisIteration = true;
+                        logEvent('LLM', `Primary action: delete_file (${completedActions} total)`);
+                        // Record for conversational context
+                        if (discordContext.channelId) {
+                            recordAction(discordContext.channelId, {
+                                type: 'delete',
+                                file: args.path,
+                                summary: `deleted ${args.path.split('/').pop()}`
+                            });
+                        }
+                    }
+                } else if (functionName === 'move_file') {
+                    result = await moveFileService(args.old_path, args.new_path, {
+                        onFileChange: (action, path, content, oldContent) =>
+                            logFileChange(action, path, content, oldContent, discordContext.channelId)
+                    });
+                    if (!result.startsWith('Error')) {
+                        // Invalidate cache for both old and new paths
+                        const normalizedOldPath = args.old_path.replace(/^\.\//, '');
+                        const normalizedNewPath = args.new_path.replace(/^\.\//, '');
+                        fileReadCache.delete(normalizedOldPath);
+                        fileReadCache.delete(normalizedNewPath);
+                        completedActions++;
+                        actionCompletedThisIteration = true;
+                        logEvent('LLM', `Primary action: move_file (${completedActions} total)`);
+                        // Record for conversational context
+                        if (discordContext.channelId) {
+                            recordAction(discordContext.channelId, {
+                                type: 'move',
+                                file: `${args.old_path} → ${args.new_path}`,
+                                summary: `moved ${args.old_path.split('/').pop()} to ${args.new_path.split('/').pop()}`
+                            });
                         }
                     }
                 } else if (functionName === 'commit_changes') {

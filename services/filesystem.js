@@ -603,6 +603,136 @@ Return ONLY the complete updated file content. No explanations, no markdown code
 }
 
 /**
+ * Delete a file from the repository
+ * @param {string} filePath - Path to delete
+ * @param {Object} options - Options
+ * @param {Function} options.onFileChange - Callback for logging file changes
+ * @returns {Promise<string>} Success message or error
+ */
+async function deleteFile(filePath, options = {}) {
+    const { onFileChange } = options;
+    const startTime = Date.now();
+    console.log(`[DELETE_FILE] Starting deletion for: ${filePath}`);
+
+    try {
+        // Path resolution - same logic as readFile/editFile
+        let resolvedPath = filePath;
+        const pathsToTry = [filePath];
+
+        // If path starts with src/, also try without src/ prefix
+        if (filePath.startsWith('src/')) {
+            pathsToTry.push(filePath.replace(/^src\//, ''));
+        }
+        // If path doesn't start with src/, try adding src/ prefix
+        if (!filePath.startsWith('src/') && !filePath.startsWith('./src/')) {
+            pathsToTry.push(`src/${filePath}`);
+        }
+
+        let fileContent;
+        let lastError;
+        for (const tryPath of pathsToTry) {
+            try {
+                // Check if file exists and read it for GitHub API (need existing SHA)
+                fileContent = await fs.readFile(tryPath, 'utf-8');
+                if (tryPath !== filePath) {
+                    console.log(`[DELETE_FILE] Resolved ${filePath} -> ${tryPath}`);
+                }
+                resolvedPath = tryPath;
+                break;
+            } catch (e) {
+                lastError = e;
+            }
+        }
+
+        if (!fileContent) {
+            throw new Error(`File not found: ${lastError.message}`);
+        }
+
+        // Update filePath to resolved path
+        filePath = resolvedPath;
+
+        // Delete the file locally first
+        await fs.unlink(filePath);
+        console.log(`[DELETE_FILE] Deleted locally: ${filePath}`);
+
+        // Log file deletion to GUI dashboard
+        if (onFileChange) {
+            onFileChange('delete', filePath, '');
+        }
+
+        // Push deletion to GitHub API
+        console.log(`[DELETE_FILE] Pushing deletion to remote...`);
+        const fileName = path.basename(filePath);
+        const commitMessage = `delete ${fileName}`;
+
+        try {
+            // GitHub API requires empty content and existing SHA for deletion
+            const { getExistingFileSha } = require('./gitHelper');
+            const existingSha = await getExistingFileSha(filePath, 'main');
+
+            if (!existingSha) {
+                throw new Error('File does not exist on remote - cannot delete');
+            }
+
+            const sha = await pushFileViaAPI(filePath, '', commitMessage, 'main', existingSha);
+            const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            console.log(`[DELETE_FILE] Pushed deletion: ${filePath} (${sha?.slice(0,7) || 'no-sha'}) in ${totalTime}s`);
+            return `File deleted and pushed: ${filePath} - deletion now live`;
+        } catch (apiErr) {
+            const detail = apiErr.response?.data?.message || apiErr.message;
+            console.error(`[DELETE_FILE] Push failed: ${detail}`);
+            return `Error deleting file: GitHub push failed - ${detail}`;
+        }
+    } catch (error) {
+        const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.error(`[DELETE_FILE] Error after ${totalTime}s:`, error.message);
+        return `Error deleting file: ${error.message}`;
+    }
+}
+
+/**
+ * Move/rename a file in the repository
+ * @param {string} oldPath - Current file path
+ * @param {string} newPath - New file path
+ * @param {Object} options - Options
+ * @param {Function} options.onFileChange - Callback for logging file changes
+ * @returns {Promise<string>} Success message or error
+ */
+async function moveFile(oldPath, newPath, options = {}) {
+    const { onFileChange } = options;
+    const startTime = Date.now();
+    console.log(`[MOVE_FILE] Moving ${oldPath} -> ${newPath}`);
+
+    try {
+        // Read the original file (uses path resolution)
+        const content = await readFile(oldPath, options);
+        if (content.startsWith('Error')) {
+            throw new Error(`Cannot read source file: ${content}`);
+        }
+
+        // Write to new location
+        const writeResult = await writeFile(newPath, content, options);
+        if (writeResult.startsWith('Error')) {
+            throw new Error(`Cannot write to new location: ${writeResult}`);
+        }
+
+        // Delete the original file
+        const deleteResult = await deleteFile(oldPath, options);
+        if (deleteResult.startsWith('Error')) {
+            throw new Error(`File copied but deletion failed: ${deleteResult}`);
+        }
+
+        const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`[MOVE_FILE] Completed move in ${totalTime}s`);
+        return `File moved successfully: ${oldPath} -> ${newPath} - now live at https://bot.inference-arcade.com/${newPath}`;
+    } catch (error) {
+        const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.error(`[MOVE_FILE] Error after ${totalTime}s:`, error.message);
+        return `Error moving file: ${error.message}`;
+    }
+}
+
+/**
  * Search within a single file for text patterns
  * @param {string} pattern - Regex pattern to search
  * @param {string} filePath - File to search
@@ -829,5 +959,7 @@ module.exports = {
     readFile,
     writeFile,
     editFile,
+    deleteFile,
+    moveFile,
     searchFiles
 };
