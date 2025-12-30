@@ -521,6 +521,13 @@
       "collection": "arcade-games",
       "hidden": false
     },
+    "lightsaber-duel": {
+      "title": "Lightsaber Duel",
+      "icon": "⚔️",
+      "description": "Fight AI with saber clashes",
+      "collection": "arcade-games",
+      "hidden": false
+    },
     "lightsaber-combat": {
       "title": "Lightsaber Combat",
       "icon": "🕹️",
