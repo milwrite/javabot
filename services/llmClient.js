@@ -335,9 +335,5 @@ function extractJSON(content) {
 
 module.exports = {
     callSonnet,
-    extractJSON,
-    MODEL_PRESETS,
-    FALLBACK_MODELS,
-    ROLE_PROMPTS,
-    BASE_SYSTEM_CONTEXT
+    MODEL_PRESETS
 };

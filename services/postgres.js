@@ -359,8 +359,6 @@ function truncate(str, maxLen) {
 
 module.exports = {
     init,
-    enabled,
-    getSessionId,
     logMention,
     logToolCall,
     logFileChange,
@@ -372,6 +370,5 @@ module.exports = {
     getDailyStats,
     searchEvents,
     getToolStats,
-    close,
-    DEFAULTS
+    close
 };

@@ -466,9 +466,6 @@ function generateReportHTML(result, query) {
 module.exports = {
     deepResearch,
     formatForDiscord,
-    extractCitations,
     generateReportHTML,
-    generateSlug,
-    DEEP_RESEARCH_MODEL,
-    DEEP_RESEARCH_TIMEOUT
+    DEEP_RESEARCH_MODEL
 };

@@ -486,10 +486,5 @@ function buildRoutingGuidance(plan) {
 
 module.exports = {
     generateRoutingPlan,
-    fallbackRouting,
-    getToolInfo,
-    filterToolsForPlan,
-    buildRoutingGuidance,
-    TOOL_CATALOG,
-    ROUTER_MODEL
+    buildRoutingGuidance
 };

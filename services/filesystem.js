@@ -829,8 +829,5 @@ module.exports = {
     readFile,
     writeFile,
     editFile,
-    searchFiles,
-    searchSingleFile,
-    cleanMarkdownCodeBlocks,
-    DEFAULTS
+    searchFiles
 };

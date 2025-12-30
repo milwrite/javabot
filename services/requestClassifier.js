@@ -285,6 +285,5 @@ function fallbackClassification(prompt, meta = {}) {
 }
 
 module.exports = {
-    classifyRequest,
-    fallbackClassification
+    classifyRequest
 };

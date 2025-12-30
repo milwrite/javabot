@@ -1,12 +1,9 @@
 require('dotenv').config({ override: true });
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { Octokit } = require('@octokit/rest');
-// simple-git removed - using GitHub API instead for Railway compatibility
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const { execSync } = require('child_process');
-
-// Git binary detection removed - using GitHub API for all operations
 const path = require('path');
 const axios = require('axios');
 const axiosRetry = require('axios-retry').default;
@@ -15,7 +12,7 @@ const axiosRetry = require('axios-retry').default;
 const { runGamePipeline, commitGameFiles, isGameRequest, isEditRequest } = require('./services/gamePipeline');
 const { getRecentPatternsSummary } = require('./services/buildLogs');
 const { classifyRequest } = require('./services/requestClassifier');
-const { generateRoutingPlan, buildRoutingGuidance, filterToolsForPlan } = require('./services/llmRouter');
+const { generateRoutingPlan, buildRoutingGuidance } = require('./services/llmRouter');
 
 // Filesystem and Git tools (Phase 2 extraction)
 const { listFiles: listFilesService, fileExists: fileExistsService, readFile: readFileService, writeFile: writeFileService, editFile: editFileService, searchFiles: searchFilesService } = require('./services/filesystem');
@@ -108,6 +105,21 @@ if (!process.env.NO_GUI) {
 // Initialize PostgreSQL logging (non-blocking)
 postgres.init().catch(err => {
     console.error('[POSTGRES] Init failed:', err.message);
+});
+
+// Graceful shutdown handlers
+process.on('SIGTERM', async () => {
+    console.log('🛑 SIGTERM received, shutting down gracefully...');
+    if (postgres) await postgres.close();
+    if (guiServer) await guiServer.stop();
+    process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+    console.log('🛑 SIGINT received, shutting down gracefully...');
+    if (postgres) await postgres.close();
+    if (guiServer) await guiServer.stop();
+    process.exit(0);
 });
 
 // Configuration constants
@@ -314,8 +326,6 @@ const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN,
 });
 
-// simpleGit removed - all git operations now use GitHub API via services/gitHelper.js
-
 // Discord Context Manager - fetches message history directly from Discord API
 // Replaces agents.md file-based memory with real-time Discord awareness
 class DiscordContextManager {
@@ -471,15 +481,6 @@ class DiscordContextManager {
 // Global context manager instance (initialized in clientReady)
 let contextManager = null;
 
-
-// Note: getEncodedRemoteUrl removed (migrated to GitHub API via services/gitHelper)
-
-// pushWithAuth removed - now using pushFileViaAPI from services/gitHelper.js
-// All git push operations use GitHub API instead of git CLI for Railway compatibility
-
-// initializeGitRemote removed - GitHub API doesn't need local git remote setup
-
-// gitWithTimeout removed - GitHub API has its own timeout handling
 
 // Discord interaction timeout handler with automatic fallback to channel messages
 // Discord interactions expire after 15 minutes - this detects and handles that gracefully
@@ -1150,9 +1151,6 @@ function addToHistory(username, message, isBot = false) {
         // Remove oldest 20 messages at once to reduce frequent array operations
         messageHistory.splice(0, 20);
     }
-
-    // Note: agents.md file persistence removed - now using Discord API for context
-    // The in-memory messageHistory is kept for debugging/fallback purposes only
 }
 
 // Build proper messages array from conversation history

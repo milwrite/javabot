@@ -405,7 +405,5 @@ async function getEditResponse(userMessage, conversationMessages = [], context =
 }
 
 module.exports = {
-    getEditResponse,
-    EDIT_TOOLS,
-    EDIT_SYSTEM_SUFFIX
+    getEditResponse
 };

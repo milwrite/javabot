@@ -157,11 +157,6 @@ async function getRecentPatternsSummary(limit = 10) {
 }
 
 module.exports = {
-    ensureLogDir,
     writeBuildLog,
-    readBuildLog,
-    getRecentBuilds,
-    getRecentIssues,
-    getRecentPatternsSummary,
-    LOG_DIR
+    getRecentPatternsSummary
 };

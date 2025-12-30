@@ -203,8 +203,6 @@ async function pushMultipleFiles(files, commitMessage, branch = 'main') {
 }
 
 module.exports = {
-    octokit,
-    getExistingFileSha,
     pushFileViaAPI,
     getRepoStatus,
     pushMultipleFiles

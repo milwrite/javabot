@@ -296,22 +296,6 @@ source .env && psql "$DATABASE_URL" -c "SELECT to_char(timestamp, 'HH24:MI:SS') 
 
 **Non-blocking**: All logging is fire-and-forget to avoid impacting bot performance.
 
-### Available Slash Commands
-
-| Command | Handler | Purpose |
-|---------|---------|---------|
-| `/commit <message> [files]` | `handleCommit` | Git add, commit, push to main |
-| `/add-page <name> <description>` | `handleAddPage` | Generate self-contained HTML page |
-| `/add-feature <name> <description>` | `handleAddFeature` | Generate JS feature/component + demo |
-| `/build-game <title> <prompt> [type]` | `handleBuildGame` | **NEW**: AI-driven game pipeline (Architect→Builder→Tester→Scribe) |
-| `/status` | `handleStatus` | Show repo status + live site link |
-| `/chat <message>` | `handleChat` | AI conversation with context |
-| `/search <query>` | `handleSearch` | Web search via OpenRouter |
-| `/set-model <model>` | `handleSetModel` | Switch AI model at runtime |
-| `/set-prompt <action> [content]` | `handleSetPrompt` | Modify bot personality/system prompt at runtime |
-| `/poll <question>` | `handlePoll` | Yes/no poll with reactions |
-| `/logs <subcommand>` | `handleLogs` | Query PostgreSQL logs (recent, errors, stats) |
-
 ### AI Function Calling System
 
 The bot uses OpenRouter's function calling with an **agentic loop** to give the AI autonomous multi-step capabilities. All tools are available via both slash commands AND @mentions:
