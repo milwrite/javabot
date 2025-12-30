@@ -124,12 +124,11 @@ async function generateRoutingPlan(userMessage, context = {}) {
     try {
         const routingPrompt = buildRoutingPrompt(userMessage, context);
 
-        const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-            model: ROUTER_MODEL,
-            messages: [
-                {
-                    role: 'system',
-                    content: `You are a routing optimizer for a Discord bot that manages files and creates content.
+        // Use modular routing prompt if enabled
+        const USE_MODULAR_PROMPTS = process.env.USE_MODULAR_PROMPTS !== 'false';
+        const routerSystemPrompt = USE_MODULAR_PROMPTS
+            ? require('../personality/assemblers').assembleRouter()
+            : `You are a routing optimizer for a Discord bot that manages files and creates content.
 Your job is to analyze user requests and output a JSON routing plan.
 
 AVAILABLE TOOLS (ordered by speed):
@@ -168,7 +167,14 @@ OUTPUT FORMAT (JSON only, no markdown):
   "clarifyFirst": false,
   "clarifyQuestion": null,
   "expectedIterations": 3
-}`
+}`;
+
+        const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+            model: ROUTER_MODEL,
+            messages: [
+                {
+                    role: 'system',
+                    content: routerSystemPrompt
                 },
                 {
                     role: 'user',

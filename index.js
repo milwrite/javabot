@@ -792,7 +792,15 @@ setInterval(checkAPIHealth, 6 * 60 * 60 * 1000);
 // Run initial check after 10 seconds
 setTimeout(checkAPIHealth, 10000);
 
-// Mutable system prompt - can be changed at runtime
+// Modular prompt system (Phase 1-5 complete)
+const USE_MODULAR_PROMPTS = process.env.USE_MODULAR_PROMPTS !== 'false'; // Default: true
+const {
+    assembleFullAgent,
+    assembleChat,
+    tools: MODULAR_TOOLS
+} = USE_MODULAR_PROMPTS ? require('./personality/assemblers') : { assembleFullAgent: null, assembleChat: null, tools: null };
+
+// Mutable system prompt - can be changed at runtime (legacy when USE_MODULAR_PROMPTS=false)
 let SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT;
 
 // Note: botResponses and getBotResponse are imported from ./personality/botResponses.js
@@ -1632,8 +1640,12 @@ async function setModel(modelChoice) {
 
 // Lightweight edit-only LLM response (delegated to editService)
 async function getEditResponse(userMessage, conversationMessages = [], discordContext = {}) {
+    const editSystemPrompt = USE_MODULAR_PROMPTS
+        ? require('./personality/assemblers').assembleEditMode()
+        : SYSTEM_PROMPT; // editService will append EDIT_SYSTEM_SUFFIX for legacy mode
     return getEditResponseService(userMessage, conversationMessages, {
-        systemPrompt: SYSTEM_PROMPT,
+        systemPrompt: editSystemPrompt,
+        useModularPrompts: USE_MODULAR_PROMPTS, // Signal to editService
         model: MODEL,
         getApiKey: getOpenRouterKey,
         logEvent,
@@ -1663,10 +1675,11 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         );
 
         // Build the full messages array for the API
+        const systemPromptContent = USE_MODULAR_PROMPTS ? assembleFullAgent() : SYSTEM_PROMPT;
         const messages = [
             {
                 role: 'system',
-                content: SYSTEM_PROMPT
+                content: systemPromptContent
             },
             ...conversationMessages,
         ];
@@ -1702,7 +1715,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         });
 
         // Define available tools for the model
-        const tools = [
+        const tools = USE_MODULAR_PROMPTS ? MODULAR_TOOLS : [
             {
                 type: 'function',
                 function: {
@@ -2973,10 +2986,13 @@ async function handleMentionAsync(message) {
                         try {
                             MODEL = MODEL_PRESETS['kimi-fast'];
                             logEvent('MENTION', `Calling OpenRouter with model: ${MODEL}`);
+                            const chatSystemPrompt = USE_MODULAR_PROMPTS
+                                ? assembleChat()
+                                : 'You are Bot Sportello, a laid-back Discord bot. You talk like Doc Sportello - chill, slightly spacey, relaxed vibe. Keep it to 1-2 short sentences. No tools or code.';
                             const simpleResponse = await axios.post(OPENROUTER_URL, {
                                 model: MODEL,
                                 messages: [
-                                    { role: 'system', content: 'You are Bot Sportello, a laid-back Discord bot. You talk like Doc Sportello - chill, slightly spacey, relaxed vibe. Keep it to 1-2 short sentences. No tools or code.' },
+                                    { role: 'system', content: chatSystemPrompt },
                                     ...conversationMessages.slice(-3),
                                     { role: 'user', content: content }
                                 ],

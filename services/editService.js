@@ -159,6 +159,7 @@ Do not use web search or create new content - only edit existing files.`;
 async function getEditResponse(userMessage, conversationMessages = [], context = {}) {
     const {
         systemPrompt = '',
+        useModularPrompts = false,
         model,
         getApiKey,
         logEvent = console.log,
@@ -176,10 +177,12 @@ async function getEditResponse(userMessage, conversationMessages = [], context =
     const searchPatterns = [];
 
     try {
+        // Use systemPrompt as-is if modular (already assembled), otherwise append suffix
+        const editPrompt = useModularPrompts ? systemPrompt : (systemPrompt + EDIT_SYSTEM_SUFFIX);
         const messages = [
             {
                 role: 'system',
-                content: systemPrompt + EDIT_SYSTEM_SUFFIX
+                content: editPrompt
             },
             ...conversationMessages,
             {

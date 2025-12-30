@@ -3,7 +3,6 @@
 
 const axios = require('axios');
 const axiosRetry = require('axios-retry').default;
-const { TEMPLATE_PROMPT } = require('../config/templates');
 
 // Configure axios with retry logic
 axiosRetry(axios, {
@@ -41,8 +40,17 @@ const FALLBACK_MODELS = [
 // Track 500 errors per model for fallback decisions
 const model500ErrorCount = new Map();
 
-// Condensed base context (~40% smaller token usage)
-const BASE_SYSTEM_CONTEXT = `
+// Use modular agent roles if enabled
+const USE_MODULAR_PROMPTS = process.env.USE_MODULAR_PROMPTS !== 'false';
+const agentRoles = USE_MODULAR_PROMPTS
+    ? require('../personality/specialized/agentRoles')
+    : null;
+
+// Legacy prompts (when USE_MODULAR_PROMPTS=false)
+const { TEMPLATE_PROMPT } = USE_MODULAR_PROMPTS ? {} : require('../config/templates');
+const BASE_SYSTEM_CONTEXT = USE_MODULAR_PROMPTS
+    ? (agentRoles ? agentRoles.BASE_SYSTEM_CONTEXT : '')
+    : `
 REPO: https://bot.inference-arcade.com/ | Files → /src/*.html | Theme: page-theme.css
 
 NOIR PALETTE: #7ec8e3 (accent), #ff0000 (buttons), #00ffff (headers), #0a0a0a (bg), Courier Prime
@@ -57,8 +65,13 @@ MOBILE-FIRST (CRITICAL):
 REQUIRED: ../page-theme.css link, viewport meta, .home-link nav, body padding-top 80px
 `.trim();
 
-// Condensed role-specific prompts
-const ROLE_PROMPTS = {
+// Condensed role-specific prompts (use modular if available, else legacy)
+const ROLE_PROMPTS = USE_MODULAR_PROMPTS && agentRoles ? {
+    architect: agentRoles.architect,
+    builder: agentRoles.builder,
+    tester: agentRoles.tester,
+    scribe: agentRoles.scribe
+} : {
     architect: `Architect for Bot Sportello noir web collection. ${BASE_SYSTEM_CONTEXT}
 
 TASK: Classify content type, return JSON plan with interaction pattern.

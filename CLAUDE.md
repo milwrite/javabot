@@ -426,14 +426,35 @@ SportelloNarrator.init({
 - `success` - "nice, that worked out pretty smooth"
 - `thinking` - "let me think about this for a sec..."
 
-**System Prompt** (`SYSTEM_PROMPT`):
-- **Mutable at runtime** via `/set-prompt` command (view, reset, add, replace)
-- Defines laid-back, slightly spacey personality
-- Lists available capabilities (file ops, web search, git)
-- Instructs AI when to use each tool
-- Mandates short responses (1-2 sentences)
-- Always links to live site when sharing pages
-- Includes optimization to prevent "Bot Sportello:" name duplication
+**Modular Prompt System** (NEW - Dec 2025):
+- **Feature flag**: `USE_MODULAR_PROMPTS=true` (default) in `.env`
+- **Location**: `personality/` directory with focused modules
+- **Token savings**: 30-70% reduction per pipeline stage
+- **Modules organized by**: core/, tools/, content/, specialized/, assemblers/
+- **See**: `personality/README.md` for full documentation
+
+**Prompt Assembly by Stage**:
+- **Full Agent** (tool execution): 200 lines (46% reduction from 372)
+- **Chat** (conversation): 105 lines (72% reduction)
+- **Edit Mode** (file editing): 114 lines (71% reduction)
+- **Router** (intent classification): 40 lines (standardized)
+- **Content Pipeline**: Architect (~39), Builder (~98), Tester (~46), Scribe (~11)
+
+**Legacy System** (`USE_MODULAR_PROMPTS=false`):
+- Falls back to monolithic `systemPrompt.js` (372 lines)
+- `/set-prompt` command removed (prompts now code-based)
+- Use git to modify prompt modules instead
+
+**Module Structure**:
+```
+personality/
+├── core/          # identity, capabilities, repository
+├── tools/         # toolCatalog, fileOperations, gitOperations, searchGuidelines
+├── content/       # designSystem, cssClasses, mobilePatterns, pageStructure, components
+├── specialized/   # routing, editing, agentRoles
+├── assemblers/    # Combines modules per stage
+└── test/          # Validation scripts
+```
 
 **Usage**: Call `getBotResponse(category)` for random selection from category.
 
