@@ -2935,42 +2935,57 @@ async function handleMentionAsync(message) {
                     const routerConfidence = routingPlan?.confidence || 0;
                     logEvent('MENTION', `Attempt ${processingAttempt}: Router=${routerIntent}(${routerConfidence.toFixed(2)}) Classifier=${classification.type}(${classification.method})`);
 
-                    // Handle READ_ONLY requests immediately (like "print the site inventory")
+                    // Handle READ_ONLY requests - but respect router if it says tools needed
                     if (classification.isReadOnly) {
-                        // If the read-only request clearly involves repository browsing (files, src/, commits),
-                        // route to normal LLM flow with tools; otherwise use a fast no-tools reply.
+                        // If router says 'read' with high confidence, it likely needs tools (file access)
+                        const routerWantsTools = routingPlan && routerIntent === 'read' && routerConfidence >= 0.7;
+                        // If the read-only request clearly involves repository browsing, use tools
                         const repoIntent = /(src\/|\.(html|js)\b|projectmetadata\.json|index\.html|repository|repo|git|commit|push)/i.test(content);
                         const listSearchFiles = /\b(list|show|find|search)\b[^\n]*\b(files?|pages?|commits?)\b/i.test(content);
-                        if (repoIntent || listSearchFiles) {
-                            logEvent('MENTION', `READ_ONLY repo request - routing to normal flow with tools`);
+
+                        if (routerWantsTools || repoIntent || listSearchFiles) {
+                            logEvent('MENTION', `READ_ONLY needs tools (router=${routerWantsTools}, repo=${repoIntent}, list=${listSearchFiles}) - routing to normal flow`);
                             // Break out to proceed with normal LLM processing below
                         } else {
                             logEvent('MENTION', `READ_ONLY conversational info - fast no-tools response`);
-                            await safeEditReply(thinkingMsg, '📖 processing your information request...');
                             const originalModel = MODEL;
                             try {
-                                MODEL = MODEL_PRESETS.glm;
+                                MODEL = MODEL_PRESETS['kimi-fast'];
+                                logEvent('MENTION', `Calling OpenRouter with model: ${MODEL}`);
+                                const infoSystemPrompt = USE_MODULAR_PROMPTS
+                                    ? assembleChat()
+                                    : 'You are Bot Sportello, a helpful Discord bot. Answer briefly and directly. No code unless asked explicitly.';
                                 const simpleResponse = await axios.post(OPENROUTER_URL, {
                                     model: MODEL,
                                     messages: [
-                                        { role: 'system', content: 'You are Bot Sportello, a helpful Discord bot. Answer briefly and directly. No code unless asked explicitly.' },
+                                        { role: 'system', content: infoSystemPrompt },
+                                        ...conversationMessages.slice(-3),
                                         { role: 'user', content: content }
                                     ],
                                     max_tokens: 500,
-                                    temperature: 0.7
+                                    temperature: 0.7,
+                                    provider: { data_collection: 'deny' }
                                 }, {
                                     headers: {
                                         'Authorization': `Bearer ${getOpenRouterKey()}`,
                                         'Content-Type': 'application/json'
                                     },
-                                    timeout: 30000
+                                    timeout: 20000
                                 });
+                                logEvent('MENTION', `OpenRouter response received`);
                                 let response = cleanBotResponse(simpleResponse.data.choices[0].message.content || '');
-                                if (!response) response = 'Got it.';
+                                if (!response) response = getBotResponse('confirmations');
+                                logEvent('MENTION', `Sending reply: ${response.substring(0, 50)}`);
                                 await safeEditReply(thinkingMsg, response);
                                 addToHistory(username, content, false);
                                 addToHistory('Bot Sportello', response, true);
                                 return; // Done
+                            } catch (infoError) {
+                                console.error('[READ_ONLY] Error:', infoError.message);
+                                logEvent('ERROR', `READ_ONLY failed: ${infoError.message}`);
+                                // Fallback response
+                                await safeEditReply(thinkingMsg, getBotResponse('errors') || "sorry man, brain froze for a sec there");
+                                return;
                             } finally {
                                 MODEL = originalModel;
                             }
@@ -2997,7 +3012,8 @@ async function handleMentionAsync(message) {
                                     { role: 'user', content: content }
                                 ],
                                 max_tokens: 100,
-                                temperature: 0.8
+                                temperature: 0.8,
+                                provider: { data_collection: 'deny' }
                             }, {
                                 headers: {
                                     'Authorization': `Bearer ${getOpenRouterKey()}`,
