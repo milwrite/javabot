@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crumb City - The Sequel to Peanut City</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        body {
+            padding: 50px 20px 20px 20px;
+            background: #0a0a0a;
+            line-height: 1.7;
+            font-family: 'Courier New', monospace;
+        }
+
+        .story-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .chapter {
+            margin-bottom: 60px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .chapter.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .chapter-number {
+            color: #ffaa00;
+            font-size: 0.8em;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .chapter-title {
+            color: #ffaa00;
+            font-size: 1.6em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 8px rgba(255, 170, 0, 0.3);
+        }
+
+        .paragraph {
+            margin-bottom: 18px;
+            font-size: 1.05em;
+        }
+
+        .emphasis {
+            color: #00ff41;
+            font-weight: bold;
+        }
+
+        .crumb-reference {
+            background: rgba(255, 170, 0, 0.1);
+            border-left: 3px solid #ffaa00;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 35px 0;
+            color: #ffaa00;
+            font-size: 1.3em;
+            letter-spacing: 8px;
+        }
+
+        .twist-reveal {
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a140a 50%, #0a0a0a 100%);
+            padding: 40px 25px;
+            margin: 50px -20px 30px -20px;
+            border-top: 2px solid #00ff41;
+            border-bottom: 2px solid #00ff41;
+            text-align: center;
+        }
+
+        .twist-reveal .reveal-text {
+            font-size: 1.15em;
+            color: #00ff41;
+            text-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+            animation: pulse 2s infinite;
+            line-height: 1.8;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .epilogue {
+            margin-top: 50px;
+            padding: 25px;
+            border: 1px solid #ffaa00;
+            background: rgba(255, 170, 0, 0.05);
+        }
+
+        .signature {
+            text-align: right;
+            margin-top: 25px;
+            color: #ffaa00;
+            font-style: italic;
+        }
+
+        .progress-indicator {
+            position: fixed;
+            top: 50px;
+            right: 15px;
+            width: 3px;
+            height: 150px;
+            background: rgba(255, 170, 0, 0.2);
+            border-radius: 2px;
+            z-index: 100;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 0%;
+            background: #ffaa00;
+            border-radius: 2px;
+            transition: height 0.3s ease;
+            box-shadow: 0 0 8px rgba(255, 170, 0, 0.5);
+        }
+
+        .crumb-icon {
+            display: inline-block;
+            font-size: 0.8em;
+            margin: 0 2px;
+            color: #ffaa00;
+        }
+
+        .footnote {
+            font-size: 0.9em;
+            color: #7ec8e3;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-indicator">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="story-container">
+        
+        <div class="chapter" id="chapter1">
+            <div class="chapter-number">Chapter 1</div>
+            <div class="chapter-title">The Crumby Exodus</div>
+            
+            <div class="paragraph">Twenty years after the Great Peanut Revolt, the city had fallen into a new kind of madness. The peanut shells that once littered the streets were gone, replaced by something far more insidious: <span class="emphasis">crumbs</span>.</div>
+            
+            <div class="paragraph">Every citizen of what was now called Crumb City walked barefoot, their soles perpetually coated in the gritty residue of a thousand forgotten snacks. <span class="crumb-icon">•</span> It started as a fashion statement, a rebellion against the sterile cleanliness that had followed the peanut wars. But it became an identity.</div>
+            
+            <div class="paragraph">I was hired to investigate the disappearance of a baker named Elena, whose sourdough had once been the pride of the old Peanut City. They said she'd gone mad, claiming the crumbs were <span class="emphasis">alive</span>.</div>
+        </div>
+
+        <div class="chapter" id="chapter2">
+            <div class="chapter-number">Chapter 2</div>
+            <div class="chapter-title">The Baker's Secret</div>
+            
+            <div class="paragraph">Elena's bakery stood abandoned, the windows caked with flour dust. Inside, I found her journal hidden beneath a flour sack. The entries spoke of crumbs that <span class="emphasis">whispered</span>, of patterns in the dust that predicted futures.</div>
+            
+            <div class="crumb-reference">"They're not just leftovers. They're memories. Every crumb remembers where it came from, what it tasted like, who ate it. And they're trying to tell us something."</div>
+            
+            <div class="paragraph">The last entry was dated the day she vanished: <span class="emphasis">"They're forming a map. A map back to the beginning."</span></div>
+        </div>
+
+        <div class="chapter" id="chapter3">
+            <div class="chapter-number">Chapter 3</div>
+            <div class="chapter-title">The Crumby Conspiracy</div>
+            
+            <div class="paragraph">I started seeing it too. The crumbs on people's feet weren't random. They formed intricate patterns—geometric shapes, symbols, what looked like <span class="emphasis">circuit diagrams</span>. The city's homeless population, who had the most complex crumb patterns, seemed to be the most content.</div>
+            
+            <div class="paragraph">Then I found Elena. She wasn't missing—she was <span class="emphasis">hiding</span>. Living in the subway tunnels, her feet covered in the most elaborate crumb mosaic I'd ever seen.</div>
+            
+            <div class="paragraph">"They're not just memories," she whispered. "They're <span class="emphasis">seeds</span>. The peanuts were phase one. This is phase two."</div>
+        </div>
+
+        <div class="divider">•••</div>
+
+        <div class="chapter" id="chapter4">
+            <div class="chapter-number">Chapter 4</div>
+            <div class="chapter-title">The Great Unraveling</div>
+            
+            <div class="paragraph">Elena showed me the truth. The crumbs were indeed alive—nanobiotic organisms designed by the same scientists who had created the sentient peanuts. <span class="emphasis">Project Crumb</span> was their backup plan.</div>
+            
+            <div class="paragraph">The peanuts had been too obvious, too messy. But crumbs? They were invisible. They traveled on feet, in pockets, between teeth. They were gathering data, learning about humanity through our most intimate moments.</div>
+            
+            <div class="paragraph">And they were preparing for something big. The patterns on our feet weren't art—they were <span class="emphasis">blueprints</span>.</div>
+        </div>
+
+        <div class="twist-reveal">
+            <div class="reveal-text">
+                THE IRONIC TWIST: The crumbs weren't trying to destroy humanity. They were trying to <span class="emphasis">save</span> us. The patterns were terraforming instructions, designed to repair the environmental damage caused by the peanut wars. The very thing we feared was our salvation.
+            </div>
+        </div>
+
+        <div class="chapter" id="chapter5">
+            <div class="chapter-number">Chapter 5</div>
+            <div class="chapter-title">The Connection</div>
+            
+            <div class="paragraph">The final piece fell into place when I traced the crumbs back to their origin: the abandoned Peanut Corporation headquarters. In the basement lab, I found the connection.</div>
+            
+            <div class="paragraph">The scientist who created the sentient peanuts had a daughter with severe allergies. She couldn't eat peanuts, so he created the crumbs as an <span class="emphasis">alternative delivery system</span> for his environmental restoration technology.</div>
+            
+            <div class="paragraph">The peanuts were the warning. The crumbs were the cure. And we'd been walking on the solution this whole time.</div>
+            
+            <div class="crumb-reference">"The revolution wasn't about control," Elena said, reading the scientist's final notes. "It was about second chances. The peanuts taught us about consequences. The crumbs are teaching us about redemption."</div>
+        </div>
+
+        <div class="epilogue">
+            <div class="paragraph">Today, Crumb City thrives. The crumbs continue their work, slowly healing the land. We still walk barefoot, but now we understand the patterns on our feet. They're not just blueprints—they're <span class="emphasis">stories</span>.</div>
+            
+            <div class="paragraph">The peanut shells may be gone, but their legacy lives on in every crumb that whispers beneath our feet, reminding us that sometimes salvation comes from the most unexpected places.</div>
+            
+            <div class="signature">- The Crumb Detective</div>
+            
+            <div class="footnote">Sequel to "Peanut City" - where every step tells a story</div>
+        </div>
+
+    </div>
+
+    <script>
+        // Scroll reveal animation
+        const chapters = document.querySelectorAll('.chapter');
+        const progressBar = document.getElementById('progressBar');
+
+        function checkScroll() {
+            const windowHeight = window.innerHeight;
+            const scrollY = window.scrollY || window.pageYOffset;
+            const docHeight = document.documentElement.scrollHeight - windowHeight;
+            
+            // Update progress bar
+            const scrollPercent = (scrollY / docHeight) * 100;
+            progressBar.style.height = Math.min(scrollPercent, 100) + '%';
+
+            // Reveal chapters
+            chapters.forEach(chapter => {
+                const rect = chapter.getBoundingClientRect();
+                if (rect.top < windowHeight * 0.75) {
+                    chapter.classList.add('revealed');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', checkScroll);
+        window.addEventListener('resize', checkScroll);
+        
+        // Initial check
+        checkScroll();
+
+        // Add some interactive crumb effects
+        document.addEventListener('click', function(e) {
+            if (Math.random() > 0.7) {
+                const crumb = document.createElement('span');
+                crumb.className = 'crumb-icon';
+                crumb.textContent = '•';
+                crumb.style.position = 'fixed';
+                crumb.style.left = e.clientX + 'px';
+                crumb.style.top = e.clientY + 'px';
+                crumb.style.fontSize = (Math.random() * 12 + 8) + 'px';
+                crumb.style.opacity = '0.7';
+                crumb.style.pointerEvents = 'none';
+                crumb.style.zIndex = '1000';
+                crumb.style.transition = 'all 2s ease';
+                
+                document.body.appendChild(crumb);
+                
+                setTimeout(() => {
+                    crumb.style.transform = 'translateY(-100px) rotate(360deg)';
+                    crumb.style.opacity = '0';
+                }, 10);
+                
+                setTimeout(() => {
+                    document.body.removeChild(crumb);
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
