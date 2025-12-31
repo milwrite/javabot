@@ -485,7 +485,7 @@ function buildRoutingGuidance(plan) {
         guidance += `\nReasoning: ${plan.reasoning}\n`;
     }
 
-    guidance += `\nFollow this sequence unless you determine a better approach is needed.`;
+    guidance += `\nThis is a suggested starting point - feel free to explore or deviate as needed. When uncertain, default to exploration (list_files, search_files, site-inventory).`;
 
     return guidance;
 }

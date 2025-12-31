@@ -118,168 +118,46 @@ Respond with ONLY one of these exact words: SIMPLE_EDIT, FUNCTIONALITY_FIX, CREA
 
 /**
  * Fallback keyword-based classification (used if LLM fails)
- * Much simpler and more conservative than the old system
+ * Simplified to only detect pure greetings - router handles everything else
  */
 function fallbackClassification(prompt, meta = {}) {
     const lowerPrompt = prompt.toLowerCase();
-
-    // Conservative fallback - when LLM fails, default to normal chat flow
-    // This ensures functionality fixes get proper tool access
-
-    // Fast path: common greetings/small talk → CONVERSATION
     const trimmed = lowerPrompt.trim();
+
+    // Only detect pure greetings - let router handle everything else
     const greetOnly = trimmed.replace(/[^a-z\s']/g, '');
     const greetingPatterns = [
         /^hi\b/, /^hey\b/, /^hello\b/, /^yo\b/, /^sup\b/,
-        /^what['’]s up\b/, /^what is up\b/, /^whats up\b/, /^hiya\b/, /^howdy\b/,
-        /^good (morning|evening|afternoon)\b/, /^(yo|sup|hey|hi)$/
+        /^what['']s up\b/, /^hiya\b/, /^howdy\b/,
+        /^good (morning|evening|afternoon)\b/
     ];
     const isGreeting = greetingPatterns.some(re => re.test(greetOnly));
-    const isVeryShort = trimmed.length <= 20 && !/(file|src\/|git|commit|push|create|build|fix)/.test(trimmed);
+    const isVeryShort = trimmed.length <= 20 && !/file|src|git|commit|create|build|fix/.test(trimmed);
+
     if (isGreeting || isVeryShort) {
         return {
             type: 'CONVERSATION',
-            isEdit: false,
-            isCreate: false,
-            isCommit: false,
-            isReadOnly: false,
             isConversation: true,
-            method: meta.method || 'fallback'
-        };
-    }
-
-    // READ-ONLY queries about git history (must check BEFORE commit check)
-    // Handles: "list commit messages", "show commit history", "previous commits", "git log"
-    const gitHistoryPatterns = [
-        'commit message', 'commit history', 'commit log',
-        'previous commit', 'recent commit', 'last commit',
-        'show commit', 'list commit', 'search commit',
-        'git log', 'git history'
-    ];
-    if (gitHistoryPatterns.some(pattern => lowerPrompt.includes(pattern))) {
-        return {
-            type: 'READ_ONLY',
+            method: meta.method || 'fallback',
+            // All other flags false
             isEdit: false,
             isCreate: false,
             isCommit: false,
-            isReadOnly: true,
-            isConversation: false,
-            method: meta.method || 'fallback'
+            isReadOnly: false,
+            isFunctionalityFix: false
         };
     }
 
-    // Clear commit indicators (create a NEW commit)
-    if (lowerPrompt.includes('commit this') ||
-        lowerPrompt.includes('commit the') ||
-        lowerPrompt.includes('make a commit') ||
-        lowerPrompt.includes('save this') ||
-        lowerPrompt.includes('push this') ||
-        lowerPrompt.includes('push changes') ||
-        lowerPrompt.includes('git add') ||
-        lowerPrompt.includes('save changes')) {
-        return {
-            type: 'COMMIT',
-            isEdit: false,
-            isCreate: false,
-            isCommit: true,
-            isReadOnly: false,
-            isConversation: false,
-            method: meta.method || 'fallback'
-        };
-    }
-
-    // Clear create indicators
-    if (lowerPrompt.includes('create') || 
-        lowerPrompt.includes('build') || 
-        lowerPrompt.includes('make a') ||
-        lowerPrompt.includes('produce') ||
-        lowerPrompt.includes('generate') ||
-        lowerPrompt.includes('new')) {
-        return {
-            type: 'CREATE_NEW',
-            isEdit: false,
-            isCreate: true,
-            isCommit: false,
-            isReadOnly: false,
-            isConversation: false,
-            method: meta.method || 'fallback'
-        };
-    }
-
-    // Treat URL+edit intent as SIMPLE_EDIT (e.g., bot.inference-arcade.com/src/... edit ...)
-    const mentionsSrcUrl = /(bot\.inference-arcade\.com\/src\/|(^|\s)src\/[^\s]+\.(html|js|css)\b)/i.test(lowerPrompt);
-    const hasEditVerb = /\b(edit|change|replace|update|set|make)\b/i.test(lowerPrompt);
-    if (mentionsSrcUrl && hasEditVerb) {
-        return {
-            type: 'SIMPLE_EDIT',
-            isEdit: true,
-            isCreate: false,
-            isCommit: false,
-            isReadOnly: false,
-            isConversation: false,
-            method: meta.method || 'fallback'
-        };
-    }
-
-    // Simple edit indicators (text/content changes without fix/bug keywords)
-    // Must check BEFORE functionality fix to catch "change X to Y" patterns
-    const simpleEditPatterns = [
-        /\b(change|replace|update|set|make)\b.+\b(to|with|instead of)\b/i,
-        /\b(title|text|heading|label|name|unit|units)\b.+\b(should be|says?|to)\b/i,
-        /\bedit\b.*\b(file|page|webpage|content|html)\b/i,
-        /\bin\s+src\/.*\b(change|replace|update|edit)\b/i
-    ];
-    if (simpleEditPatterns.some(re => re.test(lowerPrompt))) {
-        return {
-            type: 'SIMPLE_EDIT',
-            isEdit: true,
-            isCreate: false,
-            isCommit: false,
-            isReadOnly: false,
-            isConversation: false,
-            method: meta.method || 'fallback'
-        };
-    }
-
-    // Functionality fix indicators (route to tool-enabled flow)
-    if (/(\bfix\b|\bbug\b|\bbroken\b|\berror\b|\bdebug\b|\bnot working\b|\bisn'?t working\b|css|style|responsive|mobile|layout|button|align|center|font|color)/.test(lowerPrompt)) {
-        return {
-            type: 'FUNCTIONALITY_FIX',
-            isEdit: false,
-            isFunctionalityFix: true,
-            isCreate: false,
-            isCommit: false,
-            isReadOnly: false,
-            isConversation: false,
-            method: meta.method || 'fallback'
-        };
-    }
-    
-    // Clear read-only indicators
-    if (lowerPrompt.startsWith('show') ||
-        lowerPrompt.startsWith('list') ||
-        lowerPrompt.startsWith('find') ||
-        lowerPrompt.startsWith('what') ||
-        lowerPrompt.startsWith('search')) {
-        return {
-            type: 'READ_ONLY',
-            isEdit: false,
-            isCreate: false,
-            isCommit: false,
-            isReadOnly: true,
-            isConversation: false,
-            method: meta.method || 'fallback'
-        };
-    }
-    
-    // Default to conversation for safety
+    // Default: not conversation (let router decide intent)
+    // Return neutral classification so normal flow proceeds
     return {
-        type: 'CONVERSATION',
+        type: 'UNKNOWN',
+        isConversation: false,
         isEdit: false,
         isCreate: false,
         isCommit: false,
         isReadOnly: false,
-        isConversation: true,
+        isFunctionalityFix: false,
         method: meta.method || 'fallback'
     };
 }

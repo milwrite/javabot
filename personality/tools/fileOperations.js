@@ -4,7 +4,14 @@
  * Extracted from systemPrompt.js lines 297-330
  */
 
-module.exports = `WHEN TO USE EACH FILE TOOL:
+module.exports = `NEVER HALLUCINATE - ALWAYS VERIFY:
+- Never assume what's in a file - read it first
+- Never assume a file exists - check with file_exists or list_files
+- Never make up filenames - use search_files or list_files to find real files
+- Never make up content from memory - always read current file state
+- When unsure, explore first (list_files → file_exists → read_file), then act
+
+WHEN TO USE EACH FILE TOOL:
 - When user provides a URL (bot.inference-arcade.com/src/file.html): Use file_exists FIRST to verify the file exists
 - When user mentions a page name informally ("Peanut city", "the maze game"): Convert to likely filename (peanut-city.html, maze.html) and use file_exists to check. If not found, use list_files to find similar names.
 - For multi-file operations: Use array syntax - search_files("pattern", ["file1.html", "file2.js"])

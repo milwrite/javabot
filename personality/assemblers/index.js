@@ -4,10 +4,12 @@
  * Reduces token usage by loading only necessary context per stage
  */
 
-// Core modules (identity, capabilities, repository)
+// Core modules (identity, capabilities, repository, exploration, context)
 const identity = require('../core/identity');
 const capabilities = require('../core/capabilities');
 const repository = require('../core/repository');
+const explorationRules = require('../core/explorationRules');
+const contextRules = require('../core/contextRules');
 
 // Tool modules (tool catalog, file ops, git ops, search)
 const { all: allTools, editMode: editModeTools, routingAware: routingToolNames } = require('../tools/toolCatalog');
@@ -29,12 +31,16 @@ const agentRoles = require('../specialized/agentRoles');
 
 /**
  * Assemble full agent prompt (for tool execution stage)
- * Includes: core identity, capabilities, repository, all tools, file ops, git, search
- * Token estimate: ~250 lines (vs 372 in monolithic)
+ * Includes: exploration rules, context rules, identity, repository, capabilities, file ops, git, search
+ * Token estimate: ~350 lines (vs 372 in monolithic, but with stronger anti-hallucination rules)
  * Usage: index.js getLLMResponse() agentic loop
  */
 function assembleFullAgent() {
     return [
+        explorationRules,
+        '\n\n',
+        contextRules,
+        '\n\n',
         identity,
         '\n\n',
         repository,

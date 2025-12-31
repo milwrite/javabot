@@ -2956,67 +2956,12 @@ async function handleMentionAsync(message) {
                     const routerConfidence = routingPlan?.confidence || 0;
                     logEvent('MENTION', `Attempt ${processingAttempt}: Router=${routerIntent}(${routerConfidence.toFixed(2)}) Classifier=${classification.type}(${classification.method})`);
 
-                    // Handle READ_ONLY requests - but respect router if it says tools needed
-                    if (classification.isReadOnly) {
-                        // If router says 'read' with high confidence, it likely needs tools (file access)
-                        const routerWantsTools = routingPlan && routerIntent === 'read' && routerConfidence >= 0.7;
-                        // If the read-only request clearly involves repository browsing, use tools
-                        const repoIntent = /(src\/|\.(html|js)\b|projectmetadata\.json|index\.html|repository|repo|git|commit|push)/i.test(content);
-                        const listSearchFiles = /\b(list|show|find|search)\b[^\n]*\b(files?|pages?|commits?)\b/i.test(content);
-
-                        if (routerWantsTools || repoIntent || listSearchFiles) {
-                            logEvent('MENTION', `READ_ONLY needs tools (router=${routerWantsTools}, repo=${repoIntent}, list=${listSearchFiles}) - routing to normal flow`);
-                            // Break out to proceed with normal LLM processing below
-                        } else {
-                            logEvent('MENTION', `READ_ONLY conversational info - fast no-tools response`);
-                            const originalModel = MODEL;
-                            try {
-                                MODEL = MODEL_PRESETS['kimi-fast'];
-                                logEvent('MENTION', `Calling OpenRouter with model: ${MODEL}`);
-                                const infoSystemPrompt = USE_MODULAR_PROMPTS
-                                    ? assembleChat()
-                                    : 'You are Bot Sportello, a helpful Discord bot. Answer briefly and directly. No code unless asked explicitly.';
-                                const simpleResponse = await axios.post(OPENROUTER_URL, {
-                                    model: MODEL,
-                                    messages: [
-                                        { role: 'system', content: infoSystemPrompt },
-                                        ...conversationMessages.slice(-3),
-                                        { role: 'user', content: content }
-                                    ],
-                                    max_tokens: 500,
-                                    temperature: 0.7,
-                                    provider: { data_collection: 'deny' }
-                                }, {
-                                    headers: {
-                                        'Authorization': `Bearer ${getOpenRouterKey()}`,
-                                        'Content-Type': 'application/json'
-                                    },
-                                    timeout: 20000
-                                });
-                                logEvent('MENTION', `OpenRouter response received`);
-                                let response = cleanBotResponse(simpleResponse.data.choices[0].message.content || '');
-                                if (!response) response = getBotResponse('confirmations');
-                                logEvent('MENTION', `Sending reply: ${response.substring(0, 50)}`);
-                                await safeEditReply(thinkingMsg, response);
-                                addToHistory(username, content, false);
-                                addToHistory('Bot Sportello', response, true);
-                                return; // Done
-                            } catch (infoError) {
-                                console.error('[READ_ONLY] Error:', infoError.message);
-                                logEvent('ERROR', `READ_ONLY failed: ${infoError.message}`);
-                                // Fallback response
-                                await safeEditReply(thinkingMsg, getBotResponse('errors') || "sorry man, brain froze for a sec there");
-                                return;
-                            } finally {
-                                MODEL = originalModel;
-                            }
-                        }
-                    }
-
                     // Handle general conversation/greetings with a super fast path
                     // ONLY use fast path if router also thinks it's chat (or router failed)
+                    // AND the message is short enough to be a pure greeting (not a hybrid query)
                     const routerAgreesChatOrFailed = !routingPlan || (routerIntent === 'chat' && routerConfidence >= 0.6);
-                    if (classification.isConversation && routerAgreesChatOrFailed) {
+                    const isPureGreeting = content.trim().length <= 30 && classification.isConversation;
+                    if (isPureGreeting && routerAgreesChatOrFailed) {
                         logEvent('MENTION', `CONVERSATION request (router: ${routerIntent || 'none'}) - fast small-talk response`);
                         const originalModel = MODEL;
                         try {
@@ -3061,47 +3006,6 @@ async function handleMentionAsync(message) {
                         }
                     }
 
-                    // Handle COMMIT requests immediately
-                    if (classification.isCommit) {
-                        logEvent('MENTION', `COMMIT request - executing git commit`);
-                        await safeEditReply(thinkingMsg, '💾 committing changes...');
-                        
-                        try {
-                            // Extract commit message from the request, or use default
-                            let commitMessage = 'commit changes';
-                            const lowerContent = content.toLowerCase();
-                            
-                            // Extract the file reference if mentioned (e.g., "commit this game" -> look for recent files)
-                            if (lowerContent.includes('this game') || lowerContent.includes('this file') || lowerContent.includes('this page')) {
-                                // Check for recently modified files in src directory
-                                const srcFiles = await fs.readdir('./src').catch(() => []);
-                                if (srcFiles.length > 0) {
-                                    // Use the most recent file name as hint
-                                    const recentFile = srcFiles[srcFiles.length - 1];
-                                    commitMessage = `commit src/${recentFile}`;
-                                }
-                            }
-                            
-                            // Try to extract explicit commit message (e.g., "commit with message 'fix bug'")
-                            const messageMatch = content.match(/(?:commit.*?(?:with message|as|:)\s*['"]([^'"]+)['"])|(?:commit\s+['"]([^'"]+)['"])/i);
-                            if (messageMatch) {
-                                commitMessage = messageMatch[1] || messageMatch[2];
-                            }
-
-                            const result = await commitChanges(commitMessage);
-                            await safeEditReply(thinkingMsg, `✅ ${result}`);
-                            
-                            // Success - break out of retry loop
-                            return;
-                            
-                        } catch (error) {
-                            lastFailureReason = `commit-failed`;
-                            logEvent('MENTION', `Commit failed: ${error.message}`);
-                            await safeEditReply(thinkingMsg, `❌ commit failed: ${error.message}`);
-                            return;
-                        }
-                    }
-                    
                     // Handle content creation requests with game pipeline
                     if (classification.isCreate) {
                         logEvent('MENTION', `CREATE_NEW request - routing to game pipeline`);
