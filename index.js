@@ -1988,6 +1988,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         const editedFiles = new Set(); // Track files already edited to prevent redundant edits
         const loopStartTime = Date.now(); // Track duration for logging
         const allToolsUsed = []; // Track all tools used across iterations for logging
+        const allToolResults = []; // Track all tool results across iterations for fallback URL extraction
         const fileReadCache = new Map(); // Cache file contents to avoid redundant reads within conversation
         const searchResults = []; // Track web search results for context persistence
         let completedActions = 0; // Count primary actions (edits, creates, commits)
@@ -2323,7 +2324,8 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             // Add assistant message and tool results to conversation
             messages.push(lastResponse);
             messages.push(...toolResults);
-            
+            allToolResults.push(...toolResults); // Accumulate for fallback URL extraction
+
             // Update agent loop with tools used and thinking (for GUI dashboard)
             if (lastResponse.tool_calls) {
                 const toolsUsed = lastResponse.tool_calls.map(tc => tc.function.name);
@@ -2390,7 +2392,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             let fallbackText = getBotResponse('success');
 
             // Extract file URLs from tool results for context
-            const fileUrls = toolResults
+            const fileUrls = allToolResults
                 .map(tr => tr.content)
                 .filter(c => c && c.includes('bot.inference-arcade.com'))
                 .map(c => {
