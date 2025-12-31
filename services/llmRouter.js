@@ -61,20 +61,6 @@ const TOOL_CATALOG = {
         prereqFor: [],
         extractsFrom: ['message', 'files']
     },
-    create_page: {
-        speed: 'slow',
-        cost: 'api_call',
-        purpose: 'Generate new HTML page via AI',
-        prereqFor: [],
-        extractsFrom: ['name', 'description']
-    },
-    build_game: {
-        speed: 'very_slow',
-        cost: 'multi_api',
-        purpose: 'Full game pipeline (architect→builder→tester)',
-        prereqFor: [],
-        extractsFrom: ['title', 'prompt', 'type']
-    },
     web_search: {
         speed: 'slow',
         cost: 'api_call',
@@ -138,12 +124,10 @@ AVAILABLE TOOLS (ordered by speed):
 - set_model: Instant model switch
 - search_files: Fast grep across files
 - read_file: Fast read file contents
-- write_file: Fast create/overwrite file
+- write_file: Fast create/overwrite file (use for new pages)
 - edit_file: SLOW - modifies existing file (needs read first)
 - commit_changes: SLOW - git operations
-- create_page: SLOW - AI generates new HTML page
 - web_search: SLOW - internet search
-- build_game: VERY SLOW - full game pipeline
 
 ROUTING PRINCIPLES:
 1. Always check file_exists before read_file or edit_file
@@ -155,7 +139,7 @@ ROUTING PRINCIPLES:
 
 OUTPUT FORMAT (JSON only, no markdown):
 {
-  "intent": "edit|create|read|commit|chat|search|build",
+  "intent": "edit|create|read|commit|chat|search",
   "toolSequence": ["file_exists", "read_file", "edit_file"],
   "parameterHints": {
     "file_exists": {"path": "src/game.html"},
@@ -375,19 +359,12 @@ function fallbackRouting(userMessage, context = {}) {
         plan.expectedIterations = 3;
         plan.reasoning = `Edit request with explicit path: ${extractedPath}`;
     }
-    // Create intent
+    // Create intent - use write_file for content creation
     else if (/\b(create|build|make|generate|new)\b/.test(lower)) {
-        if (/\b(game|play|interactive)\b/.test(lower)) {
-            plan.intent = 'build';
-            plan.toolSequence = ['build_game'];
-            plan.expectedIterations = 1;
-            plan.reasoning = 'Game creation request';
-        } else {
-            plan.intent = 'create';
-            plan.toolSequence = ['create_page'];
-            plan.expectedIterations = 1;
-            plan.reasoning = 'Page creation request';
-        }
+        plan.intent = 'create';
+        plan.toolSequence = ['list_files', 'write_file'];
+        plan.expectedIterations = 2;
+        plan.reasoning = 'Content creation request';
     }
     // Commit intent
     else if (/\b(commit|push|save|deploy)\b/.test(lower)) {

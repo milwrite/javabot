@@ -8,6 +8,7 @@ const { testGame } = require('../agents/gameTester');
 const { documentGame, updateProjectMetadata } = require('../agents/gameScribe');
 const { writeBuildLog, getRecentPatternsSummary } = require('./buildLogs');
 const { pushMultipleFiles } = require('./gitHelper');
+const postgres = require('./postgres');
 const fsSync = require('fs');
 const path = require('path');
 
@@ -65,6 +66,15 @@ async function runGamePipeline({
             userPrompt
         });
 
+        // Log to PostgreSQL for analytics
+        postgres.logBuildStage({
+            buildId,
+            stage: 'plan',
+            attempt: 1,
+            result: { contentType: plan.contentType, title: plan.metadata?.title },
+            durationMs: Date.now() - startTime
+        });
+
         // Stage 2: Build-Test Loop (up to maxAttempts)
         let lastIssues = [];
         let buildResult;
@@ -110,6 +120,14 @@ async function runGamePipeline({
                 }
             });
 
+            // Log to PostgreSQL for analytics
+            postgres.logBuildStage({
+                buildId,
+                stage: 'build',
+                attempt,
+                result: { files: buildResult.files, htmlSize: buildResult.htmlContent.length }
+            });
+
             await onStatusUpdate(`🧪 Running quality tests (attempt ${attempt}/${maxAttempts})...`);
 
             // Log to GUI
@@ -141,6 +159,15 @@ async function runGamePipeline({
                 stage: 'test',
                 attempt,
                 testResult
+            });
+
+            // Log to PostgreSQL for analytics
+            postgres.logBuildStage({
+                buildId,
+                stage: 'test',
+                attempt,
+                testScore: testResult.score,
+                result: { passed: testResult.ok, issues: testResult.issues.length }
             });
 
             // Success! Break out of loop
@@ -206,6 +233,14 @@ async function runGamePipeline({
             docs
         });
 
+        // Log to PostgreSQL for analytics
+        postgres.logBuildStage({
+            buildId,
+            stage: 'scribe',
+            attempt: 1,
+            result: { caption: docs.metadata?.caption, collection: docs.metadata?.collection }
+        });
+
         // Update projectmetadata.json
         const slug = plan.slug;
         await updateProjectMetadata(slug, docs.metadata);
@@ -232,6 +267,16 @@ async function runGamePipeline({
             success: true
         });
 
+        // Log to PostgreSQL for analytics
+        postgres.logBuildStage({
+            buildId,
+            stage: 'complete',
+            attempt: 1,
+            testScore: testResult?.score || null,
+            durationMs: Date.now() - startTime,
+            result: { success: true, title: plan.metadata?.title }
+        });
+
         return {
             ok: true,
             buildId,
@@ -250,6 +295,24 @@ async function runGamePipeline({
             stage: 'error',
             error: error.message,
             stack: error.stack
+        });
+
+        // Log to PostgreSQL for analytics
+        postgres.logBuildStage({
+            buildId,
+            stage: 'error',
+            attempt: 1,
+            result: { error: error.message },
+            durationMs: Date.now() - startTime
+        });
+
+        // Also log as an error for error tracking
+        postgres.logError({
+            errorType: 'PipelineError',
+            category: 'build',
+            message: error.message,
+            stack: error.stack,
+            context: { buildId }
         });
 
         return {

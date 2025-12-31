@@ -14,12 +14,10 @@ AVAILABLE TOOLS (ordered by speed):
 - set_model: Instant model switch
 - search_files: Fast grep across files
 - read_file: Fast read file contents
-- write_file: Fast create/overwrite file
+- write_file: Fast create/overwrite file (use for new pages)
 - edit_file: SLOW - modifies existing file (needs read first)
 - commit_changes: SLOW - git operations
-- create_page: SLOW - AI generates new HTML page
 - web_search: SLOW - internet search
-- build_game: VERY SLOW - full game pipeline
 
 ROUTING PRINCIPLES:
 1. Always check file_exists before read_file or edit_file
@@ -31,7 +29,7 @@ ROUTING PRINCIPLES:
 
 OUTPUT FORMAT (JSON only, no markdown):
 {
-  "intent": "edit|create|read|commit|chat|search|build",
+  "intent": "edit|create|read|commit|chat|search",
   "toolSequence": ["file_exists", "read_file", "edit_file"],
   "parameterHints": {
     "file_exists": {"path": "src/game.html"},

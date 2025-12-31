@@ -763,6 +763,17 @@ let apiHealthStatus = {
     lastSuccessfulModel: MODEL_PRESETS[DEFAULT_MODEL]
 };
 
+// Check if there are any active action caches (bot has been recently used)
+function hasRecentActivity() {
+    const now = Date.now();
+    for (const [channelId, entry] of actionCache.entries()) {
+        if (now - entry.timestamp <= ACTION_CACHE_CONFIG.ACTION_TTL) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Check API health with quick test request
 async function checkAPIHealth() {
     try {
@@ -791,14 +802,14 @@ async function checkAPIHealth() {
             apiHealthStatus.lastError = `Status ${testResponse.status}`;
         }
         apiHealthStatus.lastCheck = new Date();
-        
+
     } catch (error) {
         apiHealthStatus.isHealthy = false;
         apiHealthStatus.consecutiveFailures++;
         apiHealthStatus.lastError = error.message;
         apiHealthStatus.lastCheck = new Date();
         logEvent('API_HEALTH', `Health check failed (${apiHealthStatus.consecutiveFailures}x): ${error.message}`);
-        
+
         // If API is down for too long, log warning
         if (apiHealthStatus.consecutiveFailures >= 3) {
             console.warn(`⚠️ OpenRouter API appears to be down (${apiHealthStatus.consecutiveFailures} consecutive failures)`);
@@ -806,10 +817,13 @@ async function checkAPIHealth() {
     }
 }
 
-// Start health checks 4 times per day (every 6 hours)
-setInterval(checkAPIHealth, 6 * 60 * 60 * 1000);
-// Run initial check after 10 seconds
-setTimeout(checkAPIHealth, 10000);
+// Conditional health check - only runs if bot has been recently used
+setInterval(() => {
+    if (hasRecentActivity()) {
+        console.log('[API_HEALTH] Running health check (recent activity detected)');
+        checkAPIHealth();
+    }
+}, 6 * 60 * 60 * 1000); // Check every 6 hours, but only execute if there's recent activity
 
 // Modular prompt system (Phase 1-5 complete)
 const USE_MODULAR_PROMPTS = process.env.USE_MODULAR_PROMPTS !== 'false'; // Default: true
@@ -867,18 +881,28 @@ function cleanBotResponse(response) {
 }
 
 // Efficient logging system - only log important events
-function logEvent(type, message, details = null) {
+// Now also persists to PostgreSQL for analytics
+function logEvent(type, message, details = null, context = {}) {
     const timestamp = new Date().toISOString();
     console.log(`[${timestamp}] ${type}: ${message}`);
     if (details && process.env.NODE_ENV === 'development') {
         console.log(details);
     }
-    
+
     // Log to GUI
-    const level = type === 'ERROR' ? 'error' : 
-                  type === 'WARN' ? 'warn' : 
+    const level = type === 'ERROR' ? 'error' :
+                  type === 'WARN' ? 'warn' :
                   type === 'DEBUG' ? 'debug' : 'info';
     logToGUI(level, `${type}: ${message}`, details || {});
+
+    // Log to PostgreSQL for analytics (fire-and-forget)
+    postgres.logOperationalEvent({
+        category: type,
+        message: message,
+        details: details,
+        channelId: context.channelId || null,
+        userId: context.userId || null
+    });
 }
 
 // Helper function to track and prevent error loops
@@ -2455,6 +2479,15 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         });
         errorLogger.track(errorEntry);
 
+        // Log to PostgreSQL for persistent error tracking
+        postgres.logError({
+            errorType: error.code || 'LLMError',
+            category: 'llm',
+            message: error.message || String(error),
+            stack: error.stack,
+            context: { model: MODEL, userId: discordContext?.userId, channelId: discordContext?.channelId }
+        });
+
         // End agent loop tracking with error
         endAgentLoop(null, error.message, {
             command: userMessage.substring(0, 100),
@@ -2737,6 +2770,15 @@ client.on('interactionCreate', async interaction => {
     } catch (error) {
         console.error('Command error:', error);
 
+        // Log to PostgreSQL for persistent error tracking
+        postgres.logError({
+            errorType: error.code || 'CommandError',
+            category: 'discord',
+            message: error.message || String(error),
+            stack: error.stack,
+            context: { command: commandName, userId, channelId: interaction.channel?.id }
+        });
+
         // Track error and check for loops
         const isInLoop = trackError(userId, commandName);
         const errorMsg = isInLoop
@@ -2791,6 +2833,14 @@ client.on('messageCreate', async message => {
         // Don't block - handle async
         handleMentionAsync(message).catch(error => {
             console.error('❌ Async mention handler error:', error);
+            // Log to PostgreSQL for persistent error tracking
+            postgres.logError({
+                errorType: 'MentionHandlerError',
+                category: 'mention',
+                message: error.message || String(error),
+                stack: error.stack,
+                context: { userId: message.author?.id, channelId: message.channel?.id }
+            });
         });
     }
 });

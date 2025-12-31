@@ -89,24 +89,24 @@ async function logMention(data) {
 /**
  * Log a tool call event
  * @param {Object} data - {toolName, args, result, error, durationMs, iteration, channelId, userId}
+ *
+ * NOTE: Previously inserted to BOTH bot_events AND tool_calls tables (redundant).
+ * Now only inserts to tool_calls table which has more detail.
+ * Use getRecentEvents('tool_call') to query via the tool_calls table.
  */
 async function logToolCall(data) {
     if (!isEnabled) return;
     try {
-        // Insert event
-        const eventRes = await pool.query(
-            `INSERT INTO bot_events (event_type, session_id, user_id, channel_id, duration_ms, success, payload)
-             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-            ['tool_call', sessionId, data.userId, data.channelId, data.durationMs,
-             !data.error, JSON.stringify({ tool: data.toolName, args: data.args })]
-        );
+        // Sanitize tool name (remove any XML tags that may leak through)
+        const sanitizedToolName = data.toolName?.replace(/<[^>]*>/g, '').trim() || 'unknown';
 
-        // Insert tool call detail
+        // Single insert to tool_calls table only (removed bot_events redundancy)
         await pool.query(
-            `INSERT INTO tool_calls (event_id, tool_name, arguments, result, error, duration_ms, iteration)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-            [eventRes.rows[0].id, data.toolName, JSON.stringify(data.args),
-             truncate(data.result, 5000), data.error, data.durationMs, data.iteration]
+            `INSERT INTO tool_calls (tool_name, arguments, result, error, duration_ms, iteration, user_id, channel_id, session_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            [sanitizedToolName, JSON.stringify(data.args),
+             truncate(data.result, 5000), data.error, data.durationMs, data.iteration,
+             data.userId, data.channelId, sessionId]
         );
     } catch (error) {
         console.error('[POSTGRES] logToolCall error:', error.message);
@@ -186,6 +186,44 @@ async function logBuildStage(data) {
     }
 }
 
+/**
+ * Log an operational event (LLM, ROUTER, API_HEALTH, etc.)
+ * Captures events that were previously only logged to console/GUI.
+ * @param {Object} data - {category, message, details, channelId, userId}
+ */
+async function logOperationalEvent(data) {
+    if (!isEnabled) return;
+    try {
+        await pool.query(
+            `INSERT INTO bot_events (event_type, session_id, user_id, channel_id, payload)
+             VALUES ($1, $2, $3, $4, $5)`,
+            ['operational', sessionId, data.userId || null, data.channelId || null,
+             JSON.stringify({ category: data.category, message: data.message, details: data.details })]
+        );
+    } catch (error) {
+        console.error('[POSTGRES] logOperationalEvent error:', error.message);
+    }
+}
+
+/**
+ * Log prompt module usage for analytics
+ * Tracks which personality modules are assembled and used.
+ * @param {Object} data - {role, modules, tokenEstimate, channelId}
+ */
+async function logPromptUsage(data) {
+    if (!isEnabled) return;
+    try {
+        await pool.query(
+            `INSERT INTO bot_events (event_type, session_id, channel_id, payload)
+             VALUES ($1, $2, $3, $4)`,
+            ['prompt_usage', sessionId, data.channelId || null,
+             JSON.stringify({ role: data.role, modules: data.modules, tokens: data.tokenEstimate })]
+        );
+    } catch (error) {
+        console.error('[POSTGRES] logPromptUsage error:', error.message);
+    }
+}
+
 // ============ QUERY FUNCTIONS (for /logs command) ============
 
 /**
@@ -197,12 +235,39 @@ async function logBuildStage(data) {
 async function getRecentEvents(eventType = 'all', limit = 10) {
     if (!isEnabled) return [];
     try {
-        const query = eventType === 'all'
-            ? `SELECT * FROM bot_events ORDER BY timestamp DESC LIMIT $1`
-            : `SELECT * FROM bot_events WHERE event_type = $1 ORDER BY timestamp DESC LIMIT $2`;
+        // tool_call events are now in tool_calls table, not bot_events
+        if (eventType === 'tool_call') {
+            const res = await pool.query(
+                `SELECT id, tool_name, arguments as payload, result, error, duration_ms,
+                        iteration, user_id, channel_id, session_id, timestamp,
+                        'tool_call' as event_type
+                 FROM tool_calls ORDER BY timestamp DESC LIMIT $1`,
+                [limit]
+            );
+            return res.rows;
+        }
 
-        const params = eventType === 'all' ? [limit] : [eventType, limit];
-        const res = await pool.query(query, params);
+        // For 'all', union bot_events with tool_calls
+        if (eventType === 'all') {
+            const res = await pool.query(
+                `(SELECT id, event_type, session_id, user_id, channel_id, duration_ms, success, payload, timestamp
+                  FROM bot_events WHERE event_type != 'tool_call'
+                  ORDER BY timestamp DESC LIMIT $1)
+                 UNION ALL
+                 (SELECT id, 'tool_call' as event_type, session_id, user_id, channel_id, duration_ms,
+                         error IS NULL as success, arguments as payload, timestamp
+                  FROM tool_calls ORDER BY timestamp DESC LIMIT $1)
+                 ORDER BY timestamp DESC LIMIT $1`,
+                [limit]
+            );
+            return res.rows;
+        }
+
+        // Other event types from bot_events
+        const res = await pool.query(
+            `SELECT * FROM bot_events WHERE event_type = $1 ORDER BY timestamp DESC LIMIT $2`,
+            [eventType, limit]
+        );
         return res.rows;
     } catch (error) {
         console.error('[POSTGRES] getRecentEvents error:', error.message);
@@ -359,12 +424,18 @@ function truncate(str, maxLen) {
 
 module.exports = {
     init,
+    enabled,
+    getSessionId,
+    // Logging functions
     logMention,
     logToolCall,
     logFileChange,
     logAgentLoop,
     logError,
     logBuildStage,
+    logOperationalEvent,
+    logPromptUsage,
+    // Query functions
     getRecentEvents,
     getErrorStats,
     getDailyStats,

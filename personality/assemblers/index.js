@@ -4,6 +4,32 @@
  * Reduces token usage by loading only necessary context per stage
  */
 
+// PostgreSQL logging for prompt analytics
+let postgres;
+try {
+    postgres = require('../../services/postgres');
+} catch (e) {
+    // Allow module to work even if postgres not available
+    postgres = { logPromptUsage: () => {} };
+}
+
+/**
+ * Log prompt assembly for analytics
+ * @param {string} role - The assembler role (fullAgent, router, etc.)
+ * @param {string[]} modules - List of modules assembled
+ * @param {number} charCount - Total character count of assembled prompt
+ */
+function logPromptAssembly(role, modules, charCount) {
+    // Estimate tokens (rough approximation: 1 token ≈ 4 chars)
+    const tokenEstimate = Math.round(charCount / 4);
+
+    postgres.logPromptUsage({
+        role,
+        modules,
+        tokenEstimate
+    });
+}
+
 // Core modules (identity, capabilities, repository, exploration, context)
 const identity = require('../core/identity');
 const capabilities = require('../core/capabilities');
@@ -36,7 +62,8 @@ const agentRoles = require('../specialized/agentRoles');
  * Usage: index.js getLLMResponse() agentic loop
  */
 function assembleFullAgent() {
-    return [
+    const modules = ['explorationRules', 'contextRules', 'identity', 'repository', 'capabilities', 'fileOperations', 'gitOperations', 'searchGuidelines'];
+    const result = [
         explorationRules,
         '\n\n',
         contextRules,
@@ -53,6 +80,8 @@ function assembleFullAgent() {
         '\n\n',
         searchGuidelines
     ].join('');
+    logPromptAssembly('fullAgent', modules, result.length);
+    return result;
 }
 
 /**
@@ -62,6 +91,7 @@ function assembleFullAgent() {
  * Usage: services/llmRouter.js generateRoutingPlan()
  */
 function assembleRouter() {
+    logPromptAssembly('router', ['routing'], routing.length);
     return routing;
 }
 
@@ -72,13 +102,16 @@ function assembleRouter() {
  * Usage: services/editService.js getEditResponse()
  */
 function assembleEditMode() {
-    return [
+    const modules = ['repository', 'fileOperations', 'editing'];
+    const result = [
         repository,
         '\n\n',
         fileOperations,
         '\n\n',
         editing
     ].join('');
+    logPromptAssembly('editMode', modules, result.length);
+    return result;
 }
 
 /**
@@ -88,13 +121,16 @@ function assembleEditMode() {
  * Usage: index.js mention handler chat fast path
  */
 function assembleChat() {
-    return [
+    const modules = ['identity', 'repository', 'capabilities'];
+    const result = [
         identity,
         '\n\n',
         repository,
         '\n\n',
         capabilities
     ].join('');
+    logPromptAssembly('chat', modules, result.length);
+    return result;
 }
 
 /**
@@ -104,7 +140,9 @@ function assembleChat() {
  * Usage: agents/gameArchitect.js, services/llmClient.js
  */
 function assembleArchitect() {
-    return agentRoles.architect;
+    const prompt = agentRoles.architect;
+    logPromptAssembly('architect', ['agentRoles.architect'], prompt.length);
+    return prompt;
 }
 
 /**
@@ -114,7 +152,9 @@ function assembleArchitect() {
  * Usage: agents/gameBuilder.js, services/llmClient.js
  */
 function assembleBuilder() {
-    return agentRoles.builder;
+    const prompt = agentRoles.builder;
+    logPromptAssembly('builder', ['agentRoles.builder'], prompt.length);
+    return prompt;
 }
 
 /**
@@ -124,7 +164,9 @@ function assembleBuilder() {
  * Usage: agents/gameTester.js, services/llmClient.js
  */
 function assembleTester() {
-    return agentRoles.tester;
+    const prompt = agentRoles.tester;
+    logPromptAssembly('tester', ['agentRoles.tester'], prompt.length);
+    return prompt;
 }
 
 /**
@@ -134,7 +176,9 @@ function assembleTester() {
  * Usage: agents/gameScribe.js, services/llmClient.js
  */
 function assembleScribe() {
-    return agentRoles.scribe;
+    const prompt = agentRoles.scribe;
+    logPromptAssembly('scribe', ['agentRoles.scribe'], prompt.length);
+    return prompt;
 }
 
 /**
@@ -144,7 +188,8 @@ function assembleScribe() {
  * Usage: When creating pages/features via slash commands
  */
 function assembleContentCreation() {
-    return [
+    const modules = ['identity', 'repository', 'designSystem', 'cssClasses', 'mobilePatterns', 'pageStructure', 'components'];
+    const result = [
         identity,
         '\n\n',
         repository,
@@ -159,6 +204,8 @@ function assembleContentCreation() {
         '\n\n',
         components
     ].join('');
+    logPromptAssembly('contentCreation', modules, result.length);
+    return result;
 }
 
 // Export tool definitions for direct use
