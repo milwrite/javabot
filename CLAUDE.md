@@ -148,8 +148,8 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 8. Message tracking, @ mention responses, and bot ready event
 
 **Services Modules** (`/services/`):
-- `llmRouter.js` - **Primary request router** (LLM-based, runs BEFORE fast paths, uses Gemma 3 12B)
-- `requestClassifier.js` - Backup keyword classifier (only used if router fails or for fast path gating)
+- `llmRouter.js` - **Primary request router** (LLM-based, uses Gemma 3 12B, provides suggestive guidance)
+- `requestClassifier.js` - **Simplified greeting detector** (only detects pure greetings ≤30 chars, returns 'UNKNOWN' for everything else)
 - `filesystem.js` - File operations (listFiles, fileExists, readFile, writeFile, editFile, searchFiles)
 - `gitHelper.js` - GitHub API operations (octokit, pushFileViaAPI, getExistingFileSha)
 - `gamePipeline.js` - Game building pipeline
@@ -158,10 +158,11 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 
 **Request Routing Flow** (for @mentions):
 1. `generateRoutingPlan()` runs FIRST - LLM analyzes request, returns `{intent, toolSequence, confidence}`
-2. Keyword classifier runs as backup
-3. Fast paths check: only trigger if BOTH router and classifier agree (e.g., `intent='chat' + confidence>=0.6`)
-4. If router says `intent='create'|'edit'|'build'` etc., request goes to full agent with tools
-5. This prevents keyword classifier from incorrectly routing tool-requiring requests to conversation fast path
+2. Keyword classifier detects pure greetings (≤30 chars only)
+3. **CONVERSATION fast path**: Only triggers for very short greetings when router agrees (`intent='chat' + confidence>=0.6`)
+4. **All other requests** go to full agent with tools (including "list games", "commit changes", etc.)
+5. **Removed fast paths** (as of Dec 2025): READ_ONLY bypass, COMMIT regex parsing
+6. Router guidance is **suggestive, not prescriptive**: "This is a suggested starting point - feel free to explore"
 
 **Config Modules** (`/config/`):
 - `models.js` - MODEL_PRESETS, OPENROUTER_URL, reasoning config
@@ -426,15 +427,16 @@ SportelloNarrator.init({
 - `success` - "nice, that worked out pretty smooth"
 - `thinking` - "let me think about this for a sec..."
 
-**Modular Prompt System** (NEW - Dec 2025):
+**Modular Prompt System** (Active - Dec 2025):
 - **Feature flag**: `USE_MODULAR_PROMPTS=true` (default) in `.env`
 - **Location**: `personality/` directory with focused modules
 - **Token savings**: 30-70% reduction per pipeline stage
+- **Anti-hallucination focus**: Strong exploration rules prevent assumptions
 - **Modules organized by**: core/, tools/, content/, specialized/, assemblers/
 - **See**: `personality/README.md` for full documentation
 
 **Prompt Assembly by Stage**:
-- **Full Agent** (tool execution): 200 lines (46% reduction from 372)
+- **Full Agent** (tool execution): ~350 lines with anti-hallucination rules (exploration + context + identity + repo + capabilities + tools)
 - **Chat** (conversation): 105 lines (72% reduction)
 - **Edit Mode** (file editing): 114 lines (71% reduction)
 - **Router** (intent classification): 40 lines (standardized)
@@ -448,13 +450,19 @@ SportelloNarrator.init({
 **Module Structure**:
 ```
 personality/
-├── core/          # identity, capabilities, repository
+├── core/          # identity, capabilities, repository, explorationRules, contextRules
 ├── tools/         # toolCatalog, fileOperations, gitOperations, searchGuidelines
 ├── content/       # designSystem, cssClasses, mobilePatterns, pageStructure, components
 ├── specialized/   # routing, editing, agentRoles
 ├── assemblers/    # Combines modules per stage
 └── test/          # Validation scripts
 ```
+
+**Key Anti-Hallucination Modules**:
+- `core/explorationRules.js` - "Never assume, always verify" directives, default to exploration over assumption
+- `core/contextRules.js` - Reference resolution ("the game" → check recent actions cache, resolve pronouns)
+- `core/repository.js` - Emphasizes `src/site-inventory.html` as THE source of truth for file discovery
+- `tools/fileOperations.js` - "NEVER HALLUCINATE - ALWAYS VERIFY" rules at top of module
 
 **Usage**: Call `getBotResponse(category)` for random selection from category.
 
