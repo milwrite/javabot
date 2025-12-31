@@ -705,34 +705,53 @@ let MODEL = MODEL_PRESETS[DEFAULT_MODEL];
 // Get final text-only response (consolidated helper to reduce duplicate API calls)
 async function getFinalTextResponse(messages, tools, options = {}) {
     const { completedActions = 0, maxTokens = 10000 } = options;
-    try {
-        const response = await axios.post(OPENROUTER_URL, {
-            model: MODEL,
-            messages: messages,
-            max_tokens: maxTokens,
-            temperature: 0.7,
-            tools: tools,
-            tool_choice: 'none', // Force text response without more tool calls
-            provider: { data_collection: 'deny' }
-        }, {
-            headers: {
-                'Authorization': `Bearer ${getOpenRouterKey()}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: 45000
-        });
 
-        return response.data.choices[0].message;
-    } catch (error) {
-        logEvent('LLM', `Final response error: ${error.message}`);
-        // Provide in-character fallback response if we had completed actions
-        if (completedActions > 0) {
-            return {
-                content: `${getBotResponse('success')} changes are live at https://bot.inference-arcade.com/`
-            };
+    // Try primary model first, then fallback
+    const modelsToTry = [MODEL, MODEL_PRESETS['kimi-fast'], MODEL_PRESETS[DEFAULT_MODEL]];
+    const uniqueModels = [...new Set(modelsToTry)]; // Dedupe in case MODEL is already kimi-fast
+
+    for (const model of uniqueModels) {
+        try {
+            const response = await axios.post(OPENROUTER_URL, {
+                model: model,
+                messages: messages,
+                max_tokens: maxTokens,
+                temperature: 0.7,
+                // Don't pass tools - we want text-only response
+                provider: { data_collection: 'deny' }
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${getOpenRouterKey()}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 30000,
+                validateStatus: (status) => status < 500 // Don't throw on 4xx
+            });
+
+            // Handle 4xx client errors
+            if (response.status >= 400) {
+                const errorMsg = response.data?.error?.message || `HTTP ${response.status}`;
+                logEvent('LLM', `Final response ${response.status} with ${model}: ${errorMsg}`);
+                continue; // Try next model
+            }
+
+            if (response.data?.choices?.[0]?.message) {
+                return response.data.choices[0].message;
+            }
+        } catch (error) {
+            logEvent('LLM', `Final response error with ${model}: ${error.message}`);
+            continue; // Try next model
         }
-        return null;
     }
+
+    // All models failed - provide in-character fallback
+    logEvent('LLM', `All models failed for final response, using fallback`);
+    if (completedActions > 0) {
+        return {
+            content: `${getBotResponse('success')} changes are live at https://bot.inference-arcade.com/`
+        };
+    }
+    return { content: getBotResponse('confirmations') || "yeah man, got that info for you" };
 }
 
 // API Health tracking
