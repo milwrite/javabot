@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lynchian Spin-off - The Case of the Missing Muffin - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+
+        :root {
+            --noir-bg: #0a0a0a;
+            --noir-accent: #7ec8e3;
+            --noir-header: #00ffff;
+            --noir-alert: #ff0000;
+            --noir-text: #cccccc;
+            --noir-velvet: #330033;
+        }
+
+        body {
+            background-color: var(--noir-bg);
+            color: var(--noir-text);
+            font-family: 'Courier Prime', monospace;
+            line-height: 1.6;
+            padding-top: 80px;
+            margin: 0;
+        }
+
+        .log-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            border-left: 2px solid var(--noir-accent);
+            box-shadow: -5px 0 15px rgba(126, 200, 227, 0.1);
+        }
+
+        .log-header {
+            margin-bottom: 40px;
+            border-bottom: 1px dashed var(--noir-header);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--noir-header);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0 0 10px 0;
+            font-size: 1.8rem;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        .meta-data {
+            font-size: 0.9rem;
+            color: var(--noir-accent);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .entry {
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .entry::before {
+            content: '>';
+            position: absolute;
+            left: -25px;
+            color: var(--noir-accent);
+            font-weight: bold;
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .timestamp {
+            color: var(--noir-accent);
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .location {
+            color: #666;
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+
+        .entry-content {
+            text-align: justify;
+        }
+
+        .entry-content p {
+            margin-bottom: 15px;
+        }
+
+        .highlight {
+            color: var(--noir-header);
+            font-weight: bold;
+        }
+
+        .alert {
+            color: var(--noir-alert);
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 1px solid var(--noir-alert);
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .velvet-box {
+            background: var(--noir-velvet);
+            border: 1px solid #660066;
+            padding: 15px;
+            margin: 20px 0;
+            box-shadow: 0 0 15px rgba(102, 0, 102, 0.3);
+        }
+
+        .log-footer {
+            margin-top: 60px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .log-container {
+                padding: 15px;
+                border-left-width: 1px;
+            }
+
+            .entry::before {
+                left: -20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link" aria-label="Back to home"></a>
+
+    <main class="log-container">
+        <header class="log-header">
+            <h1>Lynchian Case File: The Missing Muffin</h1>
+            <div class="meta-data">
+                <span>ID: BOT-9001</span>
+                <span>STATUS: <span class="highlight" style="color:var(--noir-alert)">BAFFLED</span></span>
+                <span>ABSURDITY LEVEL: CRITICAL</span>
+            </div>
+        </header>
+
+        <article class="entry">
+            <div class="entry-header">
+                <span class="timestamp">3:47 AM</span>
+                <span class="location">Kitchen</span>
+            </div>
+            <div class="entry-content">
+                <p>The blueberry muffin was there. Then it wasn't. A perfect specimen, still warm from the oven, sitting on the counter like a promise of morning. I turned to get the butter—just for a second—and when I looked back: <span class="highlight">nothing but crumbs and existential dread.</span></p>
+                <p>The air hums with the refrigerator's mournful dirge. The clock on the wall ticks backward occasionally. I think it's trying to warn me.</p>
+            </div>
+        </article>
+
+        <article class="entry">
+            <div class="alert">Red Velvet Curtains Appear</div>
+            <div class="entry-header">
+                <span class="timestamp">4:13 AM</span>
+                <span class="location">Living Room (Suddenly)</span>
+            </div>
+            <div class="velvet-box">
+                <p>The room has changed. Heavy velvet curtains now hang where drywall used to be. They smell of mothballs and forgotten dreams. A small man in a tuxedo is polishing a single red balloon in the corner. He won't make eye contact.</p>
+                <p>"The muffin," I ask him. He just keeps polishing. The balloon seems to pulse with a faint, ominous light.</p>
+            </div>
+        </article>
+
+        <article class="entry">
+            <div class="entry-header">
+                <span class="timestamp">4:45 AM</span>
+                <span class="location">Stairwell (Floor Unknown)</span>
+            </div>
+            <div class="entry-content">
+                <p>The stairs go up and down simultaneously. I've been climbing for what feels like years, but the ceiling gets no closer. Occasionally, a door appears, but it's always locked. Through the keyholes, I can see people dancing. They move in slow motion, their faces frozen in expressions of mild disappointment.</p>
+                <p>I found a note tucked under a loose stair. It reads: <span class="highlight">"The answer is in the butter."</span> But I already checked the butter. It was just butter.</p>
+            </div>
+        </article>
+
+        <article class="entry">
+            <div class="alert">Dwarves in Reverse</div>
+            <div class="entry-header">
+                <span class="timestamp">5:22 AM</span>
+                <span class="location">Basement (Maybe)</span>
+            </div>
+            <div class="entry-content">
+                <p>Seven dwarves walked backward into the room. They were carrying tiny pickaxes and humming a tune that sounded suspiciously like "Smoke on the Water" played backward. They formed a circle around a miniature door I hadn't noticed before.</p>
+                <p>One of them—I think it was Grumpy—looked at me and shook his head slowly. Then they all vanished, leaving behind the distinct scent of ozone and industrial lubricant.</p>
+            </div>
+        </article>
+
+        <article class="entry">
+            <div class="entry-header">
+                <span class="timestamp">6:01 AM</span>
+                <span class="location">The Microwave</span>
+            </div>
+            <div class="entry-content">
+                <p>The microwave clock reads 88:88. It's been like that for hours. I opened the door and a tiny, distorted version of myself stared back from the glass plate. He looked tired. He mouthed the words <span class="highlight">"check the toaster"</span> before fading into the chrome.</p>
+                <p>The toaster was empty, except for two pieces of burnt bread that spelled out <span class="highlight">"IT WAS NEVER ABOUT THE MUFFIN"</span> in perfect cursive.</p>
+            </div>
+        </article>
+
+        <article class="entry">
+            <div class="alert">Final Revelation</div>
+            <div class="entry-header">
+                <span class="timestamp">DAWN (Theoretical)</span>
+                <span class="location">Everywhere and Nowhere</span>
+            </div>
+            <div class="velvet-box">
+                <p>The red curtains part. The tuxedo man is gone. In his place sits the muffin, perfectly intact, on a velvet cushion. It looks exactly as I remember it, except now it's wearing a tiny monocle.</p>
+                <p>"The mystery wasn't my disappearance," the muffin says in a voice like crumbling pastry. <span class="highlight">"The mystery was why you thought you deserved me in the first place."</span></p>
+                <p>The clock ticks forward. The refrigerator stops humming. The world makes sense again, which is somehow more terrifying than when it didn't.</p>
+            </div>
+        </article>
+
+        <footer class="log-footer">
+            <p>CASE STATUS: RESOLVED (BUT NOT REALLY)</p>
+            <p>RECOMMENDATION: MORE COFFEE, LESS SELF-REFLECTION</p>
+        </footer>
+    </main>
+</body>
+</html>
