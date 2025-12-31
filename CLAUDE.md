@@ -538,11 +538,17 @@ errorTracker.set(`${userId}-${commandName}`, {
 
 To make functionality available via @mentions as well as slash commands:
 
-1. Add tool definition to `tools` array in `getLLMResponse()` (~line 1500)
-2. Add handler in the tool execution switch statement (~line 1640)
+1. Add tool definition to `personality/tools/toolCatalog.js` (single source of truth)
+   - Add to `ALL_TOOLS` array with full JSON schema
+   - Tool automatically exports via `.all`, `.editMode`, or `.routingAware` as needed
+2. Add handler in the tool execution switch statement in `index.js` (~line 1640)
 3. Create helper function (e.g., `async function myTool(args)`)
-4. Update SYSTEM_PROMPT's "AVAILABLE CAPABILITIES" section
-5. Tools automatically become available to AI during @mention conversations
+4. Update capability guidelines in `personality/core/capabilities.js` (high-level "what can I do")
+5. Add usage guidelines to appropriate module:
+   - File operations → `personality/tools/fileOperations.js`
+   - Git operations → `personality/tools/gitOperations.js`
+   - Search operations → `personality/tools/searchGuidelines.js`
+6. Tools automatically become available to AI during @mention conversations
 
 ## Recent Updates & Style Consistency (Dec 2025)
 
@@ -590,7 +596,16 @@ Changes apply immediately to all subsequent AI calls.
 
 ## Mobile & Styling
 
-See `SYSTEM_PROMPT` in index.js:916-1107 for bot content generation rules (mobile CSS, noir theme, page structure).
+**Content Creation Guidelines** (Modular System):
+- **Design System**: `personality/content/designSystem.js` - Noir theme, colors, typography, fonts
+- **CSS Classes**: `personality/content/cssClasses.js` - Complete page-theme.css class reference
+- **Mobile Patterns**: `personality/content/mobilePatterns.js` - Interaction patterns (D-pad vs direct-touch)
+- **Page Structure**: `personality/content/pageStructure.js` - Required elements, layout hierarchy
+- **Components**: `personality/content/components.js` - Reusable audio components
+
+**Legacy Reference** (when `USE_MODULAR_PROMPTS=false`):
+- See `personality/systemPrompt.js` lines 39-279 for monolithic content creation rules
+- Active when feature flag is disabled for rollback scenarios
 
 ## Key Configuration Constants
 
