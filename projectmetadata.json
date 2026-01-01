@@ -5,20 +5,25 @@
       "description": "Spotlight builds and journeys",
       "order": 1
     },
+    "meta": {
+      "title": "🔧 Meta",
+      "description": "Bot internals and site tools",
+      "order": 2
+    },
     "arcade-games": {
       "title": "🕹️ Arcade Games",
       "description": "Mobile-ready retro games",
-      "order": 2
+      "order": 3
     },
     "utilities-apps": {
       "title": "📋 Utilities & Apps",
       "description": "Planners, trackers, calculators",
-      "order": 3
+      "order": 4
     },
     "stories-content": {
       "title": "📖 Stories & Content",
       "description": "Letters, recipes, transmissions",
-      "order": 4
+      "order": 5
     },
     "unsorted": {
       "title": "🗂️ Unsorted",
@@ -44,14 +49,14 @@
       "title": "Site Inventory",
       "icon": "🗂️",
       "description": "repository scanner utility",
-      "collection": "featured",
+      "collection": "meta",
       "hidden": false
     },
     "prompt-flow-visualizer": {
       "title": "Prompt Flow Visualizer",
       "icon": "🔀",
       "description": "modular prompt system explorer",
-      "collection": "utilities-apps",
+      "collection": "meta",
       "hidden": false
     },
     "double_dragon_beatem_up": {
