@@ -47,6 +47,13 @@
       "collection": "featured",
       "hidden": false
     },
+    "prompt-flow-visualizer": {
+      "title": "Prompt Flow Visualizer",
+      "icon": "🔀",
+      "description": "modular prompt system explorer",
+      "collection": "utilities-apps",
+      "hidden": false
+    },
     "double_dragon_beatem_up": {
       "title": "Double Dragon Beatdown",
       "description": "Side-scroll co-op brawler",
