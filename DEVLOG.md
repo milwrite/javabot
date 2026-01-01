@@ -1,3 +1,44 @@
+## 2026-01-01
+
+### Prompt Flow Visualizer
+
+**Feature:**
+Created an interactive SVG-based visualization of the modular prompt system to help understand how prompts are assembled for different request types.
+
+**Location:** `src/prompt-flow-visualizer.html`
+**Live URL:** https://bot.inference-arcade.com/src/prompt-flow-visualizer.html
+
+**Features Implemented:**
+- **SVG flow diagram** showing request path: @mention → Router → Decision → Assembler → Modules → Output
+- **4 example flows** with step-by-step animation:
+  - Greeting Flow (3 modules, ~650 tokens, 72% savings)
+  - Edit Flow (8 modules, ~1400 tokens, 46% savings)
+  - Build Flow (4 pipeline stages, ~710 tokens, 53% savings)
+  - Search Flow (8 modules + web_search priority)
+- **Play/Pause/Step controls** with adjustable animation speed
+- **Click-to-inspect** - Click any node or module to see:
+  - Module name, category, line count, token estimate
+  - Purpose description
+  - Actual prompt content preview (~150 chars)
+- **Stats panel** showing module count, token usage, and savings percentage
+- **Savings bar** visual comparison to monolithic 1500-token prompt
+- **Monolithic comparison** greyed-out box showing "Wasteful" legacy approach
+- **Noir terminal aesthetic** matching site theme (cyan/red, Courier Prime)
+- **Responsive layout** for mobile viewing
+
+**Technical Implementation:**
+- Pure SVG + CSS animations (no canvas or external libraries)
+- Data-driven architecture: `MODULES`, `ASSEMBLERS`, `EXAMPLES` objects
+- CSS class-based state management (`active`, `highlighted` classes)
+- Step indicator shows current action during animation
+- Module previews contain actual content from personality/*.js files
+
+**Files Created/Modified:**
+- `src/prompt-flow-visualizer.html` (new, ~1200 lines)
+- `projectmetadata.json` (added to utilities-apps collection)
+
+---
+
 ## 2025-12-30
 
 ### Modular Prompt System Implementation

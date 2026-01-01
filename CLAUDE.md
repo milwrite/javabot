@@ -434,6 +434,7 @@ SportelloNarrator.init({
 - **Anti-hallucination focus**: Strong exploration rules prevent assumptions
 - **Modules organized by**: core/, tools/, content/, specialized/, assemblers/
 - **See**: `personality/README.md` for full documentation
+- **Interactive Visualizer**: `src/prompt-flow-visualizer.html` - SVG flow diagram showing how prompts are assembled for different request types (greeting, edit, build, search) with animated token flow and click-to-inspect module details
 
 **Prompt Assembly by Stage**:
 - **Full Agent** (tool execution): ~350 lines with anti-hallucination rules (exploration + context + identity + repo + capabilities + tools)
