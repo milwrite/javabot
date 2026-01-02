@@ -125,10 +125,31 @@ Note: The bot itself does not use local git remotes for pushing. It commits via 
 3. Use the manual push format above with current token
 
 **Problem**: Remote URL contains embedded token causing issues
-**Solution**: 
+**Solution**:
 ```bash
 git remote set-url origin https://github.com/milwrite/javabot.git
 ```
+
+### Cleaning Up Phantom Slash Commands
+
+Discord caches slash commands globally. If old commands persist in Discord after removal from code:
+
+```bash
+# List and clear all global commands (run once)
+node -e "
+require('dotenv').config();
+const { REST, Routes } = require('discord.js');
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+const clientId = process.env.DISCORD_CLIENT_ID;
+rest.get(Routes.applicationCommands(clientId))
+  .then(cmds => { console.log('Global commands:', cmds.map(c => '/' + c.name).join(', ')); return cmds; })
+  .then(() => rest.put(Routes.applicationCommands(clientId), { body: [] }))
+  .then(() => console.log('Cleared. Restart bot to re-register guild commands.'))
+  .catch(console.error);
+"
+```
+
+After running, restart the bot and quit/reopen Discord to clear client cache.
 
 ## Architecture Overview
 
@@ -184,6 +205,13 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 - **Scribe**: Generates documentation and updates metadata
 
 **Features**: Content-type-aware generation, iterative quality loop (3 attempts), build log pattern detection
+
+### Known Issues
+
+- Tool API mismatches (camelCase vs snake_case in some places)
+- Duplication across edit vs normal loops
+- No automated testing (uses runtime validation instead)
+- Unbounded growth in `responses/` directory
 
 ### Key Integrations
 
@@ -363,43 +391,8 @@ Pages are created via the `write_file()` tool when users ask for new pages, game
 
 **Reusable Audio Components** (`src/audio/`):
 
-Two reusable audio components are available for Bot Sportello pages:
-
-**SportelloAmbient** - Ambient sound mixer with Web Audio synthesis:
-```html
-<div id="ambient-controls"></div>
-<script src="audio/sportello-ambient.js"></script>
-<script>
-SportelloAmbient.init({
-    container: '#ambient-controls',
-    sounds: ['rain', 'ocean', 'wind', 'whitenoise', 'heartbeat', 'chimes'],
-    timer: true,
-    theme: 'sleep'  // 'sleep' (lavender) or 'noir' (cyan/red)
-});
-</script>
-```
-- Available sounds: rain, ocean, wind, fire, whitenoise, pinknoise, heartbeat, chimes, drone
-- Auto-injects styled controls matching theme
-- Sleep timer with fade-out
-- Programmatic API: `.play()`, `.stop()`, `.toggle(name)`, `.setVolume(name, 0-1)`
-
-**SportelloNarrator** - Text-to-speech for stories:
-```html
-<div id="narrator-controls"></div>
-<script src="audio/sportello-narrator.js"></script>
-<script>
-SportelloNarrator.init({
-    voice: 'Ralph',           // Bot Sportello's voice
-    selector: '.paragraph',
-    rate: 0.85,
-    pitch: 0.9
-});
-</script>
-```
-- Uses Ralph voice exclusively (Bot Sportello's voice)
-- Auto-injects noir-styled control panel
-- Highlights current paragraph with red left-border
-- Mobile-responsive controls
+- **SportelloAmbient** - Ambient sound mixer (rain, ocean, wind, fire, whitenoise, heartbeat, chimes, drone). Themes: `sleep` (lavender) or `noir` (cyan/red). Init: `SportelloAmbient.init({ container, sounds, timer, theme })`
+- **SportelloNarrator** - TTS for stories using Ralph voice. Init: `SportelloNarrator.init({ selector: '.paragraph', rate: 0.85 })`
 
 ### Doc Sportello Personality System
 
@@ -535,31 +528,6 @@ To make functionality available via @mentions as well as slash commands:
    - Search operations → `personality/tools/searchGuidelines.js`
 6. Tools automatically become available to AI during @mention conversations
 
-## Recent Updates & Style Consistency (Dec 2025)
-
-**Comprehensive Style Unification**:
-All 45 HTML pages in `/src/` have been unified to use consistent noir terminal aesthetic:
-- Fixed 2 broken CSS paths (missing `../` relative path)
-- Converted 5 purple gradient files to noir palette
-- Converted 2 green theme games to noir colors
-- Converted 4 custom-themed files to noir aesthetic
-- Standardized all 43 home links to: `<a class="home-link" href="../index.html">← HOME</a>`
-- Added missing CSS links to page-theme.css (10 files)
-- Ensured all files use Courier Prime font for consistency
-
-**Design System Enforcement**:
-When generating new pages, AI must enforce:
-1. Link to `../page-theme.css` as primary stylesheet
-2. Courier Prime font as standard (no custom fonts unless specifically requested)
-3. Noir color palette only (red #ff0000, cyan #00ffff, light blue #7ec8e3, black #0a0a0a)
-4. Standard home link pattern with "← HOME" text
-5. Conservative CSS approach: only component-specific overrides in embedded `<style>` tags
-
-**Future Maintenance**:
-- Do NOT add new color schemes or fonts without updating all 45 existing pages
-- Any style changes to `page-theme.css` automatically apply across entire site
-- Broken CSS links or custom fonts are now considered technical debt
-
 ## Model Switching
 
 The `MODEL` variable is mutable and can be changed at runtime:
@@ -636,18 +604,3 @@ const CONFIG = {
 **Features**: 1000 entry cap per panel, real-time updates, auto-scroll
 **Disable**: Use `--no-gui` flag or `NO_GUI=true`
 
-## Architecture Notes
-
-**Modular Design**: Core bot in `index.js` (~4,900 lines) with services extracted to `/services/` for maintainability:
-- `services/filesystem.js` - File operations with grep/search capability
-- `services/gitHelper.js` - GitHub API operations
-- `services/llmClient.js` - LLM client with role prompts
-- `config/models.js` - Model presets and configuration
-
-**Known Issues**:
-- Tool API mismatches (camelCase vs snake_case)
-- Duplication across edit vs normal loops
-- No automated testing (uses runtime validation instead)
-- Unbounded growth in `responses/` directory
-
-**Design Rationale**: Balances rapid iteration with modular organization for critical services

@@ -113,27 +113,17 @@ Agent loop details:
 - Perplexity: `perplexity/sonar` model via OpenRouter for web search.
 - GUI: Express + Socket.IO server at `http://localhost:${GUI_PORT||3001}` (disable with `NO_GUI=true`).
 
-## Commands
+## Slash Commands
 
-Content & pipeline:
-- `/add-page <name> <description>` — generate one HTML page.
-- `/add-feature <name> <description>` — generate a JS library + demo page.
-- `/build-game <title> <prompt> [type]` — multi‑agent pipeline build.
-- `/build-puzzle <theme> [difficulty]` — story riddle with p5.js viz.
-
-Repo & admin:
 - `/commit <message> [files]` — staged commit with confirm buttons; pushes to `main`.
 - `/status` — branch and changed files summary + live URL.
-- `/sync-index` — ensure `projectmetadata.json` backfills from `src/*.html`.
-
-AI & utilities:
-- `/chat <message>` — chat with full repo tool access.
 - `/search <query>` — web search via Perplexity (saved to `responses/` if long).
 - `/set-model <model>` — `glm|kimi|deepseek|qwen|mimo|minimax`.
-- `/set-prompt <view|reset|add|replace> [content]` — system prompt controls.
-- `/update-style <preset> [description]` — preset or “custom” guidance.
 - `/poll <question>` — quick yes/no reactions.
+- `/deep-research <query>` — comprehensive research with citations (1-3 min).
 - `/logs <recent|errors|stats>` — query PostgreSQL logs (requires DATABASE_URL).
+
+**Note**: Content creation (pages, games, features) is done via @mentions using `write_file` tool, not slash commands.
 
 ## Frontend Site
 
