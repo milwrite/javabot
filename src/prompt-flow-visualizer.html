@@ -119,7 +119,8 @@
         #flowDiagram {
             width: 100%;
             height: 450px;
-            min-width: 800px;
+            /* allow shrinking on mobile */
+            min-width: 0;
         }
 
         /* SVG Node Styles */
@@ -399,6 +400,33 @@
         .flow-token.animating {
             animation: pulse 0.5s infinite;
         }
+
+        /* Compact/mobile layout tweaks */
+        @media (max-width: 640px) {
+            body { padding-top: 56px; }
+            h1 { font-size: 1.2rem; }
+            .controls { gap: 8px; padding: 10px; }
+            .controls select { width: 100%; }
+            #flowDiagram { height: 320px; }
+            .node-text { font-size: 9px; }
+            .node-label { font-size: 8px; }
+            .module-text { font-size: 7px; }
+            .legend { gap: 8px; font-size: 0.7rem; }
+            .panels { grid-template-columns: 1fr; gap: 12px; }
+            .panel { padding: 10px; }
+            /* keep details visible along with diagram */
+            .module-details { max-height: 36vh; overflow: auto; }
+        }
+
+        /* Explicit compact mode toggle (also auto on small screens) */
+        body.compact #flowDiagram { height: 320px; }
+        body.compact .module-text { font-size: 7px; }
+        body.compact .node-text { font-size: 9px; }
+        body.compact .node-label { font-size: 8px; }
+        body.compact .legend { gap: 8px; font-size: 0.7rem; }
+        /* In compact mode, hide per-module micro-boxes for clarity */
+        body.compact .modules-group .module-item { display: none; }
+        body.compact .module-details { max-height: 36vh; overflow: auto; }
     </style>
 </head>
 <body>
@@ -420,6 +448,7 @@
             <button id="playBtn">Play</button>
             <button id="stepBtn">Step</button>
             <button id="resetBtn">Reset</button>
+            <button id="compactBtn" title="Toggle compact layout">Compact</button>
 
             <div class="speed-control">
                 <label>Speed:</label>
@@ -428,7 +457,7 @@
         </div>
 
         <div class="diagram-container">
-            <svg id="flowDiagram" viewBox="0 0 900 450">
+            <svg id="flowDiagram" viewBox="0 0 900 450" preserveAspectRatio="xMidYMin meet">
                 <defs>
                     <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
                         <polygon points="0 0, 10 3.5, 0 7" fill="#555" />
@@ -489,21 +518,21 @@
                 <!-- Chat Assembler -->
                 <g id="node-chat" class="node" data-info="chat">
                     <rect class="node-rect" x="130" y="140" width="140" height="50" rx="5"/>
-                    <text class="node-text" x="200" y="162">assembleChat()</text>
+                    <text class="node-text" x="200" y="162" text-anchor="middle">Chat</text>
                     <text class="node-label" x="200" y="178" text-anchor="middle">FAST PATH</text>
                 </g>
 
                 <!-- Full Agent Assembler -->
                 <g id="node-full" class="node" data-info="full">
                     <rect class="node-rect" x="350" y="140" width="140" height="50" rx="5"/>
-                    <text class="node-text" x="420" y="162">assembleFullAgent()</text>
+                    <text class="node-text" x="420" y="162" text-anchor="middle">Full Agent</text>
                     <text class="node-label" x="420" y="178" text-anchor="middle">TOOLS + CONTEXT</text>
                 </g>
 
                 <!-- Pipeline -->
                 <g id="node-pipeline" class="node" data-info="pipeline">
                     <rect class="node-rect" x="570" y="140" width="140" height="50" rx="5"/>
-                    <text class="node-text" x="640" y="162">Content Pipeline</text>
+                    <text class="node-text" x="640" y="162" text-anchor="middle">Pipeline</text>
                     <text class="node-label" x="640" y="178" text-anchor="middle">4-STAGE BUILD</text>
                 </g>
 
@@ -543,31 +572,39 @@
                 <g id="modules-full" class="modules-group" data-info="modules-full">
                     <rect class="module-box" x="300" y="220" width="240" height="80" rx="3"/>
                     <text class="node-text" x="420" y="240" text-anchor="middle">Modules (8)</text>
-                    <!-- Individual module boxes -->
+                    <!-- Row 1 (left to right) -->
                     <g class="module-item" data-module="core/explorationRules">
-                        <rect class="module-box" x="305" y="250" width="55" height="40" rx="2"/>
-                        <text class="module-text" x="332" y="268" text-anchor="middle">explore</text>
-                        <text class="module-text" x="332" y="280" text-anchor="middle">~180 tok</text>
+                        <rect class="module-box" x="305" y="250" width="50" height="30" rx="2"/>
+                        <text class="module-text" x="330" y="268" text-anchor="middle">explore</text>
                     </g>
                     <g class="module-item" data-module="core/contextRules">
-                        <rect class="module-box" x="365" y="250" width="50" height="40" rx="2"/>
-                        <text class="module-text" x="390" y="268" text-anchor="middle">context</text>
-                        <text class="module-text" x="390" y="280" text-anchor="middle">~220 tok</text>
+                        <rect class="module-box" x="360" y="250" width="50" height="30" rx="2"/>
+                        <text class="module-text" x="385" y="268" text-anchor="middle">context</text>
                     </g>
                     <g class="module-item" data-module="core/identity">
-                        <rect class="module-box" x="420" y="250" width="40" height="40" rx="2"/>
-                        <text class="module-text" x="440" y="268" text-anchor="middle">id</text>
-                        <text class="module-text" x="440" y="280" text-anchor="middle">200</text>
+                        <rect class="module-box" x="415" y="250" width="50" height="30" rx="2"/>
+                        <text class="module-text" x="440" y="268" text-anchor="middle">identity</text>
+                    </g>
+                    <g class="module-item" data-module="core/repository">
+                        <rect class="module-box" x="470" y="250" width="50" height="30" rx="2"/>
+                        <text class="module-text" x="495" y="268" text-anchor="middle">repo</text>
+                    </g>
+                    <!-- Row 2 (left to right) -->
+                    <g class="module-item" data-module="core/capabilities">
+                        <rect class="module-box" x="305" y="285" width="50" height="30" rx="2"/>
+                        <text class="module-text" x="330" y="302" text-anchor="middle">caps</text>
                     </g>
                     <g class="module-item" data-module="tools/fileOperations">
-                        <rect class="module-box" x="465" y="250" width="35" height="40" rx="2"/>
-                        <text class="module-text" x="482" y="268" text-anchor="middle">file</text>
-                        <text class="module-text" x="482" y="280" text-anchor="middle">280</text>
+                        <rect class="module-box" x="360" y="285" width="50" height="30" rx="2"/>
+                        <text class="module-text" x="385" y="302" text-anchor="middle">file</text>
                     </g>
                     <g class="module-item" data-module="tools/gitOperations">
-                        <rect class="module-box" x="505" y="250" width="30" height="40" rx="2"/>
-                        <text class="module-text" x="520" y="268" text-anchor="middle">git</text>
-                        <text class="module-text" x="520" y="280" text-anchor="middle">120</text>
+                        <rect class="module-box" x="415" y="285" width="50" height="30" rx="2"/>
+                        <text class="module-text" x="440" y="302" text-anchor="middle">git</text>
+                    </g>
+                    <g class="module-item" data-module="tools/searchGuidelines">
+                        <rect class="module-box" x="470" y="285" width="50" height="30" rx="2"/>
+                        <text class="module-text" x="495" y="302" text-anchor="middle">search</text>
                     </g>
                 </g>
 
@@ -974,6 +1011,12 @@ TASK: Generate project metadata in Doc Sportello's voice:
         const moduleInfo = document.getElementById('moduleInfo');
         const flowToken = document.getElementById('flowToken');
         const stepIndicator = document.getElementById('stepIndicator');
+        const compactBtn = document.getElementById('compactBtn');
+
+        function getQueryParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
 
         // Initialize
         function init() {
@@ -985,9 +1028,32 @@ TASK: Generate project metadata in Doc Sportello's voice:
                 animationSpeed = 2200 - parseInt(e.target.value);
             });
 
+            // Compact mode toggle + auto-enable on small screens
+            compactBtn.addEventListener('click', () => {
+                document.body.classList.toggle('compact');
+                compactBtn.classList.toggle('active');
+            });
+            // Allow overriding compact breakpoint via ?compactBP=### or ?bp=### and persist in localStorage
+            const qpBP = parseInt(getQueryParam('compactBP') || getQueryParam('bp'), 10);
+            if (!Number.isNaN(qpBP)) {
+                try { localStorage.setItem('compactBP', String(qpBP)); } catch (e) {}
+            }
+            const storedBP = parseInt((() => { try { return localStorage.getItem('compactBP'); } catch (e) { return null; } })() || '640', 10);
+            const compactQuery = `(max-width: ${storedBP}px)`;
+            document.body.setAttribute('data-compact-bp', String(storedBP));
+            if (window.matchMedia && window.matchMedia(compactQuery).matches) {
+                document.body.classList.add('compact');
+                compactBtn.classList.add('active');
+            }
+
             // Click handlers for modules
             document.querySelectorAll('.module-item').forEach(el => {
                 el.addEventListener('click', () => showModuleDetails(el.dataset.module));
+            });
+
+            // Allow clicking entire module groups in compact layout
+            document.querySelectorAll('.modules-group').forEach(el => {
+                el.addEventListener('click', () => showNodeInfo(el.dataset.info));
             });
 
             document.querySelectorAll('.node').forEach(el => {
@@ -1154,6 +1220,15 @@ TASK: Generate project metadata in Doc Sportello's voice:
                 </div>
                 <div class="preview-box">${escapeHtml(mod.preview)}</div>
             `;
+
+            // Keep details visible with the diagram on small screens
+            try {
+                const storedBP = parseInt(localStorage.getItem('compactBP') || '640', 10);
+                const compactQuery = `(max-width: ${storedBP}px)`;
+                if (window.matchMedia && window.matchMedia(compactQuery).matches) {
+                    document.querySelector('.module-details').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            } catch (e) {}
         }
 
         function showNodeInfo(infoKey, moduleKey) {
@@ -1186,6 +1261,13 @@ TASK: Generate project metadata in Doc Sportello's voice:
                     </div>
                     <div class="preview-box" style="max-height: 150px;">${info.desc}</div>
                 `;
+                try {
+                    const storedBP = parseInt(localStorage.getItem('compactBP') || '640', 10);
+                    const compactQuery = `(max-width: ${storedBP}px)`;
+                    if (window.matchMedia && window.matchMedia(compactQuery).matches) {
+                        document.querySelector('.module-details').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                } catch (e) {}
             }
         }
 
