@@ -1,5 +1,67 @@
 # Development Log - Bot Sportello
 
+## 2026-01-01 - Phantom Slash Command Cleanup & Documentation Overhaul
+
+### Issue: Old slash commands persisting in Discord
+
+**Problem:** After removing `/add-page`, `/add-feature`, `/build-game`, and other commands from code, they still appeared in Discord's command picker—sometimes duplicated alongside current commands.
+
+### Root Cause
+
+Discord caches slash commands at two levels:
+1. **Global commands** - registered via `Routes.applicationCommands()`, cached up to 1 hour
+2. **Guild commands** - registered via `Routes.applicationGuildCommands()`, update faster
+
+The bot previously registered commands globally, then switched to guild-specific. Both sets persisted.
+
+### Solution
+
+Created one-time cleanup to purge global commands:
+```bash
+node -e "
+require('dotenv').config();
+const { REST, Routes } = require('discord.js');
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), { body: [] })
+  .then(() => console.log('Global commands cleared'));
+"
+```
+
+Found and removed 13 phantom global commands:
+- `/add-page`, `/add-feature`, `/build-game`, `/build-puzzle`
+- `/chat`, `/sync-index`, `/set-prompt`, `/update-style`
+- Plus duplicates of current commands
+
+### Documentation Improvements
+
+**CLAUDE.md** (-57 lines net):
+- Added phantom command cleanup section with one-liner fix
+- Removed dated "Recent Updates & Style Consistency (Dec 2025)" section
+- Consolidated duplicate Architecture Notes section (moved Known Issues)
+- Shortened audio component examples (full code blocks → 2-line summaries)
+
+**README.md**:
+- Updated Commands section to reflect actual 7 slash commands
+- Added note that content creation uses @mentions with `write_file` tool
+
+### Current Slash Commands (7)
+
+| Command | Purpose |
+|---------|---------|
+| `/commit` | Stage, commit, push to main |
+| `/status` | Repository status + live URL |
+| `/search` | Web search via Perplexity |
+| `/set-model` | Switch AI model |
+| `/poll` | Quick yes/no reactions |
+| `/deep-research` | Comprehensive research (1-3 min) |
+| `/logs` | Query PostgreSQL event logs |
+
+### Commits
+- `71199d7` - cleanup: remove phantom tool refs, expand components, fix visualizer corruption
+- `90801fa` - docs: add phantom command cleanup, remove redundancy, update slash commands
+
+---
+
 ## 2025-12-15 - Riddle River: Interactive Scroll-Reveal Riddle with Web Audio
 
 ### Features Implemented
