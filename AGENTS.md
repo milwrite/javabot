@@ -36,7 +36,25 @@
 ## Security & Configuration Tips
 - Copy `.env.example` → `.env`; required: `DISCORD_TOKEN`, `GITHUB_TOKEN`, `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME`, `OPENROUTER_API_KEY`. Optional: `DATABASE_URL` (Railway Postgres).
 - Never commit secrets. Prefer GitHub API pushes (Octokit) from services/gitHelper.js.
-- When using git CLI locally, follow CLAUDE.md token-embedded push procedure.
+- CLI push (token-embedded):
+
+  ```bash
+  # push current branch to main using GITHUB_TOKEN, then restore clean remote
+  source .env && \
+  git remote set-url origin https://milwrite:$GITHUB_TOKEN@github.com/milwrite/javabot.git && \
+  git push origin main && \
+  git remote set-url origin https://github.com/milwrite/javabot.git
+  ```
+
+  Convenience (stage+commit+push):
+
+  ```bash
+  git add . && git commit -m "your message" && \
+  source .env && \
+  git remote set-url origin https://milwrite:$GITHUB_TOKEN@github.com/milwrite/javabot.git && \
+  git push origin main && \
+  git remote set-url origin https://github.com/milwrite/javabot.git
+  ```
 
 ## Architecture Overview (Quick)
 - Discord bot routes → tool calling → services (filesystem, GitHub, Postgres) → auto-commit + deploy.
