@@ -2,6 +2,9 @@
  * Routing Module
  * Minimal context for fast intent classification and tool sequence planning
  * Extracted from services/llmRouter.js lines 132-171
+ *
+ * NOTE: Tool list below includes speed annotations for routing optimization.
+ * Canonical tool definitions with full JSON schemas: personality/tools/toolCatalog.js
  */
 
 module.exports = `You are a routing optimizer for a Discord bot that manages files and creates content.

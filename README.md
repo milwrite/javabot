@@ -92,14 +92,14 @@ Available to the LLM via OpenRouter function‑calling; implemented in `index.js
 - `read_file(path | paths[])` — read one or many files (size‑capped).
 - `write_file(path, content)` — create/overwrite a file.
 - `edit_file(path, old_string?, new_string?, instructions?)` — prefer exact replace; fall back to instruction‑based edit.
-- `create_page(name, description)` — generate a single HTML page and update index.
-- `create_feature(name, description)` — generate a JS library + demo HTML.
+- `delete_file(path)` — delete a file from repository.
+- `move_file(old_path, new_path)` — move or rename a file.
 - `commit_changes(message, files='.')` — stage/commit/push.
 - `get_repo_status()` — branch and changed files, plus live site link.
+- `git_log(count?, file?, oneline?)` — view commit history.
 - `web_search(query)` — calls `perplexity/sonar` via OpenRouter for sources.
+- `deep_research(query)` — comprehensive research with citations (1-3 min).
 - `set_model(model)` — switch model preset.
-- `update_style(preset, description?)` — return plan for theme changes (manual CSS edit).
-- `build_game(title, prompt, type)` — shortcut to the multi‑agent pipeline.
 
 Agent loop details:
 - Tool loop runs up to 6 iterations; logs each iteration to the GUI.

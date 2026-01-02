@@ -172,7 +172,7 @@ VIZ_SCAFFOLD      // Canvas, sliders, stats grid
 
 **General Agentic Loop** (`getLLMResponse`):
 - **Goal**: Complex problem solving
-- **Tools**: Full set including `web_search`, `create_page`, `build_game`
+- **Tools**: Full set including `web_search`, `deep_research`, `commit_changes`
 - **Limits**: Max 6 iterations, max 5 read-only iterations
 - **Features**:
   - Action injection ("you just edited X, looking there first")
@@ -188,13 +188,14 @@ VIZ_SCAFFOLD      // Canvas, sliders, stats grid
 | `file_exists` | `path\|url` | Fast check with fuzzy matching |
 | `edit_file` | `path, old, new` OR `replacements[]` | Exact string replacement or batch |
 | `write_file` | `path, content` | Create/overwrite file |
-| `create_page` | `name, description` | Equivalent to `/add-page` |
-| `create_feature` | `name, description` | Equivalent to `/add-feature` |
-| `build_game` | `title, prompt, type` | Equivalent to `/build-game` |
+| `delete_file` | `path` | Delete file from repository |
+| `move_file` | `old_path, new_path` | Move or rename file |
 | `commit_changes` | `message, files` | Git add, commit, push |
 | `get_repo_status` | - | Repository status |
+| `git_log` | `count, file, oneline` | View commit history |
 | `set_model` | `model` | Switch AI model at runtime |
 | `web_search` | `query` | Internet search via Perplexity Sonar |
+| `deep_research` | `query` | Comprehensive research with citations |
 
 ---
 

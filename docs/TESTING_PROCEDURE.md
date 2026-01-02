@@ -201,10 +201,9 @@ All slash command functionality should also work via @mentions.
 **Input:** `@Bot Sportello create a page called mention-test with a simple countdown timer`
 **Expected:**
 - Triggers `CREATE_NEW` classification
-- May route to System-V1 pipeline OR standard `create_page` tool
-- Generates HTML file
+- Uses `write_file` tool to generate HTML file
 - Updates metadata
-- Prompts for commit
+- Auto-pushes via GitHub API
 
 ### 3.4 Edit Request via Mention
 **Input:** `@Bot Sportello change the title on test-page.html to "Updated Title"`
@@ -347,13 +346,14 @@ Test with OpenRouter unavailable:
 | `edit_file` (AI) | Provide instructions | AI-assisted edit (~3-5s) |
 | `search_files` | Pattern search | Matching results |
 
-### 6.2 Content Creation Tools
+### 6.2 Content Creation (via write_file)
 
-| Tool | Test | Verification |
-|------|------|--------------|
-| `create_page` | New page request | HTML in src/, metadata updated |
-| `create_feature` | New feature request | JS + demo HTML created |
-| `build_game` | Game request | Full pipeline execution |
+Content is created via `write_file` tool, not specialized commands:
+
+| Request | Tool Flow | Verification |
+|---------|-----------|--------------|
+| "Create a page" | `write_file` → auto-push | HTML in src/, metadata updated |
+| "Make a game" | `write_file` → auto-push | HTML with game logic, mobile controls |
 
 ### 6.3 Repository Tools
 
@@ -361,13 +361,15 @@ Test with OpenRouter unavailable:
 |------|------|--------------|
 | `commit_changes` | Stage and commit | Git log shows new commit |
 | `get_repo_status` | Check status | Returns branch and file status |
+| `git_log` | View history | Shows recent commits |
+| `delete_file` | Remove file | File deleted, pushed |
+| `move_file` | Rename/move | File moved, pushed |
 
 ### 6.4 Configuration Tools
 
 | Tool | Test | Verification |
 |------|------|--------------|
 | `set_model` | Switch models | Console confirms change |
-| `update_style` | Apply preset | CSS updated in index.html |
 
 ### 6.5 Web Search Tool
 

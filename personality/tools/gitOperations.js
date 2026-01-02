@@ -25,6 +25,6 @@ module.exports = `GIT OPERATIONS:
 
 COMMIT WORKFLOW:
 - User makes changes via edit_file or write_file
-- Bot asks if user wants to commit (unless auto-deploying via create_page/build_game)
+- Bot asks if user wants to commit after making changes
 - Only prompt for commits if AI changes actual code files (filter out projectmetadata.json updates)
-- Auto-commit for: create_page, create_feature, build_game (includes deployment)`;
+- Files are auto-pushed via GitHub API after write_file/edit_file operations`;

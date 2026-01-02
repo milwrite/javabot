@@ -2,6 +2,9 @@
  * Bot Sportello Capabilities Module
  * High-level overview of what the bot can do
  * Used for routing, classification, and user questions about capabilities
+ *
+ * NOTE: This provides user-friendly tool descriptions for prompts.
+ * Canonical tool definitions with full JSON schemas: personality/tools/toolCatalog.js
  */
 
 module.exports = `AVAILABLE CAPABILITIES (Enhanced Multi-File Support):

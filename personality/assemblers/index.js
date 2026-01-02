@@ -97,13 +97,15 @@ function assembleRouter() {
 
 /**
  * Assemble edit mode prompt (for edit workflow stage)
- * Includes: repository URLs/paths, file operations, edit workflow enforcement
- * Token estimate: ~120 lines (vs 398 with full system prompt + suffix)
+ * Includes: identity (personality), repository URLs/paths, file operations, edit workflow enforcement
+ * Token estimate: ~150 lines (vs 398 with full system prompt + suffix)
  * Usage: services/editService.js getEditResponse()
  */
 function assembleEditMode() {
-    const modules = ['repository', 'fileOperations', 'editing'];
+    const modules = ['identity', 'repository', 'fileOperations', 'editing'];
     const result = [
+        identity,
+        '\n\n',
         repository,
         '\n\n',
         fileOperations,

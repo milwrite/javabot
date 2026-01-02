@@ -105,11 +105,9 @@ git add . && git commit -m "your message" && source .env && git remote set-url o
 ### Bot Auto-Commit Behavior
 
 The bot automatically commits and pushes changes when:
-- Creating new pages (`/add-page`, `create_page()`)
-- Adding features (`/add-feature`, `create_feature()`) 
-- Editing files (`edit_file()` function)
-- Building games (`/build-game`, `build_game()`)
-- Manual commits (`/commit`, `commit_changes()`)
+- Writing files via `write_file()` tool
+- Editing files via `edit_file()` tool
+- Manual commits via `/commit` or `commit_changes()` tool
 
 Note: The bot itself does not use local git remotes for pushing. It commits via the GitHub API (Octokit) using `services/gitHelper.js`, sending the token in an `Authorization` header. No URL‑embedded tokens are used by the bot.
 
@@ -142,10 +140,9 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 2. Configuration constants in `CONFIG` object (lines 68-83)
 3. Error tracking system (prevents infinite error loops)
 4. Discord client setup and context manager
-5. Content creation tools (create_page, create_feature)
-6. Enhanced LLM with function calling (agentic loop, max 6 iterations)
-7. Slash command definitions and handlers
-8. Message tracking, @ mention responses, and bot ready event
+5. Enhanced LLM with function calling (agentic loop, max 6 iterations)
+6. Slash command definitions and handlers
+7. Message tracking, @ mention responses, and bot ready event
 
 **Services Modules** (`/services/`):
 - `llmRouter.js` - **Primary request router** (LLM-based, uses Gemma 3 12B, provides suggestive guidance)
@@ -256,7 +253,7 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 | **issues/*.md** | Bug reports and fix documentation | Markdown with symptoms, root cause, fix | Per-issue; tracked in git for project history |
 | **index.html** | Main page (project hub) | HTML with embedded CSS | Persistent; manually edited theme |
 | **page-theme.css** | Shared noir styling (all pages) | CSS with color vars + mobile breakpoints | Persistent; theme source of truth |
-| **/src/*.html** | Generated pages (games, pages, features) | Self-contained HTML + inline CSS/JS | Created by `/add-page`, `/build-game`, etc. |
+| **/src/*.html** | Generated pages (games, pages, features) | Self-contained HTML + inline CSS/JS | Created via `write_file()` tool |
 | **PostgreSQL (Railway)** | Long-term event logging | Tables: bot_events, tool_calls, build_stages | Persistent; queryable via `/logs` command |
 
 ### PostgreSQL Logging
@@ -318,11 +315,6 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
   * Must use EXACT string from file including all whitespace/indentation
   * String must be unique in file (or use `replace_all: true` in batch mode)
 
-**Content Creation Tools**:
-- `create_page(name, description)` - Generate and deploy a new HTML page (equivalent to `/add-page`)
-- `create_feature(name, description)` - Generate JS library + demo page (equivalent to `/add-feature`)
-- `build_game(title, prompt, type)` - Full game pipeline with testing (equivalent to `/build-game`)
-
 **Repository Tools**:
 - `commit_changes(message, files)` - Git add, commit, push to main (equivalent to `/commit`)
 - `get_repo_status()` - Check current git status (equivalent to `/status`)
@@ -349,24 +341,14 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 
 ### Content Generation Flow
 
-**`/add-page`**:
-1. User provides name + description
-2. AI generates HTML that links to `page-theme.css` (shared noir terminal theme)
-3. Prompt specifies: noir terminal colors, Courier Prime font, CSS classes to use
-4. Back button with `.home-link` class automatically included (CSS displays arrow only)
-5. Mobile-responsive with appropriate touch controls (D-pad for movement games, direct touch for tap games)
-6. **Layout hierarchy enforced**: Canvas → Controls (if needed) → Start Button → Instructions
-7. **Economical spacing**: Tight margins (5-8px), smaller start buttons (0.85-0.95em)
-8. File saved to `src/{name}.html` and added to `projectmetadata.json`
-9. Live URL shown in Discord embed
+Pages are created via the `write_file()` tool when users ask for new pages, games, or features:
 
-**`/add-feature`**:
-1. User provides feature name + description of what it should do
-2. First AI call: Generate `.js` file (library, component, utility, etc.)
-3. Second AI call: Generate demo HTML that links to `page-theme.css`
-4. Both files saved to `src/` directory and metadata updated
-5. Live demo URL shown in Discord embed
-6. Flexible enough for libraries, UI components, interactive elements, utilities
+1. AI generates complete HTML that links to `page-theme.css` (shared noir terminal theme)
+2. Back button with `.home-link` class included (CSS displays arrow only)
+3. Mobile-responsive with appropriate touch controls (D-pad for movement games, direct touch for tap games)
+4. **Layout hierarchy**: Canvas → Controls (if needed) → Start Button → Instructions
+5. File saved to `src/{name}.html` via `write_file()`, then pushed via GitHub API
+6. Metadata updated in `projectmetadata.json`
 
 **Styling Consistency**:
 - All new pages link to `page-theme.css` for uniform noir terminal aesthetic
@@ -428,7 +410,6 @@ SportelloNarrator.init({
 - `thinking` - "let me think about this for a sec..."
 
 **Modular Prompt System** (Active - Dec 2025):
-- **Feature flag**: `USE_MODULAR_PROMPTS=true` (default) in `.env`
 - **Location**: `personality/` directory with focused modules
 - **Token savings**: 30-70% reduction per pipeline stage
 - **Anti-hallucination focus**: Strong exploration rules prevent assumptions
@@ -442,11 +423,6 @@ SportelloNarrator.init({
 - **Edit Mode** (file editing): 114 lines (71% reduction)
 - **Router** (intent classification): 40 lines (standardized)
 - **Content Pipeline**: Architect (~39), Builder (~98), Tester (~46), Scribe (~11)
-
-**Legacy System** (`USE_MODULAR_PROMPTS=false`):
-- Falls back to monolithic `systemPrompt.js` (372 lines)
-- `/set-prompt` command removed (prompts now code-based)
-- Use git to modify prompt modules instead
 
 **Module Structure**:
 ```
@@ -611,10 +587,6 @@ Changes apply immediately to all subsequent AI calls.
 - **Mobile Patterns**: `personality/content/mobilePatterns.js` - Interaction patterns (D-pad vs direct-touch)
 - **Page Structure**: `personality/content/pageStructure.js` - Required elements, layout hierarchy
 - **Components**: `personality/content/components.js` - Reusable audio components
-
-**Legacy Reference** (when `USE_MODULAR_PROMPTS=false`):
-- See `personality/systemPrompt.js` lines 39-279 for monolithic content creation rules
-- Active when feature flag is disabled for rollback scenarios
 
 ## Key Configuration Constants
 
