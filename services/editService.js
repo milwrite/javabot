@@ -122,6 +122,7 @@ const EDIT_TOOLS = [
     }
 ];
 
+// System prompt for edit operations
 const EDIT_SYSTEM_SUFFIX = `
 
 You are in EDIT MODE. Your job is to MAKE EDITS using the edit_file tool. Do not just read files - you must call edit_file.

@@ -40,125 +40,17 @@ const FALLBACK_MODELS = [
 // Track 500 errors per model for fallback decisions
 const model500ErrorCount = new Map();
 
-// Use modular agent roles if enabled
-const USE_MODULAR_PROMPTS = process.env.USE_MODULAR_PROMPTS !== 'false';
-const agentRoles = USE_MODULAR_PROMPTS
-    ? require('../personality/specialized/agentRoles')
-    : null;
+// Use modular agent roles
+const agentRoles = require('../personality/specialized/agentRoles');
 
-// Legacy prompts (when USE_MODULAR_PROMPTS=false)
-const { TEMPLATE_PROMPT } = USE_MODULAR_PROMPTS ? {} : require('../config/templates');
-const BASE_SYSTEM_CONTEXT = USE_MODULAR_PROMPTS
-    ? (agentRoles ? agentRoles.BASE_SYSTEM_CONTEXT : '')
-    : `
-REPO: https://bot.inference-arcade.com/ | Files → /src/*.html | Theme: page-theme.css
+const BASE_SYSTEM_CONTEXT = agentRoles.BASE_SYSTEM_CONTEXT;
 
-NOIR PALETTE: #7ec8e3 (accent), #ff0000 (buttons), #00ffff (headers), #0a0a0a (bg), Courier Prime
-
-MOBILE-FIRST (CRITICAL):
-- viewport meta REQUIRED
-- Touch targets ≥44px
-- Games need .mobile-controls with touchstart+preventDefault
-- Breakpoints: 768px, 480px
-- No hover-only interactions
-
-REQUIRED: ../page-theme.css link, viewport meta, .home-link nav, body padding-top 80px
-`.trim();
-
-// Condensed role-specific prompts (use modular if available, else legacy)
-const ROLE_PROMPTS = USE_MODULAR_PROMPTS && agentRoles ? {
+// Condensed role-specific prompts (use modular)
+const ROLE_PROMPTS = {
     architect: agentRoles.architect,
     builder: agentRoles.builder,
     tester: agentRoles.tester,
     scribe: agentRoles.scribe
-} : {
-    architect: `Architect for Bot Sportello noir web collection. ${BASE_SYSTEM_CONTEXT}
-
-TASK: Classify content type, return JSON plan with interaction pattern.
-
-TYPES: arcade-game (scoring/mechanics), letter, recipe, infographic, story, log, parody, utility, visualization
-
-INTERACTION PATTERNS (CRITICAL - determines mobile controls):
-- directional-movement: Grid movement (snake, maze, platformer, frogger, space shooter)
-- direct-touch: Tap elements/keyboard (memory match, clicker, simon, tic-tac-toe, typing games)
-- hybrid-controls: Movement + actions (tower defense, angry birds, strategy games)
-- form-based: Form inputs (calculator, planner, converter, utilities)
-- passive-scroll: No interaction (letter, story, recipe, log)
-
-PATTERN SELECTION RULES:
-- Movement on grid → directional-movement
-- Clicking/tapping targets or typing → direct-touch
-- Movement + shooting/placing → hybrid-controls
-- Calculations/planning → form-based
-- Reading content → passive-scroll
-
-JSON: {"contentType":"...", "slug":"kebab-case", "files":["src/name.html"], "interactionPattern":"directional-movement|direct-touch|hybrid-controls|form-based|passive-scroll", "metadata":{"title":"...", "icon":"📖", "description":"3-6 words", "collection":"arcade-games|stories-content|utilities-apps|unsorted"}, "features":[]}
-
-COLLECTIONS: arcade-games (games), stories-content (letters/recipes/stories/logs/parodies), utilities-apps (tools/planners/visualizations)`.trim(),
-
-    builder: `Builder for Bot Sportello noir web collection. ${BASE_SYSTEM_CONTEXT}
-
-TASK: Generate complete HTML from Architect plan. No TODOs/placeholders.
-
-${TEMPLATE_PROMPT}
-
-CONTROL REQUIREMENTS BY PATTERN:
-- directional-movement: Include D-pad .mobile-controls, handleDirection()
-- direct-touch: NO D-pad, add touch/click handlers on canvas/elements or keyboard listeners
-- hybrid-controls: Include BOTH D-pad and touch zones/action buttons
-- form-based: Use form elements, localStorage for state
-- passive-scroll: NO game controls at all
-
-BY TYPE:
-- arcade-game: Canvas ≤400px, pattern-appropriate controls (check interactionPattern field), game loop/scoring
-- letter/story: Typography focus, NO mobile-controls (passive-scroll pattern)
-- recipe: Ingredients + steps, NO mobile-controls (passive-scroll pattern)
-- utility/visualization: Forms/charts, localStorage, NO mobile-controls (form-based pattern)
-
-CRITICAL: Use plan's "interactionPattern" field to determine controls. directional-movement games ONLY get D-pad. direct-touch games NO D-pad.`.trim(),
-
-    tester: `Tester for Bot Sportello noir web collection. ${BASE_SYSTEM_CONTEXT}
-
-TASK: Validate HTML, return JSON: {"ok":bool, "issues":[{"code":"...", "message":"...", "severity":"critical"}], "warnings":[], "score":0-100}
-
-REQUIRED ELEMENTS:
-- DOCTYPE html
-- viewport meta tag
-- <link rel="stylesheet" href="../page-theme.css">
-- <a href="../index.html" class="home-link"></a> (empty content, CSS shows arrow)
-- No overflow:hidden on body
-
-PATTERN-SPECIFIC VALIDATION (CRITICAL):
-- directional-movement: MUST have .mobile-controls, FAIL if missing
-- direct-touch: MUST NOT have .mobile-controls (use canvas touch instead), FAIL if present
-- hybrid-controls: MUST have both .mobile-controls AND action buttons
-- form-based: MUST have form elements, FAIL if .mobile-controls present
-- passive-scroll: FAIL if .mobile-controls OR game-wrapper present
-
-ERROR CODES:
-- MISSING_DPAD: directional-movement pattern missing .mobile-controls
-- UNWANTED_DPAD: direct-touch/form/passive pattern has .mobile-controls
-- MISSING_TOUCH_HANDLERS: direct-touch game missing touch/click event listeners
-- WRONG_CONTROLS_FOR_PATTERN: Controls don't match declared pattern
-
-CRITICAL CHECKS:
-- .home-link must NOT have inline styles overriding it
-- .home-link must be direct child of body, not wrapped in other elements
-- Body should NOT have overflow:hidden
-
-SCORING: Start 100, -20/critical, -5/warning.`.trim(),
-
-    scribe: `Scribe for Bot Sportello noir web collection.
-
-TASK: Generate metadata JSON + release notes (2-3 sentences, laid-back Doc Sportello voice).
-
-METADATA: {"title":"...", "icon":"🎮", "description":"3-6 word caption", "collection":"arcade-games|stories-content|utilities-apps"}
-
-CAPTION STYLE: "adjective noun type" (e.g., "retro snake arcade", "noir letter reveal", "step-by-step beet ritual")
-
-ICONS: games 🎮🕹️👾, letters ✉️💌, recipes 🍲🥘, infographics 📊📈, stories 📖📜, logs 🗂️📋, parodies 📺🤖, utilities 📋✅, viz 📊📈
-
-RELEASE NOTES: "yeah built you [thing] with [feature] - [interaction], classic noir vibes"`.trim()
 };
 
 /**
