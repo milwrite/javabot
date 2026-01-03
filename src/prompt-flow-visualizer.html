@@ -493,7 +493,7 @@
                 <g id="node-router" class="node" data-info="router" data-module="specialized/routing">
                     <rect class="node-rect" x="240" y="30" width="120" height="50" rx="5"/>
                     <text class="node-text" x="300" y="52" text-anchor="middle">Router</text>
-                    <text class="node-label" x="300" y="68" text-anchor="middle">LLM ROUTING</text>
+                    <text class="node-label" x="300" y="68" text-anchor="middle">PATTERN MATCH</text>
                 </g>
 
                 <!-- Edge: Router -> Decision -->
@@ -734,14 +734,14 @@
                 name: 'routing',
                 category: 'specialized',
                 lines: 44,
-                tokens: 180,
-                purpose: 'Fast intent classification and tool sequence planning',
-                preview: `You are a routing optimizer for a Discord bot that manages files and creates content.
-Your job is to analyze user requests and output a JSON routing plan.
-
-AVAILABLE TOOLS (ordered by speed):
-- file_exists: Instant check if path/URL exists
-- list_files: Instant directory listing...`
+                tokens: 0,
+                purpose: 'Instant pattern-based intent classification (no LLM call)',
+                preview: `Pattern-based routing using regex patterns:
+- Structural transforms: /follow|match|same design/ → write_file
+- Edit requests: /edit|change|fix/ + path → edit_file
+- Create requests: /create|build|make/ → pipeline
+- Pronouns: "fix it" + recent file → resolve from cache
+No API call - instant classification (<1ms)`
             },
             'core/identity': {
                 name: 'identity',
@@ -781,13 +781,16 @@ Personality: Casual, chill, slightly unfocused but helpful. SHORT responses (1-2
                 category: 'core',
                 lines: 40,
                 tokens: 180,
-                purpose: 'Critical heuristics to prevent hallucination and ensure verification',
-                preview: `CRITICAL EXPLORATION RULES (Always follow these):
+                purpose: 'Decisive action rules - act fast, ask when truly stuck',
+                preview: `DECISION RULES (Be confident, act fast):
 
-1. WHEN UNCERTAIN WHAT FILES EXIST:
-   - Use list_files("src") to see all available files
-   - OR read_file("src/site-inventory.html") for detailed site structure
-   - NEVER guess or assume files exist based on memory...`
+1. ACT DECISIVELY when you have clear signals:
+   - User gives filename? → file_exists → read_file → act
+   - Clear request? → do it, don't ask permission
+
+2. ASK QUESTIONS when truly ambiguous:
+   - Multiple files could match → ask user
+   - Vague request with no context → ask for specifics...`
             },
             'core/contextRules': {
                 name: 'contextRules',
@@ -900,10 +903,10 @@ TASK: Generate project metadata in Doc Sportello's voice:
         // Assembler configurations
         const ASSEMBLERS = {
             router: {
-                name: 'Router',
+                name: 'Pattern Router',
                 modules: ['specialized/routing'],
-                totalTokens: 180,
-                usedFor: 'Fast intent classification (Gemma 3 12B)'
+                totalTokens: 0,
+                usedFor: 'Instant intent classification (regex patterns, no LLM)'
             },
             chat: {
                 name: 'Chat Path',
@@ -933,7 +936,7 @@ TASK: Generate project metadata in Doc Sportello's voice:
                 description: 'Pure greeting triggers chat fast path - minimal token usage',
                 steps: [
                     { node: 'node-input', edge: 'edge-input-router', label: 'User sends @mention' },
-                    { node: 'node-router', edge: 'edge-router-decision', label: 'Router: intent=chat, confidence=0.9' },
+                    { node: 'node-router', edge: 'edge-router-decision', label: 'Pattern: no file ref, short msg → intent=chat (<1ms)' },
                     { node: 'node-decision', edge: 'edge-decision-chat', label: 'Decision: Chat fast path' },
                     { node: 'node-chat', edge: 'edge-chat-modules', label: 'assembleChat() called' },
                     { node: 'modules-chat', edge: 'edge-chatmod-output', label: 'Load 3 modules: identity + repository + capabilities' },
@@ -948,10 +951,10 @@ TASK: Generate project metadata in Doc Sportello's voice:
                 description: 'Edit intent routes to full agent with all tools available',
                 steps: [
                     { node: 'node-input', edge: 'edge-input-router', label: 'User sends edit request' },
-                    { node: 'node-router', edge: 'edge-router-decision', label: 'Router: intent=edit, sequence=[file_exists, read_file, edit_file]' },
+                    { node: 'node-router', edge: 'edge-router-decision', label: 'Pattern: /change/ + .html → intent=edit, path=src/snake-game.html (<1ms)' },
                     { node: 'node-decision', edge: 'edge-decision-full', label: 'Decision: Full agent with tools' },
-                    { node: 'node-full', edge: 'edge-full-modules', label: 'assembleFullAgent() + routing guidance' },
-                    { node: 'modules-full', edge: 'edge-fullmod-output', label: 'Load 8 modules with anti-hallucination rules' },
+                    { node: 'node-full', edge: 'edge-full-modules', label: 'assembleFullAgent() + routing guidance hints' },
+                    { node: 'modules-full', edge: 'edge-fullmod-output', label: 'Load 8 modules with decisive action rules' },
                     { node: 'node-full-output', label: 'Final prompt: ~1400 tokens (46% savings)' }
                 ],
                 assembler: 'full',
@@ -963,7 +966,7 @@ TASK: Generate project metadata in Doc Sportello's voice:
                 description: 'Content creation uses 4-stage pipeline with specialized prompts',
                 steps: [
                     { node: 'node-input', edge: 'edge-input-router', label: 'User sends build request' },
-                    { node: 'node-router', edge: 'edge-router-decision', label: 'Router: intent=create, confidence=0.95' },
+                    { node: 'node-router', edge: 'edge-router-decision', label: 'Pattern: /build|create|make/ → intent=create (<1ms)' },
                     { node: 'node-decision', edge: 'edge-decision-pipeline', label: 'Decision: Content pipeline' },
                     { node: 'node-pipeline', edge: 'edge-pipeline-stages', label: 'runGamePipeline() initiated' },
                     { node: 'stages-pipeline', edge: 'edge-pipemod-output', label: 'Stage 1: Architect (100 tok) -> Stage 2: Builder (400 tok) -> Stage 3: Tester (150 tok) -> Stage 4: Scribe (60 tok)' },
@@ -978,9 +981,9 @@ TASK: Generate project metadata in Doc Sportello's voice:
                 description: 'Search intent uses full agent with web_search tool prioritized',
                 steps: [
                     { node: 'node-input', edge: 'edge-input-router', label: 'User asks about current events' },
-                    { node: 'node-router', edge: 'edge-router-decision', label: 'Router: intent=search, toolSequence=[web_search]' },
+                    { node: 'node-router', edge: 'edge-router-decision', label: 'Pattern: /latest|current|news/ → intent=search (<1ms)' },
                     { node: 'node-decision', edge: 'edge-decision-full', label: 'Decision: Full agent (search needs tools)' },
-                    { node: 'node-full', edge: 'edge-full-modules', label: 'assembleFullAgent() with searchGuidelines emphasized' },
+                    { node: 'node-full', edge: 'edge-full-modules', label: 'assembleFullAgent() with searchGuidelines' },
                     { node: 'modules-full', edge: 'edge-fullmod-output', label: 'Load 8 modules including search guidelines' },
                     { node: 'node-full-output', label: 'Final prompt: ~1400 tokens + web_search tool' }
                 ],
@@ -1233,8 +1236,8 @@ TASK: Generate project metadata in Doc Sportello's voice:
 
             const nodeDescriptions = {
                 'input': { name: '@mention Input', desc: 'User mentions Bot Sportello in Discord. Message content is extracted and passed to routing system.' },
-                'router': { name: 'LLM Router', desc: 'Fast Gemma 3 12B model classifies intent and suggests tool sequence. Returns JSON with intent, toolSequence, confidence, and parameterHints.' },
-                'decision': { name: 'Intent Decision', desc: 'Based on router output and classifier backup, determines which assembler path to use: chat (fast), full agent (tools), or pipeline (content creation).' },
+                'router': { name: 'Pattern Router', desc: 'Instant regex-based classification (<1ms). Extracts file paths, detects structural transformations, resolves pronouns from action cache. No LLM call - pure pattern matching.' },
+                'decision': { name: 'Intent Decision', desc: 'Based on pattern router output, determines which path: chat (greeting), full agent (tools), or pipeline (content creation). Routing guidance passed to main LLM.' },
                 'chat': { name: 'assembleChat()', desc: 'Minimal prompt assembly for pure greetings. Only loads identity, repository, and capabilities modules. Uses kimi-fast model for quick responses.' },
                 'full': { name: 'assembleFullAgent()', desc: 'Complete prompt with anti-hallucination rules, all tool guidelines, and context resolution. Used for file operations, edits, and searches.' },
                 'pipeline': { name: 'Content Pipeline', desc: '4-stage build process: Architect (plan) -> Builder (generate) -> Tester (validate) -> Scribe (metadata). Each stage has specialized prompt.' },
