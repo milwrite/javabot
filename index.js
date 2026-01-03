@@ -851,9 +851,13 @@ function cleanBotResponse(response) {
         .replace(/<\/?(invoke|parameter)\b[^>]*>/gi, '')
         .replace(/^<[^>\n]*(tool_call|invoke|parameter)[^>\n]*>\s*$/gmi, '');
 
-    // Also strip accidental plain-text tool call lines like
-    // "functions.read_file: { ... }" or "functions.search_files: ..."
-    cleaned = cleaned.replace(/^functions\.[a-zA-Z0-9_\-]+\s*:\s*.*$/gmi, '').trim();
+    // Strip plain-text tool calls that some models emit
+    // Pattern 1: Line starting with functions.X (original format)
+    // Pattern 2: Mid-line functions.X:N {...} format (Kimi K2 style with iteration number)
+    cleaned = cleaned
+        .replace(/^functions\.[a-zA-Z0-9_\-]+\s*:\s*.*$/gmi, '')
+        .replace(/\s*functions\.[a-zA-Z0-9_]+(?::\d+)?\s*\{[^}]+\}/gi, '')
+        .trim();
 
     // Improve markdown formatting with proper spacing
     cleaned = cleaned
