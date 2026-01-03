@@ -1,3 +1,96 @@
+## 2026-01-02
+
+### Compositional Identity & API Error Fixes
+
+**Issue:**
+Railway logs showed two critical errors: (1) "No models provided" 400 error from OpenRouter API, and (2) agent exhibiting "schizophrenic" behavior with inconsistent personality across different code paths after modular prompt refactoring.
+
+**Root Causes:**
+1. `MODEL_PRESETS.glm` referenced in `index.js:2970,3000` but 'glm' key was removed from `config/models.js` during model cleanup → API received `undefined` as model
+2. `assembleFullAgent()` ordered modules as: explorationRules → contextRules → identity → ... (identity 3rd) → LLM established "rule-follower" persona from first ~500 tokens before reading personality context
+3. Chat fast path used different assembly (identity first) creating inconsistent personas between paths
+4. Router module had zero personality context ("You are a routing optimizer...") → mechanical classification without Doc Sportello awareness
+5. Edit mode missing exploration and context rules → blind file operations
+
+**Log Evidence:**
+```
+error: { message: 'No models provided', code: 400 }
+[ROUTER] LLM routing failed: timeout of 4000ms exceeded
+```
+
+**Changes Made:**
+
+**1. Model Configuration** ([config/models.js](config/models.js)):
+- Added `'glm': 'z-ai/glm-4.6:exacto'` to MODEL_PRESETS (user specified 4.6 over 4.7)
+- Added display name `'glm': 'GLM 4.6 Exacto'`
+
+**2. LLM Client Cleanup** ([services/llmClient.js](services/llmClient.js)):
+- Removed duplicate MODEL_PRESETS with outdated GLM 4.7 reference
+- Changed to import from `config/models.js` for single source of truth:
+  ```javascript
+  const { MODEL_PRESETS } = require('../config/models');
+  ```
+
+**3. Assembly Reordering** ([personality/assemblers/index.js](personality/assemblers/index.js)):
+- `assembleFullAgent()`: Reordered to identity-first:
+  ```
+  BEFORE: explorationRules → contextRules → identity → repository → capabilities → ...
+  AFTER:  identity → repository → capabilities → explorationRules → contextRules → ...
+  ```
+- Added comments explaining LLM persona formation from first ~500 tokens
+
+**4. Module Coverage Standardization**:
+- `assembleChat()`: Added `contextRules` for reference resolution ("the game", "that file")
+- `assembleEditMode()`: Added `explorationRules` + `contextRules` for consistent file verification
+
+**5. Personality Framing** ([personality/core/explorationRules.js](personality/core/explorationRules.js), [contextRules.js](personality/core/contextRules.js)):
+- Added Doc Sportello personality intros before rule content:
+  ```javascript
+  // explorationRules.js
+  `You dig verification, man. These exploration rules keep you grounded...`
+
+  // contextRules.js
+  `When someone says "the game" or "that file," you're chill about figuring out...`
+  ```
+
+**6. Router Identity** ([personality/specialized/routing.js](personality/specialized/routing.js)):
+- Changed mechanical opener to personality-aware:
+  ```javascript
+  // BEFORE
+  `You are a routing optimizer for a Discord bot...`
+
+  // AFTER
+  `You're helping Doc Sportello (a laid-back but helpful Discord bot) figure out what the user needs. Remember Doc's style: thorough verification, chill vibes.`
+  ```
+
+**Assembly Order Comparison:**
+
+| Stage | Before | After |
+|-------|--------|-------|
+| **Full Agent** | rules → rules → identity | **identity** → repo → caps → rules |
+| **Chat** | identity → repo → caps | identity → repo → caps → **contextRules** |
+| **Edit Mode** | identity → repo → fileOps → edit | identity → repo → **explorationRules** → **contextRules** → fileOps → edit |
+| **Router** | "routing optimizer" (mechanical) | "helping Doc Sportello" (personality-aware) |
+
+**Expected Outcomes:**
+- No more "No models provided" API errors (GLM 4.6 now valid in presets)
+- Consistent Doc Sportello personality across all code paths
+- Agent establishes identity before reading rules → personality-first, not rule-first
+- Router classifications reflect Doc's style (thorough verification, chill vibes)
+- Edit mode includes file verification rules preventing blind assumptions
+
+**Files Modified:**
+- `config/models.js` - Added GLM 4.6 preset and display name
+- `services/llmClient.js` - Import MODEL_PRESETS from config (removed duplicate)
+- `personality/assemblers/index.js` - Reordered assembleFullAgent(), updated assembleChat(), assembleEditMode()
+- `personality/core/explorationRules.js` - Added personality framing intro
+- `personality/core/contextRules.js` - Added personality framing intro
+- `personality/specialized/routing.js` - Added Doc Sportello identity context
+
+**Commit:** `c12ac13` - "fix: identity-first prompt assembly, add glm 4.6, standardize module coverage"
+
+---
+
 ## 2026-01-01
 
 ### Prompt Flow Visualizer
