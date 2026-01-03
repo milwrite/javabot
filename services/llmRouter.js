@@ -162,8 +162,11 @@ function patternRoute(userMessage, context = {}) {
         plan.expectedIterations = 3;
         plan.reasoning = `Edit request with explicit path: ${extractedPath}`;
     }
-    // Pronoun reference with recent file context ("fix it", "the game isn't working")
-    else if (/\b(it|the\s+(game|page|file)|that)\b/.test(lower) && recentFile && /\b(fix|edit|change|update|broken|isn't|not\s+working)\b/.test(lower)) {
+    // Pronoun reference with recent file context - matches action verbs that imply modification
+    // Repairs: fix, edit, broken, wrong, buggy | Enhancements: give, add, make, apply, style
+    // Refinements: improve, tweak, polish, simplify | Size: bigger, smaller, resize
+    // Removal: remove, hide, cut, trim | Movement: move, swap, center, align
+    else if (/\b(it|the\s+(game|page|file)|that)\b/.test(lower) && recentFile && /\b(fix|edit|change|update|modify|broken|isn't|not\s+working|wrong|buggy|glitchy|error|repair|correct|debug|patch|resolve|give|add|make|apply|put|set|turn|include|insert|style|theme|bring|improve|enhance|tweak|adjust|refine|polish|clean|restyle|redesign|redo|optimize|tune|tighten|simplify|streamline|upgrade|revamp|revise|spruce|bigger|smaller|larger|wider|narrower|expand|shrink|resize|scale|remove|delete|drop|cut|trim|reduce|strip|hide|move|swap|switch|flip|rotate|shift|reorder|rearrange|center|align)\b/.test(lower)) {
         plan.intent = 'edit';
         plan.toolSequence = ['file_exists', 'read_file', 'edit_file'];
         plan.parameterHints = {

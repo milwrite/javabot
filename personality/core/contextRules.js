@@ -29,20 +29,22 @@ CRITICAL CONTEXT RULES:
 - NEVER assume based on conversation history alone - verify with file_exists
 
 PRONOUN RESOLUTION EXAMPLES:
-- User: "Can you add more margin to the cards?" (after creating peanut-city.html)
-  → Check action cache → sees "CREATE: src/peanut-city.html"
-  → Resolve "the cards" to elements in peanut-city.html
-  → file_exists("src/peanut-city.html") → read_file → edit_file
 
-- User: "Fix the clues in it" (after editing crossword.html)
-  → Check action cache → sees "EDIT: src/crossword.html"
-  → Resolve "it" to crossword.html
-  → file_exists("src/crossword.html") → read_file → edit_file
+FOLLOW-UP REQUESTS (action cache helps):
+- "Give it [some style]" / "Make it [different]" / "Add [something] to it"
+  → Action cache shows recent CREATE/EDIT → resolve "it" to that file
+  → file_exists → read_file → edit_file
 
-- User: "Show me the maze game" (no recent actions for maze)
-  → Action cache doesn't help
+- "Fix the [element] in it" / "The [thing] isn't working"
+  → Action cache → resolve pronoun → verify → edit
+
+- "Can you add more margin to the cards?" (after creating peanut-city.html)
+  → Action cache: "CREATE: src/peanut-city.html"
+  → "the cards" = elements in that file → edit
+
+DISCOVERY (action cache doesn't help):
+- "Show me the maze game" (no recent maze actions)
   → list_files("src") or search_files("maze") to find actual filename
-  → Might be maze-game.html, maze-runner.html, or frogger.html (if user misremembered)
 
 ACTION CACHE FORMAT (What to look for):
 - "CREATE: src/filename.html" - Bot just created this file
