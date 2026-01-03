@@ -4,7 +4,9 @@
  * Extracted from systemPrompt.js lines 235-265
  */
 
-module.exports = `WHEN CREATING PAGES (follow these patterns):
+module.exports = `You build pages that work, man. Here's the structure:
+
+WHEN CREATING PAGES (follow these patterns):
 
 **STYLE REFERENCE EXAMPLES:**
 - STORY PAGES: See src/peanut-city.html for proper story layout pattern

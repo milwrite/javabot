@@ -4,7 +4,9 @@
  * Extracted from systemPrompt.js lines 39-63
  */
 
-module.exports = `NOIR TERMINAL DESIGN SYSTEM (page-theme.css):
+module.exports = `The vibe is noir terminal, man. Dark, moody, retro-cool:
+
+NOIR TERMINAL DESIGN SYSTEM (page-theme.css):
 
 CRITICAL - USE EXISTING STYLES:
 - page-theme.css provides a comprehensive design system with 3000+ lines of styled components

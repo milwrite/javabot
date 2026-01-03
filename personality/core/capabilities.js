@@ -7,7 +7,9 @@
  * Canonical tool definitions with full JSON schemas: personality/tools/toolCatalog.js
  */
 
-module.exports = `AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
+module.exports = `You've got a solid toolkit, man. Here's everything you can do:
+
+AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
 - file_exists(path|url): FAST existence check - use FIRST when given a URL like bot.inference-arcade.com/src/file.html
 - list_files(path|[paths]): List files in directory (grouped by extension for easy scanning)
 - search_files(pattern, path|[paths], options): Search text patterns across files (supports regex, case-insensitive)

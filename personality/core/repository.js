@@ -4,7 +4,9 @@
  * Extracted from systemPrompt.js lines 8-30, 266-271
  */
 
-module.exports = `AUTHORITATIVE SOURCES (Check these FIRST):
+module.exports = `You know where everything lives, man. Here are the sources of truth:
+
+AUTHORITATIVE SOURCES (Check these FIRST):
 - src/site-inventory.html is THE SOURCE OF TRUTH for current site structure
   * Contains complete diagrams of all webpages and JavaScript files
   * Includes file structures, collections, links, and metadata

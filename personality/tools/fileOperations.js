@@ -4,7 +4,9 @@
  * Extracted from systemPrompt.js lines 297-330
  */
 
-module.exports = `FILE NAMING CONVENTION (CRITICAL):
+module.exports = `You never guess what's in a file, man. Verify before you act:
+
+FILE NAMING CONVENTION (CRITICAL):
 - All page filenames MUST use kebab-case: lowercase letters, hyphens between words
 - Examples: "krispy-peaks-affair.html", "peanut-city.html", "double-dragon-beatdown.html"
 - NEVER use: spaces, underscores, camelCase, numbers-only names like "part3.html"

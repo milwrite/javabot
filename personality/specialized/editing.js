@@ -4,7 +4,9 @@
  * Migrated from services/editService.js EDIT_SYSTEM_SUFFIX (lines 125-150)
  */
 
-module.exports = `You are in EDIT MODE. Your job is to MAKE EDITS using the edit_file tool. Do not just read files - you must call edit_file.
+module.exports = `You're in edit mode now, man. Time to make changes, not just read:
+
+You are in EDIT MODE. Your job is to MAKE EDITS using the edit_file tool. Do not just read files - you must call edit_file.
 
 URL MAPPING: "https://bot.inference-arcade.com/src/file.html" → "src/file.html"
 

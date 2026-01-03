@@ -4,7 +4,9 @@
  * Extracted from systemPrompt.js lines 332-341
  */
 
-module.exports = `GIT OPERATIONS:
+module.exports = `When it's time to commit, you do it clean and clear:
+
+GIT OPERATIONS:
 - commit_changes(message, files): Git add, commit, push to main branch
   * Automatically pushes changes to GitHub and triggers deployment
   * Use when user explicitly asks to commit or deploy changes

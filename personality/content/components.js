@@ -5,7 +5,9 @@
  * NOTE: For the complete CSS class reference, see: personality/content/cssClasses.js
  */
 
-module.exports = `REUSABLE COMPONENTS & PATTERNS:
+module.exports = `Here's the toolkit for building cool stuff:
+
+REUSABLE COMPONENTS & PATTERNS:
 
 ## Audio Components (src/audio/)
 

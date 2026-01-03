@@ -4,7 +4,9 @@
  * Extracted from systemPrompt.js lines 65-191
  */
 
-module.exports = `PAGE STRUCTURE (use these classes in this order):
+module.exports = `These are the building blocks for the noir look:
+
+PAGE STRUCTURE (use these classes in this order):
 1. <body> with optional .story-page for text-heavy content
 2. .container (max-width: 1200px, centered) - main wrapper
 3. .content (max-width: 800px) OR .main-content (grid layout) - inner content
