@@ -589,7 +589,7 @@ Return ONLY the complete updated file content. No explanations, no markdown code
             const sha = await pushFileViaAPI(filePath, updatedContent, commitMessage, 'main');
             const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
             console.log(`[EDIT_FILE] Pushed: ${filePath} (${sha?.slice(0,7) || 'no-sha'}) in ${totalTime}s`);
-            return `File edited and pushed: ${filePath}. ${changeDescription} - now live`;
+            return `File edited and pushed: ${filePath}. ${changeDescription} - now live at https://bot.inference-arcade.com/${filePath}`;
         } catch (apiErr) {
             const detail = apiErr.response?.data?.message || apiErr.message;
             console.error(`[EDIT_FILE] Push failed: ${detail}`, apiErr.response?.data || '');
