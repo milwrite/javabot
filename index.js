@@ -2191,7 +2191,8 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             if (result) lastResponse = result;
         }
 
-        const content = lastResponse?.content;
+        // Clean content immediately to strip any tool call artifacts from the response
+        const content = cleanBotResponse(lastResponse?.content || '');
         if (!content || content.trim() === '') {
             logEvent('LLM', 'Empty response from AI - using fallback');
             console.error('Last response:', JSON.stringify(lastResponse, null, 2));
