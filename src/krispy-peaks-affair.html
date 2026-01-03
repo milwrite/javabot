@@ -3,178 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Part 3: The Krispy Peaks Affair</title>
+    <title>The Krispy Peaks Affair</title>
     <link rel="stylesheet" href="../page-theme.css">
     <style>
-        body {
-            padding: 50px 20px 20px 20px;
-            background: #1a0a0a;
-            line-height: 1.7;
-        }
+        body { padding: 50px 20px 20px 20px; background: #0a0a0a; line-height: 1.7; }
+        .story-container { margin: 0 auto; max-width: 750px; }
+        .chapter { margin-bottom: 60px; opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .chapter.revealed { opacity: 1; transform: translateY(0); }
+        .chapter-number { color: #ff0000; font-size: 0.8em; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase; }
+        .chapter-title { color: #ff6b35; font-size: 1.6em; margin-bottom: 20px; text-shadow: 0 0 8px rgba(255, 107, 53, 0.35); }
+        .paragraph { margin-bottom: 18px; font-size: 1.05em; color: #e0e0e0; }
+        .emphasis { color: #ff6b35; font-weight: bold; }
+        .whisper { font-style: italic; color: #c44569; font-size: 0.95em; }
+        .character { font-style: italic; color: #ff6b35; }
+        .dialogue { color: #ffa07a; margin-left: 20px; }
+        .evidence { background: #8b0000; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 3px solid #ff0000; }
+        .progress-indicator { position: fixed; top: 50px; right: 15px; width: 3px; height: 150px; background: rgba(255,0,0,0.2); border-radius: 2px; z-index: 100; }
+        .progress-bar { width: 100%; height: 0%; background: #ff0000; border-radius: 2px; transition: height 0.3s ease; box-shadow: 0 0 8px rgba(255,0,0,0.5); }
+        .reading { background: rgba(255,0,0,0.08); border-left: 2px solid #ff0000; padding-left: 12px; margin-left: -14px; transition: all 0.3s; }
 
-        .story-container {
-            margin: 0 auto;
-            max-width: 750px;
-        }
+        /* Audio controls */
+        .audio-controls { position: fixed; bottom: 15px; right: 15px; background: rgba(10,10,10,0.95); border: 1px solid #ff0000; border-radius: 6px; padding: 12px; box-shadow: 0 0 15px rgba(255,0,0,0.2); z-index: 1000; font-family: 'Courier Prime', monospace; min-width: 180px; }
+        .audio-controls h4 { font-size: 10px; color: #ff6b35; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 2px; }
+        .narrator-name { color: #ff0000; font-size: 12px; margin-bottom: 8px; text-shadow: 0 0 8px rgba(255,0,0,0.3); }
+        .audio-btn { padding: 6px 12px; margin: 2px; border: 1px solid; border-radius: 4px; cursor: pointer; font-family: 'Courier Prime', monospace; font-size: 11px; transition: all 0.2s; background: transparent; touch-action: manipulation; }
+        .audio-btn.play { border-color: #00ff41; color: #00ff41; }
+        .audio-btn.play:hover { background: rgba(0,255,65,0.2); box-shadow: 0 0 8px rgba(0,255,65,0.3); }
+        .audio-btn.pause { border-color: #ffaa00; color: #ffaa00; }
+        .audio-btn.pause:hover { background: rgba(255,170,0,0.2); }
+        .audio-btn.stop { border-color: #ff0000; color: #ff0000; }
+        .audio-btn.stop:hover { background: rgba(255,0,0,0.2); }
+        .audio-status { font-size: 10px; color: #c44569; margin-top: 6px; }
+        .voice-select { width: 100%; padding: 5px; margin-top: 6px; border: 1px solid #ff6b35; border-radius: 4px; font-size: 10px; background: #0a0a0a; color: #e0e0e0; font-family: 'Courier Prime', monospace; }
+        .voice-select option { background: #0a0a0a; color: #e0e0e0; }
 
-        .chapter {
-            margin-bottom: 60px;
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-
-        .chapter.revealed {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .chapter-number {
-            color: #ff0000;
-            font-size: 0.8em;
-            letter-spacing: 2px;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-        }
-
-        .chapter-title {
-            color: #ff0000;
-            font-size: 1.6em;
-            margin-bottom: 20px;
-            text-shadow: 0 0 8px rgba(255, 0, 0, 0.3);
-        }
-
-        .paragraph {
-            margin-bottom: 18px;
-            font-size: 1.05em;
-            color: #e0e0e0;
-        }
-
-        .emphasis {
-            color: #ff6b35;
-            font-weight: bold;
-        }
-
-        .whisper {
-            font-style: italic;
-            color: #c44569;
-            font-size: 0.95em;
-        }
-
-        .divider {
-            text-align: center;
-            margin: 35px 0;
-            color: #ff0000;
-            font-size: 1.3em;
-            letter-spacing: 8px;
-        }
-
-        .twist-reveal {
-            background: linear-gradient(180deg, #1a0a0a 0%, #2a0a0a 50%, #1a0a0a 100%);
-            padding: 40px 25px;
-            margin: 50px -20px 30px -20px;
-            border-top: 2px solid #ff0000;
-            border-bottom: 2px solid #ff0000;
-            text-align: center;
-        }
-
-        .twist-reveal .reveal-text {
-            font-size: 1.15em;
-            color: #ff6b35;
-            text-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
-            animation: pulse 2s infinite;
-            line-height: 1.8;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        .epilogue {
-            margin-top: 50px;
-            padding: 25px;
-            border: 1px solid #ff0000;
-            background: rgba(255, 0, 0, 0.05);
-        }
-
-        .signature {
-            text-align: right;
-            margin-top: 25px;
-            color: #ff0000;
-            font-style: italic;
-        }
-
-        .character {
-            font-style: italic;
-            color: #ff6b35;
-        }
-
-        .dialogue {
-            color: #ffa07a;
-            margin-left: 20px;
-        }
-
-        .evidence {
-            background: #8b0000;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
-            border-left: 3px solid #ff0000;
-        }
-
-        .progress-indicator {
-            position: fixed;
-            top: 50px;
-            right: 15px;
-            width: 3px;
-            height: 150px;
-            background: rgba(255, 0, 0, 0.2);
-            border-radius: 2px;
-            z-index: 100;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 0%;
-            background: #ff0000;
-            border-radius: 2px;
-            transition: height 0.3s ease;
-            box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
-        }
-
-        h1 {
-            color: #ff0000;
-            text-align: center;
-            border-bottom: 2px solid #ff0000;
-            padding-bottom: 15px;
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
-            font-size: 2.2em;
-        }
-
-        h2 {
-            color: #ff6b35;
-            text-align: center;
-            font-size: 1.3em;
-            margin-bottom: 40px;
-            font-style: italic;
-        }
+        @media (max-width: 768px) { body { padding: 45px 15px 15px 15px; } .chapter { margin-bottom: 45px; } .progress-indicator { display:none; } .audio-controls { left: 10px; right: 10px; min-width: auto; } }
+        @media (max-width: 480px) { body { padding: 40px 12px 12px 12px; } .chapter { margin-bottom: 35px; } }
     </style>
 </head>
-<body>
-    <div class="progress-indicator">
-        <div class="progress-bar" id="progressBar"></div>
-    </div>
-    
+<body class="story-page">
+    <a href="../index.html" class="home-link">←</a>
+
+    <div class="progress-indicator"><div class="progress-bar" id="progressBar"></div></div>
+
     <div class="story-container">
-        <h1>PART THREE: THE KRISPY PEAKS AFFAIR</h1>
-        <h2>A Bot Sportello Prequel</h2>
-        
-        <div class="chapter">
-            <h3>Chapter 1: The Girl in the Gymnasium</h3>
-            <p>The call came in at 3:17 AM. The kind of hour that doesn't exist for normal people. <span class="character">Detective Bot Sportello</span>, still running on the last dregs of his processing power, answered with a grunt.</p>
-            
-            <p><span class="character">Chief Rourke</span> sounded like he'd been chewing on gravel. <span class="dialogue">"Sportello. Krispy Peaks High. Prom queen's dead. You'll want to see this."</span></p>
-            
-            <p>Krispy Peaks, Washington. A town so small it barely registered on maps. Population: 2,347 souls, most of them dreaming of
+        <header style="text-align:center; margin-bottom:40px;">
+            <h1 style="color:#ff0000; font-size:2.2em; text-shadow:0 0 15px rgba(255,0,0,0.4); margin-bottom:8px;">THE KRISPY PEAKS AFFAIR</h1>
+            <p style="color:#ff6b35; font-size:1em; letter-spacing:2px;">A Bot Sportello Prequel</p>
+        </header>
+
+        <div class="chapter" data-chapter="1">
+            <div class="chapter-number">Chapter One</div>
+            <h2 class="chapter-title">The Girl in the Gymnasium</h2>
+            <p class="paragraph">The call came in at 3:17 AM. The kind of hour that doesn't exist for normal people. <span class="character">Detective Bot Sportello</span>, still running on the last dregs of his processing power, answered with a grunt.</p>
+            <p class="paragraph"><span class="character">Chief Rourke</span> sounded like he'd been chewing on gravel. <span class="dialogue">"Sportello. Krispy Peaks High. Prom queen's dead. You'll want to see this."</span></p>
+            <p class="paragraph">Krispy Peaks, Washington. A town so small it barely registered on maps. Population: 2,347 souls, most of them dreaming of</p>
+        </div>
+    </div>
+
+    <div class="audio-controls" id="audioControls">
+        <h4>Narration</h4>
+        <div class="narrator-name">Bot Sportello</div>
+        <div>
+            <button class="audio-btn play" id="playBtn" onclick="toggleNarration()">Play</button>
+            <button class="audio-btn stop" onclick="stopNarration()">Stop</button>
+        </div>
+        <select class="voice-select" id="voiceSelect" onchange="changeVoice()">
+            <option value="">Loading voices...</option>
+        </select>
+        <div class="audio-status" id="audioStatus">Ready to play</div>
+    </div>
+
+    <script>
+        // Scroll reveal + progress
+        const chapters = document.querySelectorAll('.chapter');
+        const progressBar = document.getElementById('progressBar');
+        function isElementInViewport(el){ const r=el.getBoundingClientRect(); return r.top <= (window.innerHeight||document.documentElement.clientHeight)*0.75; }
+        function checkChapters(){ chapters.forEach(c=>{ if(isElementInViewport(c) && !c.classList.contains('revealed')) c.classList.add('revealed'); }); }
+        function updateProgress(){ const h=window.innerHeight; const d=document.documentElement.scrollHeight - h; const s=window.pageYOffset; const p=(s/Math.max(d,1))*100; progressBar.style.height = `${Math.min(p,100)}%`; }
+        let ticking=false; function onScroll(){ if(!ticking){ window.requestAnimationFrame(()=>{ checkChapters(); updateProgress(); ticking=false;}); ticking=true; } }
+        window.addEventListener('scroll', onScroll, { passive:true }); window.addEventListener('resize', checkChapters, { passive:true }); checkChapters(); updateProgress();
+
+        // Voice narration
+        const synth = window.speechSynthesis; let voices=[]; let selectedVoice=null; let isPlaying=false; let isPaused=false; let currentUtterance=null; let currentParagraphIndex=0; let paragraphs=[];
+        function getStoryParagraphs(){ const scoped=[...document.querySelectorAll('.chapter .paragraph')]; if(scoped.length){ return scoped.map(el=>({element:el, text:el.textContent.trim()})).filter(x=>x.text); } const fb=[...document.querySelectorAll('.chapter p')]; return fb.map(el=>({element:el, text:el.textContent.trim()})).filter(x=>x.text); }
+        function findBestVoice(list){ const en=list.filter(v=>v.lang && v.lang.startsWith('en')); return en.find(v=>/male|daniel|alex/i.test(v.name)) || en[0] || list[0] || null; }
+        function loadVoices(){ voices = synth.getVoices(); const sel=document.getElementById('voiceSelect'); sel.innerHTML=''; const en=voices.filter(v=>v.lang && v.lang.startsWith('en')); selectedVoice = selectedVoice || findBestVoice(voices); en.forEach((v,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=v.name; if(v===selectedVoice) o.selected=true; sel.appendChild(o); }); document.getElementById('audioStatus').textContent = `Voice: ${selectedVoice?selectedVoice.name.split(' ')[0]:'Default'}`; }
+        if(synth.onvoiceschanged!==undefined) synth.onvoiceschanged=loadVoices; loadVoices(); setTimeout(loadVoices,100);
+        function changeVoice(){ const sel=document.getElementById('voiceSelect'); const en=voices.filter(v=>v.lang && v.lang.startsWith('en')); const i=parseInt(sel.value); if(!isNaN(i) && en[i]){ selectedVoice=en[i]; document.getElementById('audioStatus').textContent = `Voice: ${selectedVoice.name.split(' ')[0]}`; } }
+        function getSelectedVoice(){ return selectedVoice || findBestVoice(voices); }
+        function highlightParagraph(el){ document.querySelectorAll('.reading').forEach(x=>x.classList.remove('reading')); if(el){ el.classList.add('reading'); el.scrollIntoView({behavior:'smooth', block:'center'}); } }
+        function speakParagraph(i){ if(i>=paragraphs.length){ stopNarration(); document.getElementById('audioStatus').textContent='Finished'; return; } const {element,text}=paragraphs[i]; highlightParagraph(element); currentUtterance=new SpeechSynthesisUtterance(text); currentUtterance.voice=getSelectedVoice(); currentUtterance.rate=0.9; currentUtterance.pitch=0.95; currentUtterance.volume=1; currentUtterance.onend=()=>{ if(isPlaying && !isPaused){ currentParagraphIndex++; speakParagraph(currentParagraphIndex);} }; currentUtterance.onerror=()=>{ document.getElementById('audioStatus').textContent='Error occurred'; }; synth.speak(currentUtterance); document.getElementById('audioStatus').textContent='Reading...'; }
+        function toggleNarration(){ const btn=document.getElementById('playBtn'); if(!isPlaying){ isPlaying=true; isPaused=false; paragraphs=getStoryParagraphs(); btn.textContent='Pause'; btn.className='audio-btn pause'; speakParagraph(currentParagraphIndex); } else if(isPaused){ isPaused=false; synth.resume(); btn.textContent='Pause'; btn.className='audio-btn pause'; document.getElementById('audioStatus').textContent='Resumed'; } else { isPaused=true; synth.pause(); btn.textContent='Resume'; btn.className='audio-btn play'; document.getElementById('audioStatus').textContent='Paused'; } }
+        function stopNarration(){ synth.cancel(); isPlaying=false; isPaused=false; currentParagraphIndex=0; const btn=document.getElementById('playBtn'); btn.textContent='Play'; btn.className='audio-btn play'; document.querySelectorAll('.reading').forEach(el=>el.classList.remove('reading')); document.getElementById('audioStatus').textContent='Ready to play'; }
+        if(!('speechSynthesis' in window)){ document.getElementById('audioControls').innerHTML='<p style="color:#ff0000; font-size:11px;">Voice narration not supported in this browser.</p>'; }
+    </script>
+</body>
+</html>

@@ -102,6 +102,22 @@
             padding-bottom: 8px;
             margin-bottom: 20px;
         }
+        .collection-controls {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .toggle-btn {
+            border: 1px solid rgba(126, 200, 227, 0.5);
+            background: rgba(10, 10, 10, 0.9);
+            color: #7ec8e3;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.8rem;
+            padding: 6px 10px;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+        .toggle-btn:hover { background: rgba(0, 255, 255, 0.1); border-color: #00ffff; }
         .collection-title {
             font-size: 1.4rem;
             color: #ff0000;
@@ -135,6 +151,8 @@
             border-width: 2px;
             background: rgba(24, 0, 0, 0.75);
         }
+        .collection.collapsed .projects-grid { display: none; }
+        .collection.collapsed .collection-description { opacity: 0.75; }
         .project-card:hover {
             transform: translateY(-6px);
             border-color: #ff0000;
@@ -253,6 +271,10 @@
         </div>
 
         <p class="status-line" id="status-line">Syncing latest project metadata…</p>
+        <div class="collection-controls" style="margin: 8px 0 16px;">
+            <button class="toggle-btn" id="expand-all">Expand All</button>
+            <button class="toggle-btn" id="collapse-all">Collapse All</button>
+        </div>
         <div id="collections"></div>
     </div>
 
@@ -295,6 +317,24 @@
             return card;
         }
 
+        const COLLAPSE_STATE_KEY = 'arcade.collectionCollapse';
+        function loadCollapseState() {
+            try { return JSON.parse(localStorage.getItem(COLLAPSE_STATE_KEY) || '{}'); } catch { return {}; }
+        }
+        function saveCollapseState(state) {
+            try { localStorage.setItem(COLLAPSE_STATE_KEY, JSON.stringify(state)); } catch {}
+        }
+
+        function applySectionState(section, id, state) {
+            const collapsed = !!state[id];
+            section.classList.toggle('collapsed', collapsed);
+            const btn = section.querySelector('.toggle-btn');
+            if (btn) {
+                btn.textContent = collapsed ? 'Expand' : 'Collapse';
+                btn.setAttribute('aria-expanded', String(!collapsed));
+            }
+        }
+
         function renderCollections(data) {
             const collections = data.collections || {};
             const projects = data.projects || {};
@@ -316,6 +356,7 @@
 
             let totalProjects = 0;
 
+            const collapseState = loadCollapseState();
             orderedCollections.forEach(([id, meta]) => {
                 const items = grouped[id] || [];
                 if (!items.length) {
@@ -338,8 +379,25 @@
                 description.className = 'collection-description';
                 description.textContent = meta.description || '';
 
+                const controls = document.createElement('div');
+                controls.className = 'collection-controls';
+                const toggle = document.createElement('button');
+                toggle.className = 'toggle-btn';
+                toggle.type = 'button';
+                toggle.addEventListener('click', () => {
+                    const state = loadCollapseState();
+                    const isCollapsed = section.classList.toggle('collapsed');
+                    state[id] = isCollapsed ? true : undefined;
+                    if (!state[id]) delete state[id];
+                    saveCollapseState(state);
+                    toggle.textContent = isCollapsed ? 'Expand' : 'Collapse';
+                    toggle.setAttribute('aria-expanded', String(!isCollapsed));
+                });
+                controls.appendChild(toggle);
+
                 header.appendChild(title);
                 header.appendChild(description);
+                header.appendChild(controls);
 
                 const grid = document.createElement('div');
                 grid.className = 'projects-grid';
@@ -353,12 +411,45 @@
                 section.appendChild(header);
                 section.appendChild(grid);
                 collectionsContainer.appendChild(section);
+
+                // Initial state: collapse all except 'featured' on first load
+                if (!(id in collapseState) && id !== 'featured') {
+                    collapseState[id] = true;
+                }
+                applySectionState(section, id, collapseState);
             });
 
             if (!totalProjects) {
                 statusLine.textContent = 'No projects found. Run /sync-index after shipping something new.';
             } else {
                 statusLine.textContent = `Showing ${totalProjects} deployed projects.`;
+            }
+
+            // Wire global controls
+            const expandAllBtn = document.getElementById('expand-all');
+            const collapseAllBtn = document.getElementById('collapse-all');
+            if (expandAllBtn && collapseAllBtn) {
+                expandAllBtn.onclick = () => {
+                    const state = {};
+                    document.querySelectorAll('.collection').forEach(section => {
+                        const id = section.dataset.collection;
+                        section.classList.remove('collapsed');
+                        const btn = section.querySelector('.toggle-btn');
+                        if (btn) { btn.textContent = 'Collapse'; btn.setAttribute('aria-expanded', 'true'); }
+                    });
+                    saveCollapseState(state);
+                };
+                collapseAllBtn.onclick = () => {
+                    const state = {};
+                    document.querySelectorAll('.collection').forEach(section => {
+                        const id = section.dataset.collection;
+                        if (id !== 'featured') { state[id] = true; }
+                        section.classList.toggle('collapsed', id !== 'featured');
+                        const btn = section.querySelector('.toggle-btn');
+                        if (btn) { btn.textContent = (id !== 'featured') ? 'Expand' : 'Collapse'; btn.setAttribute('aria-expanded', String(id === 'featured')); }
+                    });
+                    saveCollapseState(state);
+                };
             }
         }
 
