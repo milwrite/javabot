@@ -312,6 +312,73 @@ const CHANNEL_IDS = process.env.CHANNEL_ID
     ? process.env.CHANNEL_ID.split(',').map(id => id.trim())
     : [];
 
+// ============================================================================
+// ACTIVE CHANNEL TRACKING SYSTEM
+// Tracks channels where bot has been engaged - stays "active" for 30 minutes
+// ============================================================================
+const ACTIVE_CHANNEL_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
+const activeChannels = new Map(); // channelId -> { timestamp, userId, guildId, channelName, isThread }
+
+function trackActiveChannel(message) {
+    activeChannels.set(message.channel.id, {
+        timestamp: Date.now(),
+        userId: message.author.id,
+        guildId: message.guild?.id,
+        channelName: message.channel.name || 'DM',
+        isThread: message.channel.isThread?.() || false,
+        parentId: message.channel.parentId || null
+    });
+    console.log(`[ACTIVE] Channel ${message.channel.name || message.channel.id} now active (30 min window)`);
+}
+
+function isRecentlyActiveChannel(channelId) {
+    const entry = activeChannels.get(channelId);
+    if (!entry) return false;
+    return (Date.now() - entry.timestamp) < ACTIVE_CHANNEL_WINDOW_MS;
+}
+
+function cleanupActiveChannels() {
+    const now = Date.now();
+    let cleaned = 0;
+    for (const [channelId, entry] of activeChannels) {
+        if (now - entry.timestamp > ACTIVE_CHANNEL_WINDOW_MS) {
+            activeChannels.delete(channelId);
+            cleaned++;
+        }
+    }
+    if (cleaned > 0) {
+        console.log(`[CLEANUP] Removed ${cleaned} expired active channels`);
+    }
+}
+
+// Clean up expired active channels every 5 minutes
+setInterval(cleanupActiveChannels, 5 * 60 * 1000);
+
+// Check if message contains "bot" or "Bot" as standalone word
+function containsBotKeyword(content) {
+    return /\bbot\b|\bBot\b/.test(content);
+}
+
+// Determine if bot should process messages from this channel
+function shouldProcessChannel(channelId, isThread = false, parentId = null) {
+    // If no specific channels configured, allow all
+    if (CHANNEL_IDS.length === 0) return true;
+
+    // Allow if in configured list
+    if (CHANNEL_IDS.includes(channelId)) return true;
+
+    // Allow if recently active (within 30 min window)
+    if (isRecentlyActiveChannel(channelId)) return true;
+
+    // For threads: also check if parent channel is configured or active
+    if (isThread && parentId) {
+        if (CHANNEL_IDS.includes(parentId)) return true;
+        if (isRecentlyActiveChannel(parentId)) return true;
+    }
+
+    return false;
+}
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -323,6 +390,23 @@ const client = new Client({
 
 const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN,
+});
+
+// Auto-join threads in monitored/active channels
+client.on('threadCreate', async (thread) => {
+    try {
+        const parentId = thread.parentId;
+        if (!shouldProcessChannel(parentId)) {
+            return;
+        }
+
+        if (thread.joinable) {
+            await thread.join();
+            console.log(`[THREAD] Auto-joined thread "${thread.name}" in parent channel ${parentId}`);
+        }
+    } catch (error) {
+        console.error(`[THREAD] Failed to join thread: ${error.message}`);
+    }
 });
 
 // Discord Context Manager - fetches message history directly from Discord API
@@ -469,10 +553,13 @@ class DiscordContextManager {
     // Get channel metadata for enhanced context
     getChannelMetadata(channel) {
         return {
+            id: channel.id,
             name: channel.name || 'DM',
             topic: channel.topic || null,
             type: channel.type,
-            isThread: typeof channel.isThread === 'function' ? channel.isThread() : false
+            isThread: typeof channel.isThread === 'function' ? channel.isThread() : false,
+            parentId: channel.parentId || null,
+            isActive: isRecentlyActiveChannel(channel.id)
         };
     }
 }
@@ -2600,43 +2687,51 @@ client.on('interactionCreate', async interaction => {
 
 // Message tracking for conversation context
 client.on('messageCreate', async message => {
-    // Debug: Log all incoming messages (uncomment for troubleshooting)
-    // console.log(`[DEBUG] Message from ${message.author.username} in channel ${message.channel.id}: ${message.content.substring(0, 50)}`);
-
     // Ignore bot messages (including our own)
     if (message.author.bot) {
         return;
     }
 
-    // Only track messages from designated channels (if CHANNEL_IDS is configured)
-    if (CHANNEL_IDS.length > 0 && !CHANNEL_IDS.includes(message.channel.id)) {
-        // Log when messages are filtered out (helps debug channel ID issues)
-        if (message.mentions.has(client.user)) {
-            console.log(`⚠️ [CHANNEL_FILTER] Mention ignored from ${message.author.username} in channel ${message.channel.id} (not in CHANNEL_IDS: ${CHANNEL_IDS.join(',')})`);
+    const isThread = message.channel.isThread?.() || false;
+    const parentId = message.channel.parentId || null;
+    const channelId = message.channel.id;
+
+    // Check if we should process this channel (configured, active, or thread in monitored parent)
+    if (!shouldProcessChannel(channelId, isThread, parentId)) {
+        // Log when potential triggers are filtered out
+        if (message.mentions.has(client.user) || containsBotKeyword(message.content)) {
+            console.log(`⚠️ [CHANNEL_FILTER] Message ignored from ${message.author.username} in channel ${channelId} (not in watch list)`);
         }
         return;
     }
 
     // Add message to conversation history
-    console.log(`[TRACKING] ${message.author.username} in #${message.channel.name || message.channel.id}: ${message.content.substring(0, 100)}`);
+    console.log(`[TRACKING] ${message.author.username} in #${message.channel.name || channelId}${isThread ? ' (thread)' : ''}: ${message.content.substring(0, 100)}`);
     addToHistory(message.author.username, message.content, false);
     if (contextManager) {
         contextManager.upsertMessage(message);
     }
 
-    // Handle @ mentions with full AI capabilities
-    if (message.mentions.has(client.user)) {
-        console.log(`🔔 [MENTION DETECTED] ${message.author.username} mentioned the bot in #${message.channel.name || message.channel.id}`);
-        // Don't block - handle async
+    // Determine if we should respond: @mention OR "bot"/"Bot" keyword
+    const isMentioned = message.mentions.has(client.user);
+    const hasBotKeyword = containsBotKeyword(message.content);
+
+    if (isMentioned || hasBotKeyword) {
+        // Track this channel as active (extends/sets 30 min window)
+        trackActiveChannel(message);
+
+        const triggerType = isMentioned ? 'MENTION' : 'BOT_KEYWORD';
+        console.log(`🔔 [${triggerType}] ${message.author.username} triggered bot in #${message.channel.name || channelId}${isThread ? ' (thread)' : ''}`);
+
+        // Handle async
         handleMentionAsync(message).catch(error => {
-            console.error('❌ Async mention handler error:', error);
-            // Log to PostgreSQL for persistent error tracking
+            console.error(`❌ Async ${triggerType.toLowerCase()} handler error:`, error);
             postgres.logError({
-                errorType: 'MentionHandlerError',
-                category: 'mention',
+                errorType: 'MessageHandlerError',
+                category: triggerType.toLowerCase(),
                 message: error.message || String(error),
                 stack: error.stack,
-                context: { userId: message.author?.id, channelId: message.channel?.id }
+                context: { userId: message.author?.id, channelId }
             });
         });
     }

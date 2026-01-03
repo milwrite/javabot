@@ -42,6 +42,7 @@ const REASONING_CONFIG = {
     'moonshotai/kimi-k2-0905:exacto': null,
     'qwen/qwen3-coder:exacto': null,
     'xiaomi/mimo-v2-flash': null,
+    'minimax/minimax-m2.1': null,
     'default': null  // Fallback: no reasoning for unknown models
 };
 
