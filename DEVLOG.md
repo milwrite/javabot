@@ -1,3 +1,78 @@
+## 2026-01-03
+
+### Hallucinated Success Prevention
+
+**Issue:**
+Bot was claiming "yeah there we go, all set changes are live" without actually executing any tools. User reported requesting an edit to `enlightenment-breathing.html` and bot falsely claimed success, then treated the complaint "no changes were made" as casual conversation.
+
+**Evidence:**
+```
+Bot SportelloAPP — 1:54 AM
+yeah there we go, all set changes are live at https://bot.inference-arcade.com/
+
+[User: "no changes were made"]
+
+ROUTER: Plan: chat → [none] (confidence: 0.5, method: pattern)
+MENTION: Attempt 1: Router=chat(0.50) Classifier=CONVERSATION(keyword)
+```
+
+**Root Causes:**
+
+1. **editService.js:389** - Fallback returned "changes are live" even when `editCompleted=false`
+2. **requestClassifier.js:135-137** - Short messages ≤20 chars without keywords classified as CONVERSATION, so "no changes were made" (19 chars) got casual chat response
+3. **index.js agent loop** - LLM could generate success-sounding text without calling tools, no verification against actual tool execution
+
+**Fixes Applied:**
+
+**1. editService.js** ([services/editService.js:389-410](services/editService.js#L389-L410)):
+- Only claims success if `editCompleted=true`
+- If no edit happened, returns `suggestNormalFlow: true` to let full agent retry
+- Logs to PostgreSQL when edit loop fails without completion
+
+**2. requestClassifier.js** ([services/requestClassifier.js:127-155](services/requestClassifier.js#L127-L155)):
+- Added complaint pattern detection before greeting check:
+  ```javascript
+  const complaintPatterns = [
+      /\bno changes\b/,
+      /\bnothing (was|happened|changed)\b/,
+      /\bdidn'?t (work|change|do|happen)\b/,
+      /\bstill (the same|broken|wrong)\b/,
+      /\btry again\b/,
+      // ... etc
+  ];
+  ```
+- Complaints now route to agent flow with `method: 'complaint-detected'`
+
+**3. index.js** ([index.js:2197-2225](index.js#L2197-L2225)):
+- Added hallucination detection after response cleaning:
+  ```javascript
+  const routerSuggestedAction = routingPlan && actionIntents.includes(routingPlan.intent);
+  const soundsLikeSuccess = /\b(changes are live|all set|done|updated|...)\b/i.test(content);
+
+  if (routerSuggestedAction && completedActions === 0 && soundsLikeSuccess) {
+      logEvent('LLM', `HALLUCINATION DETECTED: Router suggested ${routingPlan.intent} but no tools executed`);
+      // Log to PostgreSQL and return honest response instead
+  }
+  ```
+- Logs hallucinations to PostgreSQL with `category: 'hallucination'` for tracking
+
+**4. index.js fallback cleanup** ([index.js:2928-2932](index.js#L2928-L2932)):
+- Removed false success fallback in edit loop path
+- Now falls through to full agent flow instead of claiming success
+
+**Testing:**
+```bash
+# Router correctly identifies edit intent
+node -e "const { patternRoute } = require('./services/llmRouter'); console.log(patternRoute('update enlightenment-breathing.html to share noir aesthetic', {}))"
+# → intent: 'edit', confidence: 0.8, toolSequence: ['file_exists', 'read_file', 'edit_file']
+
+# Classifier correctly routes complaints
+node -e "require('./services/requestClassifier').classifyRequest('no changes were made').then(r => console.log(r))"
+# → type: 'UNKNOWN', method: 'keyword' (no longer CONVERSATION)
+```
+
+---
+
 ## 2026-01-02
 
 ### Compositional Identity & API Error Fixes
