@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enlightenment Breathing</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e6e6e6;
+            font-family: 'Georgia', serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            padding: 2rem;
+        }
+
+        .quote {
+            font-size: 1.8rem;
+            line-height: 1.4;
+            margin-bottom: 3rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .quote-line {
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .breathing-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #4a90e2 0%, #357abd 100%);
+            margin: 2rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 4s ease-in-out;
+            box-shadow: 0 0 50px rgba(74, 144, 226, 0.3);
+        }
+
+        .breathing-circle.expanding {
+            transform: scale(1.5);
+            background: radial-gradient(circle, #5da8ff 0%, #4a90e2 100%);
+        }
+
+        .breathing-circle.contracting {
+            transform: scale(0.8);
+            background: radial-gradient(circle, #357abd 0%, #2c5aa0 100%);
+        }
+
+        .breath-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+        }
+
+        .controls {
+            margin-top: 2rem;
+        }
+
+        button {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        button:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .instructions {
+            margin-top: 2rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .wood-water-icons {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin: 2rem 0;
+            opacity: 0.7;
+        }
+
+        .icon {
+            font-size: 3rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .icon:nth-child(2) {
+            animation-delay: 1.5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="quote">
+            <div class="quote-line">Before enlightenment, chop wood, carry water.</div>
+            <div class="quote-line">After enlightenment, chop wood, carry water.</div>
+        </div>
+
+        <div class="wood-water-icons">
+            <div class="icon">🪵</div>
+            <div class="icon">💧</div>
+        </div>
+
+        <div class="breathing-circle" id="breathingCircle">
+            <div class="breath-text" id="breathText">Breathe In</div>
+        </div>
+
+        <div class="controls">
+            <button id="startBtn">Begin Breathing</button>
+            <button id="pauseBtn" style="display: none;">Pause</button>
+        </div>
+
+        <div class="instructions">
+            <p>Follow the circle's rhythm: Expand to breathe in, contract to breathe out.</p>
+            <p>4 seconds in, 4 seconds hold, 4 seconds out, 4 seconds hold.</p>
+            <p class="pulse">The same breath, before and after.</p>
+        </div>
+    </div>
+
+    <script>
+        const breathingCircle = document.getElementById('breathingCircle');
+        const breathText = document.getElementById('breathText');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+
+        let isBreathing = false;
+        let breathInterval;
+
+        const breathCycle = [
+            { text: 'Breathe In', className: 'expanding', duration: 4000 },
+            { text: 'Hold', className: '', duration: 4000 },
+            { text: 'Breathe Out', className: 'contracting', duration: 4000 },
+            { text: 'Hold', className: '', duration: 4000 }
+        ];
+
+        let currentStep = 0;
+
+        function startBreathing() {
+            if (isBreathing) return;
+            
+            isBreathing = true;
+            startBtn.style.display = 'none';
+            pauseBtn.style.display = 'inline-block';
+            
+            breathInterval = setInterval(() => {
+                const step = breathCycle[currentStep];
+                
+                // Reset classes
+                breathingCircle.className = 'breathing-circle';
+                
+                // Apply current step
+                setTimeout(() => {
+                    breathingCircle.classList.add(step.className);
+                    breathText.textContent = step.text;
+                }, 100);
+                
+                currentStep = (currentStep + 1) % breathCycle.length;
+            }, 4000);
+            
+            // Start first breath immediately
+            const firstStep = breathCycle[0];
+            breathingCircle.classList.add(firstStep.className);
+            breathText.textContent = firstStep.text;
+            currentStep = 1;
+        }
+
+        function pauseBreathing() {
+            isBreathing = false;
+            clearInterval(breathInterval);
+            breathingCircle.className = 'breathing-circle';
+            breathText.textContent = 'Paused';
+            startBtn.style.display = 'inline-block';
+            pauseBtn.style.display = 'none';
+        }
+
+        startBtn.addEventListener('click', startBreathing);
+        pauseBtn.addEventListener('click', pauseBreathing);
+
+        // Auto-start after 3 seconds
+        setTimeout(() => {
+            if (!isBreathing) {
+                startBreathing();
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
