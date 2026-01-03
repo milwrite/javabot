@@ -24,21 +24,23 @@ CREATE INDEX IF NOT EXISTS idx_events_session ON bot_events(session_id);
 CREATE INDEX IF NOT EXISTS idx_events_payload ON bot_events USING GIN (payload);
 CREATE INDEX IF NOT EXISTS idx_events_error_category ON bot_events(error_category) WHERE error_category IS NOT NULL;
 
--- Tool calls detail table (linked to events)
+-- Tool calls detail table (standalone, no longer linked to events)
 CREATE TABLE IF NOT EXISTS tool_calls (
     id SERIAL PRIMARY KEY,
-    event_id INTEGER REFERENCES bot_events(id) ON DELETE CASCADE,
     tool_name VARCHAR(100) NOT NULL,
     arguments JSONB,
     result TEXT,
     error TEXT,
     duration_ms INTEGER,
     iteration INTEGER,
+    user_id VARCHAR(50),
+    channel_id VARCHAR(50),
+    session_id VARCHAR(100),
     timestamp TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_tool_calls_name ON tool_calls(tool_name);
-CREATE INDEX IF NOT EXISTS idx_tool_calls_event ON tool_calls(event_id);
+CREATE INDEX IF NOT EXISTS idx_tool_calls_session ON tool_calls(session_id);
 CREATE INDEX IF NOT EXISTS idx_tool_calls_timestamp ON tool_calls(timestamp DESC);
 
 -- Build pipeline stages
