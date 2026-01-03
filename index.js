@@ -849,7 +849,12 @@ function cleanBotResponse(response) {
         .replace(/<parameter\b[^>]*>[\s\S]*?<\/parameter>/gi, '')
         .replace(/<[^>]*tool_call[^>]*>/gi, '')
         .replace(/<\/?(invoke|parameter)\b[^>]*>/gi, '')
-        .replace(/^<[^>\n]*(tool_call|invoke|parameter)[^>\n]*>\s*$/gmi, '');
+        .replace(/^<[^>\n]*(tool_call|invoke|parameter)[^>\n]*>\s*$/gmi, '')
+        // Strip Unicode-delimited tool calls (some models use fullwidth ｜ and block ▁ chars)
+        // Matches entire block: <｜tool▁calls▁begin｜>...<｜tool▁calls▁end｜>
+        .replace(/<｜tool▁calls▁begin｜>[\s\S]*?<｜tool▁calls▁end｜>/g, '')
+        // Fallback: strip any remaining <｜...｜> tags
+        .replace(/<｜[^｜]*｜>/g, '');
 
     // Strip plain-text tool calls that some models emit
     // Pattern 1: Line starting with functions.X (original format)
@@ -877,6 +882,19 @@ function cleanBotResponse(response) {
         .replace(/\n{3,}/g, '\n\n');
 
     return cleaned;
+}
+
+// Sanitize error messages before exposing to users
+// Strips file paths, stack traces, and URLs that could leak internal details
+function sanitizeErrorMessage(error) {
+    const msg = error?.message || 'unknown error';
+    return msg
+        .replace(/\/Users\/[^\s:]+/g, '[path]')
+        .replace(/at\s+\w+\s+\([^)]+\)/g, '')
+        .replace(/https?:\/\/[^\s]+/g, '[url]')
+        .replace(/\n+/g, ' ')
+        .trim()
+        .substring(0, 100);
 }
 
 // Efficient logging system - only log important events
@@ -1545,7 +1563,7 @@ async function commitChanges(message, files = '.') {
         } else if (error.message.includes('nothing to commit')) {
             return 'Nothing to commit - no changes detected.';
         } else {
-            return `Error committing: ${error.message}`;
+            return `Error committing: ${sanitizeErrorMessage(error)}`;
         }
     }
 }
@@ -1569,7 +1587,7 @@ async function getRepoStatus() {
         result += `Commits: https://github.com/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}/commits/main/`;
         return result;
     } catch (error) {
-        return `Error getting status: ${error.message}`;
+        return `Error getting status: ${sanitizeErrorMessage(error)}`;
     }
 }
 
@@ -1627,7 +1645,7 @@ async function getGitLog(count = 10, file = null, oneline = false) {
                 .join('\n');
         }
     } catch (error) {
-        return `Error getting git log: ${error.message}`;
+        return `Error getting git log: ${sanitizeErrorMessage(error)}`;
     }
 }
 
@@ -1676,7 +1694,7 @@ async function setModel(modelChoice) {
         return `Switched to ${modelChoice} model (${MODEL}). This will apply to subsequent messages.`;
     } catch (error) {
         console.error('Set model error:', error);
-        return `Error switching model: ${error.message}`;
+        return `Error switching model: ${sanitizeErrorMessage(error)}`;
     }
 }
 
@@ -3114,7 +3132,7 @@ async function handleMentionAsync(message) {
         } else if (error.message?.includes('All') && error.message?.includes('attempts failed')) {
             userMessage = `man, i tried like ${maxProcessingAttempts} different ways but couldn't get through. the AI servers might be overloaded. maybe try again in a minute?`;
         } else {
-            userMessage = `${getBotResponse('errors')}\n\n*couldn't process that one: ${error.message?.substring(0, 100) || 'technical difficulties'}*`;
+            userMessage = `${getBotResponse('errors')}\n\n*couldn't process that one: ${sanitizeErrorMessage(error) || 'technical difficulties'}*`;
         }
 
         try {
@@ -3226,7 +3244,7 @@ async function handleCommit(interaction) {
 
     } catch (error) {
         console.error('Commit preparation error:', error);
-        await interaction.editReply(getBotResponse('errors') + ` ${error.message}`);
+        await interaction.editReply(getBotResponse('errors') + ` ${sanitizeErrorMessage(error)}`);
     }
 }
 
@@ -3304,9 +3322,9 @@ async function executeCommit(interaction, commitData) {
         } else if (error.message.includes('remote')) {
             errorMessage += ' Trouble reaching the remote repository.';
         } else {
-            errorMessage += ` ${error.message}`;
+            errorMessage += ` ${sanitizeErrorMessage(error)}`;
         }
-        
+
         await interaction.editReply(errorMessage);
     }
 }
@@ -3423,8 +3441,9 @@ async function handleSearch(interaction) {
     try {
         await safeEditReply(interaction, getBotResponse('thinking'));
 
-        // Perform web search
-        const searchResult = await webSearch(query);
+        // Perform web search and clean any tool call artifacts
+        const rawSearchResult = await webSearch(query);
+        const searchResult = cleanBotResponse(rawSearchResult);
 
         // If response is longer than 2000 characters, save to file and truncate
         if (searchResult.length > 2000) {
@@ -3815,9 +3834,9 @@ async function executeMentionCommit(interaction, commitData) {
         } else if (error.message.includes('remote')) {
             errorMessage += ' Trouble reaching the remote repository.';
         } else {
-            errorMessage += ` ${error.message}`;
+            errorMessage += ` ${sanitizeErrorMessage(error)}`;
         }
-        
+
         await interaction.editReply(errorMessage);
     }
 }
