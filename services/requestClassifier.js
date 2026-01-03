@@ -124,6 +124,36 @@ function fallbackClassification(prompt, meta = {}) {
     const lowerPrompt = prompt.toLowerCase();
     const trimmed = lowerPrompt.trim();
 
+    // Detect complaint/feedback patterns that should NOT be treated as conversation
+    // These indicate the user is responding to a failed action and need agent attention
+    const complaintPatterns = [
+        /\bno changes\b/,
+        /\bnothing (was|happened|changed)\b/,
+        /\bdidn'?t (work|change|do|happen)\b/,
+        /\bstill (the same|broken|wrong)\b/,
+        /\bthat'?s? (wrong|not right|incorrect)\b/,
+        /\bwasn'?t (done|changed|updated)\b/,
+        /\bnot (working|fixed|changed|updated)\b/,
+        /\bfailed\b/,
+        /\btry again\b/,
+        /\bactually\b.*\bdidn'?t\b/
+    ];
+    const isComplaint = complaintPatterns.some(re => re.test(trimmed));
+
+    if (isComplaint) {
+        // Route to agent flow so it can understand context and take action
+        return {
+            type: 'UNKNOWN',
+            isConversation: false,
+            isEdit: false,
+            isCreate: false,
+            isCommit: false,
+            isReadOnly: false,
+            isFunctionalityFix: false,
+            method: meta.method || 'complaint-detected'
+        };
+    }
+
     // Only detect pure greetings - let router handle everything else
     const greetOnly = trimmed.replace(/[^a-z\s']/g, '');
     const greetingPatterns = [

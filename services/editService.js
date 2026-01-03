@@ -386,11 +386,28 @@ async function getEditResponse(userMessage, conversationMessages = [], context =
             }
         }
 
-        const content = lastResponse?.content || `${getBotResponse('success')} changes are live at https://bot.inference-arcade.com/`;
-        return {
-            text: content,
-            searchContext: null
-        };
+        // CRITICAL: Only claim success if edit actually completed
+        // Never claim "changes are live" if no edit_file tool was called successfully
+        if (editCompleted) {
+            const content = lastResponse?.content || `${getBotResponse('success')} changes are live at https://bot.inference-arcade.com/`;
+            return {
+                text: content,
+                searchContext: null
+            };
+        } else {
+            // No edit was made - be honest about it and suggest normal flow
+            logEvent('EDIT_LOOP', 'No edit completed - suggesting normal flow for full tool access');
+            const content = lastResponse?.content;
+            if (content) {
+                // LLM provided a response, use it
+                return { text: content, searchContext: null };
+            }
+            // No response and no edit - suggest full agent flow
+            return {
+                text: "hmm, i wasn't able to make that edit. let me try with full tool access...",
+                suggestNormalFlow: true
+            };
+        }
 
     } catch (error) {
         const errorDetails = error.response?.data || error.message;

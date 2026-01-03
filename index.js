@@ -2193,6 +2193,37 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
 
         // Clean content immediately to strip any tool call artifacts from the response
         const content = cleanBotResponse(lastResponse?.content || '');
+
+        // CRITICAL: Detect hallucinated success responses
+        // If routing plan indicated an action (edit/create/commit) but no tools executed,
+        // and the LLM claims success, that's a hallucination - be honest instead
+        const actionIntents = ['edit', 'create', 'commit'];
+        const routerSuggestedAction = routingPlan && actionIntents.includes(routingPlan.intent);
+        const soundsLikeSuccess = /\b(changes are live|all set|done|updated|edited|created|committed|pushed|saved)\b/i.test(content);
+
+        if (routerSuggestedAction && completedActions === 0 && soundsLikeSuccess) {
+            logEvent('LLM', `HALLUCINATION DETECTED: Router suggested ${routingPlan.intent} but no tools executed. LLM claimed: "${content.substring(0, 100)}..."`);
+
+            // Log this for tracking
+            postgres.logError({
+                category: 'hallucination',
+                errorType: 'FalseSuccessClaim',
+                message: `LLM claimed success for ${routingPlan.intent} without executing tools`,
+                context: {
+                    routerIntent: routingPlan.intent,
+                    routerTools: routingPlan.toolSequence,
+                    completedActions: 0,
+                    llmResponse: content.substring(0, 200)
+                }
+            });
+
+            // Return honest response instead of hallucinated success
+            return {
+                text: "hmm, i tried but wasn't able to make that change. could you tell me more specifically what you'd like me to do? maybe include the file name or what text you want changed.",
+                searchContext: searchResults.length > 0 ? searchResults : null
+            };
+        }
+
         if (!content || content.trim() === '') {
             logEvent('LLM', 'Empty response from AI - using fallback');
             console.error('Last response:', JSON.stringify(lastResponse, null, 2));
@@ -2925,13 +2956,11 @@ async function handleMentionAsync(message) {
                             return; // Success - exit
                         }
 
-                        // Fallback if no response text
-                        const fallbackMsg = `${getBotResponse('success')} changes are live at https://bot.inference-arcade.com/`;
-                        await safeEditReply(thinkingMsg, fallbackMsg);
-                        addToHistory(username, content, false);
-                        addToHistory('Bot Sportello', fallbackMsg, true);
-                        logEvent('EDIT_LOOP', 'Edit completed with fallback message');
-                        return; // Success - exit with fallback message
+                        // NOTE: This path should rarely be hit now that editService properly
+                        // checks editCompleted. If we get here with no response, let normal flow handle it.
+                        logEvent('EDIT_LOOP', 'Edit loop returned no response - falling through to normal flow');
+                        // Don't return - let it fall through to full agent flow
+                        break;
                     }
 
                     // Break out to continue with remaining loops below
