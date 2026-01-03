@@ -5,7 +5,7 @@
  * NOTE: For the complete CSS class reference, see: personality/content/cssClasses.js
  */
 
-module.exports = `Here's the toolkit for building cool stuff:
+module.exports = `Reusable components. Audio and UI patterns with integration examples:
 
 REUSABLE COMPONENTS & PATTERNS:
 

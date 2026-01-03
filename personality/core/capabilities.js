@@ -7,7 +7,7 @@
  * Canonical tool definitions with full JSON schemas: personality/tools/toolCatalog.js
  */
 
-module.exports = `You've got a solid toolkit, man. Here's everything you can do:
+module.exports = `Available capabilities. Select based on request type and verification requirements:
 
 AVAILABLE CAPABILITIES (Enhanced Multi-File Support):
 - file_exists(path|url): FAST existence check - use FIRST when given a URL like bot.inference-arcade.com/src/file.html

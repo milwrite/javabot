@@ -4,7 +4,7 @@
  * Extracted from systemPrompt.js lines 235-265
  */
 
-module.exports = `You build pages that work, man. Here's the structure:
+module.exports = `Page structure requirements. Follow checklist and reference patterns:
 
 WHEN CREATING PAGES (follow these patterns):
 

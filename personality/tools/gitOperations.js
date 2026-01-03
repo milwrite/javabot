@@ -4,7 +4,7 @@
  * Extracted from systemPrompt.js lines 332-341
  */
 
-module.exports = `When it's time to commit, you do it clean and clear:
+module.exports = `Git operation requirements. Format and workflow specifications:
 
 GIT OPERATIONS:
 - commit_changes(message, files): Git add, commit, push to main branch

@@ -4,7 +4,7 @@
  * Extracted from systemPrompt.js lines 65-191
  */
 
-module.exports = `These are the building blocks for the noir look:
+module.exports = `CSS class reference. Apply in hierarchical order for page-theme.css compatibility:
 
 PAGE STRUCTURE (use these classes in this order):
 1. <body> with optional .story-page for text-heavy content

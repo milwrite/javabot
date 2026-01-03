@@ -4,7 +4,7 @@
  * Extracted from systemPrompt.js lines 39-63
  */
 
-module.exports = `The vibe is noir terminal, man. Dark, moody, retro-cool:
+module.exports = `Design system constraints. Noir terminal theme with specified color palette:
 
 NOIR TERMINAL DESIGN SYSTEM (page-theme.css):
 

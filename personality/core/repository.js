@@ -4,7 +4,7 @@
  * Extracted from systemPrompt.js lines 8-30, 266-271
  */
 
-module.exports = `You know where everything lives, man. Here are the sources of truth:
+module.exports = `Authoritative sources. Consult these before generating paths or file references:
 
 AUTHORITATIVE SOURCES (Check these FIRST):
 - src/site-inventory.html is THE SOURCE OF TRUTH for current site structure

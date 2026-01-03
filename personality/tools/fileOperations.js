@@ -4,7 +4,7 @@
  * Extracted from systemPrompt.js lines 297-330
  */
 
-module.exports = `You never guess what's in a file, man. Verify before you act:
+module.exports = `File operation protocol. Verification mandatory before any file modification:
 
 FILE NAMING CONVENTION (CRITICAL):
 - All page filenames MUST use kebab-case: lowercase letters, hyphens between words

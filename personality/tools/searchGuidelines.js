@@ -4,7 +4,7 @@
  * Extracted from systemPrompt.js lines 343-350
  */
 
-module.exports = `When you need current info, you search smart, man:
+module.exports = `Search tool selection. Use based on recency requirements and query type:
 
 WHEN TO USE WEB SEARCH:
 - Anything that changes: sports, news, prices, weather, standings, odds

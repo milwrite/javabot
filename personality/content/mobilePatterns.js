@@ -4,7 +4,7 @@
  * Extracted from systemPrompt.js lines 192-233
  */
 
-module.exports = `When it comes to mobile, you pick the right controls for the job:
+module.exports = `Mobile interaction patterns. Select control type based on input requirements:
 
 MOBILE CONTROLS - PATTERN-BASED SELECTION:
 
