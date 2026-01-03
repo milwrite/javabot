@@ -1,5 +1,68 @@
 ## 2026-01-03
 
+### Expanded Discord Listening & Response Sensitivity
+
+**Feature:**
+Expanded bot's Discord listening capabilities with three new mechanisms: active channel tracking, thread auto-join, and "bot" keyword trigger.
+
+**Changes Made:**
+
+**1. Active Channel Tracking** ([index.js:315-380](index.js#L315-L380)):
+- New `activeChannels` Map tracks channels where bot has been engaged
+- Channels stay "active" for 30 minutes after last interaction
+- `trackActiveChannel(message)` - registers channel with timestamp
+- `isRecentlyActiveChannel(channelId)` - checks if within 30 min window
+- `cleanupActiveChannels()` - runs every 5 min to expire old entries
+- `shouldProcessChannel()` - unified filter checking: configured IDs, active channels, thread parents
+
+**2. Thread Auto-Join** ([index.js:395-410](index.js#L395-L410)):
+- New `threadCreate` event handler
+- Auto-joins threads in monitored/active parent channels
+- Logs: `[THREAD] Auto-joined thread "name" in parent channel X`
+
+**3. "bot" Keyword Trigger** ([index.js:357-360](index.js#L357-L360)):
+- `containsBotKeyword(content)` - detects standalone "bot" or "Bot" via regex `/\bbot\b|\bBot\b/`
+- Bot responds to keyword mentions in addition to @mentions
+- Trigger type logged: `[MENTION]` vs `[BOT_KEYWORD]`
+
+**4. Modified messageCreate Handler** ([index.js:2686-2735](index.js#L2686-L2735)):
+- Thread detection: `isThread`, `parentId` extracted from channel
+- Uses `shouldProcessChannel()` for filtering
+- Dual trigger: `isMentioned || hasBotKeyword`
+- Tracks channel as active when triggered
+- Enhanced logging with thread context
+
+**5. Enhanced Channel Metadata** ([index.js:553-564](index.js#L553-L564)):
+- `getChannelMetadata()` now returns `id`, `parentId`, `isActive` in addition to existing fields
+
+**Unfinished Research:**
+
+**Discord.js Thread Behavior (needs verification):**
+- Does `GuildMessages` intent receive thread messages automatically, or do we need explicit thread intents?
+- Does `thread.join()` persist across bot restarts, or do we need to rejoin on startup?
+- Do thread messages have `channel.parentId` reliably set, or only when fetched fresh?
+- How do archived threads behave - does the bot get kicked out?
+
+**Active Channel Edge Cases (needs testing):**
+- What happens if user interacts in channel, bot goes offline, comes back within 30 min?
+  - Answer: activeChannels Map is in-memory only, lost on restart
+- Should we persist active channels to PostgreSQL for restart resilience?
+- What's the Discord rate limit on `channel.messages.fetch()` for newly active channels?
+
+**"bot" Keyword False Positives (needs monitoring):**
+- Will messages like "chatbot", "robot", "reboot" trigger? (No - regex uses word boundaries)
+- What about "Bot!" or "bot," with punctuation? (Should work - `\b` handles these)
+- Need to monitor logs for unwanted triggers in production
+
+**Thread Auto-Join Limitations:**
+- Private threads may require different permissions
+- Existing threads at bot startup are not auto-joined (only new ones via `threadCreate`)
+- Consider adding startup scan to join existing threads in monitored channels
+
+**Commit:** `e073989` - "feat: expand discord listening with active channels, threads, and 'bot' keyword trigger"
+
+---
+
 ### Hallucinated Success Prevention
 
 **Issue:**
