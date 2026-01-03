@@ -1762,6 +1762,11 @@ async function webSearch(query) {
         });
 
         const searchResults = response.data.choices[0].message.content;
+        // Log cache discount if present (OpenRouter prompt caching)
+        const searchCacheDiscount = response.data.cache_discount;
+        if (searchCacheDiscount && searchCacheDiscount > 0) {
+            logEvent('CACHE', `${(searchCacheDiscount * 100).toFixed(1)}% discount (web search)`);
+        }
         logEvent('WEB_SEARCH', `Got results (${searchResults.length} chars)`);
         return searchResults;
     } catch (error) {
@@ -1991,6 +1996,12 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             }
 
             lastResponse = response.data.choices[0].message;
+
+            // Log cache discount if present (OpenRouter prompt caching)
+            const cacheDiscount = response.data.cache_discount;
+            if (cacheDiscount && cacheDiscount > 0) {
+                logEvent('CACHE', `${(cacheDiscount * 100).toFixed(1)}% discount (model: ${currentModel})`);
+            }
 
             // Extract reasoning/thinking from response (if model supports it)
             const reasoning = response.data.choices[0].message.reasoning_details ||
@@ -2928,6 +2939,11 @@ async function handleMentionAsync(message) {
                                 timeout: 20000
                             });
                             logEvent('MENTION', `OpenRouter response received`);
+                            // Log cache discount if present (OpenRouter prompt caching)
+                            const chatCacheDiscount = simpleResponse.data.cache_discount;
+                            if (chatCacheDiscount && chatCacheDiscount > 0) {
+                                logEvent('CACHE', `${(chatCacheDiscount * 100).toFixed(1)}% discount (chat fast path)`);
+                            }
                             let response = cleanBotResponse(simpleResponse.data.choices[0].message.content || '');
                             if (!response) response = getBotResponse('confirmations');
                             logEvent('MENTION', `Sending reply: ${response.substring(0, 50)}`);

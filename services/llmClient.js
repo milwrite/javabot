@@ -128,6 +128,12 @@ async function callSonnet({
 
         const choice = response.data.choices[0];
 
+        // Log cache discount if present (OpenRouter prompt caching)
+        const cacheDiscount = response.data.cache_discount;
+        if (cacheDiscount && cacheDiscount > 0) {
+            console.log(`[CACHE] ${(cacheDiscount * 100).toFixed(1)}% discount on ${modelString}`);
+        }
+
         // Reset 500 error count on success
         model500ErrorCount.set(modelString, 0);
 
