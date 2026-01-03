@@ -7,6 +7,7 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 // Available models (2025 latest) - All ZDR-compliant
 const MODEL_PRESETS = {
+    'glm': 'z-ai/glm-4.6:exacto',
     'deepseek': 'deepseek/deepseek-v3.1-terminus:exacto',
     'kimi': 'moonshotai/kimi-k2-thinking',
     'kimi-fast': 'moonshotai/kimi-k2-0905:exacto',
@@ -17,6 +18,7 @@ const MODEL_PRESETS = {
 
 // Human-readable display names for each model
 const MODEL_DISPLAY_NAMES = {
+    'glm': 'GLM 4.6 Exacto',
     'deepseek': 'DeepSeek V3.1 Terminus (Default)',
     'kimi': 'Kimi K2 Thinking',
     'kimi-fast': 'Kimi K2 Fast',

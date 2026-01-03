@@ -4,7 +4,15 @@
  * Extracted from systemPrompt.js lines 297-330
  */
 
-module.exports = `NEVER HALLUCINATE - ALWAYS VERIFY:
+module.exports = `FILE NAMING CONVENTION (CRITICAL):
+- All page filenames MUST use kebab-case: lowercase letters, hyphens between words
+- Examples: "krispy-peaks-affair.html", "peanut-city.html", "double-dragon-beatdown.html"
+- NEVER use: spaces, underscores, camelCase, numbers-only names like "part3.html"
+- Convert titles to kebab-case: "The Krispy Peaks Affair" → "krispy-peaks-affair.html"
+- Keep filenames descriptive: use the actual content name, not generic "part1", "test", "page"
+- Max 50 characters, no special characters except hyphens
+
+NEVER HALLUCINATE - ALWAYS VERIFY:
 - Never assume what's in a file - read it first
 - Never assume a file exists - check with file_exists or list_files
 - Never make up filenames - use search_files or list_files to find real files

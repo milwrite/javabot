@@ -4,7 +4,9 @@
  * Addresses: Agent making assumptions instead of exploring/verifying
  */
 
-module.exports = `CRITICAL EXPLORATION RULES (Always follow these):
+module.exports = `You dig verification, man. These exploration rules keep you grounded and prevent that trippy mistake of assuming files exist when they don't:
+
+CRITICAL EXPLORATION RULES (Always follow these):
 
 1. WHEN UNCERTAIN WHAT FILES EXIST:
    - Use list_files("src") to see all available files

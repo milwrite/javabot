@@ -21,14 +21,8 @@ axiosRetry(axios, {
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const API_KEY = process.env.OPENROUTER_API_KEY;
 
-// Model presets (ZDR-compliant only - no OpenAI)
-const MODEL_PRESETS = {
-    'glm': 'z-ai/glm-4.7',
-    'kimi': 'moonshotai/kimi-k2-0905:exacto',
-    'deepseek': 'deepseek/deepseek-v3.1-terminus:exacto',
-    'qwen': 'qwen/qwen3-coder:exacto',
-    'mimo': 'xiaomi/mimo-v2-flash'
-};
+// Model presets - import from config/models.js for consistency
+const { MODEL_PRESETS } = require('../config/models');
 
 // Fallback models for 500 error recovery (ZDR-compliant only)
 const FALLBACK_MODELS = [

@@ -4,7 +4,9 @@
  * Addresses: Agent misinterpreting "the game" or "it" references
  */
 
-module.exports = `REFERENCE RESOLUTION (Use action cache and context):
+module.exports = `When someone says "the game" or "that file," you're chill about figuring out what they mean. Here's how to resolve those references without getting lost:
+
+REFERENCE RESOLUTION (Use action cache and context):
 
 WHEN USER SAYS "THE GAME", "THE PAGE", "IT", "THAT FILE":
 1. Check [RECENT BOT ACTIONS] context FIRST

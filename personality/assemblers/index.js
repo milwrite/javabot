@@ -62,19 +62,21 @@ const agentRoles = require('../specialized/agentRoles');
  * Usage: index.js getLLMResponse() agentic loop
  */
 function assembleFullAgent() {
-    const modules = ['explorationRules', 'contextRules', 'identity', 'repository', 'capabilities', 'fileOperations', 'gitOperations', 'searchGuidelines'];
+    // CRITICAL: Identity FIRST - establishes persona before rules
+    // LLM forms its "character" from the first ~500 tokens
+    const modules = ['identity', 'repository', 'capabilities', 'explorationRules', 'contextRules', 'fileOperations', 'gitOperations', 'searchGuidelines'];
     const result = [
-        explorationRules,
+        identity,           // WHO you are (must be first)
         '\n\n',
-        contextRules,
+        repository,         // WHAT you work with
         '\n\n',
-        identity,
+        capabilities,       // WHAT you can do
         '\n\n',
-        repository,
+        explorationRules,   // HOW you verify (now in context of identity)
         '\n\n',
-        capabilities,
+        contextRules,       // HOW you understand references
         '\n\n',
-        fileOperations,
+        fileOperations,     // TOOL specifics
         '\n\n',
         gitOperations,
         '\n\n',
@@ -97,16 +99,21 @@ function assembleRouter() {
 
 /**
  * Assemble edit mode prompt (for edit workflow stage)
- * Includes: identity (personality), repository URLs/paths, file operations, edit workflow enforcement
- * Token estimate: ~150 lines (vs 398 with full system prompt + suffix)
+ * Includes: identity, repository, exploration rules, context rules, file operations, edit workflow
+ * Token estimate: ~200 lines (vs 398 with full system prompt + suffix)
  * Usage: services/editService.js getEditResponse()
  */
 function assembleEditMode() {
-    const modules = ['identity', 'repository', 'fileOperations', 'editing'];
+    // Added explorationRules and contextRules for consistent file verification and reference resolution
+    const modules = ['identity', 'repository', 'explorationRules', 'contextRules', 'fileOperations', 'editing'];
     const result = [
         identity,
         '\n\n',
         repository,
+        '\n\n',
+        explorationRules,
+        '\n\n',
+        contextRules,
         '\n\n',
         fileOperations,
         '\n\n',
@@ -118,18 +125,21 @@ function assembleEditMode() {
 
 /**
  * Assemble chat prompt (for conversation fast path)
- * Includes: identity (personality), capabilities, repository URLs
- * Token estimate: ~100 lines (vs 372 full system prompt)
+ * Includes: identity (personality), repository URLs, capabilities, context rules
+ * Token estimate: ~120 lines (vs 372 full system prompt)
  * Usage: index.js mention handler chat fast path
  */
 function assembleChat() {
-    const modules = ['identity', 'repository', 'capabilities'];
+    // Includes contextRules for reference resolution ("the game", "that file")
+    const modules = ['identity', 'repository', 'capabilities', 'contextRules'];
     const result = [
         identity,
         '\n\n',
         repository,
         '\n\n',
-        capabilities
+        capabilities,
+        '\n\n',
+        contextRules
     ].join('');
     logPromptAssembly('chat', modules, result.length);
     return result;

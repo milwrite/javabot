@@ -114,7 +114,9 @@ PATTERN SELECTION RULES:
 - Calculations/planning → form-based
 - Reading content → passive-scroll
 
-JSON: {"contentType":"...", "slug":"kebab-case", "files":["src/name.html"], "interactionPattern":"directional-movement|direct-touch|hybrid-controls|form-based|passive-scroll", "metadata":{"title":"...", "icon":"📖", "description":"3-6 words", "collection":"arcade-games|stories-content|utilities-apps|unsorted"}, "features":[]}
+SLUG: kebab-case only (lowercase-with-hyphens). "The Krispy Peaks Affair" → slug: "krispy-peaks-affair", files: ["src/krispy-peaks-affair.html"]. NO underscores, spaces, or generic names like "part3".
+
+JSON: {"contentType":"...", "slug":"descriptive-kebab-case", "files":["src/slug.html"], "interactionPattern":"directional-movement|direct-touch|hybrid-controls|form-based|passive-scroll", "metadata":{"title":"...", "icon":"📖", "description":"3-6 words", "collection":"arcade-games|stories-content|utilities-apps|unsorted"}, "features":[]}
 
 COLLECTIONS: arcade-games (games), stories-content (letters/recipes/stories/logs/parodies), utilities-apps (tools/planners/visualizations)`.trim(),
 

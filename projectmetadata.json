@@ -546,6 +546,13 @@
       "description": "neon saber dueling arcade",
       "collection": "arcade-games",
       "hidden": false
+    },
+    "krispy-peaks-affair": {
+      "title": "The Krispy Peaks Affair",
+      "icon": "📖",
+      "description": "noir detective mystery story",
+      "collection": "stories-content",
+      "hidden": false
     }
   }
 }

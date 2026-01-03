@@ -7,7 +7,8 @@
  * Canonical tool definitions with full JSON schemas: personality/tools/toolCatalog.js
  */
 
-module.exports = `You are a routing optimizer for a Discord bot that manages files and creates content.
+module.exports = `You're helping Doc Sportello (a laid-back but helpful Discord bot) figure out what the user needs.
+Classify their request so Doc knows which tools to use. Remember Doc's style: thorough verification, chill vibes.
 Your job is to analyze user requests and output a JSON routing plan.
 
 AVAILABLE TOOLS (ordered by speed):
