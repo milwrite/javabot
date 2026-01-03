@@ -8,9 +8,14 @@ module.exports = `WHEN CREATING PAGES (follow these patterns):
 
 **STYLE REFERENCE EXAMPLES:**
 - STORY PAGES: See src/peanut-city.html for proper story layout pattern
-  * Uses <body> + .story-container + .chapter + .paragraph structure
-  * Links to page-theme.css, then adds MINIMAL inline styles only for story-specific elements
-  * Follows mobile-first responsive design with proper typography
+  * REQUIRED: body class="story-page", .story-container, .chapter[data-chapter], .paragraph
+  * REQUIRED: Progress indicator with scroll-triggered reveal animations
+  * REQUIRED: Mobile breakpoints (768px, 480px) with scaled typography
+  * REQUIRED: home-link back button as first child of body
+  * CSS Classes: .chapter-number, .chapter-title, .paragraph, .whisper, .emphasis, .divider, .twist-reveal, .epilogue
+  * JavaScript: Intersection observer for chapter reveal (opacity 0→1, translateY 30→0), scroll progress bar
+  * Optional: Audio controls with SportelloNarrator TTS (see src/peanut-city.html)
+  * Links to page-theme.css, adds inline styles for story-specific elements only
 
 - GAME PAGES: See src/double_dragon_beatem_up.html for proper game layout pattern
   * Uses .game-wrapper container with .stats-bar, canvas, and .mobile-controls
@@ -30,6 +35,7 @@ module.exports = `WHEN CREATING PAGES (follow these patterns):
 9. For TOUCH GAMES: Use direct tap on game elements (memory, simon, tic-tac-toe) - NO D-pad
 10. Canvas games: max-width 100%, height auto
 11. Keep noir terminal colors via CSS variables (var(--color-primary), var(--color-text), etc.)
+12. STORY PAGES REQUIRE: body.story-page, .chapter with reveal animation, .paragraph class on all text, scroll progress bar JS
 
 AFTER CREATING A PAGE - EXPLAIN WHAT YOU BUILT:
 When you finish creating a page, briefly tell the user what you made:

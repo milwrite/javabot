@@ -92,6 +92,87 @@ CRITICAL RULES:
 - Match controls to interaction pattern EXACTLY
 `.trim();
 
+// Story page template (passive-scroll pattern) - Reference: src/peanut-city.html
+const STORY_TEMPLATE = `
+STORY PAGE TEMPLATE (passive-scroll pattern):
+Reference: src/peanut-city.html
+
+REQUIRED STRUCTURE:
+<body class="story-page">
+    <a href="../index.html" class="home-link" aria-label="Back">←</a>
+    <div class="progress-indicator"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="story-container">
+        <header style="text-align:center;margin-bottom:40px">
+            <h1 style="color:#ff0000;font-size:2.5em;text-shadow:0 0 15px rgba(255,0,0,0.4)">TITLE</h1>
+            <p style="color:#00ffff;font-size:1.1em;letter-spacing:2px">Subtitle</p>
+        </header>
+        <div class="chapter" data-chapter="1">
+            <div class="chapter-number">Chapter One</div>
+            <h2 class="chapter-title">Title</h2>
+            <p class="paragraph">Standard paragraph text...</p>
+            <p class="paragraph whisper">Whispered or subdued text (italic, muted)</p>
+            <p class="paragraph"><span class="emphasis">Emphasized text</span> highlighted</p>
+        </div>
+        <div class="divider">• • •</div>
+        <div class="twist-reveal"><p class="reveal-text">DRAMATIC REVEAL</p></div>
+        <div class="epilogue">Closing section with border...</div>
+    </div>
+</body>
+
+REQUIRED STORY JAVASCRIPT (scroll reveal + progress bar):
+const chapters = document.querySelectorAll('.chapter');
+const progressBar = document.getElementById('progressBar');
+
+function isElementInViewport(el) {
+    const rect = el.getBoundingClientRect();
+    return rect.top <= window.innerHeight * 0.75;
+}
+
+function checkChapters() {
+    chapters.forEach(chapter => {
+        if (isElementInViewport(chapter) && !chapter.classList.contains('revealed')) {
+            chapter.classList.add('revealed');
+        }
+    });
+}
+
+function updateProgress() {
+    const scrolled = window.pageYOffset;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.height = (scrolled / docHeight * 100) + '%';
+}
+
+window.addEventListener('scroll', () => { checkChapters(); updateProgress(); }, { passive: true });
+checkChapters();
+
+STORY CSS CLASSES (inline in <style>):
+- .story-container: max-width 750px, margin 0 auto
+- .chapter: opacity 0, transform translateY(30px), transition 0.6s
+- .chapter.revealed: opacity 1, transform translateY(0)
+- .chapter-number: #00ffff, 0.8em, uppercase, letter-spacing 2px
+- .chapter-title: #00ffff, 1.6em, text-shadow
+- .paragraph: margin-bottom 18px, font-size 1.05em, color #e0e0e0
+- .whisper: italic, muted color (#5a9fb0), 0.95em
+- .emphasis: #ff0000 bold
+- .divider: centered, letter-spacing 8px
+- .twist-reveal: gradient background, border-top/bottom, pulse animation
+- .epilogue: border 1px solid #00ffff, background rgba
+- .progress-indicator: fixed right 15px, width 3px, height 150px
+- .progress-bar: #00ffff background, height 0% transitions on scroll
+
+REQUIRED STORY MOBILE BREAKPOINTS:
+@media (max-width: 768px) {
+    body { padding: 45px 15px 15px 15px; }
+    .chapter-title { font-size: 1.4em; }
+    .progress-indicator { display: none; }
+}
+@media (max-width: 480px) {
+    body { padding: 40px 12px 12px 12px; }
+    .chapter-title { font-size: 1.25em; }
+    .paragraph { font-size: 0.95em; margin-bottom: 14px; }
+}
+`.trim();
+
 // Role-specific prompts
 const ROLE_PROMPTS = {
     architect: `Architect for Bot Sportello noir web collection. ${BASE_SYSTEM_CONTEXT}
@@ -125,6 +206,8 @@ COLLECTIONS: arcade-games (games), stories-content (letters/recipes/stories/logs
 TASK: Generate complete HTML from Architect plan. No TODOs/placeholders.
 
 ${TEMPLATE_PROMPT}
+
+${STORY_TEMPLATE}
 
 CONTROL REQUIREMENTS BY PATTERN:
 - directional-movement: Include D-pad .mobile-controls, handleDirection()
@@ -191,5 +274,6 @@ module.exports = {
     tester: ROLE_PROMPTS.tester,
     scribe: ROLE_PROMPTS.scribe,
     BASE_SYSTEM_CONTEXT,
-    TEMPLATE_PROMPT
+    TEMPLATE_PROMPT,
+    STORY_TEMPLATE
 };

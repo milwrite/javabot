@@ -1,12 +1,6 @@
 // services/llmRouter.js
-// LLM-based intelligent routing for tool calls
-// Replaces coarse-grained classification with nuanced routing plans
-
-const axios = require('axios');
-
-// Fast model for routing decisions - Gemma 3 12B (fast, accurate structured output)
-const ROUTER_MODEL = process.env.ROUTER_MODEL || 'google/gemma-3-12b-it';
-const ROUTER_TIMEOUT_MS = Number(process.env.ROUTER_TIMEOUT_MS || 4000);
+// Pattern-based routing for tool calls (no LLM dependency - instant routing)
+// Uses regex patterns to classify intent and extract parameters
 
 /**
  * Tool definitions with metadata for smart routing
@@ -85,213 +79,40 @@ const TOOL_CATALOG = {
 };
 
 /**
- * Routing plan schema
- * @typedef {Object} RoutingPlan
- * @property {string} intent - Primary intent (edit|create|read|commit|chat|search)
- * @property {string[]} toolSequence - Ordered tools to call
- * @property {Object} parameterHints - Pre-extracted parameters
- * @property {string[]} contextNeeded - What context to pre-load
- * @property {number} confidence - 0-1 confidence score
- * @property {string} reasoning - Why this routing was chosen
- * @property {boolean} clarifyFirst - Should ask user for clarification
- * @property {string} clarifyQuestion - Question to ask if clarifyFirst=true
- * @property {number} expectedIterations - Estimated agentic loop iterations
- */
-
-/**
- * Generate routing plan using LLM
+ * Generate routing plan using pattern matching (instant, no LLM call)
  * @param {string} userMessage - The user's request
  * @param {Object} context - Additional context (recent files, channel history, etc.)
  * @returns {Promise<RoutingPlan>}
  */
 async function generateRoutingPlan(userMessage, context = {}) {
     const startTime = Date.now();
-
-    try {
-        const routingPrompt = buildRoutingPrompt(userMessage, context);
-
-        // Use modular routing prompt
-        const routerSystemPrompt = require('../personality/assemblers').assembleRouter();
-
-        const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-            model: ROUTER_MODEL,
-            messages: [
-                {
-                    role: 'system',
-                    content: routerSystemPrompt
-                },
-                {
-                    role: 'user',
-                    content: routingPrompt
-                }
-            ],
-            max_tokens: 500,
-            temperature: 0.1,
-            response_format: { type: 'json_object' }
-        }, {
-            headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json',
-                'HTTP-Referer': 'https://bot.inference-arcade.com',
-                'X-Title': 'Bot Sportello Router'
-            },
-            timeout: ROUTER_TIMEOUT_MS
-        });
-
-        const content = response.data.choices[0].message.content;
-        let plan;
-
-        try {
-            plan = JSON.parse(content);
-        } catch (parseErr) {
-            // Try to extract JSON from response
-            const jsonMatch = content.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                plan = JSON.parse(jsonMatch[0]);
-            } else {
-                throw new Error('No valid JSON in response');
-            }
-        }
-
-        const duration = Date.now() - startTime;
-        console.log(`[ROUTER] Plan generated in ${duration}ms: ${plan.intent} → [${plan.toolSequence?.join('→')}] (confidence: ${plan.confidence})`);
-
-        return {
-            ...validatePlan(plan),
-            durationMs: duration,
-            method: 'llm'
-        };
-
-    } catch (error) {
-        console.error(`[ROUTER] LLM routing failed: ${error.message}`);
-        return fallbackRouting(userMessage, context);
-    }
+    const plan = patternRoute(userMessage, context);
+    plan.durationMs = Date.now() - startTime;
+    console.log(`[ROUTER] Pattern plan (${plan.durationMs}ms): ${plan.intent} → [${plan.toolSequence.join('→')}]`);
+    return plan;
 }
 
 /**
- * Build the routing prompt with context
+ * Pattern-based routing - instant classification via regex
+ * @param {string} userMessage - The user's request
+ * @param {Object} context - Additional context
+ * @returns {RoutingPlan}
  */
-function buildRoutingPrompt(userMessage, context) {
-    let prompt = `USER REQUEST: "${userMessage}"`;
-
-    // Add context about recently created/modified files (CRITICAL for follow-up requests)
-    if (context.recentFiles?.length) {
-        prompt += `\n\nRECENTLY CREATED/MODIFIED FILES (use these for "it", "the page", "isn't working" references): ${context.recentFiles.join(', ')}`;
-    }
-
-    // Add action summary for more context
-    if (context.actionSummary) {
-        prompt += `\n\nRECENT BOT ACTIONS: ${context.actionSummary}`;
-    }
-
-    // Add context about files in src/
-    if (context.availableFiles?.length) {
-        prompt += `\n\nFILES IN src/: ${context.availableFiles.slice(0, 20).join(', ')}${context.availableFiles.length > 20 ? '...' : ''}`;
-    }
-
-    // Add conversation context
-    if (context.conversationSummary) {
-        prompt += `\n\nCONVERSATION CONTEXT: ${context.conversationSummary}`;
-    }
-
-    // Extract obvious parameters from request
-    const urlMatch = userMessage.match(/bot\.inference-arcade\.com\/([^\s]+)/i);
-    const srcMatch = userMessage.match(/src\/([^\s]+\.(?:html|js|css))/i);
-
-    if (urlMatch || srcMatch) {
-        const extractedPath = srcMatch ? `src/${srcMatch[1]}` : urlMatch[1];
-        prompt += `\n\nEXTRACTED PATH: ${extractedPath}`;
-    }
-
-    prompt += '\n\nGenerate routing plan JSON:';
-    return prompt;
-}
-
-/**
- * Validate and normalize the routing plan
- */
-function validatePlan(plan) {
-    const defaults = {
-        intent: 'chat',
-        toolSequence: [],
-        parameterHints: {},
-        contextNeeded: [],
-        confidence: 0.5,
-        reasoning: 'No reasoning provided',
-        clarifyFirst: false,
-        clarifyQuestion: null,
-        expectedIterations: 1
-    };
-
-    const validated = { ...defaults, ...plan };
-
-    // Ensure toolSequence is array
-    if (!Array.isArray(validated.toolSequence)) {
-        validated.toolSequence = [];
-    }
-
-    // Filter to only valid tools
-    validated.toolSequence = validated.toolSequence.filter(t => TOOL_CATALOG[t]);
-
-    // Ensure confidence is 0-1
-    validated.confidence = Math.max(0, Math.min(1, validated.confidence || 0.5));
-
-    // Add prerequisite tools if missing
-    validated.toolSequence = ensurePrerequisites(validated.toolSequence);
-
-    return validated;
-}
-
-/**
- * Ensure prerequisite tools are in sequence
- * e.g., if edit_file is in sequence, read_file should come before it
- */
-function ensurePrerequisites(sequence) {
-    const result = [];
-    const seen = new Set();
-
-    for (const tool of sequence) {
-        // Check what this tool needs
-        const toolInfo = TOOL_CATALOG[tool];
-        if (!toolInfo) continue;
-
-        // For edit_file, ensure read_file comes first
-        if (tool === 'edit_file' && !seen.has('read_file') && !sequence.includes('read_file')) {
-            // Also ensure file_exists before read
-            if (!seen.has('file_exists')) {
-                result.push('file_exists');
-                seen.add('file_exists');
-            }
-            result.push('read_file');
-            seen.add('read_file');
-        }
-
-        // For read_file, ensure file_exists comes first (but not always necessary)
-        if (tool === 'read_file' && !seen.has('file_exists') && !sequence.includes('file_exists')) {
-            result.push('file_exists');
-            seen.add('file_exists');
-        }
-
-        if (!seen.has(tool)) {
-            result.push(tool);
-            seen.add(tool);
-        }
-    }
-
-    return result;
-}
-
-/**
- * Fast fallback routing when LLM fails
- * Uses pattern matching similar to requestClassifier but outputs a plan
- */
-function fallbackRouting(userMessage, context = {}) {
+function patternRoute(userMessage, context = {}) {
     const lower = userMessage.toLowerCase();
 
-    // Extract file path if present
+    // Extract file path if present (handles multiple formats)
     const urlMatch = userMessage.match(/bot\.inference-arcade\.com\/([^\s]+)/i);
     const srcMatch = userMessage.match(/src\/([^\s]+\.(?:html|js|css))/i);
-    const extractedPath = srcMatch ? `src/${srcMatch[1]}` : (urlMatch ? urlMatch[1] : null);
+    // Informal file references like "part3.html" or "peanut-city.html" (no src/ prefix)
+    const informalMatch = userMessage.match(/\b([\w][\w-]*\.(?:html|js|css))\b/i);
+    // Priority: explicit src/ > URL > informal reference (prepend src/ for .html)
+    const extractedPath = srcMatch ? `src/${srcMatch[1]}`
+        : (urlMatch ? urlMatch[1]
+        : (informalMatch && informalMatch[1].endsWith('.html') ? `src/${informalMatch[1]}` : null));
+
+    // Use recent files from context for pronoun resolution ("the game", "it", etc.)
+    const recentFile = context.recentFiles?.[0] || null;
 
     // Determine intent and build plan
     let plan = {
@@ -299,16 +120,38 @@ function fallbackRouting(userMessage, context = {}) {
         toolSequence: [],
         parameterHints: {},
         contextNeeded: [],
-        confidence: 0.6,
-        reasoning: 'Fallback pattern matching',
+        confidence: 0.8,
+        reasoning: 'Pattern matching',
         clarifyFirst: false,
         clarifyQuestion: null,
         expectedIterations: 1,
-        method: 'fallback'
+        method: 'pattern'
     };
 
-    // Edit intent
-    if (/\b(edit|change|replace|update|fix|modify)\b/.test(lower) && extractedPath) {
+    // Structural transformation intent (e.g., "follow same design as", "match structure of")
+    // These need write_file for full replacement, not edit_file for patches
+    if (/\b(follow|match|same\s+(design|structure|format|layout)|like|similar\s+to)\b/i.test(lower) && extractedPath) {
+        // Extract reference file if mentioned (e.g., "like peanut-city.html")
+        const refMatch = lower.match(/(?:like|as|to)\s+(\w[\w-]*\.html)/i);
+        const refPath = refMatch ? `src/${refMatch[1]}` : null;
+
+        plan.intent = 'create';
+        plan.toolSequence = refPath
+            ? ['file_exists', 'read_file', 'read_file', 'write_file']
+            : ['file_exists', 'read_file', 'write_file'];
+        plan.parameterHints = {
+            file_exists: { path: extractedPath },
+            read_file: { paths: refPath ? [extractedPath, refPath] : [extractedPath] },
+            write_file: { path: extractedPath },
+            note: 'Structural transformation - read file(s), then write_file with new structure'
+        };
+        plan.expectedIterations = refPath ? 4 : 3;
+        plan.reasoning = refPath
+            ? `Structural transformation: ${extractedPath} → match ${refPath}`
+            : `Structural transformation: ${extractedPath}`;
+    }
+    // Edit intent (targeted changes, not structural overhaul)
+    else if (/\b(edit|change|replace|update|fix|modify)\b/.test(lower) && extractedPath) {
         plan.intent = 'edit';
         plan.toolSequence = ['file_exists', 'read_file', 'edit_file'];
         plan.parameterHints = {
@@ -318,6 +161,18 @@ function fallbackRouting(userMessage, context = {}) {
         };
         plan.expectedIterations = 3;
         plan.reasoning = `Edit request with explicit path: ${extractedPath}`;
+    }
+    // Pronoun reference with recent file context ("fix it", "the game isn't working")
+    else if (/\b(it|the\s+(game|page|file)|that)\b/.test(lower) && recentFile && /\b(fix|edit|change|update|broken|isn't|not\s+working)\b/.test(lower)) {
+        plan.intent = 'edit';
+        plan.toolSequence = ['file_exists', 'read_file', 'edit_file'];
+        plan.parameterHints = {
+            file_exists: { path: recentFile },
+            read_file: { path: recentFile },
+            edit_file: { path: recentFile }
+        };
+        plan.expectedIterations = 3;
+        plan.reasoning = `Pronoun resolved to recent file: ${recentFile}`;
     }
     // Create intent - use write_file for content creation
     else if (/\b(create|build|make|generate|new)\b/.test(lower)) {
@@ -333,8 +188,15 @@ function fallbackRouting(userMessage, context = {}) {
         plan.expectedIterations = 2;
         plan.reasoning = 'Git commit request';
     }
+    // Model switch intent
+    else if (/\b(switch|use|set)\s+(to\s+)?(glm|kimi|deepseek|qwen|mimo|minimax)\b/i.test(lower)) {
+        plan.intent = 'config';
+        plan.toolSequence = ['set_model'];
+        plan.expectedIterations = 1;
+        plan.reasoning = 'Model switch request';
+    }
     // Read/list intent
-    else if (/\b(list|show|find|search|what|read)\b/.test(lower)) {
+    else if (/\b(list|show|find|search|what|read|check)\b/.test(lower)) {
         if (extractedPath) {
             plan.intent = 'read';
             plan.toolSequence = ['file_exists', 'read_file'];
@@ -361,49 +223,21 @@ function fallbackRouting(userMessage, context = {}) {
         plan.expectedIterations = 1;
         plan.reasoning = 'Web search for current information';
     }
-    // Default to chat
+    // Default to chat (let agentic loop handle ambiguous requests)
     else {
-        plan.reasoning = 'General conversation, no specific tools needed';
+        plan.intent = 'chat';
+        plan.confidence = 0.5;
+        plan.reasoning = 'General request - letting agentic loop decide';
     }
 
-    console.log(`[ROUTER] Fallback plan: ${plan.intent} → [${plan.toolSequence.join('→')}]`);
     return plan;
-}
-
-/**
- * Get tool metadata
- */
-function getToolInfo(toolName) {
-    return TOOL_CATALOG[toolName] || null;
-}
-
-/**
- * Filter tools based on routing plan
- * Returns a subset of tools optimized for the plan
- */
-function filterToolsForPlan(allTools, plan) {
-    if (!plan.toolSequence?.length) {
-        return allTools; // No filtering if no sequence
-    }
-
-    // Prioritize tools in sequence, but include all tools for flexibility
-    const priorityTools = new Set(plan.toolSequence);
-
-    // Sort tools: priority tools first, then others
-    return [...allTools].sort((a, b) => {
-        const aName = a.function?.name;
-        const bName = b.function?.name;
-        const aPriority = priorityTools.has(aName) ? 0 : 1;
-        const bPriority = priorityTools.has(bName) ? 0 : 1;
-        return aPriority - bPriority;
-    });
 }
 
 /**
  * Build system prompt enhancement based on routing plan
  */
 function buildRoutingGuidance(plan) {
-    if (!plan.toolSequence?.length) {
+    if (!plan || !plan.toolSequence?.length) {
         return '';
     }
 
@@ -422,12 +256,13 @@ function buildRoutingGuidance(plan) {
         guidance += `\nReasoning: ${plan.reasoning}\n`;
     }
 
-    guidance += `\nThis is a suggested starting point - feel free to explore or deviate as needed. When uncertain, default to exploration (list_files, search_files, site-inventory).`;
+    guidance += `\nThis is a suggested starting point - feel free to explore or deviate as needed.`;
 
     return guidance;
 }
 
 module.exports = {
     generateRoutingPlan,
-    buildRoutingGuidance
+    buildRoutingGuidance,
+    patternRoute  // Export for testing
 };

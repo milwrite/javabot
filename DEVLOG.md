@@ -91,6 +91,73 @@ error: { message: 'No models provided', code: 400 }
 
 ---
 
+### Story Page Template & Structural Routing
+
+**Issue:**
+Story pages (like krispy-peaks-affair.html) lacked consistent structure guidance. The builder agent had no reference template for scroll-reveal animations, progress bars, or noir story typography. Additionally, fallback routing couldn't detect structural transformation requests ("make it follow the same design as peanut-city").
+
+**Changes Made:**
+
+**1. Story Template** ([personality/specialized/agentRoles.js](personality/specialized/agentRoles.js)):
+- Added comprehensive `STORY_TEMPLATE` (~80 lines) covering:
+  - Required HTML structure: `body.story-page`, `.story-container`, `.chapter[data-chapter]`, `.paragraph`
+  - Required JavaScript: Intersection observer for chapter reveal, scroll progress bar
+  - CSS classes: `.chapter-number`, `.chapter-title`, `.whisper`, `.emphasis`, `.divider`, `.twist-reveal`, `.epilogue`
+  - Mobile breakpoints (768px, 480px) with scaled typography
+  - Reference: `src/peanut-city.html`
+- Integrated STORY_TEMPLATE into builder prompt
+- Exported for use in other modules
+
+**2. Page Structure Guidelines** ([personality/content/pageStructure.js](personality/content/pageStructure.js)):
+- Expanded story page requirements:
+  - `body class="story-page"` required
+  - `.chapter` with reveal animation (opacity 0→1, translateY 30→0)
+  - `.paragraph` class on all text blocks
+  - Scroll progress bar JavaScript required
+- Added checklist item #12: "STORY PAGES REQUIRE: body.story-page, .chapter with reveal animation..."
+
+**3. Enhanced Fallback Routing** ([services/llmRouter.js](services/llmRouter.js)):
+- Added informal file reference detection:
+  ```javascript
+  // Now detects: "part3.html", "peanut-city.html" without src/ prefix
+  const informalMatch = userMessage.match(/\b([\w][\w-]*\.(?:html|js|css))\b/i);
+  ```
+- Added structural transformation intent detection:
+  - Triggers on: "follow same design as", "match structure of", "like X.html"
+  - Uses `write_file` instead of `edit_file` (full replacement, not patches)
+  - Reads both source file AND reference file before rewriting
+  - Example: "make krispy-peaks-affair follow peanut-city design" → read both → write_file
+
+**4. PostgreSQL Schema Fix** ([scripts/schema.sql](scripts/schema.sql)):
+- Fixed `tool_calls` table (addresses log error about missing columns):
+  - Removed `event_id` foreign key (standalone table now)
+  - Added `user_id`, `channel_id`, `session_id` columns
+  - Updated indexes for session-based queries
+
+**Structural Transformation Routing Example:**
+```
+User: "make krispy-peaks-affair.html follow the same design as peanut-city"
+
+Fallback Router Output:
+{
+  intent: "create",
+  toolSequence: ["file_exists", "read_file", "read_file", "write_file"],
+  parameterHints: {
+    read_file: { paths: ["src/krispy-peaks-affair.html", "src/peanut-city.html"] },
+    write_file: { path: "src/krispy-peaks-affair.html" },
+    note: "Structural transformation - read file(s), then write_file with new structure"
+  }
+}
+```
+
+**Files Modified:**
+- `personality/specialized/agentRoles.js` - Added STORY_TEMPLATE, exported
+- `personality/content/pageStructure.js` - Expanded story page requirements
+- `services/llmRouter.js` - Informal file detection + structural transformation routing
+- `scripts/schema.sql` - Fixed tool_calls table schema
+
+---
+
 ## 2026-01-01
 
 ### Prompt Flow Visualizer
