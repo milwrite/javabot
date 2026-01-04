@@ -43,17 +43,15 @@ class DashboardServer {
      * Setup Express routes
      */
     setupRoutes() {
+        // Serve static files from project root (main site)
+        this.app.use(express.static(path.join(__dirname, '..')));
+
         // Serve static files from gui/ directory
         this.app.use('/gui', express.static(path.join(__dirname, '../gui')));
 
-        // Dashboard page
+        // Dashboard page at /dashboard
         this.app.get('/dashboard', (req, res) => {
             res.sendFile(path.join(__dirname, '../gui/dashboard.html'));
-        });
-
-        // Redirect root to dashboard
-        this.app.get('/', (req, res) => {
-            res.redirect('/dashboard');
         });
 
         // SSE endpoint - real-time event stream
