@@ -1,11 +1,14 @@
-// services/postgres.js
-// PostgreSQL logging service for persistent event storage and analytics
+// services/serenaLogs.js
+// Unified Serena Logs service - PostgreSQL persistence with real-time NOTIFY streaming
+// Replaces: postgres.js, gui-server.js in-memory storage, log-preserv.js session tracking
 
 const { Pool } = require('pg');
 const crypto = require('crypto');
+const os = require('os');
 
 // Connection pool (lazy init)
 let pool = null;
+let notifyClient = null;
 let sessionId = null;
 let isEnabled = false;
 
@@ -15,13 +18,15 @@ const DEFAULTS = {
     CONNECTION_TIMEOUT: 10000
 };
 
+// ============ INITIALIZATION ============
+
 /**
- * Initialize database connection pool
+ * Initialize database connection pool and start session
  * @returns {Promise<boolean>} True if connected
  */
 async function init() {
     if (!process.env.DATABASE_URL) {
-        console.log('[POSTGRES] DATABASE_URL not set, logging disabled');
+        console.log('[SERENA] DATABASE_URL not set, logging disabled');
         return false;
     }
 
@@ -39,14 +44,64 @@ async function init() {
         await client.query('SELECT 1');
         client.release();
 
-        sessionId = crypto.randomUUID();
         isEnabled = true;
-        console.log(`[POSTGRES] Connected, session: ${sessionId.slice(0, 8)}...`);
+
+        // Start a new session
+        await startSession();
+
+        console.log(`[SERENA] Connected, session: ${sessionId.slice(0, 8)}...`);
         return true;
     } catch (error) {
-        console.error('[POSTGRES] Connection failed:', error.message);
+        console.error('[SERENA] Connection failed:', error.message);
         isEnabled = false;
         return false;
+    }
+}
+
+/**
+ * Start a new bot session (inserts row into bot_sessions)
+ */
+async function startSession() {
+    if (!isEnabled) return;
+    try {
+        let version = '1.0.0';
+        try {
+            version = require('../package.json').version || '1.0.0';
+        } catch (e) { /* ignore */ }
+
+        const res = await pool.query(
+            `INSERT INTO bot_sessions (hostname, version) VALUES ($1, $2) RETURNING id`,
+            [os.hostname(), version]
+        );
+        sessionId = res.rows[0].id;
+    } catch (error) {
+        // Fallback to UUID if session table doesn't exist
+        console.error('[SERENA] startSession error:', error.message);
+        sessionId = crypto.randomUUID();
+    }
+}
+
+/**
+ * End the current session (updates bot_sessions row)
+ * @param {number} exitCode - Process exit code
+ * @param {string} exitReason - 'normal', 'crash', 'sigterm', 'sigint'
+ */
+async function endSession(exitCode = 0, exitReason = 'normal') {
+    if (!isEnabled || !sessionId) return;
+    try {
+        await pool.query(
+            `UPDATE bot_sessions SET
+                ended_at = NOW(),
+                exit_code = $1,
+                exit_reason = $2,
+                event_count = (SELECT COUNT(*) FROM bot_events WHERE session_id = $3),
+                error_count = (SELECT COUNT(*) FROM bot_events WHERE session_id = $3 AND event_type = 'error')
+             WHERE id = $3`,
+            [exitCode, exitReason, sessionId]
+        );
+        console.log(`[SERENA] Session ended: ${exitReason} (code ${exitCode})`);
+    } catch (error) {
+        console.error('[SERENA] endSession error:', error.message);
     }
 }
 
@@ -59,14 +114,96 @@ function getSessionId() {
 }
 
 /**
- * Check if postgres logging is enabled
+ * Check if Serena logging is enabled
  * @returns {boolean}
  */
 function enabled() {
     return isEnabled;
 }
 
-// ============ LOGGING FUNCTIONS (fire-and-forget) ============
+// ============ LISTEN/NOTIFY FOR REAL-TIME STREAMING ============
+
+/**
+ * Setup LISTEN client for real-time event streaming
+ * @param {Function} callback - Called with parsed event data on each notification
+ * @returns {Promise<Object>} The client connection (keep reference to prevent GC)
+ */
+async function setupNotifyListener(callback) {
+    if (!isEnabled) {
+        console.warn('[SERENA] Cannot setup NOTIFY listener - not connected');
+        return null;
+    }
+
+    try {
+        notifyClient = await pool.connect();
+        await notifyClient.query('LISTEN serena_logs');
+
+        notifyClient.on('notification', (msg) => {
+            try {
+                const payload = JSON.parse(msg.payload);
+                callback(payload);
+            } catch (e) {
+                console.error('[SERENA] NOTIFY parse error:', e.message);
+            }
+        });
+
+        notifyClient.on('error', (err) => {
+            console.error('[SERENA] NOTIFY client error:', err.message);
+            // Attempt reconnect after delay
+            setTimeout(() => {
+                setupNotifyListener(callback).catch(console.error);
+            }, 5000);
+        });
+
+        console.log('[SERENA] NOTIFY listener active on channel: serena_logs');
+        return notifyClient;
+    } catch (error) {
+        console.error('[SERENA] setupNotifyListener error:', error.message);
+        return null;
+    }
+}
+
+// ============ STRUCTURED LOGGING (replaces console.log) ============
+
+const log = {
+    /**
+     * Log info level message
+     * @param {string} category - STARTUP, CONTEXT, COMMIT, ROUTER, TOOL, MENTION, CLEANUP, API_HEALTH
+     * @param {string} message - Log message
+     * @param {Object} data - Additional data
+     */
+    info: (category, message, data = {}) => {
+        console.log(`[${category}] ${message}`, data && Object.keys(data).length ? data : '');
+        logOperationalEvent({ category, message, details: data });
+    },
+
+    /**
+     * Log warning level message
+     */
+    warn: (category, message, data = {}) => {
+        console.warn(`[${category}] ⚠️ ${message}`, data && Object.keys(data).length ? data : '');
+        logOperationalEvent({ category, message: `[WARN] ${message}`, details: data });
+    },
+
+    /**
+     * Log error level message
+     */
+    error: (category, message, data = {}) => {
+        console.error(`[${category}] ❌ ${message}`, data && Object.keys(data).length ? data : '');
+        logError({ category, message, ...data });
+    },
+
+    /**
+     * Log debug level message (console only, no DB)
+     */
+    debug: (category, message, data = {}) => {
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[${category}:DEBUG] ${message}`, data && Object.keys(data).length ? data : '');
+        }
+    }
+};
+
+// ============ EVENT LOGGING FUNCTIONS (fire-and-forget) ============
 
 /**
  * Log a mention event
@@ -82,17 +219,13 @@ async function logMention(data) {
              JSON.stringify({ content: data.content, ...data.metadata })]
         );
     } catch (error) {
-        console.error('[POSTGRES] logMention error:', error.message);
+        console.error('[SERENA] logMention error:', error.message);
     }
 }
 
 /**
  * Log a tool call event
  * @param {Object} data - {toolName, args, result, error, durationMs, iteration, channelId, userId}
- *
- * NOTE: Previously inserted to BOTH bot_events AND tool_calls tables (redundant).
- * Now only inserts to tool_calls table which has more detail.
- * Use getRecentEvents('tool_call') to query via the tool_calls table.
  */
 async function logToolCall(data) {
     if (!isEnabled) return;
@@ -100,7 +233,6 @@ async function logToolCall(data) {
         // Sanitize tool name (remove any XML tags that may leak through)
         const sanitizedToolName = data.toolName?.replace(/<[^>]*>/g, '').trim() || 'unknown';
 
-        // Single insert to tool_calls table only (removed bot_events redundancy)
         await pool.query(
             `INSERT INTO tool_calls (tool_name, arguments, result, error, duration_ms, iteration, user_id, channel_id, session_id)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
@@ -109,7 +241,7 @@ async function logToolCall(data) {
              data.userId, data.channelId, sessionId]
         );
     } catch (error) {
-        console.error('[POSTGRES] logToolCall error:', error.message);
+        console.error('[SERENA] logToolCall error:', error.message);
     }
 }
 
@@ -127,7 +259,7 @@ async function logFileChange(data) {
              JSON.stringify({ action: data.action, path: data.path, preview: truncate(data.contentPreview, 500) })]
         );
     } catch (error) {
-        console.error('[POSTGRES] logFileChange error:', error.message);
+        console.error('[SERENA] logFileChange error:', error.message);
     }
 }
 
@@ -146,7 +278,7 @@ async function logAgentLoop(data) {
              JSON.stringify({ command: data.command, tools: data.toolsUsed, result: truncate(data.finalResult, 1000) })]
         );
     } catch (error) {
-        console.error('[POSTGRES] logAgentLoop error:', error.message);
+        console.error('[SERENA] logAgentLoop error:', error.message);
     }
 }
 
@@ -164,7 +296,7 @@ async function logError(data) {
              JSON.stringify({ type: data.errorType, message: data.message, stack: data.stack, context: data.context })]
         );
     } catch (error) {
-        console.error('[POSTGRES] logError error:', error.message);
+        console.error('[SERENA] logError error:', error.message);
     }
 }
 
@@ -182,13 +314,12 @@ async function logBuildStage(data) {
              JSON.stringify(data.result), data.testScore, data.durationMs]
         );
     } catch (error) {
-        console.error('[POSTGRES] logBuildStage error:', error.message);
+        console.error('[SERENA] logBuildStage error:', error.message);
     }
 }
 
 /**
  * Log an operational event (LLM, ROUTER, API_HEALTH, etc.)
- * Captures events that were previously only logged to console/GUI.
  * @param {Object} data - {category, message, details, channelId, userId}
  */
 async function logOperationalEvent(data) {
@@ -201,13 +332,12 @@ async function logOperationalEvent(data) {
              JSON.stringify({ category: data.category, message: data.message, details: data.details })]
         );
     } catch (error) {
-        console.error('[POSTGRES] logOperationalEvent error:', error.message);
+        // Silent fail for operational events to avoid log spam
     }
 }
 
 /**
  * Log prompt module usage for analytics
- * Tracks which personality modules are assembled and used.
  * @param {Object} data - {role, modules, tokenEstimate, channelId}
  */
 async function logPromptUsage(data) {
@@ -220,11 +350,11 @@ async function logPromptUsage(data) {
              JSON.stringify({ role: data.role, modules: data.modules, tokens: data.tokenEstimate })]
         );
     } catch (error) {
-        console.error('[POSTGRES] logPromptUsage error:', error.message);
+        console.error('[SERENA] logPromptUsage error:', error.message);
     }
 }
 
-// ============ QUERY FUNCTIONS (for /logs command) ============
+// ============ QUERY FUNCTIONS (for /logs command and dashboard) ============
 
 /**
  * Get recent events
@@ -235,7 +365,7 @@ async function logPromptUsage(data) {
 async function getRecentEvents(eventType = 'all', limit = 10) {
     if (!isEnabled) return [];
     try {
-        // tool_call events are now in tool_calls table, not bot_events
+        // tool_call events are in tool_calls table
         if (eventType === 'tool_call') {
             const res = await pool.query(
                 `SELECT id, tool_name, arguments as payload, result, error, duration_ms,
@@ -270,7 +400,7 @@ async function getRecentEvents(eventType = 'all', limit = 10) {
         );
         return res.rows;
     } catch (error) {
-        console.error('[POSTGRES] getRecentEvents error:', error.message);
+        console.error('[SERENA] getRecentEvents error:', error.message);
         return [];
     }
 }
@@ -314,7 +444,7 @@ async function getErrorStats(period = '24h') {
 
         return stats;
     } catch (error) {
-        console.error('[POSTGRES] getErrorStats error:', error.message);
+        console.error('[SERENA] getErrorStats error:', error.message);
         return { total: 0, critical: 0, auth: 0, network: 0, git: 0, discord: 0, general: 0 };
     }
 }
@@ -352,7 +482,7 @@ async function getDailyStats(days = 7) {
             uniqueUsers: parseInt(row.unique_users) || 0
         };
     } catch (error) {
-        console.error('[POSTGRES] getDailyStats error:', error.message);
+        console.error('[SERENA] getDailyStats error:', error.message);
         return { total: 0, mentions: 0, toolCalls: 0, errors: 0, uniqueUsers: 0 };
     }
 }
@@ -374,7 +504,7 @@ async function searchEvents(query, limit = 20) {
         `, [`%${query}%`, limit]);
         return res.rows;
     } catch (error) {
-        console.error('[POSTGRES] searchEvents error:', error.message);
+        console.error('[SERENA] searchEvents error:', error.message);
         return [];
     }
 }
@@ -400,18 +530,83 @@ async function getToolStats(days = 7) {
         `);
         return res.rows;
     } catch (error) {
-        console.error('[POSTGRES] getToolStats error:', error.message);
+        console.error('[SERENA] getToolStats error:', error.message);
         return [];
     }
 }
 
 /**
+ * Get session history
+ * @param {number} limit - Max results
+ * @returns {Promise<Array>}
+ */
+async function getSessionHistory(limit = 20) {
+    if (!isEnabled) return [];
+    try {
+        const res = await pool.query(
+            `SELECT * FROM bot_sessions ORDER BY started_at DESC LIMIT $1`,
+            [limit]
+        );
+        return res.rows;
+    } catch (error) {
+        console.error('[SERENA] getSessionHistory error:', error.message);
+        return [];
+    }
+}
+
+/**
+ * Get events for a specific session
+ * @param {string} targetSessionId - Session UUID
+ * @param {number} limit - Max results
+ * @returns {Promise<Array>}
+ */
+async function getSessionEvents(targetSessionId, limit = 100) {
+    if (!isEnabled) return [];
+    try {
+        const res = await pool.query(
+            `SELECT * FROM bot_events WHERE session_id = $1 ORDER BY timestamp DESC LIMIT $2`,
+            [targetSessionId, limit]
+        );
+        return res.rows;
+    } catch (error) {
+        console.error('[SERENA] getSessionEvents error:', error.message);
+        return [];
+    }
+}
+
+/**
+ * Get a single event by ID (for fetching full data after NOTIFY)
+ * @param {string} table - 'bot_events', 'tool_calls', or 'build_stages'
+ * @param {number} id - Event ID
+ * @returns {Promise<Object|null>}
+ */
+async function getEventById(table, id) {
+    if (!isEnabled) return null;
+    const validTables = ['bot_events', 'tool_calls', 'build_stages'];
+    if (!validTables.includes(table)) return null;
+
+    try {
+        const res = await pool.query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
+        return res.rows[0] || null;
+    } catch (error) {
+        console.error('[SERENA] getEventById error:', error.message);
+        return null;
+    }
+}
+
+// ============ CLEANUP ============
+
+/**
  * Close database connection pool
  */
 async function close() {
+    if (notifyClient) {
+        notifyClient.release();
+        notifyClient = null;
+    }
     if (pool) {
         await pool.end();
-        console.log('[POSTGRES] Connection pool closed');
+        console.log('[SERENA] Connection pool closed');
     }
 }
 
@@ -423,10 +618,22 @@ function truncate(str, maxLen) {
 }
 
 module.exports = {
+    // Initialization
     init,
     enabled,
     getSessionId,
-    // Logging functions
+    startSession,
+    endSession,
+    close,
+
+    // Real-time streaming
+    setupNotifyListener,
+    getEventById,
+
+    // Structured logging
+    log,
+
+    // Event logging functions
     logMention,
     logToolCall,
     logFileChange,
@@ -435,11 +642,13 @@ module.exports = {
     logBuildStage,
     logOperationalEvent,
     logPromptUsage,
+
     // Query functions
     getRecentEvents,
     getErrorStats,
     getDailyStats,
     searchEvents,
     getToolStats,
-    close
+    getSessionHistory,
+    getSessionEvents
 };

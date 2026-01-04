@@ -28,12 +28,10 @@ const { generateSiteInventory } = require('./scripts/generateSiteInventory.js');
 // Site configuration - Single source of truth
 const SITE_CONFIG = require('./site-config.js');
 
-// GUI Server for verbose logging
-const BotGUIServer = require('./scripts/gui-server.js');
-let guiServer = null;
-
-// PostgreSQL logging service
-const postgres = require('./services/postgres');
+// Unified Serena Logs service (replaces gui-server + postgres)
+const serena = require('./services/serenaLogs');
+const DashboardServer = require('./scripts/dashboard-server');
+let dashboard = null;
 
 // Edit service (streamlined edit loop)
 const { getEditResponse: getEditResponseService } = require('./services/editService');
@@ -95,32 +93,33 @@ if (process.env.OPENROUTER_FALLBACK) {
     console.log('🔑 Fallback OpenRouter key configured');
 }
 
-// Initialize GUI server
-if (!process.env.NO_GUI) {
-    guiServer = new BotGUIServer(process.env.GUI_PORT || 3001);
-    guiServer.start().catch(err => {
-        console.error('Failed to start GUI server:', err);
-        guiServer = null;
-    });
-}
-
-// Initialize PostgreSQL logging (non-blocking)
-postgres.init().catch(err => {
-    console.error('[POSTGRES] Init failed:', err.message);
+// Initialize Serena Logs and Dashboard
+serena.init().then(async (connected) => {
+    if (connected && !process.env.NO_GUI) {
+        dashboard = new DashboardServer(process.env.GUI_PORT || 3001);
+        await dashboard.start().catch(err => {
+            console.error('[DASHBOARD] Failed to start:', err.message);
+            dashboard = null;
+        });
+    }
+}).catch(err => {
+    console.error('[SERENA] Init failed:', err.message);
 });
 
 // Graceful shutdown handlers
 process.on('SIGTERM', async () => {
     console.log('🛑 SIGTERM received, shutting down gracefully...');
-    if (postgres) await postgres.close();
-    if (guiServer) await guiServer.stop();
+    await serena.endSession(0, 'sigterm');
+    await serena.close();
+    if (dashboard) await dashboard.stop();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
     console.log('🛑 SIGINT received, shutting down gracefully...');
-    if (postgres) await postgres.close();
-    if (guiServer) await guiServer.stop();
+    await serena.endSession(0, 'sigint');
+    await serena.close();
+    if (dashboard) await dashboard.stop();
     process.exit(0);
 });
 
@@ -212,21 +211,9 @@ function buildActionContextSummary(channelId) {
     return `[RECENT BOT ACTIONS - use this context for follow-up requests]\n${actionLines.join('\n')}`;
 }
 
-// GUI logging helper functions
-function logToGUI(level, message, data = {}) {
-    if (guiServer) {
-        guiServer.log(level, message, data);
-    }
-}
-// Make logToGUI available globally for other modules
-global.logToGUI = logToGUI;
-
+// Unified logging helper functions (via serenaLogs - triggers NOTIFY for dashboard streaming)
 function logToolCall(toolName, args, result, error = null, options = {}) {
-    if (guiServer) {
-        guiServer.logToolCall(toolName, args, result, error);
-    }
-    // Log to PostgreSQL (fire-and-forget)
-    postgres.logToolCall({
+    serena.logToolCall({
         toolName,
         args,
         result: typeof result === 'string' ? result : JSON.stringify(result),
@@ -239,11 +226,7 @@ function logToolCall(toolName, args, result, error = null, options = {}) {
 }
 
 function logFileChange(action, path, content = null, oldContent = null, channelId = null) {
-    if (guiServer) {
-        guiServer.logFileChange(action, path, content, oldContent);
-    }
-    // Log to PostgreSQL (fire-and-forget)
-    postgres.logFileChange({
+    serena.logFileChange({
         action,
         path,
         contentPreview: content ? content.slice(0, 500) : null,
@@ -251,26 +234,9 @@ function logFileChange(action, path, content = null, oldContent = null, channelI
     });
 }
 
-function startAgentLoop(command, user, channel) {
-    if (guiServer) {
-        return guiServer.startAgentLoop(command, user, channel);
-    }
-    return null;
-}
-
-function updateAgentLoop(iteration, toolsUsed, thinking = null) {
-    if (guiServer) {
-        guiServer.updateAgentLoop(iteration, toolsUsed, thinking);
-    }
-}
-
-function endAgentLoop(result, error = null, options = {}) {
-    if (guiServer) {
-        guiServer.endAgentLoop(result, error);
-    }
-    // Log to PostgreSQL (fire-and-forget)
+function logAgentLoop(result, error = null, options = {}) {
     if (options.command) {
-        postgres.logAgentLoop({
+        serena.logAgentLoop({
             command: options.command,
             toolsUsed: options.toolsUsed || [],
             finalResult: result,
@@ -677,24 +643,20 @@ const errorLogger = {
         }
         
         // Track authentication-related errors specifically
-        if (error.message?.includes('authentication') || 
+        if (error.message?.includes('authentication') ||
             error.message?.includes('Permission') ||
             error.message?.includes('fatal: could not read') ||
             error.message?.includes('remote: Invalid username or password')) {
             console.error('🔐 AUTHENTICATION ERROR DETECTED - Check GitHub token');
-            if (guiServer) {
-                guiServer.log('error', 'AUTH_ERROR', { context, error: error.message });
-            }
+            serena.log.error('AUTH', error.message, { context });
         }
-        
+
         return errorEntry;
     },
     
     track: (errorEntry) => {
         // Track error for patterns (could be enhanced to write to file)
-        if (guiServer) {
-            guiServer.log('error', errorEntry.context, { message: errorEntry.message, metadata: errorEntry.metadata });
-        }
+        serena.log.error(errorEntry.context, errorEntry.message, { metadata: errorEntry.metadata });
     }
 };
 
@@ -1003,7 +965,7 @@ function logEvent(type, message, details = null, context = {}) {
     logToGUI(level, `${type}: ${message}`, details || {});
 
     // Log to PostgreSQL for analytics (fire-and-forget)
-    postgres.logOperationalEvent({
+    serena.logOperationalEvent({
         category: type,
         message: message,
         details: details,
@@ -1816,16 +1778,56 @@ async function getEditResponse(userMessage, conversationMessages = [], discordCo
     });
 }
 
+// Helper function to execute read-only tools (for parallel execution)
+async function executeReadOnlyTool(functionName, args, parsePathArg, fileReadCache, searchResults, discordContext) {
+    if (functionName === 'list_files') {
+        return await listFilesService(parsePathArg(args.path) || './src');
+    } else if (functionName === 'file_exists') {
+        return await fileExistsService(parsePathArg(args.path));
+    } else if (functionName === 'search_files') {
+        return await searchFilesService(args.pattern, parsePathArg(args.path) || './src', {
+            caseInsensitive: args.case_insensitive || false,
+            filePattern: args.file_pattern || null
+        });
+    } else if (functionName === 'read_file') {
+        // Check cache first to avoid redundant disk reads
+        const normalizedPath = args.path.replace(/^\.\//, '');
+        if (fileReadCache.has(normalizedPath)) {
+            const cached = fileReadCache.get(normalizedPath);
+            logEvent('LLM', `Cache hit for ${normalizedPath} (saved ${cached.length} chars read)`);
+            return cached;
+        } else {
+            const result = await readFileService(args.path, {
+                onFileChange: (action, path, content, oldContent) =>
+                    logFileChange(action, path, content, oldContent, discordContext.channelId)
+            });
+            // Only cache successful reads (not errors)
+            if (!result.startsWith('Error')) {
+                fileReadCache.set(normalizedPath, result);
+            }
+            return result;
+        }
+    } else if (functionName === 'get_repo_status') {
+        return await getRepoStatus();
+    } else if (functionName === 'git_log') {
+        return await getGitLog(args.count, args.file, args.oneline);
+    } else if (functionName === 'web_search') {
+        const result = await webSearch(args.query);
+        // Store search results for context persistence
+        searchResults.push({ query: args.query, results: result });
+        return result;
+    } else if (functionName === 'deep_research') {
+        const researchResult = await deepResearch(args.query);
+        const result = `## Deep Research Results\n\n${researchResult.content}\n\n### Sources\n${researchResult.citations.map((c, i) => `${i + 1}. ${c}`).join('\n')}`;
+        searchResults.push({ query: args.query, results: result, type: 'deep' });
+        return result;
+    }
+    return `Error: Unknown read-only tool: ${functionName}`;
+}
+
 // Enhanced LLM response with tool calling
 async function getLLMResponse(userMessage, conversationMessages = [], discordContext = {}, onStatusUpdate = null, routingPlan = null) {
     try {
-        // Start agent loop tracking for GUI
-        startAgentLoop(
-            userMessage.substring(0, 100),
-            discordContext.user || 'AI',
-            discordContext.channel || 'Direct'
-        );
-
         // Build the full messages array for the API
         const systemPromptContent = assembleFullAgent();
         const messages = [
@@ -1926,6 +1928,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                         temperature: 0.7,
                         tools: tools,
                         tool_choice: 'auto',
+                        parallel_tool_calls: true, // Enable parallel tool calls for efficiency
                         provider: { data_collection: 'deny' }, // ZDR enforcement
                         // Add reasoning if model supports it (interleaved thinking)
                         ...(reasoningConfig && { reasoning: reasoningConfig })
@@ -2027,11 +2030,51 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                 await onStatusUpdate(`executing: ${toolNames}...`);
             }
 
-            // Execute all tool calls
+            // Execute all tool calls - parallelize read-only tools for efficiency
             const toolResults = [];
             let actionCompletedThisIteration = false;
 
-            for (const toolCall of lastResponse.tool_calls) {
+            // Separate read-only and write tools for parallel vs sequential execution
+            const readOnlyToolCalls = lastResponse.tool_calls.filter(tc => READ_ONLY_TOOLS.has(tc.function.name));
+            const writeToolCalls = lastResponse.tool_calls.filter(tc => !READ_ONLY_TOOLS.has(tc.function.name));
+
+            // Execute read-only tools in parallel
+            if (readOnlyToolCalls.length > 1) {
+                logEvent('LLM', `Parallel execution: ${readOnlyToolCalls.length} read-only tools`);
+            }
+            const readOnlyResults = await Promise.all(readOnlyToolCalls.map(async (toolCall) => {
+                const functionName = toolCall.function.name;
+                const healResult = healAndParseJSON(toolCall.function.arguments || '{}', {
+                    logHealing: true,
+                    logger: (msg) => logEvent('LLM', msg)
+                });
+                if (healResult.parsed === null) {
+                    logEvent('LLM', `JSON healing failed for ${functionName}: ${healResult.error}`);
+                    return {
+                        role: 'tool',
+                        tool_call_id: toolCall.id,
+                        content: `Error: Invalid JSON in tool arguments. ${healResult.error}`
+                    };
+                }
+                const args = healResult.parsed;
+                const toolStartTime = Date.now();
+                let result = await executeReadOnlyTool(functionName, args, parsePathArg, fileReadCache, searchResults, discordContext);
+                // Log tool call
+                try {
+                    const isError = typeof result === 'string' && /^Error\b/.test(result);
+                    logToolCall(functionName, args, result, isError ? result : null, {
+                        durationMs: Date.now() - toolStartTime,
+                        iteration,
+                        channelId: discordContext.channelId,
+                        userId: discordContext.userId
+                    });
+                } catch (_) { /* ignore logging failure */ }
+                return { role: 'tool', tool_call_id: toolCall.id, content: result };
+            }));
+            toolResults.push(...readOnlyResults);
+
+            // Execute write tools sequentially (they may have dependencies)
+            for (const toolCall of writeToolCalls) {
                 const functionName = toolCall.function.name;
                 const healResult = healAndParseJSON(toolCall.function.arguments || '{}', {
                     logHealing: true,
@@ -2050,32 +2093,8 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
 
                 let result;
                 const toolStartTime = Date.now();
-                if (functionName === 'list_files') {
-                    result = await listFilesService(parsePathArg(args.path) || './src');
-                } else if (functionName === 'file_exists') {
-                    result = await fileExistsService(parsePathArg(args.path));
-                } else if (functionName === 'search_files') {
-                    result = await searchFilesService(args.pattern, parsePathArg(args.path) || './src', {
-                        caseInsensitive: args.case_insensitive || false,
-                        filePattern: args.file_pattern || null
-                    });
-                } else if (functionName === 'read_file') {
-                    // Check cache first to avoid redundant disk reads
-                    const normalizedPath = args.path.replace(/^\.\//, '');
-                    if (fileReadCache.has(normalizedPath)) {
-                        result = fileReadCache.get(normalizedPath);
-                        logEvent('LLM', `Cache hit for ${normalizedPath} (saved ${result.length} chars read)`);
-                    } else {
-                        result = await readFileService(args.path, {
-                            onFileChange: (action, path, content, oldContent) =>
-                                logFileChange(action, path, content, oldContent, discordContext.channelId)
-                        });
-                        // Only cache successful reads (not errors)
-                        if (!result.startsWith('Error')) {
-                            fileReadCache.set(normalizedPath, result);
-                        }
-                    }
-                } else if (functionName === 'write_file') {
+                // Write tools only - read-only tools handled in parallel above
+                if (functionName === 'write_file') {
                     result = await writeFileService(args.path, args.content, {
                         onFileChange: (action, path, content, oldContent) =>
                             logFileChange(action, path, content, oldContent, discordContext.channelId)
@@ -2199,18 +2218,6 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                             });
                         }
                     }
-                } else if (functionName === 'get_repo_status') {
-                    result = await getRepoStatus();
-                } else if (functionName === 'git_log') {
-                    result = await getGitLog(args.count, args.file, args.oneline);
-                } else if (functionName === 'web_search') {
-                    result = await webSearch(args.query);
-                    // Store search results for context persistence
-                    searchResults.push({ query: args.query, results: result });
-                } else if (functionName === 'deep_research') {
-                    const researchResult = await deepResearch(args.query);
-                    result = `## Deep Research Results\n\n${researchResult.content}\n\n### Sources\n${researchResult.citations.map((c, i) => `${i + 1}. ${c}`).join('\n')}`;
-                    searchResults.push({ query: args.query, results: result, type: 'deep' });
                 } else if (functionName === 'set_model') {
                     result = await setModel(args.model);
                 }
@@ -2238,14 +2245,10 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             messages.push(...toolResults);
             allToolResults.push(...toolResults); // Accumulate for fallback URL extraction
 
-            // Update agent loop with tools used and thinking (for GUI dashboard)
+            // Track tools used for final logging
             if (lastResponse.tool_calls) {
                 const toolsUsed = lastResponse.tool_calls.map(tc => tc.function.name);
-                allToolsUsed.push(...toolsUsed); // Track for PostgreSQL logging
-                if (guiServer) {
-                    const thinkingForGUI = formatThinkingForGUI(reasoning);
-                    updateAgentLoop(iteration, toolsUsed, thinkingForGUI);
-                }
+                allToolsUsed.push(...toolsUsed);
             }
 
             // Track read-only iterations to prevent over-searching on info requests
@@ -2309,7 +2312,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             logEvent('LLM', `HALLUCINATION DETECTED: Router suggested ${routingPlan.intent} but no tools executed. LLM claimed: "${content.substring(0, 100)}..."`);
 
             // Log this for tracking
-            postgres.logError({
+            serena.logError({
                 category: 'hallucination',
                 errorType: 'FalseSuccessClaim',
                 message: `LLM claimed success for ${routingPlan.intent} without executing tools`,
@@ -2358,7 +2361,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         }
 
         // End agent loop tracking with success
-        endAgentLoop(content, null, {
+        logAgentLoop(content, null, {
             command: userMessage.substring(0, 100),
             toolsUsed: allToolsUsed,
             durationMs: Date.now() - loopStartTime,
@@ -2381,7 +2384,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         errorLogger.track(errorEntry);
 
         // Log to PostgreSQL for persistent error tracking
-        postgres.logError({
+        serena.logError({
             errorType: error.code || 'LLMError',
             category: 'llm',
             message: error.message || String(error),
@@ -2390,7 +2393,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         });
 
         // End agent loop tracking with error
-        endAgentLoop(null, error.message, {
+        logAgentLoop(null, error.message, {
             command: userMessage.substring(0, 100),
             toolsUsed: allToolsUsed,
             durationMs: Date.now() - loopStartTime,
@@ -2672,7 +2675,7 @@ client.on('interactionCreate', async interaction => {
         console.error('Command error:', error);
 
         // Log to PostgreSQL for persistent error tracking
-        postgres.logError({
+        serena.logError({
             errorType: error.code || 'CommandError',
             category: 'discord',
             message: error.message || String(error),
@@ -2743,7 +2746,7 @@ client.on('messageCreate', async message => {
         // Handle async
         handleMentionAsync(message).catch(error => {
             console.error(`❌ Async ${triggerType.toLowerCase()} handler error:`, error);
-            postgres.logError({
+            serena.logError({
                 errorType: 'MessageHandlerError',
                 category: triggerType.toLowerCase(),
                 message: error.message || String(error),
@@ -2781,7 +2784,7 @@ async function handleMentionAsync(message) {
         logEvent('MENTION', `${username}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`);
 
         // Log mention to PostgreSQL
-        postgres.logMention({
+        serena.logMention({
             userId: message.author.id,
             username,
             channelId: message.channel.id,
@@ -3769,7 +3772,7 @@ async function handlePoll(interaction) {
 
 // Logs command handler - query PostgreSQL logs
 async function handleLogs(interaction) {
-    if (!postgres.enabled()) {
+    if (!serena.enabled()) {
         await interaction.editReply('database logging is not configured, man. need DATABASE_URL in environment.');
         return;
     }
@@ -3782,7 +3785,7 @@ async function handleLogs(interaction) {
                 const eventType = interaction.options.getString('type') || 'all';
                 const limit = Math.min(interaction.options.getInteger('limit') || 10, 25);
 
-                const events = await postgres.getRecentEvents(eventType, limit);
+                const events = await serena.getRecentEvents(eventType, limit);
 
                 if (events.length === 0) {
                     await interaction.editReply(`no ${eventType === 'all' ? '' : eventType + ' '}events found, man.`);
@@ -3807,7 +3810,7 @@ async function handleLogs(interaction) {
 
             case 'errors': {
                 const period = interaction.options.getString('period') || '24h';
-                const stats = await postgres.getErrorStats(period);
+                const stats = await serena.getErrorStats(period);
 
                 const periodLabels = { '1h': 'Last Hour', '24h': 'Last 24 Hours', '7d': 'Last 7 Days' };
 
@@ -3830,7 +3833,7 @@ async function handleLogs(interaction) {
 
             case 'stats': {
                 const days = interaction.options.getInteger('days') || 7;
-                const stats = await postgres.getDailyStats(days);
+                const stats = await serena.getDailyStats(days);
 
                 const embed = new EmbedBuilder()
                     .setColor('#00ffff')
