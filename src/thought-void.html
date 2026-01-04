@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thought Void - Bot Sportello</title>
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        :root {
+            --void-bg: #0b0c10;
+            --void-panel: rgba(26, 0, 0, 0.6);
+            --void-line: rgba(126, 200, 227, 0.25);
+            --void-shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            padding: 0;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .skip {
+            position: absolute;
+            left: -999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+        .skip:focus {
+            left: 12px;
+            top: 12px;
+            width: auto;
+            height: auto;
+            padding: 10px 12px;
+            background: var(--void-panel);
+            border: 1px solid var(--void-line);
+            z-index: 9999;
+            color: var(--color-text);
+        }
+
+        .masthead {
+            padding: 18px 16px 10px;
+            border-bottom: 1px solid var(--void-line);
+            background: linear-gradient(to bottom, rgba(255, 0, 0, 0.08), transparent);
+            position: relative;
+            z-index: 10;
+        }
+        .masthead__inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .masthead h1 {
+            font-size: clamp(18px, 2vw, 28px);
+            margin: 0;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--color-primary);
+            text-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+        .lede {
+            margin: 0;
+            color: var(--color-text-dim);
+            max-width: 60ch;
+            line-height: 1.4;
+            font-size: 0.85rem;
+        }
+
+        .layout {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 14px 16px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 14px;
+            height: calc(100vh - 80px);
+        }
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        .panel {
+            background: var(--void-panel);
+            border: 1px solid var(--void-line);
+            box-shadow: 0 12px 35px var(--void-shadow);
+            padding: 14px;
+            overflow-y: auto;
+            max-height: calc(100vh - 120px);
+        }
+        @media (max-width: 900px) {
+            .panel {
+                max-height: none;
+            }
+        }
+
+        details summary {
+            cursor: pointer;
+            padding: 10px;
+            border: 1px solid var(--void-line);
+            user-select: none;
+            color: var(--color-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        details summary:hover {
+            border-color: var(--color-primary);
+        }
+        details[open] summary {
+            margin-bottom: 10px;
+            border-color: var(--color-primary);
+        }
+        .prose {
+            color: var(--color-text-dim);
+            line-height: 1.6;
+            font-size: 0.85rem;
+        }
+        .prose p { margin: 10px 0; }
+        .kbd {
+            border-left: 2px solid var(--color-primary);
+            padding-left: 10px;
+            margin-top: 10px;
+        }
+        kbd {
+            font-family: var(--font-family);
+            font-size: 0.85em;
+            padding: 2px 6px;
+            border: 1px solid var(--void-line);
+            background: rgba(255, 0, 0, 0.1);
+            color: var(--color-secondary);
+        }
+
+        .controls {
+            margin-top: 12px;
+            padding: 12px;
+            border: 1px solid var(--void-line);
+        }
+        .controls legend {
+            padding: 0 6px;
+            color: var(--color-text-dim);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .controls label {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 6px 0;
+            color: var(--color-text-dim);
+            font-size: 0.85rem;
+        }
+        .controls input[type="range"] {
+            flex: 1;
+            background: transparent;
+            border: none;
+            min-height: 20px;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        button {
+            appearance: none;
+            border: 1px solid var(--void-line);
+            background: rgba(255, 0, 0, 0.15);
+            color: var(--color-text);
+            padding: 10px 12px;
+            cursor: pointer;
+            font-family: var(--font-family);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s ease;
+            min-height: 44px;
+        }
+        button:hover {
+            background: rgba(255, 0, 0, 0.3);
+            border-color: var(--color-primary);
+        }
+        button:focus {
+            outline: 2px solid var(--color-secondary);
+            outline-offset: 2px;
+        }
+        button.ghost {
+            background: transparent;
+        }
+
+        .toggle {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .microtext h2, .ledger h2 {
+            font-size: 0.75rem;
+            margin: 0 0 8px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--color-text-dim);
+        }
+        .gloss {
+            min-height: 70px;
+            margin: 0;
+            padding: 12px;
+            border: 1px solid var(--void-line);
+            background: rgba(0, 0, 0, 0.4);
+            line-height: 1.5;
+            color: var(--color-text);
+            font-size: 0.85rem;
+        }
+
+        .ledger__list {
+            margin: 0;
+            padding-left: 18px;
+            max-height: 180px;
+            overflow: auto;
+            border: 1px solid var(--void-line);
+            background: rgba(0, 0, 0, 0.3);
+            list-style: none;
+        }
+        .ledger__list li {
+            padding: 8px 10px 8px 6px;
+            color: var(--color-text-dim);
+            line-height: 1.4;
+            font-size: 0.8rem;
+            border-bottom: 1px solid rgba(126, 200, 227, 0.1);
+        }
+        .ledger__list li:last-child {
+            border-bottom: none;
+        }
+        .ledger__list li::before {
+            content: '>';
+            color: var(--color-primary);
+            margin-right: 8px;
+        }
+        .ledger__list li strong { color: var(--color-secondary); }
+
+        .stageWrap {
+            background: rgba(10, 10, 10, 0.7);
+            border: 1px solid var(--void-line);
+            box-shadow: 0 12px 35px var(--void-shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 480px;
+        }
+        .stageHeader {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--void-line);
+            background: rgba(255, 0, 0, 0.05);
+        }
+        .stageHint {
+            margin: 0;
+            color: var(--color-text-dim);
+            line-height: 1.35;
+            font-size: 0.8rem;
+        }
+
+        .stage {
+            position: relative;
+            flex: 1;
+            min-height: 480px;
+            background:
+                radial-gradient(350px 200px at 60% 30%, rgba(255, 0, 0, 0.06), transparent 60%),
+                radial-gradient(300px 180px at 25% 75%, rgba(0, 255, 255, 0.04), transparent 60%);
+        }
+
+        .void {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 0, 0, 0.12), rgba(0, 255, 255, 0.05) 35%, #000 70%);
+            border: 1px solid rgba(126, 200, 227, 0.2);
+            box-shadow:
+                0 0 40px rgba(255, 0, 0, 0.3),
+                0 0 80px rgba(0, 0, 0, 0.8) inset;
+            left: 60%;
+            top: 40%;
+            transform: translate(-50%, -50%);
+            cursor: move;
+            transition: box-shadow 0.3s ease;
+        }
+        .void:hover {
+            box-shadow:
+                0 0 60px rgba(255, 0, 0, 0.5),
+                0 0 80px rgba(0, 0, 0, 0.8) inset;
+        }
+        .void:focus {
+            outline: 2px solid var(--color-secondary);
+            outline-offset: 4px;
+        }
+
+        .quilting {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            background:
+                repeating-linear-gradient(
+                    90deg,
+                    rgba(126, 200, 227, 0) 0px,
+                    rgba(126, 200, 227, 0) 24px,
+                    rgba(126, 200, 227, 0.15) 25px
+                );
+            mix-blend-mode: screen;
+            transition: opacity 0.3s ease;
+        }
+        .quilting.on {
+            opacity: 0.4;
+        }
+
+        .token {
+            position: absolute;
+            border: 1px solid rgba(126, 200, 227, 0.3);
+            background: rgba(26, 0, 0, 0.85);
+            color: var(--color-text);
+            padding: 10px 14px;
+            border-radius: 999px;
+            max-width: min(200px, 55vw);
+            text-align: left;
+            cursor: grab;
+            user-select: none;
+            backdrop-filter: blur(4px);
+            font-size: 0.85rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+        .token:active { cursor: grabbing; }
+        .token:hover {
+            border-color: var(--color-secondary);
+        }
+        .token small {
+            display: block;
+            color: var(--color-text-dim);
+            margin-top: 4px;
+            font-size: 0.75rem;
+        }
+        .token.pinned {
+            border-color: var(--color-primary);
+            background: rgba(255, 0, 0, 0.2);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        }
+        .token:focus {
+            outline: 2px solid var(--color-secondary);
+            outline-offset: 3px;
+        }
+
+        .stageFooter {
+            padding: 10px 12px;
+            border-top: 1px solid var(--void-line);
+            color: var(--color-text-dim);
+            background: rgba(0, 0, 0, 0.3);
+        }
+        .note {
+            margin: 0;
+            line-height: 1.35;
+            font-size: 0.75rem;
+        }
+
+        .srOnly {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .quilting { display: none; }
+            .void { transition: none; }
+            .token { transition: none; }
+        }
+
+        @media (max-width: 480px) {
+            .masthead {
+                padding: 12px;
+            }
+            .masthead__inner {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .layout {
+                padding: 10px;
+            }
+            .panel {
+                padding: 10px;
+            }
+            .stageWrap {
+                min-height: 350px;
+            }
+            .stage {
+                min-height: 350px;
+            }
+            .void {
+                width: 90px;
+                height: 90px;
+            }
+            .token {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a class="skip" href="#stage">Skip to stage</a>
+    <a href="../index.html" class="home-link" aria-label="Back to home"></a>
+
+    <header class="masthead">
+        <div class="masthead__inner">
+            <h1>Thought Void</h1>
+            <p class="lede">Drag thoughts into the void. Pin ideas that matter. Let the rest drift away.</p>
+        </div>
+    </header>
+
+    <main class="layout">
+        <aside class="panel" aria-label="Controls and log">
+            <details open>
+                <summary>How It Works</summary>
+                <div class="prose">
+                    <p>The void is a place for unfinished thoughts. Drag tokens around the stage to organize your mind.</p>
+                    <div class="kbd">
+                        <kbd>Click</kbd> a token to pin it<br>
+                        <kbd>Drag</kbd> to reposition<br>
+                        <kbd>Double-click</kbd> to edit text
+                    </div>
+                </div>
+            </details>
+
+            <fieldset class="controls">
+                <legend>Stage Controls</legend>
+                <label>
+                    Void Gravity
+                    <input type="range" id="gravitySlider" min="0" max="100" value="30">
+                </label>
+                <div class="row">
+                    <button type="button" id="addTokenBtn">+ Add Thought</button>
+                    <button type="button" id="clearBtn" class="ghost">Clear All</button>
+                </div>
+                <div class="toggle">
+                    <input type="checkbox" id="gridToggle">
+                    <label for="gridToggle" style="padding: 0;">Show Grid</label>
+                </div>
+            </fieldset>
+
+            <section class="microtext" aria-labelledby="glossLabel">
+                <h2 id="glossLabel">Active Thought</h2>
+                <p class="gloss" id="glossText">Select a token to see its full content here. Thoughts expand when given attention.</p>
+            </section>
+
+            <section class="ledger" aria-labelledby="ledgerLabel">
+                <h2 id="ledgerLabel">Recent Actions</h2>
+                <ul class="ledger__list" id="actionLog">
+                    <li><strong>System:</strong> Void initialized</li>
+                    <li><strong>Hint:</strong> Add your first thought</li>
+                </ul>
+            </section>
+        </aside>
+
+        <div class="stageWrap">
+            <header class="stageHeader">
+                <p class="stageHint">Tokens near the void experience gravitational pull. Pin thoughts to anchor them.</p>
+            </header>
+
+            <div class="stage" id="stage" tabindex="-1">
+                <div class="quilting" id="quilting"></div>
+                <div
+                    class="void"
+                    id="void"
+                    tabindex="0"
+                    role="img"
+                    aria-label="The void - a gravitational center for thoughts"
+                ></div>
+                <!-- Tokens will be added dynamically -->
+            </div>
+
+            <footer class="stageFooter">
+                <p class="note">Tokens: <span id="tokenCount">0</span> | Pinned: <span id="pinnedCount">0</span></p>
+            </footer>
+        </div>
+    </main>
+
+    <script>
+        const stage = document.getElementById('stage');
+        const voidEl = document.getElementById('void');
+        const quilting = document.getElementById('quilting');
+        const gravitySlider = document.getElementById('gravitySlider');
+        const gridToggle = document.getElementById('gridToggle');
+        const addTokenBtn = document.getElementById('addTokenBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const glossText = document.getElementById('glossText');
+        const actionLog = document.getElementById('actionLog');
+        const tokenCountEl = document.getElementById('tokenCount');
+        const pinnedCountEl = document.getElementById('pinnedCount');
+
+        let tokens = [];
+        let tokenId = 0;
+        let selectedToken = null;
+        let draggedToken = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        const defaultThoughts = [
+            { text: 'What if gravity is just nostalgia for the center?', sub: 'physics/philosophy' },
+            { text: 'The coffee is always better when you forget about it', sub: 'daily ritual' },
+            { text: 'Three tabs open: one for work, two for escape', sub: 'browser archaeology' },
+        ];
+
+        // Easter egg: triple-click void
+        let voidClicks = 0;
+        voidEl.addEventListener('click', () => {
+            if (++voidClicks === 3) {
+                glossText.textContent = "...man, what were we even looking for?";
+                voidClicks = 0;
+            }
+            setTimeout(() => { voidClicks = 0; }, 600);
+        });
+
+        function logAction(text) {
+            const li = document.createElement('li');
+            li.innerHTML = text;
+            actionLog.insertBefore(li, actionLog.firstChild);
+            if (actionLog.children.length > 20) {
+                actionLog.removeChild(actionLog.lastChild);
+            }
+        }
+
+        function updateCounts() {
+            tokenCountEl.textContent = tokens.length;
+            pinnedCountEl.textContent = tokens.filter(t => t.pinned).length;
+        }
+
+        function createToken(text, subtext, x, y) {
+            const token = document.createElement('div');
+            token.className = 'token';
+            token.tabIndex = 0;
+            token.id = `token-${tokenId++}`;
+            token.innerHTML = `${text}<small>${subtext}</small>`;
+            token.style.left = `${x}px`;
+            token.style.top = `${y}px`;
+
+            const tokenData = {
+                id: token.id,
+                el: token,
+                text,
+                subtext,
+                pinned: false,
+                x, y
+            };
+            tokens.push(tokenData);
+
+            // Click to select/pin
+            token.addEventListener('click', (e) => {
+                if (draggedToken) return;
+                selectToken(tokenData);
+            });
+
+            // Double-click to edit
+            token.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                const newText = prompt('Edit thought:', tokenData.text);
+                if (newText !== null && newText.trim()) {
+                    tokenData.text = newText.trim();
+                    token.innerHTML = `${tokenData.text}<small>${tokenData.subtext}</small>`;
+                    logAction(`<strong>Edited:</strong> "${newText.slice(0, 30)}..."`);
+                    if (selectedToken === tokenData) {
+                        glossText.textContent = tokenData.text;
+                    }
+                }
+            });
+
+            // Drag start
+            token.addEventListener('mousedown', startDrag);
+            token.addEventListener('touchstart', startDrag, { passive: false });
+
+            stage.appendChild(token);
+            updateCounts();
+            return tokenData;
+        }
+
+        function selectToken(tokenData) {
+            if (selectedToken) {
+                selectedToken.el.classList.remove('pinned');
+                selectedToken.pinned = false;
+            }
+
+            tokenData.pinned = !tokenData.pinned;
+            tokenData.el.classList.toggle('pinned', tokenData.pinned);
+            selectedToken = tokenData.pinned ? tokenData : null;
+
+            glossText.textContent = tokenData.text;
+            logAction(`<strong>${tokenData.pinned ? 'Pinned' : 'Unpinned'}:</strong> "${tokenData.text.slice(0, 25)}..."`);
+            updateCounts();
+        }
+
+        function startDrag(e) {
+            e.preventDefault();
+            const token = e.currentTarget;
+            const tokenData = tokens.find(t => t.id === token.id);
+            if (!tokenData) return;
+
+            draggedToken = tokenData;
+
+            const rect = token.getBoundingClientRect();
+            const stageRect = stage.getBoundingClientRect();
+
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            dragOffset.x = clientX - rect.left;
+            dragOffset.y = clientY - rect.top;
+
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchmove', onDrag, { passive: false });
+            document.addEventListener('touchend', endDrag);
+        }
+
+        function onDrag(e) {
+            if (!draggedToken) return;
+            e.preventDefault();
+
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            const stageRect = stage.getBoundingClientRect();
+            let x = clientX - stageRect.left - dragOffset.x;
+            let y = clientY - stageRect.top - dragOffset.y;
+
+            // Constrain to stage
+            x = Math.max(0, Math.min(x, stageRect.width - draggedToken.el.offsetWidth));
+            y = Math.max(0, Math.min(y, stageRect.height - draggedToken.el.offsetHeight));
+
+            draggedToken.el.style.left = `${x}px`;
+            draggedToken.el.style.top = `${y}px`;
+            draggedToken.x = x;
+            draggedToken.y = y;
+        }
+
+        function endDrag(e) {
+            if (draggedToken) {
+                logAction(`<strong>Moved:</strong> "${draggedToken.text.slice(0, 20)}..."`);
+            }
+            draggedToken = null;
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', endDrag);
+            document.removeEventListener('touchmove', onDrag);
+            document.removeEventListener('touchend', endDrag);
+        }
+
+        // Gravity simulation
+        function applyGravity() {
+            const gravity = gravitySlider.value / 100;
+            if (gravity === 0) return;
+
+            const voidRect = voidEl.getBoundingClientRect();
+            const stageRect = stage.getBoundingClientRect();
+            const voidCenterX = voidRect.left - stageRect.left + voidRect.width / 2;
+            const voidCenterY = voidRect.top - stageRect.top + voidRect.height / 2;
+
+            tokens.forEach(tokenData => {
+                if (tokenData.pinned || tokenData === draggedToken) return;
+
+                const tokenRect = tokenData.el.getBoundingClientRect();
+                const tokenCenterX = tokenData.x + tokenRect.width / 2;
+                const tokenCenterY = tokenData.y + tokenRect.height / 2;
+
+                const dx = voidCenterX - tokenCenterX;
+                const dy = voidCenterY - tokenCenterY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 200) {
+                    const force = gravity * 0.5 * (1 - distance / 200);
+                    const ax = (dx / distance) * force;
+                    const ay = (dy / distance) * force;
+
+                    let newX = tokenData.x + ax;
+                    let newY = tokenData.y + ay;
+
+                    // Constrain to stage
+                    newX = Math.max(0, Math.min(newX, stageRect.width - tokenRect.width));
+                    newY = Math.max(0, Math.min(newY, stageRect.height - tokenRect.height));
+
+                    tokenData.x = newX;
+                    tokenData.y = newY;
+                    tokenData.el.style.left = `${newX}px`;
+                    tokenData.el.style.top = `${newY}px`;
+                }
+            });
+        }
+
+        setInterval(applyGravity, 50);
+
+        // Grid toggle
+        gridToggle.addEventListener('change', () => {
+            quilting.classList.toggle('on', gridToggle.checked);
+            logAction(`<strong>Grid:</strong> ${gridToggle.checked ? 'enabled' : 'disabled'}`);
+        });
+
+        // Add token
+        addTokenBtn.addEventListener('click', () => {
+            const text = prompt('Enter your thought:');
+            if (text && text.trim()) {
+                const subtext = prompt('Category (optional):', 'untagged') || 'untagged';
+                const stageRect = stage.getBoundingClientRect();
+                const x = 20 + Math.random() * (stageRect.width - 200);
+                const y = 20 + Math.random() * (stageRect.height - 100);
+                createToken(text.trim(), subtext.trim(), x, y);
+                logAction(`<strong>Added:</strong> "${text.slice(0, 25)}..."`);
+            }
+        });
+
+        // Clear all
+        clearBtn.addEventListener('click', () => {
+            if (tokens.length === 0) return;
+            if (confirm('Clear all thoughts from the void?')) {
+                tokens.forEach(t => t.el.remove());
+                tokens = [];
+                selectedToken = null;
+                glossText.textContent = 'All thoughts have been absorbed by the void.';
+                logAction('<strong>Cleared:</strong> All tokens removed');
+                updateCounts();
+            }
+        });
+
+        // Initialize with default thoughts
+        function init() {
+            const stageRect = stage.getBoundingClientRect();
+            defaultThoughts.forEach((thought, i) => {
+                const x = 30 + (i * 80) % (stageRect.width - 180);
+                const y = 40 + (i * 60);
+                createToken(thought.text, thought.sub, x, y);
+            });
+        }
+
+        // Wait for layout to settle
+        setTimeout(init, 100);
+    </script>
+</body>
+</html>
