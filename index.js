@@ -958,12 +958,6 @@ function logEvent(type, message, details = null, context = {}) {
         console.log(details);
     }
 
-    // Log to GUI
-    const level = type === 'ERROR' ? 'error' :
-                  type === 'WARN' ? 'warn' :
-                  type === 'DEBUG' ? 'debug' : 'info';
-    logToGUI(level, `${type}: ${message}`, details || {});
-
     // Log to PostgreSQL for analytics (fire-and-forget)
     serena.logOperationalEvent({
         category: type,
