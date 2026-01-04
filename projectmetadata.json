@@ -59,6 +59,12 @@
       "collection": "meta",
       "hidden": false
     },
+    "agentic-visualization": {
+      "title": "Agentic Visualization",
+      "icon": "🕸️",
+      "description": "Interactive visualization of project structure and history.",
+      "collection": "meta"
+    },
     "double_dragon_beatem_up": {
       "title": "Double Dragon Beatdown",
       "description": "Side-scroll co-op brawler",
