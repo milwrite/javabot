@@ -132,6 +132,31 @@
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 18px;
         }
+        .collection-accordion {
+            margin-top: 18px;
+            border: 1px solid rgba(126, 200, 227, 0.35);
+            background: rgba(6, 6, 6, 0.85);
+        }
+        .collection-accordion summary {
+            cursor: pointer;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            color: #00ffff;
+            list-style: none;
+        }
+        .collection-accordion summary::-webkit-details-marker { display: none; }
+        .collection-accordion summary::before {
+            content: '▸';
+            margin-right: 8px;
+            color: #ff0000;
+            transition: transform 160ms ease;
+        }
+        .collection-accordion[open] summary::before { transform: rotate(90deg); }
+        .collection-accordion .projects-grid {
+            padding: 16px;
+            border-top: 1px solid rgba(126, 200, 227, 0.2);
+        }
         .collection-featured .projects-grid {
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         }
@@ -152,6 +177,7 @@
             background: rgba(24, 0, 0, 0.75);
         }
         .collection.collapsed .projects-grid { display: none; }
+        .collection.collapsed .collection-accordion { display: none; }
         .collection.collapsed .collection-description { opacity: 0.75; }
         .project-card:hover {
             transform: translateY(-6px);
@@ -402,14 +428,34 @@
                 const grid = document.createElement('div');
                 grid.className = 'projects-grid';
 
-                items
-                    .sort((a, b) => (a.title || a.slug).localeCompare(b.title || b.slug))
-                    .forEach(item => {
-                        grid.appendChild(createProjectCard(item.slug, item));
-                    });
+                const sortedItems = items.sort((a, b) => (a.title || a.slug).localeCompare(b.title || b.slug));
+                const cardLimit = Number.isFinite(meta.cardLimit) ? meta.cardLimit : 8;
+                const visibleItems = sortedItems.slice(0, cardLimit);
+                const overflowItems = sortedItems.slice(cardLimit);
+
+                visibleItems.forEach(item => {
+                    grid.appendChild(createProjectCard(item.slug, item));
+                });
 
                 section.appendChild(header);
                 section.appendChild(grid);
+
+                if (overflowItems.length) {
+                    const accordion = document.createElement('details');
+                    accordion.className = 'collection-accordion';
+
+                    const summary = document.createElement('summary');
+                    summary.textContent = `Show ${overflowItems.length} more`;
+                    accordion.appendChild(summary);
+
+                    const overflowGrid = document.createElement('div');
+                    overflowGrid.className = 'projects-grid';
+                    overflowItems.forEach(item => {
+                        overflowGrid.appendChild(createProjectCard(item.slug, item));
+                    });
+                    accordion.appendChild(overflowGrid);
+                    section.appendChild(accordion);
+                }
                 collectionsContainer.appendChild(section);
 
                 // Initial state: collapse all except 'featured' on first load
@@ -437,6 +483,9 @@
                         const btn = section.querySelector('.toggle-btn');
                         if (btn) { btn.textContent = 'Collapse'; btn.setAttribute('aria-expanded', 'true'); }
                     });
+                    document.querySelectorAll('.collection-accordion').forEach(accordion => {
+                        accordion.open = true;
+                    });
                     saveCollapseState(state);
                 };
                 collapseAllBtn.onclick = () => {
@@ -447,6 +496,9 @@
                         section.classList.toggle('collapsed', id !== 'featured');
                         const btn = section.querySelector('.toggle-btn');
                         if (btn) { btn.textContent = (id !== 'featured') ? 'Expand' : 'Collapse'; btn.setAttribute('aria-expanded', String(id === 'featured')); }
+                    });
+                    document.querySelectorAll('.collection-accordion').forEach(accordion => {
+                        accordion.open = false;
                     });
                     saveCollapseState(state);
                 };
