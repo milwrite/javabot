@@ -8,7 +8,7 @@ const { testGame } = require('../agents/gameTester');
 const { documentGame, updateProjectMetadata } = require('../agents/gameScribe');
 const { writeBuildLog, getRecentPatternsSummary } = require('./buildLogs');
 const { pushMultipleFiles } = require('./gitHelper');
-const postgres = require('./postgres');
+const postgres = require('./serenaLogs');
 const fsSync = require('fs');
 const path = require('path');
 

@@ -3,7 +3,8 @@
 
 const axios = require('axios');
 const { fileExists, searchFiles, readFile, editFile, listFiles } = require('./filesystem');
-const postgres = require('./postgres');
+const postgres = require('./serenaLogs');
+const { healAndParseJSON } = require('./responseHealing');
 const { OPENROUTER_URL } = require('../config/models');
 
 // Tool definitions for edit operations
@@ -236,17 +237,16 @@ async function getEditResponse(userMessage, conversationMessages = [], context =
             const toolResults = [];
             for (const toolCall of lastResponse.tool_calls) {
                 const functionName = toolCall.function.name;
-                let args;
-                try {
-                    args = JSON.parse(toolCall.function.arguments || '{}');
-                } catch (parseError) {
+                const healResult = healAndParseJSON(toolCall.function.arguments || '{}');
+                if (healResult.parsed === null) {
                     toolResults.push({
                         role: 'tool',
                         tool_call_id: toolCall.id,
-                        content: 'Error: Invalid JSON in tool arguments'
+                        content: `Error: Invalid JSON in tool arguments. ${healResult.error}`
                     });
                     continue;
                 }
+                const args = healResult.parsed;
 
                 let result;
                 const toolStartTime = Date.now();
