@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surrealist Memory Game - Bot Sportello</title>
+    <link rel="icon" type="image/jpeg" href="../default.jpg">
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        :root {
+            --neon-blue: #00ffff;
+            --neon-pink: #ff00ff;
+            --neon-green: #39ff14;
+            --dark-bg: #0a0a0a;
+            --card-bg: #1a1a2e;
+        }
+        
+        body {
+            background: var(--dark-bg);
+            color: #7ec8e3;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .game-container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: var(--neon-pink);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: transparent;
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+            padding: 10px 20px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        
+        button:hover {
+            background: var(--neon-green);
+            color: var(--dark-bg);
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+        }
+        
+        .stat {
+            color: var(--neon-blue);
+        }
+        
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .memory-card {
+            aspect-ratio: 1;
+            background: var(--card-bg);
+            border: 2px solid var(--neon-pink);
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s, border-color 0.3s;
+            overflow: hidden;
+        }
+        
+        .memory-card.flipped {
+            transform: rotateY(180deg);
+            border-color: var(--neon-blue);
+        }
+        
+        .memory-card.matched {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+        
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        
+        .card-front {
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            transform: rotateY(180deg);
+        }
+        
+        .card-back {
+            background: repeating-linear-gradient(
+                45deg,
+                #2a2a4a,
+                #2a2a4a 10px,
+                #1a1a2e 10px,
+                #1a1a2e 20px
+            );
+        }
+        
+        .surreal-symbol {
+            font-size: 3rem;
+            filter: drop-shadow(0 0 5px currentColor);
+        }
+        
+        .game-message {
+            margin-top: 20px;
+            font-size: 1.3rem;
+            color: var(--neon-pink);
+            min-height: 40px;
+        }
+        
+        /* Surreal animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(180deg); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .surreal-effect {
+            animation: float 3s ease-in-out infinite, pulse 2s ease-in-out infinite;
+        }
+        
+        @media (max-width: 768px) {
+            .memory-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="surreal-effect">SURREAL MEMORY</h1>
+        <div class="subtitle">Where logic melts like clocks in the desert</div>
+        
+        <div class="controls">
+            <button onclick="startGame()">Begin Dream</button>
+            <button onclick="resetGame()">Reset Reality</button>
+            <button onclick="shuffleCards()">Shuffle Consciousness</button>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">Moves: <span id="moves">0</span></div>
+            <div class="stat">Matches: <span id="matches">0/8</span></div>
+            <div class="stat">Time: <span id="time">0s</span></div>
+        </div>
+        
+        <div class="memory-grid" id="memoryGrid"></div>
+        
+        <div class="game-message" id="message">Find the matching surreal symbols...</div>
+    </div>
+
+    <script>
+        const surrealSymbols = ['🌀', '🌌', '🕰️', '👁️', '🔮', '🌙', '⚡', '🎭'];
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let gameStarted = false;
+        let startTime;
+        let timer;
+        
+        function initializeGame() {
+            cards = [...surrealSymbols, ...surrealSymbols];
+            shuffleArray(cards);
+            renderCards();
+            resetGameState();
+        }
+        
+        function renderCards() {
+            const grid = document.getElementById('memoryGrid');
+            grid.innerHTML = '';
+            
+            cards.forEach((symbol, index) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.symbol = symbol;
+                card.dataset.index = index;
+                
+                card.innerHTML = `
+                    <div class="card-front">
+                        <div class="surreal-symbol">${symbol}</div>
+                    </div>
+                    <div class="card-back"></div>
+                `;
+                
+                card.addEventListener('click', () => flipCard(card));
+                grid.appendChild(card);
+            });
+        }
+        
+        function flipCard(card) {
+            if (!gameStarted) {
+                startGame();
+            }
+            
+            if (flippedCards.length < 2 && !card.classList.contains('flipped') && !card.classList.contains('matched')) {
+                card.classList.add('flipped');
+                flippedCards.push(card);
+                
+                if (flippedCards.length === 2) {
+                    moves++;
+                    document.getElementById('moves').textContent = moves;
+                    checkForMatch();
+                }
+            }
+        }
+        
+        function checkForMatch() {
+            const [card1, card2] = flippedCards;
+            
+            if (card1.dataset.symbol === card2.dataset.symbol) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                document.getElementById('matches').textContent = `${matchedPairs}/8`;
+                
+                // Surreal match effect
+                card1.style.animation = 'pulse 1s ease-in-out';
+                card2.style.animation = 'pulse 1s ease-in-out';
+                
+                flippedCards = [];
+                
+                if (matchedPairs === 8) {
+                    endGame();
+                }
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    flippedCards = [];
+                }, 1000);
+            }
+        }
+        
+        function startGame() {
+            if (!gameStarted) {
+                gameStarted = true;
+                startTime = Date.now();
+                timer = setInterval(updateTimer, 1000);
+                document.getElementById('message').textContent = 'The dream unfolds...';
+            }
+        }
+        
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('time').textContent = `${elapsed}s`;
+        }
+        
+        function endGame() {
+            clearInterval(timer);
+            const finalTime = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('message').textContent = 
+                `Reality reconstructed! Completed in ${finalTime}s with ${moves} moves.`;
+            
+            // Surreal celebration
+            document.querySelectorAll('.memory-card').forEach(card => {
+                card.style.animation = 'float 2s ease-in-out infinite';
+            });
+        }
+        
+        function resetGame() {
+            clearInterval(timer);
+            initializeGame();
+            resetGameState();
+            document.getElementById('message').textContent = 'Find the matching surreal symbols...';
+        }
+        
+        function resetGameState() {
+            flippedCards = [];
+            matchedPairs = 0;
+            moves = 0;
+            gameStarted = false;
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('matches').textContent = '0/8';
+            document.getElementById('time').textContent = '0s';
+        }
+        
+        function shuffleCards() {
+            if (gameStarted) {
+                const currentFlipped = document.querySelectorAll('.memory-card.flipped:not(.matched)');
+                currentFlipped.forEach(card => card.classList.remove('flipped'));
+                
+                shuffleArray(cards);
+                renderCards();
+                flippedCards = [];
+                
+                document.getElementById('message').textContent = 'Consciousness reshuffled...';
+            }
+        }
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        // Initialize game on load
+        initializeGame();
+        
+        // Add some surreal random effects
+        setInterval(() => {
+            if (gameStarted && Math.random() < 0.1) {
+                const randomCard = document.querySelector('.memory-card:not(.flipped):not(.matched)');
+                if (randomCard) {
+                    randomCard.style.animation = 'pulse 0.5s ease-in-out';
+                    setTimeout(() => randomCard.style.animation = '', 500);
+                }
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
