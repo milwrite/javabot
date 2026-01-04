@@ -553,6 +553,13 @@
       "description": "noir detective mystery story",
       "collection": "stories-content",
       "hidden": false
+    },
+    "thought-void": {
+      "title": "Thought Void",
+      "icon": "🕳️",
+      "description": "drag thoughts into the void",
+      "collection": "utilities-apps",
+      "hidden": false
     }
   }
 }
