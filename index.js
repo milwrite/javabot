@@ -38,6 +38,9 @@ const postgres = require('./services/postgres');
 // Edit service (streamlined edit loop)
 const { getEditResponse: getEditResponseService } = require('./services/editService');
 
+// Response healing for malformed LLM JSON
+const { healAndParseJSON } = require('./services/responseHealing');
+
 // Validate required environment variables
 const REQUIRED_ENV_VARS = [
     'DISCORD_TOKEN',
@@ -2030,18 +2033,20 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
 
             for (const toolCall of lastResponse.tool_calls) {
                 const functionName = toolCall.function.name;
-                let args;
-                try {
-                    args = JSON.parse(toolCall.function.arguments || '{}');
-                } catch (parseError) {
-                    logEvent('LLM', `JSON parse error for ${functionName}: ${parseError.message}`);
+                const healResult = healAndParseJSON(toolCall.function.arguments || '{}', {
+                    logHealing: true,
+                    logger: (msg) => logEvent('LLM', msg)
+                });
+                if (healResult.parsed === null) {
+                    logEvent('LLM', `JSON healing failed for ${functionName}: ${healResult.error}`);
                     toolResults.push({
                         role: 'tool',
                         tool_call_id: toolCall.id,
-                        content: `Error: Invalid JSON in tool arguments. Please try again with valid JSON.`
+                        content: `Error: Invalid JSON in tool arguments. ${healResult.error}`
                     });
                     continue;
                 }
+                const args = healResult.parsed;
 
                 let result;
                 const toolStartTime = Date.now();
@@ -2116,8 +2121,9 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
                                 line_end: args.line_end
                             }
                         );
-                        editedFiles.add(args.path);
                         if (!result.startsWith('Error')) {
+                            // Only mark as edited if successful (allows retry on failure)
+                            editedFiles.add(args.path);
                             // Invalidate cache since file changed
                             const normalizedPath = args.path.replace(/^\.\//, '');
                             fileReadCache.delete(normalizedPath);

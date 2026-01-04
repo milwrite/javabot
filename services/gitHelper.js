@@ -5,6 +5,9 @@ const { Octokit } = require('@octokit/rest');
 
 const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN,
+    request: {
+        timeout: 30000 // 30 second timeout to prevent hanging on GitHub API issues
+    }
 });
 
 /**
