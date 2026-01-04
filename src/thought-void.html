@@ -522,6 +522,52 @@
             { text: 'Three tabs open: one for work, two for escape', sub: 'browser archaeology' },
         ];
 
+        // Doc Sportello easter eggs
+        const sportelloQuotes = [
+            "Far out, man... the void remembers everything you tried to forget.",
+            "It's like, the universe has a filing system, but nobody knows where the cabinet is.",
+            "Sometimes the case solves itself. You just gotta let the thoughts drift.",
+            "Man, that's heavy. Like, gravitationally speaking.",
+            "The thing about voids is... wait, what were we talking about?",
+            "Every thought's got a story. Most of 'em just don't wanna be told.",
+        ];
+
+        let voidClickCount = 0;
+        let voidClickTimer = null;
+        let secretBuffer = '';
+
+        // Triple-click void for Sportello wisdom
+        voidEl.addEventListener('click', () => {
+            voidClickCount++;
+            clearTimeout(voidClickTimer);
+            voidClickTimer = setTimeout(() => {
+                if (voidClickCount >= 3) {
+                    const quote = sportelloQuotes[Math.floor(Math.random() * sportelloQuotes.length)];
+                    glossText.textContent = quote;
+                    glossText.style.fontStyle = 'italic';
+                    logAction('<strong>Doc:</strong> *takes a long drag* "' + quote.slice(0, 30) + '..."');
+                    setTimeout(() => { glossText.style.fontStyle = ''; }, 5000);
+                }
+                voidClickCount = 0;
+            }, 400);
+        });
+
+        // Secret: type "doc" anywhere to summon a Sportello thought
+        document.addEventListener('keydown', (e) => {
+            secretBuffer += e.key.toLowerCase();
+            if (secretBuffer.length > 10) secretBuffer = secretBuffer.slice(-10);
+
+            if (secretBuffer.includes('doc')) {
+                secretBuffer = '';
+                const stageRect = stage.getBoundingClientRect();
+                const x = 20 + Math.random() * (stageRect.width - 200);
+                const y = 20 + Math.random() * (stageRect.height - 100);
+                const quote = sportelloQuotes[Math.floor(Math.random() * sportelloQuotes.length)];
+                createToken(quote, 'doc sportello', x, y);
+                logAction('<strong>???:</strong> A thought emerges from the haze...');
+            }
+        });
+
         function logAction(text) {
             const li = document.createElement('li');
             li.innerHTML = text;
@@ -735,7 +781,7 @@
                 tokens.forEach(t => t.el.remove());
                 tokens = [];
                 selectedToken = null;
-                glossText.textContent = 'All thoughts have been absorbed by the void.';
+                glossText.textContent = "Far out... they're all gone, man. Like they were never even here.";
                 logAction('<strong>Cleared:</strong> All tokens removed');
                 updateCounts();
             }
