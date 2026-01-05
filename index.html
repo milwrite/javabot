@@ -401,10 +401,11 @@
                 const grid = document.createElement('div');
                 grid.className = 'projects-grid';
 
-                const sortedItems = items.sort((a, b) => (a.title || a.slug).localeCompare(b.title || b.slug));
+                // Randomly sample items for fair visibility, keeping overflow alphabetically sorted
                 const cardLimit = Number.isFinite(meta.cardLimit) ? meta.cardLimit : 8;
-                const visibleItems = sortedItems.slice(0, cardLimit);
-                const overflowItems = sortedItems.slice(cardLimit);
+                const shuffled = [...items].sort(() => Math.random() - 0.5);
+                const visibleItems = shuffled.slice(0, cardLimit).sort((a, b) => (a.title || a.slug).localeCompare(b.title || b.slug));
+                const overflowItems = shuffled.slice(cardLimit).sort((a, b) => (a.title || a.slug).localeCompare(b.title || b.slug));
 
                 visibleItems.forEach(item => {
                     grid.appendChild(createProjectCard(item.slug, item));
