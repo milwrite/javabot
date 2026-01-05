@@ -130,6 +130,34 @@
         .connection-dot.connected { background: #00ff41; animation: pulse 2s infinite; }
         .connection-dot.disconnected { background: #ff0000; }
 
+        /* Error Patterns */
+        .error-pattern {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(255, 0, 0, 0.05);
+            border: 1px solid rgba(255, 0, 0, 0.2);
+            border-left: 4px solid #ff0000;
+            border-radius: 5px;
+            animation: slideIn 0.3s ease-out;
+        }
+        .error-header { display: flex; gap: 10px; align-items: flex-start; }
+        .error-count {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            white-space: nowrap;
+            font-size: 0.9em;
+        }
+        .error-message { color: #ff6b6b; word-break: break-word; flex: 1; }
+        .error-meta { margin-top: 8px; color: #666; font-size: 0.85em; }
+        .error-location { color: #ffa500; font-family: monospace; }
+        .period-select { background: rgba(0, 0, 0, 0.3); border: 1px solid #00ffff; color: #00ffff; padding: 5px 10px; font-family: inherit; font-size: 0.85em; cursor: pointer; }
+        .period-select:focus { outline: none; box-shadow: 0 0 5px rgba(0, 255, 255, 0.3); }
+        .empty-state { text-align: center; padding: 40px; color: #666; }
+        .empty-state-icon { font-size: 3em; margin-bottom: 10px; }
+
         /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
@@ -159,6 +187,7 @@
         <button class="tab active" data-panel="logs">System Logs <span class="tab-count" id="logs-count">0</span></button>
         <button class="tab" data-panel="tools">Tool Calls <span class="tab-count" id="tools-count">0</span></button>
         <button class="tab" data-panel="files">File Changes <span class="tab-count" id="files-count">0</span></button>
+        <button class="tab" data-panel="errors">Errors <span class="tab-count" id="errors-count">0</span></button>
         <button class="tab" data-panel="sessions">Sessions <span class="tab-count" id="sessions-count">0</span></button>
     </div>
 
@@ -190,6 +219,21 @@
             <div class="log-container" id="files-container"></div>
         </div>
 
+        <div class="panel" id="errors-panel">
+            <div class="panel-header">
+                <div class="panel-title">Error Patterns</div>
+                <div class="panel-actions">
+                    <select id="error-period" class="period-select" onchange="loadErrorPatterns()">
+                        <option value="7">Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                    </select>
+                    <button class="btn" onclick="loadErrorPatterns()">Refresh</button>
+                </div>
+            </div>
+            <div class="log-container" id="errors-container"></div>
+        </div>
+
         <div class="panel" id="sessions-panel">
             <div class="panel-header">
                 <div class="panel-title">Session History</div>
@@ -216,6 +260,7 @@
             logs: document.getElementById('logs-container'),
             tools: document.getElementById('tools-container'),
             files: document.getElementById('files-container'),
+            errors: document.getElementById('errors-container'),
             sessions: document.getElementById('sessions-container')
         };
 
@@ -285,10 +330,11 @@
         // Load initial data via REST
         async function loadInitialData() {
             try {
-                const [logs, tools, sessions] = await Promise.all([
+                const [logs, tools, sessions, errorPatterns] = await Promise.all([
                     fetch('/api/logs?limit=100').then(r => r.json()),
                     fetch('/api/tools?limit=50').then(r => r.json()),
-                    fetch('/api/sessions?limit=20').then(r => r.json())
+                    fetch('/api/sessions?limit=20').then(r => r.json()),
+                    fetch('/api/error-patterns?days=7').then(r => r.json())
                 ]);
 
                 // Clear and populate (newest first at top)
@@ -303,6 +349,7 @@
                 logs.filter(l => l.event_type === 'file_change').forEach(f => addFileChange(f));
 
                 displaySessions(sessions);
+                renderErrorPatterns(errorPatterns);
                 updateCounts();
             } catch (error) {
                 console.error('Failed to load initial data:', error);
@@ -316,6 +363,46 @@
             } catch (error) {
                 console.error('Failed to load sessions:', error);
             }
+        }
+
+        async function loadErrorPatterns() {
+            try {
+                const days = document.getElementById('error-period').value;
+                const patterns = await fetch(`/api/error-patterns?days=${days}`).then(r => r.json());
+                renderErrorPatterns(patterns);
+            } catch (error) {
+                console.error('Failed to load error patterns:', error);
+                containers.errors.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div>Failed to load error patterns</div>';
+            }
+        }
+
+        function renderErrorPatterns(patterns) {
+            if (!patterns || patterns.length === 0) {
+                containers.errors.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✓</div>No errors in this period</div>';
+                document.getElementById('errors-count').textContent = '0';
+                return;
+            }
+
+            containers.errors.innerHTML = patterns.map(p => {
+                const lastSeen = p.last_seen ? new Date(p.last_seen).toLocaleString() : 'unknown';
+                const location = p.locations && p.locations[0] ? p.locations[0] : 'unknown location';
+                const message = p.error_message || 'Unknown error';
+
+                return `
+                    <div class="error-pattern">
+                        <div class="error-header">
+                            <span class="error-count">${p.count}×</span>
+                            <span class="error-message">${escapeHtml(message)}</span>
+                        </div>
+                        <div class="error-meta">
+                            Last seen: ${lastSeen} |
+                            <span class="error-location">${escapeHtml(location)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('errors-count').textContent = patterns.length;
         }
 
         // Add functions

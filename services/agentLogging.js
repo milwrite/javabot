@@ -595,6 +595,34 @@ async function getEventById(table, id) {
     }
 }
 
+/**
+ * Get error patterns grouped by message
+ * @param {number} days - Number of days to look back
+ * @returns {Promise<Array>} Grouped error patterns with counts and locations
+ */
+async function getErrorPatterns(days = 7) {
+    if (!isEnabled) return [];
+    try {
+        const res = await pool.query(`
+            SELECT
+                payload->>'message' as error_message,
+                COUNT(*)::int as count,
+                MAX(timestamp) as last_seen,
+                MIN(timestamp) as first_seen,
+                array_agg(DISTINCT SUBSTRING(payload->>'stack' FROM 'at ([^\\n]+)')) as locations
+            FROM bot_events
+            WHERE event_type = 'error'
+              AND timestamp > NOW() - INTERVAL '${days} days'
+            GROUP BY payload->>'message'
+            ORDER BY count DESC
+        `);
+        return res.rows;
+    } catch (error) {
+        console.error('[AGENT-LOG] getErrorPatterns error:', error.message);
+        return [];
+    }
+}
+
 // ============ CLEANUP ============
 
 /**
@@ -647,6 +675,7 @@ module.exports = {
     // Query functions
     getRecentEvents,
     getErrorStats,
+    getErrorPatterns,
     getDailyStats,
     searchEvents,
     getToolStats,

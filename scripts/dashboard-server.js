@@ -135,6 +135,16 @@ class DashboardServer {
             }
         });
 
+        this.app.get('/api/error-patterns', async (req, res) => {
+            try {
+                const days = Math.min(parseInt(req.query.days) || 7, 90);
+                const patterns = await getAgentLog().getErrorPatterns(days);
+                res.json(patterns);
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            }
+        });
+
         // Health check
         this.app.get('/api/health', (req, res) => {
             res.json({
