@@ -110,6 +110,70 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTransform();
     };
 
+    // Touch event handlers for mobile
+    let lastTouchDistance = 0;
+    let isTouchPanning = false;
+    let touchStartX, touchStartY;
+
+    canvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            // Single touch - panning
+            isTouchPanning = true;
+            touchStartX = e.touches[0].clientX - panX;
+            touchStartY = e.touches[0].clientY - panY;
+        } else if (e.touches.length === 2) {
+            // Two fingers - pinch to zoom
+            isTouchPanning = false;
+            lastTouchDistance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+        }
+    }, { passive: true });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (e.touches.length === 1 && isTouchPanning) {
+            // Single touch panning
+            panX = e.touches[0].clientX - touchStartX;
+            panY = e.touches[0].clientY - touchStartY;
+            updateTransform();
+        } else if (e.touches.length === 2) {
+            // Pinch to zoom
+            const currentDistance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+
+            if (lastTouchDistance > 0) {
+                const scaleAmount = currentDistance / lastTouchDistance;
+
+                // Calculate pinch center
+                const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+
+                panX = centerX - (centerX - panX) * scaleAmount;
+                panY = centerY - (centerY - panY) * scaleAmount;
+                scale *= scaleAmount;
+
+                updateTransform();
+            }
+            lastTouchDistance = currentDistance;
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', () => {
+        isTouchPanning = false;
+        lastTouchDistance = 0;
+    }, { passive: true });
+
+    // Clear active labels when tapping empty canvas
+    canvas.addEventListener('click', (e) => {
+        if (e.target === canvas) {
+            document.querySelectorAll('.node.active').forEach(n => n.classList.remove('active'));
+        }
+    });
+
     function updateTransform() {
         canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
     }
@@ -131,6 +195,16 @@ document.addEventListener('DOMContentLoaded', () => {
             label.className = 'label';
             label.textContent = node.name;
             el.appendChild(label);
+
+            // Tap to toggle label on mobile
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Clear other active nodes
+                document.querySelectorAll('.node.active').forEach(n => {
+                    if (n !== el) n.classList.remove('active');
+                });
+                el.classList.toggle('active');
+            });
 
             canvas.appendChild(el);
             nodeElements[node.id] = el;

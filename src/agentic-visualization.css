@@ -75,3 +75,103 @@ button {
 button:hover {
     background-color: #555;
 }
+
+/* Home link - arrow only via CSS */
+.home-link {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 20;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #333;
+    border: 1px solid #888;
+    border-radius: 4px;
+    color: #eee;
+    text-decoration: none;
+    font-size: 20px;
+}
+
+.home-link::before {
+    content: '←';
+}
+
+.home-link:hover {
+    background-color: #555;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    #controls {
+        position: fixed;
+        top: auto;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        padding: 8px;
+        background-color: rgba(17, 17, 17, 0.9);
+        border-radius: 8px;
+        border: 1px solid #555;
+    }
+
+    button {
+        min-width: 60px;
+        min-height: 44px;
+        padding: 10px 14px;
+        font-size: 14px;
+        border-radius: 4px;
+        margin-right: 0;
+    }
+
+    .node {
+        width: 30px;
+        height: 30px;
+    }
+
+    /* Show labels on tap - controlled by JS .active class */
+    .node.active .label {
+        display: block;
+    }
+
+    .node .label {
+        font-size: 11px;
+        max-width: 150px;
+        white-space: normal;
+        text-align: center;
+    }
+
+    .home-link {
+        top: 10px;
+        right: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    #controls {
+        bottom: 10px;
+        gap: 4px;
+        padding: 6px;
+    }
+
+    button {
+        min-width: 50px;
+        min-height: 44px;
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .node {
+        width: 36px;
+        height: 36px;
+    }
+
+    .node .label {
+        font-size: 10px;
+        top: 40px;
+    }
+}
