@@ -258,6 +258,56 @@
                 gap: 6px;
             }
         }
+        /* Gallery Section */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        .gallery-item {
+            position: relative;
+            aspect-ratio: 1;
+            overflow: hidden;
+            border: 1px solid #ff0000;
+            border-radius: 4px;
+            background: rgba(10, 10, 10, 0.8);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .gallery-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+        .gallery-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.85);
+            color: #7ec8e3;
+            font-size: 10px;
+            padding: 6px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            line-height: 1.3;
+        }
+        .gallery-item:hover .gallery-caption {
+            opacity: 1;
+        }
+        .gallery-empty {
+            text-align: center;
+            color: rgba(126, 200, 227, 0.6);
+            padding: 40px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -275,6 +325,15 @@
             <button class="toggle-btn" id="collapse-all">Collapse All</button>
         </div>
         <div id="collections"></div>
+
+        <!-- AI Gallery Section -->
+        <section class="collection" id="ai-gallery" style="display: none;">
+            <div class="collection-header">
+                <h2 class="collection-title">🎨 AI Gallery</h2>
+                <p class="collection-description">Generated with Nano Banana Pro</p>
+            </div>
+            <div class="gallery-grid" id="gallery-grid"></div>
+        </section>
     </div>
 
     <script src="stars.js" defer></script>
@@ -495,6 +554,42 @@
         }
 
         loadProjects();
+
+        // Load AI Gallery
+        async function loadGallery() {
+            const gallerySection = document.getElementById('ai-gallery');
+            const galleryGrid = document.getElementById('gallery-grid');
+
+            try {
+                const response = await fetch(`src/gallery/gallery.json?${Date.now()}`);
+                if (!response.ok) return;
+
+                const data = await response.json();
+                if (!data.images || data.images.length === 0) return;
+
+                // Show section and render last 12 images (newest first)
+                gallerySection.style.display = 'block';
+                const images = data.images.slice(-12).reverse();
+
+                images.forEach(img => {
+                    const item = document.createElement('a');
+                    item.className = 'gallery-item';
+                    item.href = `src/gallery/${img.filename}`;
+                    item.target = '_blank';
+                    item.innerHTML = `
+                        <img src="src/gallery/${img.filename}" alt="${img.prompt}" loading="lazy">
+                        <div class="gallery-caption">${img.prompt}</div>
+                    `;
+                    galleryGrid.appendChild(item);
+                });
+
+            } catch (e) {
+                // Gallery not available yet - silently ignore
+                console.log('Gallery not yet available');
+            }
+        }
+
+        loadGallery();
 
     </script>
 </body>

@@ -18,6 +18,7 @@ const { generateRoutingPlan, buildRoutingGuidance } = require('./services/llmRou
 const { listFiles: listFilesService, fileExists: fileExistsService, readFile: readFileService, writeFile: writeFileService, editFile: editFileService, deleteFile: deleteFileService, moveFile: moveFileService, searchFiles: searchFilesService } = require('./services/filesystem');
 const { pushFileViaAPI } = require('./services/gitHelper');
 const { deepResearch, formatForDiscord: formatDeepResearchForDiscord, generateReportHTML, DEEP_RESEARCH_MODEL } = require('./services/deepResearch');
+const { generateImage, saveToGallery } = require('./services/vision/imageGenerator');
 
 // Modular imports (Phase 1 extraction)
 const { getBotResponse, botResponses } = require('./personality/botResponses');
@@ -2470,6 +2471,24 @@ const commands = [
                 .setRequired(true)),
 
     new SlashCommandBuilder()
+        .setName('image')
+        .setDescription('Generate an image with Nano Banana Pro')
+        .addStringOption(option =>
+            option.setName('prompt')
+                .setDescription('What to generate')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('aspect')
+                .setDescription('Aspect ratio')
+                .setRequired(false)
+                .addChoices(
+                    { name: 'Square (1:1)', value: '1:1' },
+                    { name: 'Portrait (3:4)', value: '3:4' },
+                    { name: 'Landscape (4:3)', value: '4:3' },
+                    { name: 'Wide (16:9)', value: '16:9' }
+                )),
+
+    new SlashCommandBuilder()
         .setName('logs')
         .setDescription('Query bot activity logs and statistics')
         .addSubcommand(subcommand =>
@@ -2649,6 +2668,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'deep-research':
                 await handleDeepResearch(interaction);
+                break;
+            case 'image':
+                await handleImage(interaction);
                 break;
             case 'logs':
                 await handleLogs(interaction);
@@ -3905,6 +3927,54 @@ async function handleDeepResearch(interaction) {
         }
 
         await interaction.editReply(errorMsg);
+    }
+}
+
+// Handle /image command - Generate images with Nano Banana Pro
+async function handleImage(interaction) {
+    const prompt = interaction.options.getString('prompt');
+    const aspect = interaction.options.getString('aspect') || '1:1';
+    const author = interaction.user.tag;
+
+    try {
+        await safeEditReply(interaction, `generating image: "${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}"...`);
+
+        const result = await generateImage(prompt, { aspectRatio: aspect });
+
+        if (!result.success) {
+            await interaction.editReply(`${getBotResponse('errors')} ${result.error}`);
+            return;
+        }
+
+        // Save to gallery and push to GitHub
+        await interaction.editReply('saving to gallery...');
+        const { filename, galleryEntry } = await saveToGallery(result.imageBase64, prompt, {
+            aspectRatio: aspect,
+            author
+        });
+
+        // Send image as attachment
+        const { AttachmentBuilder } = require('discord.js');
+        const attachment = new AttachmentBuilder(
+            Buffer.from(result.imageBase64, 'base64'),
+            { name: filename }
+        );
+
+        const embed = new EmbedBuilder()
+            .setTitle('Generated Image')
+            .setDescription(prompt.substring(0, 200))
+            .setImage(`attachment://${filename}`)
+            .setColor(0xff0000)
+            .setFooter({ text: `Added to gallery | ${aspect}` })
+            .setURL(`https://bot.inference-arcade.com/src/gallery/${filename}`);
+
+        await interaction.editReply({ content: null, embeds: [embed], files: [attachment] });
+
+        console.log(`[IMAGE] Generated: ${filename} for ${author}`);
+
+    } catch (error) {
+        console.error('[IMAGE] Command error:', error);
+        await interaction.editReply(`${getBotResponse('errors')} ${error.message}`);
     }
 }
 
