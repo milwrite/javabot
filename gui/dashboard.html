@@ -291,13 +291,13 @@
                     fetch('/api/sessions?limit=20').then(r => r.json())
                 ]);
 
-                // Clear and populate (reverse to show oldest first, newest at bottom)
+                // Clear and populate (newest first at top)
                 containers.logs.innerHTML = '';
                 containers.tools.innerHTML = '';
                 containers.files.innerHTML = '';
 
-                logs.reverse().forEach(log => addLog(log, log.event_type));
-                tools.reverse().forEach(tool => addToolCall(tool));
+                logs.forEach(log => addLog(log, log.event_type));
+                tools.forEach(tool => addToolCall(tool));
 
                 // Extract file changes from logs
                 logs.filter(l => l.event_type === 'file_change').forEach(f => addFileChange(f));
@@ -337,7 +337,7 @@
             `;
 
             appendWithLimit(containers.logs, entry);
-            if (autoScroll) containers.logs.scrollTop = containers.logs.scrollHeight;
+            if (autoScroll) containers.logs.scrollTop = 0;
             updateCounts();
         }
 
@@ -435,9 +435,9 @@
         }
 
         function appendWithLimit(container, element) {
-            container.appendChild(element);
+            container.prepend(element);
             while (container.children.length > MAX_ENTRIES) {
-                container.removeChild(container.firstChild);
+                container.removeChild(container.lastChild);
             }
         }
 
