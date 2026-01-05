@@ -28,8 +28,8 @@ const { generateSiteInventory } = require('./scripts/generateSiteInventory.js');
 // Site configuration - Single source of truth
 const SITE_CONFIG = require('./site-config.js');
 
-// Unified Serena Logs service (replaces gui-server + postgres)
-const serena = require('./services/serenaLogs');
+// Unified Agent Logging service (replaces gui-server + postgres)
+const agentLog = require('./services/agentLogging');
 const DashboardServer = require('./scripts/dashboard-server');
 let dashboard = null;
 
@@ -94,7 +94,7 @@ if (process.env.OPENROUTER_FALLBACK) {
 }
 
 // Initialize Serena Logs and Dashboard
-serena.init().then(async (connected) => {
+agentLog.init().then(async (connected) => {
     if (connected && !process.env.NO_GUI) {
         dashboard = new DashboardServer(process.env.GUI_PORT || 3001);
         await dashboard.start().catch(err => {
@@ -109,16 +109,16 @@ serena.init().then(async (connected) => {
 // Graceful shutdown handlers
 process.on('SIGTERM', async () => {
     console.log('🛑 SIGTERM received, shutting down gracefully...');
-    await serena.endSession(0, 'sigterm');
-    await serena.close();
+    await agentLog.endSession(0, 'sigterm');
+    await agentLog.close();
     if (dashboard) await dashboard.stop();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
     console.log('🛑 SIGINT received, shutting down gracefully...');
-    await serena.endSession(0, 'sigint');
-    await serena.close();
+    await agentLog.endSession(0, 'sigint');
+    await agentLog.close();
     if (dashboard) await dashboard.stop();
     process.exit(0);
 });
@@ -213,7 +213,7 @@ function buildActionContextSummary(channelId) {
 
 // Unified logging helper functions (via serenaLogs - triggers NOTIFY for dashboard streaming)
 function logToolCall(toolName, args, result, error = null, options = {}) {
-    serena.logToolCall({
+    agentLog.logToolCall({
         toolName,
         args,
         result: typeof result === 'string' ? result : JSON.stringify(result),
@@ -226,7 +226,7 @@ function logToolCall(toolName, args, result, error = null, options = {}) {
 }
 
 function logFileChange(action, path, content = null, oldContent = null, channelId = null) {
-    serena.logFileChange({
+    agentLog.logFileChange({
         action,
         path,
         contentPreview: content ? content.slice(0, 500) : null,
@@ -236,7 +236,7 @@ function logFileChange(action, path, content = null, oldContent = null, channelI
 
 function logAgentLoop(result, error = null, options = {}) {
     if (options.command) {
-        serena.logAgentLoop({
+        agentLog.logAgentLoop({
             command: options.command,
             toolsUsed: options.toolsUsed || [],
             finalResult: result,
@@ -648,7 +648,7 @@ const errorLogger = {
             error.message?.includes('fatal: could not read') ||
             error.message?.includes('remote: Invalid username or password')) {
             console.error('🔐 AUTHENTICATION ERROR DETECTED - Check GitHub token');
-            serena.log.error('AUTH', error.message, { context });
+            agentLog.log.error('AUTH', error.message, { context });
         }
 
         return errorEntry;
@@ -656,7 +656,7 @@ const errorLogger = {
     
     track: (errorEntry) => {
         // Track error for patterns (could be enhanced to write to file)
-        serena.log.error(errorEntry.context, errorEntry.message, { metadata: errorEntry.metadata });
+        agentLog.log.error(errorEntry.context, errorEntry.message, { metadata: errorEntry.metadata });
     }
 };
 
@@ -959,7 +959,7 @@ function logEvent(type, message, details = null, context = {}) {
     }
 
     // Log to PostgreSQL for analytics (fire-and-forget)
-    serena.logOperationalEvent({
+    agentLog.logOperationalEvent({
         category: type,
         message: message,
         details: details,
@@ -2306,7 +2306,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
             logEvent('LLM', `HALLUCINATION DETECTED: Router suggested ${routingPlan.intent} but no tools executed. LLM claimed: "${content.substring(0, 100)}..."`);
 
             // Log this for tracking
-            serena.logError({
+            agentLog.logError({
                 category: 'hallucination',
                 errorType: 'FalseSuccessClaim',
                 message: `LLM claimed success for ${routingPlan.intent} without executing tools`,
@@ -2378,7 +2378,7 @@ async function getLLMResponse(userMessage, conversationMessages = [], discordCon
         errorLogger.track(errorEntry);
 
         // Log to PostgreSQL for persistent error tracking
-        serena.logError({
+        agentLog.logError({
             errorType: error.code || 'LLMError',
             category: 'llm',
             message: error.message || String(error),
@@ -2669,7 +2669,7 @@ client.on('interactionCreate', async interaction => {
         console.error('Command error:', error);
 
         // Log to PostgreSQL for persistent error tracking
-        serena.logError({
+        agentLog.logError({
             errorType: error.code || 'CommandError',
             category: 'discord',
             message: error.message || String(error),
@@ -2740,7 +2740,7 @@ client.on('messageCreate', async message => {
         // Handle async
         handleMentionAsync(message).catch(error => {
             console.error(`❌ Async ${triggerType.toLowerCase()} handler error:`, error);
-            serena.logError({
+            agentLog.logError({
                 errorType: 'MessageHandlerError',
                 category: triggerType.toLowerCase(),
                 message: error.message || String(error),
@@ -2778,7 +2778,7 @@ async function handleMentionAsync(message) {
         logEvent('MENTION', `${username}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`);
 
         // Log mention to PostgreSQL
-        serena.logMention({
+        agentLog.logMention({
             userId: message.author.id,
             username,
             channelId: message.channel.id,
@@ -3766,7 +3766,7 @@ async function handlePoll(interaction) {
 
 // Logs command handler - query PostgreSQL logs
 async function handleLogs(interaction) {
-    if (!serena.enabled()) {
+    if (!agentLog.enabled()) {
         await interaction.editReply('database logging is not configured, man. need DATABASE_URL in environment.');
         return;
     }
@@ -3779,7 +3779,7 @@ async function handleLogs(interaction) {
                 const eventType = interaction.options.getString('type') || 'all';
                 const limit = Math.min(interaction.options.getInteger('limit') || 10, 25);
 
-                const events = await serena.getRecentEvents(eventType, limit);
+                const events = await agentLog.getRecentEvents(eventType, limit);
 
                 if (events.length === 0) {
                     await interaction.editReply(`no ${eventType === 'all' ? '' : eventType + ' '}events found, man.`);
@@ -3804,7 +3804,7 @@ async function handleLogs(interaction) {
 
             case 'errors': {
                 const period = interaction.options.getString('period') || '24h';
-                const stats = await serena.getErrorStats(period);
+                const stats = await agentLog.getErrorStats(period);
 
                 const periodLabels = { '1h': 'Last Hour', '24h': 'Last 24 Hours', '7d': 'Last 7 Days' };
 
@@ -3827,7 +3827,7 @@ async function handleLogs(interaction) {
 
             case 'stats': {
                 const days = interaction.options.getInteger('days') || 7;
-                const stats = await serena.getDailyStats(days);
+                const stats = await agentLog.getDailyStats(days);
 
                 const embed = new EmbedBuilder()
                     .setColor('#00ffff')

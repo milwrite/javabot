@@ -3,7 +3,7 @@
 
 const axios = require('axios');
 const { fileExists, searchFiles, readFile, editFile, listFiles } = require('./filesystem');
-const postgres = require('./serenaLogs');
+const agentLog = require('./agentLogging');
 const { healAndParseJSON } = require('./responseHealing');
 const { OPENROUTER_URL } = require('../config/models');
 
@@ -219,7 +219,7 @@ async function getEditResponse(userMessage, conversationMessages = [], context =
             if (!lastResponse.tool_calls || lastResponse.tool_calls.length === 0) {
                 logEvent('EDIT_LOOP', `Iteration ${iteration}: No tool calls returned by AI (text response only)`);
                 if (iteration === 1) {
-                    postgres.logError({
+                    agentLog.logError({
                         category: 'edit_no_tools',
                         errorType: 'NoToolsReturned',
                         message: 'AI returned text without using tools on first edit iteration',
@@ -413,7 +413,7 @@ async function getEditResponse(userMessage, conversationMessages = [], context =
         const errorDetails = error.response?.data || error.message;
         console.error('Edit LLM Error:', errorDetails);
 
-        postgres.logError({
+        agentLog.logError({
             category: 'edit_llm',
             errorType: error.code || 'LLMError',
             message: typeof errorDetails === 'string' ? errorDetails : JSON.stringify(errorDetails),

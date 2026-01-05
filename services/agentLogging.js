@@ -1,5 +1,5 @@
-// services/serenaLogs.js
-// Unified Serena Logs service - PostgreSQL persistence with real-time NOTIFY streaming
+// services/agentLogging.js
+// Unified Agent Logging service - PostgreSQL persistence with real-time NOTIFY streaming
 // Replaces: postgres.js, gui-server.js in-memory storage, log-preserv.js session tracking
 
 const { Pool } = require('pg');
@@ -26,7 +26,7 @@ const DEFAULTS = {
  */
 async function init() {
     if (!process.env.DATABASE_URL) {
-        console.log('[SERENA] DATABASE_URL not set, logging disabled');
+        console.log('[AGENT-LOG] DATABASE_URL not set, logging disabled');
         return false;
     }
 
@@ -49,10 +49,10 @@ async function init() {
         // Start a new session
         await startSession();
 
-        console.log(`[SERENA] Connected, session: ${sessionId.slice(0, 8)}...`);
+        console.log(`[AGENT-LOG] Connected, session: ${sessionId.slice(0, 8)}...`);
         return true;
     } catch (error) {
-        console.error('[SERENA] Connection failed:', error.message);
+        console.error('[AGENT-LOG] Connection failed:', error.message);
         isEnabled = false;
         return false;
     }
@@ -76,7 +76,7 @@ async function startSession() {
         sessionId = res.rows[0].id;
     } catch (error) {
         // Fallback to UUID if session table doesn't exist
-        console.error('[SERENA] startSession error:', error.message);
+        console.error('[AGENT-LOG] startSession error:', error.message);
         sessionId = crypto.randomUUID();
     }
 }
@@ -99,9 +99,9 @@ async function endSession(exitCode = 0, exitReason = 'normal') {
              WHERE id = $3`,
             [exitCode, exitReason, sessionId]
         );
-        console.log(`[SERENA] Session ended: ${exitReason} (code ${exitCode})`);
+        console.log(`[AGENT-LOG] Session ended: ${exitReason} (code ${exitCode})`);
     } catch (error) {
-        console.error('[SERENA] endSession error:', error.message);
+        console.error('[AGENT-LOG] endSession error:', error.message);
     }
 }
 
@@ -130,7 +130,7 @@ function enabled() {
  */
 async function setupNotifyListener(callback) {
     if (!isEnabled) {
-        console.warn('[SERENA] Cannot setup NOTIFY listener - not connected');
+        console.warn('[AGENT-LOG] Cannot setup NOTIFY listener - not connected');
         return null;
     }
 
@@ -143,22 +143,22 @@ async function setupNotifyListener(callback) {
                 const payload = JSON.parse(msg.payload);
                 callback(payload);
             } catch (e) {
-                console.error('[SERENA] NOTIFY parse error:', e.message);
+                console.error('[AGENT-LOG] NOTIFY parse error:', e.message);
             }
         });
 
         notifyClient.on('error', (err) => {
-            console.error('[SERENA] NOTIFY client error:', err.message);
+            console.error('[AGENT-LOG] NOTIFY client error:', err.message);
             // Attempt reconnect after delay
             setTimeout(() => {
                 setupNotifyListener(callback).catch(console.error);
             }, 5000);
         });
 
-        console.log('[SERENA] NOTIFY listener active on channel: serena_logs');
+        console.log('[AGENT-LOG] NOTIFY listener active on channel: serena_logs');
         return notifyClient;
     } catch (error) {
-        console.error('[SERENA] setupNotifyListener error:', error.message);
+        console.error('[AGENT-LOG] setupNotifyListener error:', error.message);
         return null;
     }
 }
@@ -219,7 +219,7 @@ async function logMention(data) {
              JSON.stringify({ content: data.content, ...data.metadata })]
         );
     } catch (error) {
-        console.error('[SERENA] logMention error:', error.message);
+        console.error('[AGENT-LOG] logMention error:', error.message);
     }
 }
 
@@ -241,7 +241,7 @@ async function logToolCall(data) {
              data.userId, data.channelId, sessionId]
         );
     } catch (error) {
-        console.error('[SERENA] logToolCall error:', error.message);
+        console.error('[AGENT-LOG] logToolCall error:', error.message);
     }
 }
 
@@ -259,7 +259,7 @@ async function logFileChange(data) {
              JSON.stringify({ action: data.action, path: data.path, preview: truncate(data.contentPreview, 500) })]
         );
     } catch (error) {
-        console.error('[SERENA] logFileChange error:', error.message);
+        console.error('[AGENT-LOG] logFileChange error:', error.message);
     }
 }
 
@@ -278,7 +278,7 @@ async function logAgentLoop(data) {
              JSON.stringify({ command: data.command, tools: data.toolsUsed, result: truncate(data.finalResult, 1000) })]
         );
     } catch (error) {
-        console.error('[SERENA] logAgentLoop error:', error.message);
+        console.error('[AGENT-LOG] logAgentLoop error:', error.message);
     }
 }
 
@@ -296,7 +296,7 @@ async function logError(data) {
              JSON.stringify({ type: data.errorType, message: data.message, stack: data.stack, context: data.context })]
         );
     } catch (error) {
-        console.error('[SERENA] logError error:', error.message);
+        console.error('[AGENT-LOG] logError error:', error.message);
     }
 }
 
@@ -314,7 +314,7 @@ async function logBuildStage(data) {
              JSON.stringify(data.result), data.testScore, data.durationMs]
         );
     } catch (error) {
-        console.error('[SERENA] logBuildStage error:', error.message);
+        console.error('[AGENT-LOG] logBuildStage error:', error.message);
     }
 }
 
@@ -350,7 +350,7 @@ async function logPromptUsage(data) {
              JSON.stringify({ role: data.role, modules: data.modules, tokens: data.tokenEstimate })]
         );
     } catch (error) {
-        console.error('[SERENA] logPromptUsage error:', error.message);
+        console.error('[AGENT-LOG] logPromptUsage error:', error.message);
     }
 }
 
@@ -400,7 +400,7 @@ async function getRecentEvents(eventType = 'all', limit = 10) {
         );
         return res.rows;
     } catch (error) {
-        console.error('[SERENA] getRecentEvents error:', error.message);
+        console.error('[AGENT-LOG] getRecentEvents error:', error.message);
         return [];
     }
 }
@@ -444,7 +444,7 @@ async function getErrorStats(period = '24h') {
 
         return stats;
     } catch (error) {
-        console.error('[SERENA] getErrorStats error:', error.message);
+        console.error('[AGENT-LOG] getErrorStats error:', error.message);
         return { total: 0, critical: 0, auth: 0, network: 0, git: 0, discord: 0, general: 0 };
     }
 }
@@ -482,7 +482,7 @@ async function getDailyStats(days = 7) {
             uniqueUsers: parseInt(row.unique_users) || 0
         };
     } catch (error) {
-        console.error('[SERENA] getDailyStats error:', error.message);
+        console.error('[AGENT-LOG] getDailyStats error:', error.message);
         return { total: 0, mentions: 0, toolCalls: 0, errors: 0, uniqueUsers: 0 };
     }
 }
@@ -504,7 +504,7 @@ async function searchEvents(query, limit = 20) {
         `, [`%${query}%`, limit]);
         return res.rows;
     } catch (error) {
-        console.error('[SERENA] searchEvents error:', error.message);
+        console.error('[AGENT-LOG] searchEvents error:', error.message);
         return [];
     }
 }
@@ -530,7 +530,7 @@ async function getToolStats(days = 7) {
         `);
         return res.rows;
     } catch (error) {
-        console.error('[SERENA] getToolStats error:', error.message);
+        console.error('[AGENT-LOG] getToolStats error:', error.message);
         return [];
     }
 }
@@ -549,7 +549,7 @@ async function getSessionHistory(limit = 20) {
         );
         return res.rows;
     } catch (error) {
-        console.error('[SERENA] getSessionHistory error:', error.message);
+        console.error('[AGENT-LOG] getSessionHistory error:', error.message);
         return [];
     }
 }
@@ -569,7 +569,7 @@ async function getSessionEvents(targetSessionId, limit = 100) {
         );
         return res.rows;
     } catch (error) {
-        console.error('[SERENA] getSessionEvents error:', error.message);
+        console.error('[AGENT-LOG] getSessionEvents error:', error.message);
         return [];
     }
 }
@@ -589,7 +589,7 @@ async function getEventById(table, id) {
         const res = await pool.query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
         return res.rows[0] || null;
     } catch (error) {
-        console.error('[SERENA] getEventById error:', error.message);
+        console.error('[AGENT-LOG] getEventById error:', error.message);
         return null;
     }
 }
@@ -606,7 +606,7 @@ async function close() {
     }
     if (pool) {
         await pool.end();
-        console.log('[SERENA] Connection pool closed');
+        console.log('[AGENT-LOG] Connection pool closed');
     }
 }
 

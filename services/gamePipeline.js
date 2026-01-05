@@ -8,7 +8,7 @@ const { testGame } = require('../agents/gameTester');
 const { documentGame, updateProjectMetadata } = require('../agents/gameScribe');
 const { writeBuildLog, getRecentPatternsSummary } = require('./buildLogs');
 const { pushMultipleFiles } = require('./gitHelper');
-const postgres = require('./serenaLogs');
+const agentLog = require('./agentLogging');
 const fsSync = require('fs');
 const path = require('path');
 
@@ -67,7 +67,7 @@ async function runGamePipeline({
         });
 
         // Log to PostgreSQL for analytics
-        postgres.logBuildStage({
+        agentLog.logBuildStage({
             buildId,
             stage: 'plan',
             attempt: 1,
@@ -121,7 +121,7 @@ async function runGamePipeline({
             });
 
             // Log to PostgreSQL for analytics
-            postgres.logBuildStage({
+            agentLog.logBuildStage({
                 buildId,
                 stage: 'build',
                 attempt,
@@ -162,7 +162,7 @@ async function runGamePipeline({
             });
 
             // Log to PostgreSQL for analytics
-            postgres.logBuildStage({
+            agentLog.logBuildStage({
                 buildId,
                 stage: 'test',
                 attempt,
@@ -234,7 +234,7 @@ async function runGamePipeline({
         });
 
         // Log to PostgreSQL for analytics
-        postgres.logBuildStage({
+        agentLog.logBuildStage({
             buildId,
             stage: 'scribe',
             attempt: 1,
@@ -268,7 +268,7 @@ async function runGamePipeline({
         });
 
         // Log to PostgreSQL for analytics
-        postgres.logBuildStage({
+        agentLog.logBuildStage({
             buildId,
             stage: 'complete',
             attempt: 1,
@@ -298,7 +298,7 @@ async function runGamePipeline({
         });
 
         // Log to PostgreSQL for analytics
-        postgres.logBuildStage({
+        agentLog.logBuildStage({
             buildId,
             stage: 'error',
             attempt: 1,
@@ -307,7 +307,7 @@ async function runGamePipeline({
         });
 
         // Also log as an error for error tracking
-        postgres.logError({
+        agentLog.logError({
             errorType: 'PipelineError',
             category: 'build',
             message: error.message,

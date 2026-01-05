@@ -1,3 +1,56 @@
+## 2026-01-04
+
+### Response Healing for Malformed LLM JSON
+
+**Feature:**
+Client-side JSON healing module that automatically repairs malformed tool arguments from LLM responses. Mirrors OpenRouter's server-side `response-healing` plugin behavior, but works for tool calling (which doesn't use `response_format`).
+
+**Problem:**
+PostgreSQL logs revealed recurring JSON parse failures:
+- `JSON parse error for read_file: Unexpected non-whitespace character after JSON at position 32` (mimo-v2-flash)
+- `JSON parse error for write_file: Expected ',' or '}' after property value in JSON at position 4700`
+- Unicode tool call delimiters from Kimi K2: `<｜tool▁call▁begin｜>{...}<｜tool▁call▁end｜>`
+
+**Solution:**
+4-phase healing pipeline in [services/responseHealing.js](services/responseHealing.js):
+
+1. **Strip Wrappers** - Remove markdown code blocks, JSONP wrappers, Unicode delimiters, extract from prose
+2. **Repair Structure** - Fix trailing commas, close unclosed brackets/braces, add missing commas
+3. **Normalize Quotes** - Convert smart quotes (U+201C etc.), single quotes to double, quote unquoted keys
+4. **Final Cleanup** - Convert Python bools (`True`→`true`), remove comments
+
+**Changes Made:**
+
+| File | Change |
+|------|--------|
+| [services/responseHealing.js](services/responseHealing.js) | New ~160 line module |
+| [services/responseHealing.test.js](services/responseHealing.test.js) | 38 unit tests from production data |
+| [index.js:42](index.js#L42) | Import healAndParseJSON |
+| [index.js:2036-2049](index.js#L2036-L2049) | Replace try/catch with healing |
+| [services/editService.js:7](services/editService.js#L7) | Import healAndParseJSON |
+| [services/editService.js:240-249](services/editService.js#L240-L249) | Replace try/catch with healing |
+| [package.json](package.json) | Add `npm test` script |
+
+**Test Coverage (38 tests):**
+- 4 real production failures from PostgreSQL logs
+- 4 markdown wrapper patterns
+- 5 structural repairs (commas, brackets)
+- 4 quote normalization cases
+- 4 Python value conversions
+- 3 prose extraction patterns
+- 8 edge cases (null, empty, whitespace, nested)
+- 3 combined repair scenarios
+- 4 tool-specific patterns
+
+**Console Output:**
+```
+[RESPONSE_HEALING] Applied: extracted_from_prose, closed_braces, py_true
+```
+
+**Run Tests:** `npm test`
+
+---
+
 ## 2026-01-03
 
 ### Expanded Discord Listening & Response Sensitivity

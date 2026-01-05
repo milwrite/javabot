@@ -604,3 +604,37 @@ const CONFIG = {
 **Features**: 1000 entry cap per panel, real-time updates, auto-scroll
 **Disable**: Use `--no-gui` flag or `NO_GUI=true`
 
+## 🧪 Testing & Verification
+
+**No formal test suite** - validation is done via runtime checks and manual testing.
+
+### Quick Syntax Check
+```bash
+node --check index.js
+```
+
+### Parallel Tool Calls Verification
+The bot parallelizes read-only tool execution for efficiency. To verify:
+
+1. **Check logs for parallel execution**:
+   ```
+   [LLM] Parallel execution: 3 read-only tools
+   ```
+
+2. **Test with multi-read request** (via Discord @mention):
+   ```
+   @Bot Sportello read the contents of snake.html, tetris.html, and memory-match.html
+   ```
+   - Should show "Parallel execution: 3 read-only tools" in console
+   - All three reads execute concurrently (~200ms total vs ~600ms sequential)
+
+3. **Read-only tools** (parallelized): `list_files`, `file_exists`, `search_files`, `read_file`, `get_repo_status`, `git_log`, `web_search`, `deep_research`
+
+4. **Write tools** (sequential): `write_file`, `edit_file`, `delete_file`, `move_file`, `commit_changes`, `set_model`
+
+### PostgreSQL Log Verification
+```bash
+# Check recent tool calls with timing
+source .env && psql "$DATABASE_URL" -c "SELECT tool_name, to_char(timestamp, 'HH24:MI:SS.MS') as time, SUBSTRING(arguments::text FROM 1 FOR 100) as args FROM tool_calls WHERE timestamp > NOW() - INTERVAL '1 hour' ORDER BY timestamp DESC LIMIT 20;"
+```
+

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Bot Sportello Launcher with Serena Logs
+# Bot Sportello Launcher with Agent Logging
 #
 # Session tracking and logging now handled by PostgreSQL (Railway).
 # Dashboard available at http://localhost:3001/dashboard
@@ -11,7 +11,7 @@
 #   ./run-bot.sh --no-gui           # Start without dashboard server
 #
 
-echo "Bot Sportello - Serena Logs Edition"
+echo "Bot Sportello - Agent Logging Edition"
 echo "====================================="
 
 # Check if Node.js is available

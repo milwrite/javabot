@@ -1,5 +1,5 @@
--- Serena Logs Schema Migration
--- Run with: source .env && psql "$DATABASE_URL" -f scripts/schema-serena.sql
+-- Agent Logging Schema Migration
+-- Run with: source .env && psql "$DATABASE_URL" -f scripts/schema-agent-logging.sql
 
 -- ============ NEW TABLE: bot_sessions ============
 CREATE TABLE IF NOT EXISTS bot_sessions (

@@ -5,13 +5,13 @@
 const express = require('express');
 const path = require('path');
 
-// Lazy-load serena to avoid circular dependency
-let serena = null;
-function getSerena() {
-    if (!serena) {
-        serena = require('../services/serenaLogs');
+// Lazy-load agentLog to avoid circular dependency
+let agentLog = null;
+function getAgentLog() {
+    if (!agentLog) {
+        agentLog = require('../services/agentLogging');
     }
-    return serena;
+    return agentLog;
 }
 
 class DashboardServer {
@@ -78,7 +78,7 @@ class DashboardServer {
             try {
                 const type = req.query.type || 'all';
                 const limit = Math.min(parseInt(req.query.limit) || 100, 500);
-                const events = await getSerena().getRecentEvents(type, limit);
+                const events = await getAgentLog().getRecentEvents(type, limit);
                 res.json(events);
             } catch (error) {
                 res.status(500).json({ error: error.message });
@@ -88,7 +88,7 @@ class DashboardServer {
         this.app.get('/api/tools', async (req, res) => {
             try {
                 const limit = Math.min(parseInt(req.query.limit) || 50, 200);
-                const events = await getSerena().getRecentEvents('tool_call', limit);
+                const events = await getAgentLog().getRecentEvents('tool_call', limit);
                 res.json(events);
             } catch (error) {
                 res.status(500).json({ error: error.message });
@@ -98,7 +98,7 @@ class DashboardServer {
         this.app.get('/api/sessions', async (req, res) => {
             try {
                 const limit = Math.min(parseInt(req.query.limit) || 20, 100);
-                const sessions = await getSerena().getSessionHistory(limit);
+                const sessions = await getAgentLog().getSessionHistory(limit);
                 res.json(sessions);
             } catch (error) {
                 res.status(500).json({ error: error.message });
@@ -108,7 +108,7 @@ class DashboardServer {
         this.app.get('/api/sessions/:id/events', async (req, res) => {
             try {
                 const limit = Math.min(parseInt(req.query.limit) || 100, 500);
-                const events = await getSerena().getSessionEvents(req.params.id, limit);
+                const events = await getAgentLog().getSessionEvents(req.params.id, limit);
                 res.json(events);
             } catch (error) {
                 res.status(500).json({ error: error.message });
@@ -118,7 +118,7 @@ class DashboardServer {
         this.app.get('/api/stats', async (req, res) => {
             try {
                 const days = parseInt(req.query.days) || 7;
-                const stats = await getSerena().getDailyStats(days);
+                const stats = await getAgentLog().getDailyStats(days);
                 res.json(stats);
             } catch (error) {
                 res.status(500).json({ error: error.message });
@@ -128,7 +128,7 @@ class DashboardServer {
         this.app.get('/api/errors', async (req, res) => {
             try {
                 const period = req.query.period || '24h';
-                const stats = await getSerena().getErrorStats(period);
+                const stats = await getAgentLog().getErrorStats(period);
                 res.json(stats);
             } catch (error) {
                 res.status(500).json({ error: error.message });
@@ -140,8 +140,8 @@ class DashboardServer {
             res.json({
                 status: 'ok',
                 clients: this.clients.size,
-                dbConnected: getSerena().enabled(),
-                sessionId: getSerena().getSessionId()
+                dbConnected: getAgentLog().enabled(),
+                sessionId: getAgentLog().getSessionId()
             });
         });
     }
@@ -150,14 +150,14 @@ class DashboardServer {
      * Setup PostgreSQL LISTEN/NOTIFY for real-time streaming
      */
     async setupNotifyListener() {
-        if (!getSerena().enabled()) {
+        if (!getAgentLog().enabled()) {
             console.warn('[DASHBOARD] Database not connected, SSE will not stream live events');
             return;
         }
 
-        this.notifyClient = await getSerena().setupNotifyListener(async (notification) => {
+        this.notifyClient = await getAgentLog().setupNotifyListener(async (notification) => {
             // Fetch full event data
-            const event = await getSerena().getEventById(notification.table, notification.id);
+            const event = await getAgentLog().getEventById(notification.table, notification.id);
             if (event) {
                 this.broadcast(notification.type, event);
             }
