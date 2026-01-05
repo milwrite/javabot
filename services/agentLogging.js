@@ -378,13 +378,14 @@ async function getRecentEvents(eventType = 'all', limit = 10) {
         }
 
         // For 'all', union bot_events with tool_calls
+        // Cast id and session_id to TEXT for type compatibility (bot_sessions uses UUID, older tables may have VARCHAR)
         if (eventType === 'all') {
             const res = await pool.query(
-                `(SELECT id, event_type, session_id, user_id, channel_id, duration_ms, success, payload, timestamp
+                `(SELECT id::text, event_type, session_id::text, user_id, channel_id, duration_ms, success, payload, timestamp
                   FROM bot_events WHERE event_type != 'tool_call'
                   ORDER BY timestamp DESC LIMIT $1)
                  UNION ALL
-                 (SELECT id, 'tool_call' as event_type, session_id, user_id, channel_id, duration_ms,
+                 (SELECT id::text, 'tool_call' as event_type, session_id::text, user_id, channel_id, duration_ms,
                          error IS NULL as success, arguments as payload, timestamp
                   FROM tool_calls ORDER BY timestamp DESC LIMIT $1)
                  ORDER BY timestamp DESC LIMIT $1`,
