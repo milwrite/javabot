@@ -14,6 +14,7 @@ Bot Sportello is a Discord bot with a laid-back Doc Sportello personality that m
 
 **Key Features**:
 - AI-generated HTML pages & JavaScript features using OpenRouter
+- AI image generation via `/image` command (Nano Banana Pro / Gemini 3 Pro Image Preview)
 - Automatic GitHub commits and deployment to GitHub Pages
 - Conversation memory (Discord API with message reactions)
 - Noir terminal design system with Courier Prime font and CRT effects
@@ -173,6 +174,7 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 - `gamePipeline.js` - Game building pipeline
 - `llmClient.js` - OpenRouter API client with role-specific prompts
 - `postgres.js` - PostgreSQL logging service (Railway database)
+- `vision/imageGenerator.js` - **AI image generation** (Nano Banana Pro via OpenRouter, gallery management)
 
 **Request Routing Flow** (for @mentions):
 1. `generateRoutingPlan()` runs FIRST - LLM analyzes request, returns `{intent, toolSequence, confidence}`
@@ -187,10 +189,12 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 
 **File Organization**:
 - `/src/` - All generated HTML pages, JS features, and demos
+- `/src/gallery/` - AI-generated images and gallery metadata
 - `/services/` - Modular service modules (filesystem, git, LLM, pipelines)
+- `/services/vision/` - Vision/image AI services (image generation)
 - `/config/` - Configuration modules (models, presets)
 - `/responses/` - AI responses >2000 chars saved with timestamps
-- `index.html` - Main hub page with embedded CSS (no longer uses style.css)
+- `index.html` - Main hub page with embedded CSS (includes AI Gallery section)
 - `page-theme.css` - Shared arcade theme for all /src/ pages
 - `projectmetadata.json` - Project collections + metadata (title, icon, caption) loaded dynamically by index.html
 
@@ -282,6 +286,8 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 | **index.html** | Main page (project hub) | HTML with embedded CSS | Persistent; manually edited theme |
 | **page-theme.css** | Shared noir styling (all pages) | CSS with color vars + mobile breakpoints | Persistent; theme source of truth |
 | **/src/*.html** | Generated pages (games, pages, features) | Self-contained HTML + inline CSS/JS | Created via `write_file()` tool |
+| **/src/gallery/*.png** | AI-generated images | PNG files with slugified names | Created via `/image` command; pushed to GitHub |
+| **/src/gallery/gallery.json** | Gallery metadata (prompts, authors, timestamps) | JSON: {images: [...]} | Updated on each image generation |
 | **PostgreSQL (Railway)** | Long-term event logging | Tables: bot_events, tool_calls, build_stages | Persistent; queryable via `/logs` command |
 
 ### PostgreSQL Logging
@@ -353,6 +359,13 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 **Web Search**:
 - `web_search(query)` - Search internet for current information (via Perplexity Sonar)
 - Automatically triggered for questions about "latest", "recent", "current"
+
+**Image Generation** (`/image` command):
+- Uses Nano Banana Pro (Gemini 3 Pro Image Preview) via OpenRouter
+- Aspect ratios: 1:1 (square), 3:4 (portrait), 4:3 (landscape), 16:9 (wide)
+- Images auto-saved to `src/gallery/` and pushed to GitHub
+- Gallery metadata tracked in `src/gallery/gallery.json`
+- Homepage displays 12 most recent images in responsive grid
 
 **Agentic Loop (Multi-Step Execution)**:
 - AI can chain multiple tool calls across iterations (max 6 rounds, max 5 read-only iterations)
@@ -481,10 +494,13 @@ errorTracker.set(`${userId}-${commandName}`, {
 
 ### Message History System
 
-**Discord-Native Context** (replaces agents.md):
-- Fetches last 5 messages from Discord API via `channel.messages.fetch()` on-demand
+**Discord-Native Context**:
+- Fetches last 10 messages from Discord API via `channel.messages.fetch()` on-demand
 - Context only activated when Bot Sportello receives input in a channel (no startup prefetch)
-- 60-second cache per channel prevents rate limiting
+- 60-second TTL cache per channel prevents rate limiting
+- **Partial cache detection**: New messages create "partial" cache entries that trigger full fetch on next request
+- **Race condition prevention**: Concurrent requests share the same in-flight fetch via `pendingFetches` Map
+- **LRU eviction**: Maximum 50 cached channels to prevent memory growth
 - Managed by `DiscordContextManager` class with `buildContextForChannel()` function
 
 **Multi-Channel Monitoring**:

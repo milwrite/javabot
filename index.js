@@ -265,17 +265,7 @@ setInterval(() => {
     if (expiredKeys.length > 0) {
         logEvent('CLEANUP', `Cleaned up ${expiredKeys.length} expired error tracking entries`);
     }
-
-    // Additional memory cleanup - force garbage collection of old message objects
-    if (messageHistory.length > 50 && global.gc) {
-        global.gc();
-        logEvent('GC', 'Forced garbage collection for memory optimization');
-    }
 }, ERROR_RESET_TIME);
-
-// Message history tracking
-const messageHistory = [];
-const MAX_HISTORY = 100; // Increased from 20 to 100
 
 // Parse channel IDs (supports comma-separated list)
 const CHANNEL_IDS = process.env.CHANNEL_ID
@@ -384,24 +374,31 @@ client.on('threadCreate', async (thread) => {
 class DiscordContextManager {
     constructor(discordClient) {
         this.client = discordClient;
-        this.cache = new Map(); // channelId -> { messages, timestamp }
+        this.cache = new Map(); // channelId -> { data, timestamp, partial, messageCount }
+        this.pendingFetches = new Map(); // channelId -> Promise (race condition prevention)
+        this.MAX_CACHE_SIZE = 50; // Maximum channels to cache
     }
 
-    // Keep cache hot when new messages arrive (prevents stale context within TTL)
+    // Keep cache hot when new messages arrive
+    // IMPORTANT: Marks cache as "partial" when incomplete to prevent false freshness
     upsertMessage(discordMessage, limit = CONFIG.DISCORD_FETCH_LIMIT) {
         const channelId = discordMessage.channel.id;
+        const channelName = discordMessage.channel.name || channelId;
         const cached = this.cache.get(channelId);
 
-        // Start fresh if we have no cache yet
+        // Start fresh if no cache - mark as PARTIAL since we only have 1 message
         if (!cached) {
             this.cache.set(channelId, {
                 data: [discordMessage],
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                partial: true,
+                messageCount: 1
             });
+            console.log(`[CONTEXT] Created partial cache for #${channelName} (1 message)`);
             return;
         }
 
-        // Replace or append message, then trim to most recent N chronologically
+        // Update existing cache, preserving partial status
         const updated = [...cached.data];
         const idx = updated.findIndex(msg => msg.id === discordMessage.id);
         if (idx >= 0) {
@@ -410,47 +407,94 @@ class DiscordContextManager {
             updated.push(discordMessage);
         }
 
-        // Sort by creation time to keep chronological order, then trim
+        // Sort chronologically and trim
         updated.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
         const trimmed = updated.slice(-limit);
 
         this.cache.set(channelId, {
             data: trimmed,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            partial: cached.partial, // Preserve partial status - only full fetch clears it
+            messageCount: trimmed.length
         });
+
+        if (cached.partial) {
+            console.log(`[CONTEXT] Updated partial cache for #${channelName} (${trimmed.length} messages)`);
+        }
     }
 
-    // Fetch message history from Discord API with caching
+    // Fetch message history with caching - ignores partial caches
     async fetchChannelHistory(channel, limit = CONFIG.DISCORD_FETCH_LIMIT) {
         const cacheKey = channel.id;
         const cached = this.cache.get(cacheKey);
 
-        // Return cache if fresh
-        if (cached && Date.now() - cached.timestamp < CONFIG.DISCORD_CACHE_TTL) {
-            console.log(`[CONTEXT] Using cached history for #${channel.name || channel.id} (${cached.data.length} messages)`);
+        // Return cache only if FULL (not partial) AND fresh
+        if (cached && !cached.partial && Date.now() - cached.timestamp < CONFIG.DISCORD_CACHE_TTL) {
+            console.log(`[CONTEXT] Using cached history for #${channel.name || channel.id} (${cached.data.length} messages, full)`);
             return cached.data;
         }
 
+        // Check for in-flight fetch to prevent race condition
+        if (this.pendingFetches.has(cacheKey)) {
+            console.log(`[CONTEXT] Waiting for in-flight fetch for #${channel.name || channel.id}`);
+            return this.pendingFetches.get(cacheKey);
+        }
+
+        // Create fetch promise and track it
+        const fetchPromise = this._doFetch(channel, limit, cacheKey);
+        this.pendingFetches.set(cacheKey, fetchPromise);
+
         try {
-            console.log(`[CONTEXT] Fetching ${limit} messages from #${channel.name || channel.id}`);
+            return await fetchPromise;
+        } finally {
+            this.pendingFetches.delete(cacheKey);
+        }
+    }
 
-            // Discord.js channel.messages.fetch()
+    // Internal: Execute Discord API fetch
+    async _doFetch(channel, limit, cacheKey) {
+        try {
+            const cached = this.cache.get(cacheKey);
+            const reason = cached?.partial ? 'partial cache' : (cached ? 'expired' : 'no cache');
+            console.log(`[CONTEXT] Fetching ${limit} messages from #${channel.name || channel.id} (${reason})`);
+
             const messages = await channel.messages.fetch({ limit });
-
-            // Convert Collection to array, reverse for chronological order
             const messageArray = Array.from(messages.values()).reverse();
 
-            // Cache the result
+            // Enforce cache size limit before adding
+            this._enforceCacheLimit();
+
+            // Cache as FULL (not partial)
             this.cache.set(cacheKey, {
                 data: messageArray,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                partial: false,
+                messageCount: messageArray.length
             });
 
-            console.log(`[CONTEXT] Cached ${messageArray.length} messages for #${channel.name || channel.id}`);
+            console.log(`[CONTEXT] Cached ${messageArray.length} messages for #${channel.name || channel.id} (full)`);
             return messageArray;
         } catch (error) {
             console.error(`[CONTEXT] Failed to fetch history:`, error.message);
             return null;
+        }
+    }
+
+    // Enforce maximum cache size with LRU eviction
+    _enforceCacheLimit() {
+        if (this.cache.size >= this.MAX_CACHE_SIZE) {
+            let oldestKey = null;
+            let oldestTime = Infinity;
+            for (const [key, entry] of this.cache) {
+                if (entry.timestamp < oldestTime) {
+                    oldestTime = entry.timestamp;
+                    oldestKey = key;
+                }
+            }
+            if (oldestKey) {
+                this.cache.delete(oldestKey);
+                console.log(`[CONTEXT] Evicted oldest cache entry: ${oldestKey}`);
+            }
         }
     }
 
@@ -477,7 +521,11 @@ class DiscordContextManager {
             const reactions = Array.from(discordMessage.reactions.cache.values())
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 3) // Top 3 reactions
-                .map(r => `${r.emoji.name}(${r.count})`)
+                .map(r => {
+                    // Handle both Unicode and custom emojis safely
+                    const emojiName = r.emoji?.name || r.emoji?.id || '?';
+                    return `${emojiName}(${r.count})`;
+                })
                 .join(' ');
             formattedContent += ` [reactions: ${reactions}]`;
         }
@@ -531,6 +579,21 @@ class DiscordContextManager {
             parentId: channel.parentId || null,
             isActive: isRecentlyActiveChannel(channel.id)
         };
+    }
+
+    // Debug helper: get cache statistics
+    getCacheStats() {
+        const stats = {
+            totalChannels: this.cache.size,
+            partialCaches: 0,
+            fullCaches: 0,
+            pendingFetches: this.pendingFetches.size
+        };
+        for (const [, entry] of this.cache) {
+            if (entry.partial) stats.partialCaches++;
+            else stats.fullCaches++;
+        }
+        return stats;
     }
 }
 
@@ -1244,46 +1307,7 @@ function buildValidationFeedback(validation, contentType = 'HTML') {
 }
 
 
-function addToHistory(username, message, isBot = false) {
-    // Truncate overly long messages to prevent memory bloat
-    const maxMessageLength = 2000;
-    const truncatedMessage = message.length > maxMessageLength 
-        ? message.substring(0, maxMessageLength) + '...[truncated]'
-        : message;
-
-    const entry = {
-        timestamp: Date.now(), // Use timestamp for faster processing
-        username: username,
-        message: truncatedMessage,
-        isBot: isBot,
-        role: isBot ? 'assistant' : 'user'
-    };
-
-    messageHistory.push(entry);
-
-    // More aggressive pruning when approaching limit
-    if (messageHistory.length >= MAX_HISTORY) {
-        // Remove oldest 20 messages at once to reduce frequent array operations
-        messageHistory.splice(0, 20);
-    }
-}
-
-// Build proper messages array from conversation history
-function buildMessagesFromHistory(maxMessages = 50) {
-    // Get last N messages (increased from 10 to 50 for better context)
-    const recentMessages = messageHistory.slice(-maxMessages);
-
-    // Convert to OpenRouter message format
-    const messages = recentMessages.map(entry => ({
-        role: entry.role,
-        content: `${entry.username}: ${entry.message}`
-    }));
-
-    return messages;
-}
-
 // Build context from Discord channel using the context manager
-// Replaces buildMessagesFromHistory for channel-based context
 async function buildContextForChannel(channel, maxMessages = CONFIG.DISCORD_CONTEXT_LIMIT) {
     // Use Discord context manager if available and channel is provided
     console.log(`[CONTEXT_DEBUG] channel=${!!channel}, contextManager=${!!contextManager}`);
@@ -2545,17 +2569,6 @@ commands.forEach((cmd, idx) => {
     }
 });
 
-// Helper to get guild ID from channel ID
-async function getGuildIdFromChannel(channelId) {
-    try {
-        const channel = await client.channels.fetch(channelId);
-        return channel.guildId;
-    } catch (error) {
-        console.warn(`Could not fetch guild for channel ${channelId}:`, error.message);
-        return null;
-    }
-}
-
 client.once('clientReady', async () => {
     console.log(`Bot is ready as ${client.user.tag}`);
     console.log(`Monitoring channels: ${CHANNEL_IDS.length > 0 ? CHANNEL_IDS.join(', ') : 'ALL CHANNELS'}`);
@@ -2578,34 +2591,15 @@ client.once('clientReady', async () => {
 
         console.log(`Sending ${validCommands.length} valid commands to Discord`);
 
-        // Try guild-specific registration first (more reliable)
-        if (CHANNEL_IDS.length > 0) {
-            const guildId = await getGuildIdFromChannel(CHANNEL_IDS[0]);
-            if (guildId) {
-                console.log(`Registering commands to guild: ${guildId}`);
-                await rest.put(
-                    Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, guildId),
-                    { body: validCommands }
-                );
-                console.log('✅ Slash commands registered to guild successfully.');
-            } else {
-                // Fall back to global registration
-                console.log('Attempting global command registration...');
-                await rest.put(
-                    Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-                    { body: validCommands }
-                );
-                console.log('✅ Slash commands registered globally successfully.');
-            }
-        } else {
-            // Fall back to global registration
-            console.log('Attempting global command registration...');
-            await rest.put(
-                Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-                { body: validCommands }
-            );
-            console.log('✅ Slash commands registered globally successfully.');
-        }
+        // Always use global registration so commands work in ALL servers
+        // Note: Global commands can take up to 1 hour to propagate to all servers
+        console.log('Registering commands globally (all servers)...');
+        await rest.put(
+            Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
+            { body: validCommands }
+        );
+        console.log('✅ Slash commands registered globally successfully.');
+        console.log('   (Note: May take up to 1 hour to appear in all servers)')
     } catch (error) {
         console.error('❌ Error registering slash commands:', error.message);
         if (error.rawError) {
@@ -2636,6 +2630,10 @@ client.on('interactionCreate', async interaction => {
     // Handle button interactions
     if (interaction.isButton()) {
         await handleButtonInteraction(interaction);
+        // Invalidate cache after button interaction as well
+        if (contextManager && interaction.channel) {
+            contextManager.invalidateCache(interaction.channel.id);
+        }
         return;
     }
     
@@ -2687,6 +2685,11 @@ client.on('interactionCreate', async interaction => {
         // Clear error tracking on successful completion
         clearErrorTracking(userId, commandName);
 
+        // Invalidate the context cache for this channel after a successful command
+        if (contextManager && interaction.channel) {
+            contextManager.invalidateCache(interaction.channel.id);
+        }
+
     } catch (error) {
         console.error('Command error:', error);
 
@@ -2718,6 +2721,11 @@ client.on('interactionCreate', async interaction => {
                 console.error('Unexpected error reply failure:', replyError.code, replyError.message);
             }
         }
+
+        // Invalidate the context cache for this channel even after an error
+        if (contextManager && interaction.channel) {
+            contextManager.invalidateCache(interaction.channel.id);
+        }
     }
 });
 
@@ -2741,9 +2749,8 @@ client.on('messageCreate', async message => {
         return;
     }
 
-    // Add message to conversation history
+    // Track message in context manager
     console.log(`[TRACKING] ${message.author.username} in #${message.channel.name || channelId}${isThread ? ' (thread)' : ''}: ${message.content.substring(0, 100)}`);
-    addToHistory(message.author.username, message.content, false);
     if (contextManager) {
         contextManager.upsertMessage(message);
     }
@@ -2857,8 +2864,6 @@ async function handleMentionAsync(message) {
                         continue; // Try next approach
                     } else {
                         await safeEditReply(thinkingMsg, response);
-                        addToHistory(username, content, false);
-                        addToHistory('Bot Sportello', response, true);
                         return; // Success - exit
                     }
                 }
@@ -2973,8 +2978,6 @@ async function handleMentionAsync(message) {
                             if (!response) response = getBotResponse('confirmations');
                             logEvent('MENTION', `Sending reply: ${response.substring(0, 50)}`);
                             await safeEditReply(thinkingMsg, response);
-                            addToHistory(username, content, false);
-                            addToHistory('Bot Sportello', response, true);
                             return; // Done
                         } catch (convError) {
                             console.error('[CONVERSATION] Error:', convError.message);
@@ -3040,10 +3043,6 @@ async function handleMentionAsync(message) {
 
                     await safeEditReply(thinkingMsg, successMsg);
 
-                    // Add to history
-                    addToHistory(username, content, false);
-                    addToHistory('Bot Sportello', successMsg, true);
-
                     // Record game creation for conversational context
                     if (message.channel.id && result.plan?.outputPath) {
                         recordAction(message.channel.id, {
@@ -3086,8 +3085,6 @@ async function handleMentionAsync(message) {
                         // Send the response (edit service already processed tool calls internally)
                         if (response) {
                             await safeEditReply(thinkingMsg, response);
-                            addToHistory(username, content, false);
-                            addToHistory('Bot Sportello', response, true);
                             logEvent('EDIT_LOOP', 'Edit completed and response sent');
                             return; // Success - exit
                         }
@@ -3254,17 +3251,6 @@ async function handleMentionAsync(message) {
             throw new Error(`All ${maxProcessingAttempts} processing attempts failed. Last failure: ${lastFailureReason}`);
         }
 
-        // Add to history - include search context if any
-        addToHistory(username, content, false);
-        if (finalSearchContext) {
-            const searchSummary = finalSearchContext.map(s =>
-                `[Search: "${s.query}"]\n${s.results}`
-            ).join('\n\n');
-            addToHistory('Bot Sportello', `${searchSummary}\n\n${finalResponse}`, true);
-        } else {
-            addToHistory('Bot Sportello', finalResponse, true);
-        }
-
         // Send response directly (no commit prompts in mentions)
         if (finalResponse.length > 2000) {
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -3278,6 +3264,11 @@ async function handleMentionAsync(message) {
             await safeEditReply(thinkingMsg, `${truncated}...\n\n*[Full response saved to \`${fileName}\`]*`);
         } else {
             await safeEditReply(thinkingMsg, finalResponse);
+        }
+
+        // Invalidate cache to ensure next message gets fresh context
+        if (contextManager) {
+            contextManager.invalidateCache(message.channel.id);
         }
 
     } catch (error) {
@@ -3325,8 +3316,14 @@ async function handleMentionAsync(message) {
                 console.error('❌ All error reply attempts failed:', finalError.message);
             }
         }
+
+        // Invalidate cache after sending an error reply too
+        if (contextManager) {
+            contextManager.invalidateCache(message.channel.id);
+        }
     }
 }
+
 
 async function handleCommit(interaction) {
     try {
