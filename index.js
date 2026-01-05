@@ -1810,13 +1810,17 @@ async function executeReadOnlyTool(functionName, args, parsePathArg, fileReadCac
         });
     } else if (functionName === 'read_file') {
         // Check cache first to avoid redundant disk reads
-        const normalizedPath = args.path.replace(/^\.\//, '');
+        const pathArg = parsePathArg(args.path);
+        if (!pathArg || typeof pathArg !== 'string') {
+            return `Error: read_file requires a valid path string, got: ${typeof pathArg}`;
+        }
+        const normalizedPath = pathArg.replace(/^\.\//, '');
         if (fileReadCache.has(normalizedPath)) {
             const cached = fileReadCache.get(normalizedPath);
             logEvent('LLM', `Cache hit for ${normalizedPath} (saved ${cached.length} chars read)`);
             return cached;
         } else {
-            const result = await readFileService(args.path, {
+            const result = await readFileService(pathArg, {
                 onFileChange: (action, path, content, oldContent) =>
                     logFileChange(action, path, content, oldContent, discordContext.channelId)
             });
