@@ -18,7 +18,7 @@ const { generateRoutingPlan, buildRoutingGuidance } = require('./services/llmRou
 const { listFiles: listFilesService, fileExists: fileExistsService, readFile: readFileService, writeFile: writeFileService, editFile: editFileService, deleteFile: deleteFileService, moveFile: moveFileService, searchFiles: searchFilesService } = require('./services/filesystem');
 const { pushFileViaAPI } = require('./services/gitHelper');
 const { deepResearch, formatForDiscord: formatDeepResearchForDiscord, generateReportHTML, DEEP_RESEARCH_MODEL } = require('./services/deepResearch');
-const { generateImage, saveToGallery } = require('./services/vision/imageGenerator');
+const { generateImage, saveToGallery, getStyleContext, updateStyleCache, clearStyleCache } = require('./services/vision/imageGenerator');
 
 // Modular imports (Phase 1 extraction)
 const { getBotResponse, botResponses } = require('./personality/botResponses');
@@ -2514,7 +2514,17 @@ const commands = [
                     { name: 'Portrait (3:4)', value: '3:4' },
                     { name: 'Landscape (4:3)', value: '4:3' },
                     { name: 'Wide (16:9)', value: '16:9' }
-                )),
+                ))
+        .addBooleanOption(option =>
+            option.setName('continue')
+                .setDescription('Continue style from previous images (comic mode)')
+                .setRequired(false))
+        .addIntegerOption(option =>
+            option.setName('history')
+                .setDescription('Number of previous images to remember for style (1-5)')
+                .setRequired(false)
+                .setMinValue(1)
+                .setMaxValue(5)),
 
     new SlashCommandBuilder()
         .setName('logs')
@@ -3935,21 +3945,35 @@ async function handleDeepResearch(interaction) {
 async function handleImage(interaction) {
     const prompt = interaction.options.getString('prompt');
     const aspect = interaction.options.getString('aspect') || '1:1';
+    const continueStyle = interaction.options.getBoolean('continue') || false;
+    const historyDepth = interaction.options.getInteger('history') || 3;
     const author = interaction.user.tag;
+    const userId = interaction.user.id;
 
     try {
-        await safeEditReply(interaction, `generating image: "${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}"...`);
+        // Check for style context if continuing
+        const styleContext = continueStyle ? getStyleContext(userId, historyDepth) : null;
+        const panelInfo = styleContext ? ` [Panel ${styleContext.imageCount + 1}]` : '';
 
-        const result = await generateImage(prompt, { aspectRatio: aspect });
+        await safeEditReply(interaction, `generating image: "${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}"...${panelInfo}`);
+
+        const result = await generateImage(prompt, {
+            aspectRatio: aspect,
+            styleContext,
+            continueStyle
+        });
 
         if (!result.success) {
             await interaction.editReply(`${getBotResponse('errors')} ${result.error}`);
             return;
         }
 
+        // Update style cache for future continuations (always update if successful)
+        updateStyleCache(userId, prompt, aspect, 5);
+
         // Save to gallery and push to GitHub
         await interaction.editReply('saving to gallery...');
-        const { filename, galleryEntry } = await saveToGallery(result.imageBase64, prompt, {
+        const { filename } = await saveToGallery(result.imageBase64, prompt, {
             aspectRatio: aspect,
             author
         });
@@ -3961,17 +3985,22 @@ async function handleImage(interaction) {
             { name: filename }
         );
 
+        // Build footer with series info if in continuation mode
+        const cacheStatus = getStyleContext(userId, historyDepth);
+        const seriesInfo = cacheStatus ? ` | Series: ${cacheStatus.imageCount} images` : '';
+        const footerText = `Added to gallery | ${aspect}${seriesInfo}`;
+
         const embed = new EmbedBuilder()
-            .setTitle('Generated Image')
+            .setTitle(styleContext ? `Generated Image (Panel ${styleContext.imageCount + 1})` : 'Generated Image')
             .setDescription(prompt.substring(0, 200))
             .setImage(`attachment://${filename}`)
             .setColor(0xff0000)
-            .setFooter({ text: `Added to gallery | ${aspect}` })
+            .setFooter({ text: footerText })
             .setURL(`https://bot.inference-arcade.com/src/gallery/${filename}`);
 
         await interaction.editReply({ content: null, embeds: [embed], files: [attachment] });
 
-        console.log(`[IMAGE] Generated: ${filename} for ${author}`);
+        console.log(`[IMAGE] Generated: ${filename} for ${author}${styleContext ? ` [Panel ${styleContext.imageCount + 1}]` : ''}`);
 
     } catch (error) {
         console.error('[IMAGE] Command error:', error);
