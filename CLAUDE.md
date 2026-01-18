@@ -360,6 +360,21 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - `web_search(query)` - Search internet for current information (via Perplexity Sonar)
 - Automatically triggered for questions about "latest", "recent", "current"
 
+**Deep Research** (`/deep-research` command - RECENT ADDITION, UNTESTED):
+- Comprehensive research with citations via Perplexity Sonar Deep Research (1-3 minute runtime)
+- **New parameters** (all optional):
+  - `format` - Output format: `review` (comprehensive analysis, default), `taxonomy` (hierarchical bullets with dates), `cover-letter` (300-500 word job application letter)
+  - `context_url` - URL to scrape for context (e.g., job posting, reference document). System scrapes HTML using cheerio and includes extracted text in research prompt. **Fails gracefully** if URL unreachable
+  - `depth` - Research thoroughness: `focused` (3-5 sources), `standard` (8-12 sources, default), `comprehensive` (15+ sources)
+  - `focus_areas` - Comma-separated topics to emphasize in research
+  - `date_range` - Source filter (e.g., "2020-present", "2015-2020"). Guides Perplexity on temporal focus
+  - `citation_style` - Format citations: `chicago` (default), `apa`, `numbered`
+- **Services**:
+  - New: `services/webScraper.js` - HTML parsing with cheerio, error handling, text extraction. Exports `scrapeURL(url, options)`
+  - Enhanced: `services/deepResearch.js` - Added `buildResearchPrompt()`, `generateFormattedReportHTML()`, format-specific HTML generators
+- **Tool handler** (lines 1843-1868 in index.js): Executes deep_research tool with all new parameters
+- **Tool definition** (toolCatalog.js line 225): Updated schema with all parameters documented
+
 **Image Generation** (`/image` command):
 - Uses Nano Banana Pro (Gemini 3 Pro Image Preview) via OpenRouter
 - Aspect ratios: 1:1 (square), 3:4 (portrait), 4:3 (landscape), 16:9 (wide)
