@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Literature review of reddit research</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            line-height: 1.6;
+            padding: 40px 20px 60px;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        a { color: #00ffff; text-decoration: none; }
+        a:hover { color: #ff0000; text-decoration: underline; }
+        .home-link { display: inline-block; margin-bottom: 30px; font-size: 13px; }
+        .home-link::before { content: '← '; }
+        header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        header h1 { color: #ff0000; font-size: 20px; font-weight: normal; margin-bottom: 8px; }
+        header .meta { font-size: 12px; color: #555; }
+        article { color: #7ec8e3; }
+        article h1 { color: #00ffff; font-size: 17px; font-weight: normal; margin: 35px 0 15px; }
+        article h2 { color: #ff0000; font-size: 15px; font-weight: normal; margin: 30px 0 12px; }
+        article h3 { color: #7ec8e3; font-size: 14px; font-weight: normal; margin: 20px 0 10px; }
+        article p { margin-bottom: 16px; }
+        article ul, article ol { margin-left: 20px; margin-bottom: 16px; }
+        article li { margin-bottom: 8px; }
+        article strong { color: #00ffff; font-weight: normal; }
+        article em { font-style: normal; color: #888; }
+
+        /* Citation styling */
+        .citation { font-size: 0.75em; vertical-align: super; line-height: 0; }
+        .citation a { color: #ff0000; padding: 0 1px; }
+        .citation a:hover { color: #ff9999; text-decoration: underline; }
+
+        /* Citations/References section */
+        .citations {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #333;
+        }
+        .citations h2 {
+            color: #ff0000;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .citations ol {
+            list-style: none;
+            padding: 0;
+        }
+        .citations li {
+            font-size: 12px;
+            margin: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            line-height: 1.5;
+            word-break: break-word;
+            color: #666;
+        }
+        .citations .back-ref {
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #ff0000;
+            text-decoration: none;
+            font-size: 11px;
+        }
+        .citations .back-ref:hover { color: #ff9999; }
+        .citations .cite-num {
+            color: #666;
+            margin-right: 8px;
+        }
+        .citations li a:not(.back-ref) {
+            color: #00ffff;
+            word-break: break-all;
+        }
+        .citations li a:not(.back-ref):hover { color: #ff0000; }
+
+        footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 11px; color: #444; }
+        @media (max-width: 600px) {
+            body { padding: 25px 15px 40px; }
+            header h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../../index.html"></a>
+    <header>
+        <h1>Literature review of reddit research</h1>
+        <div class="meta">researched Jan 18, 2026 · dug up by sportello</div>
+    </header>
+    <article>
+        <h1>A Comprehensive Literature Review of Reddit Research: Community, Education, Discourse, and Literacy</h1>
+<p>This review synthesizes current scholarship examining Reddit as both a research subject and research platform, with particular emphasis on how communities form and persist on the platform, how educational processes unfold within subreddit spaces, how discourse patterns shape interaction, and how literacy practices including information evaluation develop through Reddit engagement. Across these domains, existing research reveals Reddit to be a complex ecosystem characterized by distinctive affordances that enable both supportive community formation and polarization, that facilitate peer learning alongside misinformation spread, and that exhibits emergent norms distinct from other social media platforms. This review integrates findings from 40+ peer-reviewed studies and technical documentation to provide scholars with a comprehensive overview of the current state of Reddit research while identifying significant gaps requiring future investigation.</p>
+<h2>Reddit as a Multifaceted Research Platform: Methodologies, Infrastructure, and Ethical Considerations</h2>
+<p>The scholarly study of Reddit has grown substantially since the platform's founding in 2005, with research accelerating significantly after 2015<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>. Reddit has emerged as a particularly valuable data source for academic investigation due to several distinctive characteristics that differentiate it from competing social media platforms. The platform's architecture includes over one million communities organized as subreddits, each functioning as a semi-autonomous forum with its own moderation structure, community norms, and thematic focus<sup class="citation"><a href="#ref-11" id="cite-11">11</a>,<a href="#ref-20" id="cite-20">20</a></sup>. This architectural feature has proven invaluable for researchers seeking to examine topic-specific discourse, as it enables rapid identification and collection of relevant conversations without the filtering challenges that plague studies of less-organized platforms. Additionally, Reddit's historical record preservation means that researchers can access conversations spanning years or even the platform's entire history, enabling longitudinal analysis impossible on more ephemeral platforms where content rapidly disappears from public view<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>.</p>
+<p>The technical infrastructure supporting Reddit research has evolved considerably. Most contemporary academic investigations leverage Reddit's application programming interface (API) or third-party tools to extract data at scale<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-10" id="cite-10">10</a>,<a href="#ref-13" id="cite-13">13</a></sup>. The Reddit API provides researchers with structured access to posts, comments, user metadata, and community information, though rate limits and authentication requirements necessitate careful research design<sup class="citation"><a href="#ref-10" id="cite-10">10</a></sup>. Beyond the official API, researchers have employed web scraping techniques using tools that capture Reddit's data through systematic browsing, and the now-archived Pushshift database historically provided pre-compiled Reddit datasets spanning millions of posts and comments<sup class="citation"><a href="#ref-22" id="cite-22">22</a>,<a href="#ref-35" id="cite-35">35</a></sup>. Python has emerged as the dominant programming language for Reddit data collection and analysis, though researchers also employ R, specialized natural language processing libraries, and machine learning frameworks<sup class="citation"><a href="#ref-35" id="cite-35">35</a></sup>. The technical accessibility of Reddit data has democratized its study, allowing researchers without substantial computational resources to conduct meaningful investigations.</p>
+<p>However, this accessibility has generated significant ethical concerns that scholars increasingly recognize and address. A 2024 systematic review examining ethical considerations in Reddit research identified critical tensions between Reddit's status as publicly available data and research ethics principles requiring informed consent<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup>. Reddit users typically do not expect their posts and comments to be harvested for academic research purposes, yet the platform's terms of service permit data collection and reuse<sup class="citation"><a href="#ref-11" id="cite-11">11</a></sup>. This creates what researchers term a "blurred lines of consent" problem, where technically legal data collection may violate the spirit of ethical research practice<sup class="citation"><a href="#ref-34" id="cite-34">34</a></sup>. Scholars have proposed various mitigation strategies including anonymization of personally identifying information, removal of usernames from archived data, careful handling of sensitive disclosures, and transparent communication of research purposes<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>. Additionally, researchers increasingly recognize their responsibility to engage with Reddit communities before, during, and after data collection, seeking community consent and considering how their work might impact the communities they study<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>.</p>
+<p>The methodological approaches employed in Reddit research span the full spectrum from large-scale quantitative computational analysis to small-scale qualitative close reading. A 2023 scoping review examining Reddit substance use research found that 52 of 60 studies (87%) employed quantitative approaches focused on identifying patterns and tendencies in discussions, while only a minority engaged deeply qualitative methods<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>. Machine learning algorithms and natural language processing techniques have become standard tools for automated content analysis, enabling researchers to analyze millions of comments and identify linguistic patterns, sentiment trajectories, and semantic relationships at unprecedented scale<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-5" id="cite-5">5</a>,<a href="#ref-35" id="cite-35">35</a></sup>. Simultaneously, qualitative researchers continue to employ critical discourse analysis, ethnographic observation, and hermeneutic interpretation to understand the nuanced meaning-making occurring within specific communities<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-5" id="cite-5">5</a>,<a href="#ref-15" id="cite-15">15</a>,<a href="#ref-19" id="cite-19">19</a></sup>. This methodological diversity reflects Reddit's utility for addressing varied research questions, from epidemiological tracking of substance use patterns to intimate examination of how individuals construct identity within particular communities.</p>
+<h2>Community Formation, Maintenance, and Social Dynamics on Reddit</h2>
+<p>Reddit's structure as a platform composed of user-created and user-moderated communities has generated substantial scholarly interest in understanding how communities form, what norms they establish, how members construct shared identity, and how communities persist or dissolve over time. Research across multiple contexts reveals that Reddit communities often develop distinctive cultures that diverge substantially from platform-wide norms, suggesting that the subreddit as a unit of analysis captures meaningful social structures worthy of scholarly attention. The affordances of the subreddit model—including the ability for users to create communities around highly specific interests, the visibility of community rules and moderator decisions, and the permanence of community history—shape how communities develop and function in ways fundamentally different from other social media platforms<sup class="citation"><a href="#ref-27" id="cite-27">27</a></sup>.</p>
+<p>The process of community norm formation on Reddit operates through both explicit mechanisms and emergent implicit patterns. Communities establish explicit rules displayed prominently on their homepage, typically addressing issues such as civility requirements, acceptable content types, relevance to community purpose, and prohibitions against spam or self-promotion<sup class="citation"><a href="#ref-11" id="cite-11">11</a>,<a href="#ref-20" id="cite-20">20</a>,<a href="#ref-23" id="cite-23">23</a></sup>. Beyond these written rules exist what scholars term implicit norms—shared expectations about appropriate behavior that users internalize through observation and participation rather than explicit instruction. Research examining Reddit's affordances identified the upvote and downvote system as particularly powerful in enforcing norms, as community members use these voting mechanisms to signal approval or disapproval of contributions<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-31" id="cite-31">31</a></sup>. Posts and comments that violate implicit community norms receive downvotes, which push them lower in the thread where fewer users will encounter them, creating negative feedback that discourages norm violations. Conversely, contributions aligned with community values receive upvotes and rise to prominence, reinforcing expected behavioral patterns<sup class="citation"><a href="#ref-31" id="cite-31">31</a></sup>.</p>
+<p>Moderators play a crucial role as active architects of community culture, moving beyond passive enforcement of rules to actively shape discourse through decisions about which content to remove, which to feature, and how to guide community direction. Research on moderator decision-making has revealed that moderators enforce norms selectively and sometimes inconsistently, introducing systematic biases that reflect their own political orientations, values, and priorities<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>. A 2024 study analyzing political bias in subreddit moderation examined over 600 million Reddit comments and found that moderators were significantly more likely to remove comments expressing political opinions opposite to their own political leanings, effectively creating echo chambers through biased content curation<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>. This finding suggests that even in ostensibly democratic, community-governed spaces, power imbalances and human bias shape what voices are heard and what perspectives receive visibility.</p>
+<p>Reddit communities addressing sensitive or stigmatized topics demonstrate particular distinctiveness in their social dynamics. Mental health communities on Reddit attract members who might hesitate to disclose struggles in face-to-face contexts, and research has documented that these communities function as meaningful sources of support and validation<sup class="citation"><a href="#ref-12" id="cite-12">12</a>,<a href="#ref-21" id="cite-21">21</a>,<a href="#ref-24" id="cite-24">24</a></sup>. The affordance of anonymity through temporary "throwaway" accounts proves particularly important in mental health contexts—research found that throwaway accounts appear six times more frequently in mental health subreddits compared to other communities<sup class="citation"><a href="#ref-12" id="cite-12">12</a>,<a href="#ref-39" id="cite-39">39</a></sup>. Members using throwaway accounts share more disinhibiting content, express greater vulnerability, and report higher levels of cognitive bias and self-attentional focus compared to identified account users, suggesting that the ability to dissociate posts from one's persistent online identity enables deeper disclosure about stigmatized experiences<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup>. Gaming communities on Reddit likewise demonstrate strong social bonds despite platform incentives toward novelty and new content, with longitudinal research examining three game franchises finding that established community ties often prove stronger than the commercial lure of moving to new game subreddits when new releases occur<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>.</p>
+<p>The relationship between Reddit's affordances of anonymity and community dynamics merits particular scholarly attention, as anonymity simultaneously enables both supportive disinhibition and hostile toxicity. Research characterizes Reddit's anonymity not as complete but rather as semi-anonymous or pseudonymous, since users create persistent usernames that accumulate posting history, reputation scores, and identifiable information over time<sup class="citation"><a href="#ref-36" id="cite-36">36</a>,<a href="#ref-39" id="cite-39">39</a></sup>. This "diaphanous veil" of anonymity creates a psychological boundary between online and offline identity without providing true anonymization<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>. Studies examining how anonymity influences participation found that women are less likely to comment and post but equally likely to vote and read as men, suggesting that the active participation mechanisms requiring more identity exposure create hesitation among women concerned about visibility and potential harassment<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>. Older users more frequently engage in commenting and posting than younger users, a demographic pattern that differs from many platforms and may reflect generational differences in comfort with semi-anonymous online participation<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>.</p>
+<p>Communities on Reddit frequently experience what scholars term "polarization" and the formation of "echo chambers," particularly around politically divisive topics. Recent research employing network validation techniques to characterize Reddit's political discourse during the 2016 US presidential election identified clear clustering into ideologically distinct communities of subreddits, with users concentrated in Democratic, Conservative, and more radical communities that showed minimal cross-group engagement<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>. Election periods intensified this polarization, with cross-group engagement increasing but accompanied by reduced linguistic diversity within groups, suggesting that politically motivated mobilization may reduce the complexity of discourse even as interaction increases<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>. This pattern challenges the common assumption that Reddit is inherently more resistant to polarization and echo chamber effects than platforms like Twitter or Facebook, suggesting instead that platform structure alone does not prevent polarization without deliberate design choices and moderation policies<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>.</p>
+<h2>Educational Processes, Knowledge Sharing, and Pedagogical Implications in Reddit Spaces</h2>
+<p>The educational dimensions of Reddit have received increasing scholarly attention, with research examining how learning occurs within particular communities, how Reddit functions as a platform for knowledge exchange, and what pedagogical implications emerge from studying how people teach and learn through Reddit participation. Unlike formal educational platforms designed explicitly for instruction, Reddit communities often facilitate learning through organic peer-to-peer knowledge sharing where individuals with expertise encounter novices seeking information, creating spontaneous educational interactions. The platform's structure through threaded discussions enables sustained engagement with complex topics, with users able to provide lengthy explanations, cite evidence, and respond to follow-up questions in ways that facilitate deeper understanding than typical social media comments permit<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup>.</p>
+<p>Specific subreddits have emerged as significant sites of educational activity, with communities organizing around shared learning goals. Research on r/ChangemyView, a subreddit where users post opinions and invite community members to convince them otherwise, reveals sophisticated rhetorical practices as users construct persuasive arguments and debate substantive disagreements<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup>. Analysis of delta awards given to comments that successfully changed original posters' views found that such comments rely less on purely rational argument and more on combinations of emotional and logical appeals, and that citing evidence increases the likelihood of persuasion, particularly in sociomoral contexts<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup>. This research suggests that Reddit communities have developed emergent epistemic norms where evidence matters for persuasion but emotional resonance proves equally important. Educational research on r/Mountaineering documented how expert and novice participants co-construct knowledge about mountaineering practices, with experienced climbers sharing cautionary tales, technical knowledge, and safety practices that enable safer participation by newer community members<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup>.</p>
+<p>The University of Reddit concept exemplifies how the platform has inspired explicitly educational initiatives, with decentralized peer-driven learning communities organizing within Reddit's structure. Unlike traditional universities requiring formal accreditation, the University of Reddit facilitates learning through user-created courses taught by individuals with domain expertise, providing flexible, often free or low-cost educational opportunities in domains from programming to language learning to music<sup class="citation"><a href="#ref-16" id="cite-16">16</a></sup>. While the University of Reddit lacks formal credentials and institutional structure, it democratizes access to learning resources and embodies a vision of education as collaborative knowledge construction rather than hierarchical credential distribution<sup class="citation"><a href="#ref-16" id="cite-16">16</a></sup>. This model has inspired related platforms and demonstrates Reddit's potential as infrastructure for educational innovation beyond its original social news aggregation purpose.</p>
+<p>Research on how Reddit functions for health information seeking reveals both pedagogical promise and significant limitations. Studies of Reddit health communities found that individuals seeking health information often receive responses from community members without formal medical credentials, and that non-evidence-based or potentially harmful advice circulates alongside accurate information<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-21" id="cite-21">21</a>,<a href="#ref-30" id="cite-30">30</a></sup>. While Reddit's voting system provides one mechanism for surfacing more credible contributions through upvotes, community members frequently lack markers of expertise enabling clear distinction between authoritative and casual advice<sup class="citation"><a href="#ref-30" id="cite-30">30</a></sup>. Investigations into Reddit dermatology forums identified significant health misinformation regarding sun exposure and tanning, with some users promoting tanning beds as treatments for acne despite medical consensus regarding melanoma risks<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>. Attempts to deploy artificial intelligence bots to detect and correct health misinformation in Reddit dermatology forums showed technical feasibility but raised questions about whether corrective information actually persuades users, as research on cognitive consistency suggests people often disregard facts contradicting existing beliefs<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>.</p>
+<p>The effectiveness of Reddit for facilitating vaccine hesitancy interventions during the COVID-19 pandemic offers a contrasting example of more successful educational engagement. The r/HermanCainAward subreddit, which documented the deaths of vaccine-hesitant individuals, inadvertently created educational impact through its confrontation with mortality and visible human suffering<sup class="citation"><a href="#ref-7" id="cite-7">7</a></sup>. Despite critics describing the subreddit as anti-persuasive and punitive rather than educational, qualitative evidence emerged of vaccine-hesitant individuals becoming immunized after exposure to the subreddit content, evidenced by posts tagged #IPA (Immunized to Protect against Award) where formerly vaccine hesitant users photographed their vaccination cards<sup class="citation"><a href="#ref-7" id="cite-7">7</a></sup>. This phenomenon suggests that emotional impact and social witnessing may prove more educationally effective than abstract facts or expert recommendations, supporting theories of behavioral change emphasizing emotional and social dimensions alongside rational persuasion<sup class="citation"><a href="#ref-7" id="cite-7">7</a></sup>.</p>
+<p>Digital literacy practices emerge as critical educational concern when individuals engage with Reddit for health information and decision-making. Research comparing perceived prevalence of toxic content with actual prevalence found that Reddit users dramatically overestimate how many accounts post severely toxic comments, believing approximately 41% contribute toxic content when actual data shows only 3.1% of accounts post severe toxicity<sup class="citation"><a href="#ref-40" id="cite-40">40</a></sup>. This massive perceptual gap suggests that highly visible toxic content creates distorted impressions of community norms, with implications for digital literacy and ability to assess information source credibility. Understanding Reddit's actual composition and recognizing that visible content does not represent typical participation patterns constitute important digital literacy competencies for users attempting to evaluate information encountered on the platform.</p>
+<h2>Discourse Patterns, Communication Norms, and Linguistic Practices on Reddit</h2>
+<p>The distinctive communication patterns characterizing Reddit discourse have received substantial scholarly attention from discourse analysts, linguists, and communication scholars examining how language functions within particular subreddit contexts. Reddit's structure as platform for written, threaded discussion rather than synchronous chat creates discursive conditions quite different from real-time communication, enabling more considered responses, deeper arguments, and sustained engagement with complex topics<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup>. Simultaneously, Reddit's conversational affordances including quoting, nesting of replies, and user ability to edit posts all shape how meaning-making unfolds within communities.</p>
+<p>Critical discourse analysis of Reddit threads reveals how discourse functions to establish and reinforce particular power relations, with implications for understanding how online platforms reproduce or resist social inequalities. Research examining r/Europe, a subreddit with Western orientation, identified discursive practices that reinforce Western dominance by establishing Western values as normal and desirable while simultaneously discouraging non-Western perspectives<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-19" id="cite-19">19</a></sup>. The most common discourse type identified was "persuasion," comprising 34% of analyzed content, with the most prevalent discursive practice being "Information-Legitimacy," where posts provided information while simultaneously establishing authority or authoritative discourse<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-19" id="cite-19">19</a></sup>. This pattern suggests that Reddit discourse does not simply exchange information neutrally but rather constitutes and reinforces existing power hierarchies through linguistic choices about what counts as credible, legitimate, and normal. Similar analysis of Reddit discourse on sexual education found compounded erasure of intersectional identities, with marginalized voices underrepresented in discussions about sex education despite the lived experiences of marginalized individuals offering crucial perspectives<sup class="citation"><a href="#ref-15" id="cite-15">15</a></sup>.</p>
+<p>Research mapping the communicative space of Reddit through examination of specific subreddit communication practices identified significant variation in linguistic registers, argument forms, and interactional patterns across different communities<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup>. The vignette studies of r/ChangemyView, r/Mountaineering, and multiple other subreddits revealed that communities develop distinctive linguistic signatures reflecting their particular purposes and memberships. Register analysis comparing posts that successfully changed minds versus those that did not found no significant linguistic differences in formality or style, but revealed that topics addressed differed between successful and unsuccessful change attempts<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup>. This finding suggests that semantic content and social context may matter more than linguistic form for persuasion within Reddit discourse, with implications for understanding how meaning functions in online communities.</p>
+<p>The role of evidence and citations in Reddit discourse varies significantly across communities with different epistemic cultures. Research examining COVID-19 discourse across four subreddits (r/Coronavirus, r/COVID, r/Politics, r/AskTrumpSupporters) found that communities established distinct norms regarding appropriate evidence use and dialogue structures<sup class="citation"><a href="#ref-51" id="cite-51">51</a></sup>. The r/AskTrumpSupporters subreddit uniquely established discourse norms for turn-taking between politically opposed users, structuring dialogue around authentic questions aimed at understanding alternative perspectives<sup class="citation"><a href="#ref-51" id="cite-51">51</a></sup>. In contrast, r/Coronavirus established meso-level norms reinforcing platform-wide injunctions against incivility and off-topic discussion while also developing community-specific expectations about evidence quality and citation practices<sup class="citation"><a href="#ref-51" id="cite-51">51</a></sup>. These findings suggest that communities actively construct epistemically distinct spaces with different standards for what counts as knowledge, how claims should be justified, and what forms of discourse are acceptable.</p>
+<p>Toxicity patterns in Reddit discourse reveal complex dynamics where toxic comments appear to increase the likelihood of subsequent toxic comments, suggesting that immediate conversational context shapes discourse tone more than original post content<sup class="citation"><a href="#ref-37" id="cite-37">37</a></sup>. Analysis of tree-structured conversations from eight Reddit communities allowing profanity, examining over 1 million responses, found moderate correlation (average r = 0.631) between a comment's toxicity and the toxicity it attracted in subsequent responses<sup class="citation"><a href="#ref-37" id="cite-37">37</a></sup>. Importantly, the immediate predecessor comment had greater influence on response toxicity than earlier comments in the conversation, indicating that local context more than broader conversational frame determines tone escalation<sup class="citation"><a href="#ref-37" id="cite-37">37</a></sup>. This pattern held even in subreddits where profanity is consensually accepted, suggesting that toxicity norms operate somewhat independently from consensus about language acceptability. These findings have implications for understanding how negative interactions can spiral and how interventions targeting early toxic comments might prevent toxicity escalation.</p>
+<p>Corpus-assisted discourse analysis combining computational text analysis with qualitative interpretation has emerged as productive methodology for understanding Reddit discourse at scale. Research employing corpus methods to examine how individuals with bipolar disorder discuss hypersexuality, a stigmatized symptom, identified distinctive patterns in how community members frame their experiences, express shame, and seek support<sup class="citation"><a href="#ref-22" id="cite-22">22</a></sup>. The combination of corpus linguistics providing quantitative overview with sustained close reading enabled researchers to identify both frequent patterns and anomalous or particularly meaningful uses of language, generating insights inaccessible through either method alone<sup class="citation"><a href="#ref-22" id="cite-22">22</a></sup>. This methodological approach acknowledges that online discourse cannot be adequately understood through either purely computational analysis or close reading of individual texts, but requires integration of both approaches<sup class="citation"><a href="#ref-22" id="cite-22">22</a></sup>.</p>
+<h2>Information Literacy, Misinformation, and Credibility Evaluation in Reddit Contexts</h2>
+<p>The prevalence of misinformation on Reddit and users' ability to evaluate source credibility have emerged as significant scholarly concerns, particularly in health and political contexts. Research on information credibility in Reddit health communities found that users' perceived credibility of Reddit information and frequency of Reddit use were unrelated to whether users actually acted on health information encountered there, but that users specifically seeking health information were more likely to enact information in their lives<sup class="citation"><a href="#ref-30" id="cite-30">30</a></sup>. This pattern suggests that context of seeking and intentionality matter more than perceived source credibility for behavioral impact, with implications for understanding how Reddit users navigate health information online. Additionally, these findings indicate that high engagement with Reddit does not necessarily correlate with perceived credibility or behavioral change, suggesting that platform popularity alone does not establish information trustworthiness in users' evaluations.</p>
+<p>Source credibility assessment has become increasingly critical as Reddit's influence on AI systems' information sourcing has grown dramatically. Recent research revealed that ChatGPT cites Reddit 176% more frequently than expert financial websites when answering finance questions, despite finance being a regulated "Your Money or Your Life" category where expert authority should theoretically matter most<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup>. This finding indicates that large language models treat Reddit as authoritative peer-generated knowledge despite lack of formal expertise or credentialing requirements for Reddit contributors<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup>. In domains including business services (141% citation frequency), technology (122%), and consumer electronics (127%), ChatGPT similarly privileges Reddit over official brand websites and expert sources<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup>. This shift in AI information sourcing has profound implications for information literacy, as users increasingly encounter Reddit-sourced information through AI systems without realizing its community origin or the absence of formal expertise behind specific claims<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup>.</p>
+<p>Researchers have developed computational models to assess news source credibility on Reddit specifically. The CREDiBERT model, a transformer-based system fine-tuned on Reddit political discourse, achieved near 9% improvement in accuracy and F1 score compared to baseline models in identifying non-credible sources<sup class="citation"><a href="#ref-17" id="cite-17">17</a></sup>. This model represents emerging efforts to automate credibility assessment, though questions remain about whether computational approaches can adequately capture the contextual, social, and epistemic dimensions that human credibility evaluation involves. Examination of specific Reddit communities' susceptibility to misinformation through metrics of exposure scores and reaction scores revealed that subreddits vary significantly in their tendency to amplify low-credibility sources, with some communities showing greater resistance through higher engagement with credible sources<sup class="citation"><a href="#ref-17" id="cite-17">17</a></sup>.</p>
+<p>The r/wallstreetbets subreddit case study exemplifies how source credibility operates distinctively within Reddit communities and how community-constructed credibility can have real-world consequences. During the 2021 GameStop stock movement, r/wallstreetbets community members who lacked professional financial credentials but possessed high reputational status within the community successfully convinced millions of followers to engage in high-risk stock trading, resulting in substantial financial losses for many participants<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup>. Research on this case found that initial credibility was established through the subreddit's popularity and growth, with market maven influencers within the community diffusing investment recommendations that community members accepted despite the absence of formal financial expertise<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup>. The credibility established through community status and visibility, rather than professional qualifications, led users to make financial decisions with devastating consequences, illustrating how Reddit's credibility mechanisms can diverge significantly from credibility indicators that would matter in regulated contexts<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup>.</p>
+<p>Misinformation detection on Reddit has become focus of computational research efforts employing natural language processing, machine learning, and artificial intelligence approaches. A review of natural language processing methods applied to Reddit opioid-related research found that diverse techniques including topic modeling, sentiment analysis, word embedding, and neural networks have been employed to identify patterns in how people discuss opioid use and detect shifts in language associations with overdose<sup class="citation"><a href="#ref-35" id="cite-35">35</a></sup>. While these computational approaches offer utility for surveillance and understanding drug use patterns, researchers acknowledge limitations of automated approaches, noting that current methods are best considered supplementary to established epidemiological methods rather than replacement for human expertise and judgment<sup class="citation"><a href="#ref-35" id="cite-35">35</a></sup>. The reliance on NLP to detect misinformation reflects growing recognition that human fact-checking alone cannot scale to address misinformation volume, though concerns persist about false positives, missed context, and potential for automated systems to inadvertently amplify existing biases.</p>
+<p>Attempts to combat health misinformation through benevolent bots represent emerging intervention strategy, though concerns about effectiveness temper optimism. Artificially intelligent bots deployed to detect health misinformation regarding tanning and essential oils in Reddit dermatology forums demonstrated high accuracy in test environments, suggesting technical feasibility of automated detection and correction<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>. However, researchers emphasized that accurate information provision does not guarantee user receptivity, as psychological research on cognitive consistency demonstrates that individuals frequently reject information contradicting existing beliefs<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>. This gap between technical ability to detect and correct misinformation and actual effectiveness at changing user beliefs represents continuing challenge for misinformation interventions, suggesting that technical solutions alone prove insufficient without addressing the psychological and social dimensions of belief formation and persistence.</p>
+<h2>Identity, Anonymity, and the Social Construction of Self on Reddit</h2>
+<p>Reddit's architectural affordance of pseudonymous participation has generated distinctive patterns of identity construction and management compared to platforms requiring real names or face photographs. Users create usernames that serve as primary identifier, potentially accumulating reputation through post karma and comment karma scores visible on user profiles and enabling other users to assess contribution quality based on historical posting patterns<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>. This system creates what researchers term a "semi-anonymous" environment where users neither must disclose real identities nor benefit from complete anonymity, instead existing in what some scholars describe as protected pseudonymity<sup class="citation"><a href="#ref-36" id="cite-36">36</a>,<a href="#ref-39" id="cite-39">39</a></sup>. The psychological and social implications of this identity architecture differ substantially from fully anonymous platforms like 4chan or named platforms like Facebook, enabling distinctive patterns of self-presentation and community participation.</p>
+<p>Research examining identity choices in mental health discourse on Reddit reveals how pseudonymity enables disclosure about stigmatized experiences while allowing users to maintain boundaries between their mental health-related participation and other online activities. Many Reddit users create temporary "throwaway" accounts specifically for mental health posts, with research finding such accounts six times more prevalent in mental health subreddits compared to other communities<sup class="citation"><a href="#ref-12" id="cite-12">12</a>,<a href="#ref-39" id="cite-39">39</a></sup>. Throwaways are new accounts often used only once, enabling maximum dissociation between mental health disclosure and persistent online identity. Analysis of throwaway versus identified account posts in mental health communities found substantial differences, with throwaway posts exhibiting greater negativity, cognitive bias, self-attentional focus, and vulnerability regarding self-harm<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup>. The ability to post about stigmatized experiences through temporary accounts appears to enable more candid disclosure, as individuals feel protected from having embarrassing or sensitive information permanently associated with their main online identity. This pattern highlights how platform affordances structure possibilities for identity management and influence what kinds of disclosure feel safe and possible within communities.</p>
+<p>Gender and identity intersections shape participation patterns on Reddit in ways revealing broader social dynamics. Research on Reddit participation found women less likely to engage in active posting and commenting despite being equally likely to vote on content and read posts as men<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>. This pattern suggests gender-based hesitation about more visible forms of participation, potentially reflecting concerns about harassment, visibility, or other factors that discourage women from active contribution in semi-anonymous spaces. Additionally, studies comparing communities by their dominant political orientations found significant demographic variation, with conservative subreddits attracting distinct demographic profiles compared to left-leaning communities<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>. The platform's subreddit structure enables formation of ideologically homogeneous communities where like-minded individuals can interact without exposure to significant disagreement, potentially reinforcing existing beliefs and limiting cross-group understanding<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>.</p>
+<h2>Platform Governance, Content Moderation, and Community Rule-Setting</h2>
+<p>Reddit's governance structure distributes moderation responsibility between platform administrators ("admins") and volunteer community moderators ("mods"), creating a multi-layered approach to content governance distinct from top-down moderation models. Platform-wide rules established by Reddit administrators apply universally across all communities, addressing egregious harms such as harassment, violence incitement, child safety, illegal activity, and platform manipulation<sup class="citation"><a href="#ref-11" id="cite-11">11</a>,<a href="#ref-20" id="cite-20">20</a>,<a href="#ref-23" id="cite-23">23</a></sup>. Beyond these universal rules, individual subreddits establish community-specific rules reflecting their particular purposes and cultures, enforced by volunteer moderators drawn from the community itself<sup class="citation"><a href="#ref-11" id="cite-11">11</a>,<a href="#ref-20" id="cite-20">20</a>,<a href="#ref-23" id="cite-23">23</a></sup>. This distributed governance model relies on community self-regulation as primary moderation mechanism, with platform-level intervention reserved for violation of universal rules or moderator failure to manage harmful content<sup class="citation"><a href="#ref-23" id="cite-23">23</a></sup>.</p>
+<p>Quarantine functions represent Reddit's attempt to restrict visibility and discourage participation in subreddits containing shocking or highly offensive content without banning content outright. Implemented at scale beginning in 2018, quarantined subreddits cannot generate revenue through ads, do not appear on Reddit's front page or recommendation feeds, and require users to actively opt-in through a warning page before accessing content<sup class="citation"><a href="#ref-29" id="cite-29">29</a></sup>. Research examining quarantine efficacy found that implementation achieved Reddit's stated goal of reducing engagement, with affected subreddits experiencing approximately 50% drop in activity following quarantine<sup class="citation"><a href="#ref-29" id="cite-29">29</a></sup>. However, the quarantine also generated unintended consequences, as affected communities sometimes responded by strengthening internal bonds, viewing quarantine as external attack and using it to reinforce community identity and values<sup class="citation"><a href="#ref-29" id="cite-29">29</a></sup>. This pattern highlights how governance interventions can paradoxically strengthen communities they aim to restrict, as externally imposed constraints on visibility may increase perceived marginalization and commitment among members.</p>
+<p>Political bias in moderator content removal decisions has emerged as significant concern in Reddit governance, with research documenting that subreddit moderators systematically remove comments expressing political viewpoints opposite to moderators' own leanings<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>. Analysis of 600 million comments from 1.2 million users across independent communities revealed that commenters with political opinions differing from moderators faced significantly higher likelihood of comment removal compared to commenters aligned with moderator views<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>. This politically motivated moderation creates echo chambers through curation of which voices receive visibility, with implications for deliberative democracy and common understanding essential to democratic function<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>. The findings suggest that even in ostensibly user-governed spaces, human judgment about appropriate content reflects moderator biases that concentrate power and narrow discourse, with difficult questions about whether intervention to reduce such biases would constitute overreach or necessary protection of deliberative norms.</p>
+<p>Platform rules explicitly prohibit harassment, bullying, threats of violence, and targeting of vulnerable populations, establishing baseline standards for respectful community participation<sup class="citation"><a href="#ref-11" id="cite-11">11</a>,<a href="#ref-20" id="cite-20">20</a>,<a href="#ref-23" id="cite-23">23</a></sup>. Community moderators enforce additional norms reflecting community values, such as civility requirements, topic relevance, content type preferences, and expectations about respectful disagreement<sup class="citation"><a href="#ref-43" id="cite-43">43</a>,<a href="#ref-46" id="cite-46">46</a></sup>. Research on how community norms shape attitude expression found that subreddits establishing norms emphasizing respectful and constructive debate develop cultures centered on knowledge-sharing and mutual respect, while communities permitting hostile interactions develop more contentious cultures<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. The causal direction of this relationship remains uncertain—whether norms shape culture or culture emerges from aggregate member attitudes and practices—but the correlation suggests that explicit norm establishment and consistent enforcement matter for community character development.</p>
+<h2>The Digital Commons Potential and Future Directions for Reddit Research</h2>
+<p>Reddit's potential to function as digital commons for knowledge exchange, community support, and democratic deliberation has attracted scholarly and practitioner interest, with recognition that the platform's decentralized community structure enables formation of spaces serving diverse purposes from niche hobby communities to crisis support to activist coordination. Research on climate activism on Reddit demonstrated how the platform facilitated the emergence of the Earth Strike movement, which began as a Reddit post, evolved into a subreddit, and subsequently organized into global protests in 2019<sup class="citation"><a href="#ref-26" id="cite-26">26</a></sup>. This trajectory illustrates Reddit's potential as infrastructure for collective action, with online community participation enabling organization of offline mobilization. Causal analysis of factors driving participation in climate activist communities revealed that social influence through online interactions proved the strongest driver of engagement, with immediate exposure to activist community discussion more impactful than abstract awareness of climate change or experience of extreme weather events<sup class="citation"><a href="#ref-26" id="cite-26">26</a></sup>. This finding suggests Reddit's value specifically as platform enabling social influence and identity-based community formation, distinguishing it from merely an information repository.</p>
+<p>Mental health support communities on Reddit demonstrate the platform's therapeutic potential for individuals seeking connection, validation, and practical support around stigmatized experiences. Research examining mental health subreddits including r/MentalHealthUK, r/socialanxiety, r/mentalhealthmemes, r/talktherapy, and r/offmychest documented how these communities provide safe spaces for discussion, peer support, and resource sharing that complement but do not replace professional mental health care<sup class="citation"><a href="#ref-21" id="cite-21">21</a>,<a href="#ref-24" id="cite-24">24</a></sup>. The anonymity and asynchronous communication affordances enable individuals uncomfortable with face-to-face help-seeking to access peer support and gradually build confidence for professional help engagement. However, researchers emphasize important limitations, particularly that Reddit should supplement rather than substitute for professional mental health treatment, and that communities of individuals with identical mental health conditions can inadvertently reinforce unhelpful patterns if not oriented toward recovery and mutual support<sup class="citation"><a href="#ref-21" id="cite-21">21</a>,<a href="#ref-24" id="cite-24">24</a></sup>.</p>
+<p>Significant research gaps remain despite growing scholarly attention to Reddit. While research has examined substance use, mental health, political discourse, gaming communities, and health information seeking, many subreddit communities and interaction patterns remain unstudied. The ethical implications of large-scale data collection from Reddit require additional investigation as platforms implement stricter API access policies and researchers grapple with consent and privacy questions. The gendered patterns of participation on Reddit warrant deeper investigation alongside intersectional analysis of how race, ethnicity, sexuality, disability, and other identity dimensions shape participation and community experience. The relationship between Reddit discourse and offline outcomes remains understudied, with most research focused on patterns internal to the platform rather than effects on user beliefs, behaviors, or social connections outside Reddit. Additionally, questions about Reddit's long-term impact on digital literacy, information evaluation skills, and epistemic standards merit longitudinal investigation as AI systems increasingly cite Reddit as authoritative source and younger generations encounter Reddit-sourced information through AI interfaces.</p>
+<h2>Conclusion: Synthes</h2>
+    </article>
+    
+    <section class="citations" id="citations">
+        <h2>Sources</h2>
+        <ol>
+            <li id="ref-1">
+        <a href="#cite-1" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">1.</span>
+        "pubmed.ncbi.nlm.nih.gov." Accessed January 18, 2026.
+        <a href="https://pubmed.ncbi.nlm.nih.gov/37878361/" target="_blank" rel="noopener">https://pubmed.ncbi.nlm.nih.gov/37878361/</a>
+    </li>
+<li id="ref-2">
+        <a href="#cite-2" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">2.</span>
+        "journals.sagepub.com." Accessed January 18, 2026.
+        <a href="https://journals.sagepub.com/doi/10.1177/20563051211010167" target="_blank" rel="noopener">https://journals.sagepub.com/doi/10.1177/20563051211010167</a>
+    </li>
+<li id="ref-3">
+        <a href="#cite-3" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">3.</span>
+        "studenttheses.uu.nl." Accessed January 18, 2026.
+        <a href="https://studenttheses.uu.nl/bitstream/handle/20.500.12932/36478/2020-Birznieks-Besamusca-Bijl.pdf?sequence=1" target="_blank" rel="noopener">https://studenttheses.uu.nl/bitstream/handle/20.500.12932/36478/2020-Birznieks-Besamusca-Bijl.pdf?sequence=1</a>
+    </li>
+<li id="ref-4">
+        <a href="#cite-4" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">4.</span>
+        "dl.acm.org." Accessed January 18, 2026.
+        <a href="https://dl.acm.org/doi/10.1145/3633070" target="_blank" rel="noopener">https://dl.acm.org/doi/10.1145/3633070</a>
+    </li>
+<li id="ref-5">
+        <a href="#cite-5" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">5.</span>
+        "academic.oup.com." Accessed January 18, 2026.
+        <a href="https://academic.oup.com/dsh/article/40/1/227/8030463" target="_blank" rel="noopener">https://academic.oup.com/dsh/article/40/1/227/8030463</a>
+    </li>
+<li id="ref-6">
+        <a href="#cite-6" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">6.</span>
+        "journalistsresource.org." Accessed January 18, 2026.
+        <a href="https://journalistsresource.org/education/four-day-school-week-research/" target="_blank" rel="noopener">https://journalistsresource.org/education/four-day-school-week-research/</a>
+    </li>
+<li id="ref-7">
+        <a href="#cite-7" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">7.</span>
+        "frontiersin.org." Accessed January 18, 2026.
+        <a href="https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2024.1348095/full" target="_blank" rel="noopener">https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2024.1348095/full</a>
+    </li>
+<li id="ref-8">
+        <a href="#cite-8" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">8.</span>
+        "journals.sagepub.com." Accessed January 18, 2026.
+        <a href="https://journals.sagepub.com/doi/10.1177/20563051241309497" target="_blank" rel="noopener">https://journals.sagepub.com/doi/10.1177/20563051241309497</a>
+    </li>
+<li id="ref-9">
+        <a href="#cite-9" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">9.</span>
+        "pmc.ncbi.nlm.nih.gov." Accessed January 18, 2026.
+        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10334965/" target="_blank" rel="noopener">https://pmc.ncbi.nlm.nih.gov/articles/PMC10334965/</a>
+    </li>
+<li id="ref-10">
+        <a href="#cite-10" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">10.</span>
+        "latenode.com." Accessed January 18, 2026.
+        <a href="https://latenode.com/blog/integration-api-management/api-integration-best-practices/how-to-use-reddit-api-from-access-tokens-to-automated-data-collection" target="_blank" rel="noopener">https://latenode.com/blog/integration-api-management/api-integration-best-practices/how-to-use-reddit-api-from-access-tokens-to-automated-data-collection</a>
+    </li>
+<li id="ref-11">
+        <a href="#cite-11" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">11.</span>
+        "redditinc.com." Accessed January 18, 2026.
+        <a href="https://redditinc.com/policies/reddit-rules" target="_blank" rel="noopener">https://redditinc.com/policies/reddit-rules</a>
+    </li>
+<li id="ref-12">
+        <a href="#cite-12" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">12.</span>
+        "pmc.ncbi.nlm.nih.gov." Accessed January 18, 2026.
+        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4927338/" target="_blank" rel="noopener">https://pmc.ncbi.nlm.nih.gov/articles/PMC4927338/</a>
+    </li>
+<li id="ref-13">
+        <a href="#cite-13" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">13.</span>
+        "docs.brightdata.com." Accessed January 18, 2026.
+        <a href="https://docs.brightdata.com/api-reference/web-scraper-api/social-media-apis/reddit" target="_blank" rel="noopener">https://docs.brightdata.com/api-reference/web-scraper-api/social-media-apis/reddit</a>
+    </li>
+<li id="ref-14">
+        <a href="#cite-14" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">14.</span>
+        "redditforcommunity.com." Accessed January 18, 2026.
+        <a href="https://redditforcommunity.com/hubfs/Ultimate-Guide-2025.pdf?hsLang=en" target="_blank" rel="noopener">https://redditforcommunity.com/hubfs/Ultimate-Guide-2025.pdf?hsLang=en</a>
+    </li>
+<li id="ref-15">
+        <a href="#cite-15" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">15.</span>
+        "twu-ir.tdl.org." Accessed January 18, 2026.
+        <a href="https://twu-ir.tdl.org/bitstreams/06f2b0c4-995e-4ef1-aced-9425bd69584f/download" target="_blank" rel="noopener">https://twu-ir.tdl.org/bitstreams/06f2b0c4-995e-4ef1-aced-9425bd69584f/download</a>
+    </li>
+<li id="ref-16">
+        <a href="#cite-16" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">16.</span>
+        "polyinnovator.space." Accessed January 18, 2026.
+        <a href="https://polyinnovator.space/university-of-reddit-concept/" target="_blank" rel="noopener">https://polyinnovator.space/university-of-reddit-concept/</a>
+    </li>
+<li id="ref-17">
+        <a href="#cite-17" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">17.</span>
+        "arxiv.org." Accessed January 18, 2026.
+        <a href="https://arxiv.org/html/2402.10938v1" target="_blank" rel="noopener">https://arxiv.org/html/2402.10938v1</a>
+    </li>
+<li id="ref-18">
+        <a href="#cite-18" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">18.</span>
+        "iacis.org." Accessed January 18, 2026.
+        <a href="https://iacis.org/iis/2021/3_iis_2021_230-241.pdf" target="_blank" rel="noopener">https://iacis.org/iis/2021/3_iis_2021_230-241.pdf</a>
+    </li>
+<li id="ref-19">
+        <a href="#cite-19" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">19.</span>
+        "studenttheses.uu.nl." Accessed January 18, 2026.
+        <a href="https://studenttheses.uu.nl/bitstream/handle/20.500.12932/36478/2020-Birznieks-Besamusca-Bijl.pdf?sequence=1" target="_blank" rel="noopener">https://studenttheses.uu.nl/bitstream/handle/20.500.12932/36478/2020-Birznieks-Besamusca-Bijl.pdf?sequence=1</a>
+    </li>
+<li id="ref-20">
+        <a href="#cite-20" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">20.</span>
+        "redditinc.com." Accessed January 18, 2026.
+        <a href="https://redditinc.com/policies/reddit-rules" target="_blank" rel="noopener">https://redditinc.com/policies/reddit-rules</a>
+    </li>
+<li id="ref-21">
+        <a href="#cite-21" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">21.</span>
+        "denvermetrocounseling.com." Accessed January 18, 2026.
+        <a href="https://denvermetrocounseling.com/finding-mental-health-support-and-community-through-reddit/" target="_blank" rel="noopener">https://denvermetrocounseling.com/finding-mental-health-support-and-community-through-reddit/</a>
+    </li>
+<li id="ref-22">
+        <a href="#cite-22" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">22.</span>
+        "journals.sagepub.com." Accessed January 18, 2026.
+        <a href="https://journals.sagepub.com/doi/10.1177/00469580251338565" target="_blank" rel="noopener">https://journals.sagepub.com/doi/10.1177/00469580251338565</a>
+    </li>
+<li id="ref-23">
+        <a href="#cite-23" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">23.</span>
+        "support.reddithelp.com." Accessed January 18, 2026.
+        <a href="https://support.reddithelp.com/hc/en-us/articles/23511059871252-Content-Moderation-Enforcement-and-Appeals" target="_blank" rel="noopener">https://support.reddithelp.com/hc/en-us/articles/23511059871252-Content-Moderation-Enforcement-and-Appeals</a>
+    </li>
+<li id="ref-24">
+        <a href="#cite-24" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">24.</span>
+        "happiful.com." Accessed January 18, 2026.
+        <a href="https://happiful.com/best-subreddits-to-support-your-mental-health-and-improve-wellbeing" target="_blank" rel="noopener">https://happiful.com/best-subreddits-to-support-your-mental-health-and-improve-wellbeing</a>
+    </li>
+<li id="ref-25">
+        <a href="#cite-25" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">25.</span>
+        "arxiv.org." Accessed January 18, 2026.
+        <a href="https://arxiv.org/abs/2510.27467" target="_blank" rel="noopener">https://arxiv.org/abs/2510.27467</a>
+    </li>
+<li id="ref-26">
+        <a href="#cite-26" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">26.</span>
+        "arxiv.org." Accessed January 18, 2026.
+        <a href="https://arxiv.org/html/2410.10562v1" target="_blank" rel="noopener">https://arxiv.org/html/2410.10562v1</a>
+    </li>
+<li id="ref-27">
+        <a href="#cite-27" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">27.</span>
+        "mdia104socialandinteractivemediaweeklyblogs.wordpress.com." Accessed January 18, 2026.
+        <a href="https://mdia104socialandinteractivemediaweeklyblogs.wordpress.com/2017/09/29/reddit-as-a-cultural-field-norms-and-affordances-in-social-media-platforms/" target="_blank" rel="noopener">https://mdia104socialandinteractivemediaweeklyblogs.wordpress.com/2017/09/29/reddit-as-a-cultural-field-norms-and-affordances-in-social-media-platforms/</a>
+    </li>
+<li id="ref-28">
+        <a href="#cite-28" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">28.</span>
+        "michiganross.umich.edu." Accessed January 18, 2026.
+        <a href="https://michiganross.umich.edu/news/new-study-reddit-explores-how-political-bias-content-moderation-feeds-echo-chambers" target="_blank" rel="noopener">https://michiganross.umich.edu/news/new-study-reddit-explores-how-political-bias-content-moderation-feeds-echo-chambers</a>
+    </li>
+<li id="ref-29">
+        <a href="#cite-29" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">29.</span>
+        "policyreview.info." Accessed January 18, 2026.
+        <a href="https://policyreview.info/articles/analysis/reddit-quarantined-can-changing-platform-affordances-reduce-hateful-material" target="_blank" rel="noopener">https://policyreview.info/articles/analysis/reddit-quarantined-can-changing-platform-affordances-reduce-hateful-material</a>
+    </li>
+<li id="ref-30">
+        <a href="#cite-30" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">30.</span>
+        "pubmed.ncbi.nlm.nih.gov." Accessed January 18, 2026.
+        <a href="https://pubmed.ncbi.nlm.nih.gov/29718799/" target="_blank" rel="noopener">https://pubmed.ncbi.nlm.nih.gov/29718799/</a>
+    </li>
+<li id="ref-31">
+        <a href="#cite-31" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">31.</span>
+        "arena.im." Accessed January 18, 2026.
+        <a href="https://arena.im/online-communities/reddit-for-community-building-challenges/" target="_blank" rel="noopener">https://arena.im/online-communities/reddit-for-community-building-challenges/</a>
+    </li>
+<li id="ref-32">
+        <a href="#cite-32" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">32.</span>
+        "painonsocial.com." Accessed January 18, 2026.
+        <a href="https://painonsocial.com/blog/what-is-ethnographic-research-on-reddit" target="_blank" rel="noopener">https://painonsocial.com/blog/what-is-ethnographic-research-on-reddit</a>
+    </li>
+<li id="ref-33">
+        <a href="#cite-33" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">33.</span>
+        "publicera.kb.se." Accessed January 18, 2026.
+        <a href="https://publicera.kb.se/ir/article/view/63021" target="_blank" rel="noopener">https://publicera.kb.se/ir/article/view/63021</a>
+    </li>
+<li id="ref-34">
+        <a href="#cite-34" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">34.</span>
+        "tandfonline.com." Accessed January 18, 2026.
+        <a href="https://www.tandfonline.com/doi/abs/10.1080/13645579.2022.2111816" target="_blank" rel="noopener">https://www.tandfonline.com/doi/abs/10.1080/13645579.2022.2111816</a>
+    </li>
+<li id="ref-35">
+        <a href="#cite-35" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">35.</span>
+        "infodemiology.jmir.org." Accessed January 18, 2026.
+        <a href="https://infodemiology.jmir.org/2024/1/e51156" target="_blank" rel="noopener">https://infodemiology.jmir.org/2024/1/e51156</a>
+    </li>
+<li id="ref-36">
+        <a href="#cite-36" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">36.</span>
+        "journals.sagepub.com." Accessed January 18, 2026.
+        <a href="https://journals.sagepub.com/doi/10.1177/2056305118810216" target="_blank" rel="noopener">https://journals.sagepub.com/doi/10.1177/2056305118810216</a>
+    </li>
+<li id="ref-37">
+        <a href="#cite-37" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">37.</span>
+        "arxiv.org." Accessed January 18, 2026.
+        <a href="https://arxiv.org/html/2404.07879v1" target="_blank" rel="noopener">https://arxiv.org/html/2404.07879v1</a>
+    </li>
+<li id="ref-38">
+        <a href="#cite-38" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">38.</span>
+        "rpubs.com." Accessed January 18, 2026.
+        <a href="https://rpubs.com/kaitlynrvaldez/reddit" target="_blank" rel="noopener">https://rpubs.com/kaitlynrvaldez/reddit</a>
+    </li>
+<li id="ref-39">
+        <a href="#cite-39" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">39.</span>
+        "pmc.ncbi.nlm.nih.gov." Accessed January 18, 2026.
+        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4927338/" target="_blank" rel="noopener">https://pmc.ncbi.nlm.nih.gov/articles/PMC4927338/</a>
+    </li>
+<li id="ref-40">
+        <a href="#cite-40" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">40.</span>
+        "academic.oup.com." Accessed January 18, 2026.
+        <a href="https://academic.oup.com/pnasnexus/article/4/12/pgaf310/8377954" target="_blank" rel="noopener">https://academic.oup.com/pnasnexus/article/4/12/pgaf310/8377954</a>
+    </li>
+<li id="ref-41">
+        <a href="#cite-41" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">41.</span>
+        "amarketingexpert.com." Accessed January 18, 2026.
+        <a href="https://amarketingexpert.com/2025/06/19/how-to-use-reddit-as-an-author/" target="_blank" rel="noopener">https://amarketingexpert.com/2025/06/19/how-to-use-reddit-as-an-author/</a>
+    </li>
+<li id="ref-42">
+        <a href="#cite-42" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">42.</span>
+        "singlegrain.com." Accessed January 18, 2026.
+        <a href="https://www.singlegrain.com/search-everywhere-optimization/how-to-hack-reddits-algorithm-for-maximum-visibility-2/" target="_blank" rel="noopener">https://www.singlegrain.com/search-everywhere-optimization/how-to-hack-reddits-algorithm-for-maximum-visibility-2/</a>
+    </li>
+<li id="ref-43">
+        <a href="#cite-43" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">43.</span>
+        "pioneerpublisher.com." Accessed January 18, 2026.
+        <a href="https://www.pioneerpublisher.com/JLCS/article/download/521/465" target="_blank" rel="noopener">https://www.pioneerpublisher.com/JLCS/article/download/521/465</a>
+    </li>
+<li id="ref-44">
+        <a href="#cite-44" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">44.</span>
+        "bu.edu." Accessed January 18, 2026.
+        <a href="https://www.bu.edu/prsocial/best-practices/social-media/guide-to-reddit-amas/" target="_blank" rel="noopener">https://www.bu.edu/prsocial/best-practices/social-media/guide-to-reddit-amas/</a>
+    </li>
+<li id="ref-45">
+        <a href="#cite-45" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">45.</span>
+        "myamazonguy.com." Accessed January 18, 2026.
+        <a href="https://myamazonguy.com/news/reddit-content-strategy/" target="_blank" rel="noopener">https://myamazonguy.com/news/reddit-content-strategy/</a>
+    </li>
+<li id="ref-46">
+        <a href="#cite-46" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">46.</span>
+        "dl.acm.org." Accessed January 18, 2026.
+        <a href="https://dl.acm.org/doi/10.1145/3501247.3531549" target="_blank" rel="noopener">https://dl.acm.org/doi/10.1145/3501247.3531549</a>
+    </li>
+<li id="ref-47">
+        <a href="#cite-47" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">47.</span>
+        "adamconnell.me." Accessed January 18, 2026.
+        <a href="https://adamconnell.me/reddit-statistics/" target="_blank" rel="noopener">https://adamconnell.me/reddit-statistics/</a>
+    </li>
+<li id="ref-48">
+        <a href="#cite-48" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">48.</span>
+        "aquila.usm.edu." Accessed January 18, 2026.
+        <a href="https://aquila.usm.edu/cgi/viewcontent.cgi?article=21207&context=fac_pubs" target="_blank" rel="noopener">https://aquila.usm.edu/cgi/viewcontent.cgi?article=21207&context=fac_pubs</a>
+    </li>
+<li id="ref-49">
+        <a href="#cite-49" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">49.</span>
+        "insidehighered.com." Accessed January 18, 2026.
+        <a href="https://www.insidehighered.com/news/diversity/socioeconomics/2023/08/03/varied-definitions-first-generation-confuse-students" target="_blank" rel="noopener">https://www.insidehighered.com/news/diversity/socioeconomics/2023/08/03/varied-definitions-first-generation-confuse-students</a>
+    </li>
+<li id="ref-50">
+        <a href="#cite-50" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">50.</span>
+        "explodingtopics.com." Accessed January 18, 2026.
+        <a href="https://explodingtopics.com/blog/reddit-users" target="_blank" rel="noopener">https://explodingtopics.com/blog/reddit-users</a>
+    </li>
+<li id="ref-51">
+        <a href="#cite-51" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">51.</span>
+        "pmc.ncbi.nlm.nih.gov." Accessed January 18, 2026.
+        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10333560/" target="_blank" rel="noopener">https://pmc.ncbi.nlm.nih.gov/articles/PMC10333560/</a>
+    </li>
+<li id="ref-52">
+        <a href="#cite-52" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">52.</span>
+        "spssi.onlinelibrary.wiley.com." Accessed January 18, 2026.
+        <a href="https://spssi.onlinelibrary.wiley.com/doi/10.1111/asap.12413" target="_blank" rel="noopener">https://spssi.onlinelibrary.wiley.com/doi/10.1111/asap.12413</a>
+    </li>
+        </ol>
+    </section>
+    <footer>filed under: things worth knowing</footer>
+</body>
+</html>
