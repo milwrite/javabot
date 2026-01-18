@@ -3611,49 +3611,6 @@ async function handleButtonInteraction(interaction) {
                     components: [] 
                 });
             }
-        } else if (action === 'mention') {
-            if (type === 'commit') {
-                // Get stored mention commit data
-                const commitData = global.mentionCommitData?.get(interaction.user.id);
-                if (!commitData) {
-                    await interaction.reply({ content: 'Commit data expired. Please run the command again.', flags: 64 }); // MessageFlags.Ephemeral
-                    return;
-                }
-                
-                // Acknowledge the button click
-                await interaction.deferUpdate();
-                
-                // Execute the commit using the stored git status
-                await executeMentionCommit(interaction, commitData);
-                
-                // Clean up
-                global.mentionCommitData?.delete(interaction.user.id);
-                
-            } else if (type === 'discard') {
-                // Get stored mention commit data for response
-                const commitData = global.mentionCommitData?.get(interaction.user.id);
-                
-                // Clean up pending data
-                global.mentionCommitData?.delete(interaction.user.id);
-                
-                // GitHub API doesn't need local reset - changes are not staged locally
-                console.log('[DISCARD] No local changes to reset (GitHub API mode)');
-                
-                const discardEmbed = new EmbedBuilder()
-                    .setTitle('🗑️ Changes Discarded')
-                    .setDescription('Local changes have been discarded. Here was the AI response:')
-                    .addFields(
-                        { name: 'Original Response', value: commitData?.response?.substring(0, 1000) + (commitData?.response?.length > 1000 ? '...' : '') || 'No response available', inline: false }
-                    )
-                    .setColor(0xFF6B6B) // Red
-                    .setTimestamp();
-                    
-                await interaction.editReply({ 
-                    content: '', 
-                    embeds: [discardEmbed], 
-                    components: [] 
-                });
-            }
         }
         
     } catch (error) {
@@ -4101,83 +4058,6 @@ async function handleImage(interaction) {
     } catch (error) {
         console.error('[IMAGE] Command error:', error);
         await interaction.editReply(`${getBotResponse('errors')} ${error.message}`);
-    }
-}
-
-// New function to handle mention-triggered commits
-async function executeMentionCommit(interaction, commitData) {
-    try {
-        // Import GitHub API helpers
-        const { pushMultipleFiles } = require('./services/gitHelper');
-        
-        // Update status with progress
-        await interaction.editReply({ content: 'Collecting files...', embeds: [], components: [] });
-        
-        // Collect changed files
-        const srcFiles = await fs.readdir('./src').catch(() => []);
-        const filesToCommit = [];
-        
-        for (const file of [...srcFiles.map(f => `src/${f}`), 'index.html', 'projectmetadata.json']) {
-            try {
-                const content = await fs.readFile(file, 'utf8');
-                filesToCommit.push({ path: file, content });
-            } catch (e) {
-                // File might not exist
-            }
-        }
-        
-        // Update progress
-        await interaction.editReply('Committing changes via GitHub API...');
-        
-        // Create commit with AI response as commit message (truncated)
-        const commitMessage = `ai changes: ${commitData.originalContent.substring(0, 50)}${commitData.originalContent.length > 50 ? '...' : ''}`;
-        const commitSha = await pushMultipleFiles(filesToCommit, commitMessage, 'main');
-        
-        if (!commitSha) {
-            throw new Error('Commit failed - no SHA returned');
-        }
-        
-        // Success - create and send embed
-        const embed = new EmbedBuilder()
-            .setTitle('🚀 AI Changes Committed & Pushed')
-            .setDescription(getBotResponse('success') + '\n\n**Note:** AI-generated changes are now live!')
-            .addFields(
-                { name: 'Commit Message', value: commitMessage, inline: false },
-                { name: 'Commit Hash', value: commitSha.substring(0, 7), inline: true },
-                { name: 'Files Changed', value: filesToCommit.length.toString(), inline: true },
-                { name: 'Live Site', value: '[View Changes](https://bot.inference-arcade.com/)', inline: false }
-            )
-            .setColor(0x7dd3a0) // Mint green
-            .setTimestamp();
-        
-        // Add repository link if URL is available
-        if (process.env.GITHUB_REPO_URL) {
-            embed.addFields({
-                name: 'Repository',
-                value: `[View Commit](${process.env.GITHUB_REPO_URL}/commit/${commitSha})`,
-                inline: false
-            });
-        }
-        
-        await safeEditReply(interaction, { content: '', embeds: [embed] });
-        
-    } catch (error) {
-        console.error('Mention commit execution error:', error);
-        
-        // Provide more specific error messages
-        let errorMessage = getBotResponse('errors');
-        
-        if (error.message.includes('authentication')) {
-            errorMessage += ' Authentication issue with GitHub.';
-        } else if (error.message.includes('nothing to commit')) {
-            errorMessage += ' Nothing to commit.';
-        } else if (error.message.includes('remote')) {
-            errorMessage += ' Trouble reaching the remote repository.';
-        } else {
-            errorMessage += ` ${sanitizeErrorMessage(error)}`;
-        }
-
-        await interaction.editReply(errorMessage);
     }
 }
 
