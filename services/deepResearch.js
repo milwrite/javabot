@@ -11,14 +11,160 @@ const DEEP_RESEARCH_MODEL = 'perplexity/sonar-deep-research';
 const DEEP_RESEARCH_TIMEOUT = 180000; // 3 minutes
 
 /**
+ * Build format-specific research prompt
+ * @param {string} query - Research query
+ * @param {object} options - Configuration options
+ * @param {string} options.format - Output format (review, taxonomy, cover-letter)
+ * @param {string} options.depth - Research depth (focused, standard, comprehensive)
+ * @param {string} options.focusAreas - Comma-separated focus areas
+ * @param {string} options.dateRange - Source date filter
+ * @param {string} options.contextText - Scraped context from URL
+ * @returns {string} - Complete prompt for Perplexity
+ */
+function buildResearchPrompt(query, options = {}) {
+    const {
+        format = 'review',
+        depth = 'standard',
+        focusAreas = null,
+        dateRange = null,
+        contextText = null
+    } = options;
+
+    // Depth instructions
+    const depthInstructions = {
+        'focused': 'focusing on 3-5 authoritative sources',
+        'standard': 'using 8-12 diverse sources',
+        'comprehensive': 'conducting exhaustive research with 15+ sources from multiple perspectives'
+    };
+
+    const depthInstruction = depthInstructions[depth] || depthInstructions['standard'];
+
+    // Format-specific instructions
+    const formatInstructions = {
+        'review': `Research the following topic comprehensively ${depthInstruction}. Provide detailed analysis with sources and citations:`,
+        'taxonomy': `Research the following topic and organize findings as a hierarchical taxonomy using bullet points and nested lists ${depthInstruction}.
+Each entry should include key facts, dates, and citations. Group related concepts.
+Structure: Main categories → Subcategories → Specific items with brief descriptions.
+Use clear hierarchical indentation with bullet points. Include dates where relevant.`,
+        'cover-letter': `You are helping write a professional cover letter for a job application. Based on the job context provided and your research, generate a 300-500 word cover letter (4-6 paragraphs) that:
+1. Opens with specific interest in the role
+2. Connects applicant's research interests to the job requirements
+3. References relevant scholarly knowledge from your research
+4. Demonstrates understanding of the field's current landscape
+5. Closes with enthusiasm and fit
+
+Use formal but personable academic tone. Reference specific requirements from the job posting where relevant.
+${depthInstruction}. Cite sources to demonstrate field knowledge.`
+    };
+
+    const formatPrompt = formatInstructions[format] || formatInstructions['review'];
+
+    // Build context section
+    let contextSection = '';
+    if (contextText) {
+        contextSection = `\nJOB/CONTEXT FROM PROVIDED URL:
+${contextText}
+
+---
+
+`;
+    }
+
+    // Build focus areas section
+    let focusSection = '';
+    if (focusAreas) {
+        focusSection = `\nFocus particularly on these areas: ${focusAreas}\n`;
+    }
+
+    // Build date range section
+    let dateSection = '';
+    if (dateRange) {
+        dateSection = `\nPrioritize sources published ${dateRange}. If time-sensitive, emphasize recent developments.\n`;
+    }
+
+    return `${formatPrompt}\n\n${contextSection}Research Query:\n${query}${focusSection}${dateSection}\n\nProvide detailed analysis with sources and citations.`;
+}
+
+/**
+ * Format citation in APA style
+ * APA: Author(s). (Year). Title. Retrieved from URL
+ * Since we don't have full metadata, simplified format: Domain. Retrieved [Date]. URL
+ * @param {number} num - Citation number
+ * @param {string} url - Source URL
+ * @returns {string} - APA-formatted HTML citation with back-link
+ */
+function formatAPACitation(num, url) {
+    const domain = extractDomain(url);
+    const accessDate = new Date().toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+    });
+
+    return `<li id="ref-${num}">
+        <a href="#cite-${num}" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">${num}.</span>
+        ${domain}. Retrieved ${accessDate}, from
+        <a href="${url}" target="_blank" rel="noopener">${url}</a>
+    </li>`;
+}
+
+/**
+ * Format citation in numbered style (simple [1], [2], etc.)
+ * Simple format: just the URL
+ * @param {number} num - Citation number
+ * @param {string} url - Source URL
+ * @returns {string} - Numbered HTML citation with back-link
+ */
+function formatNumberedCitation(num, url) {
+    return `<li id="ref-${num}">
+        <a href="#cite-${num}" class="back-ref" title="Back to text">↩</a>
+        <a href="${url}" target="_blank" rel="noopener">[${num}] ${url}</a>
+    </li>`;
+}
+
+/**
+ * Format a citation using the specified style
+ * @param {number} num - Citation number
+ * @param {string} url - Source URL
+ * @param {string} style - Citation style (chicago, apa, numbered)
+ * @returns {string} - Formatted HTML citation
+ */
+function formatCitationByStyle(num, url, style = 'chicago') {
+    switch (style) {
+        case 'apa':
+            return formatAPACitation(num, url);
+        case 'numbered':
+            return formatNumberedCitation(num, url);
+        case 'chicago':
+        default:
+            return formatChicagoCitation(num, url);
+    }
+}
+
+/**
  * Execute deep research query via Perplexity Sonar Deep Research
  * @param {string} query - Research query
  * @param {object} options - Optional configuration
  * @param {Function} options.onProgress - Progress callback for long-running queries
+ * @param {string} options.format - Output format (review, taxonomy, cover-letter)
+ * @param {string} options.depth - Research depth (focused, standard, comprehensive)
+ * @param {string} options.focusAreas - Comma-separated focus areas
+ * @param {string} options.dateRange - Source date filter
+ * @param {string} options.contextText - Scraped context from URL
+ * @param {string} options.citationStyle - Citation style (chicago, apa, numbered)
  * @returns {object} - { content: string, citations: array, usage: object }
  */
 async function deepResearch(query, options = {}) {
-    const { onProgress } = options;
+    const {
+        onProgress,
+        format = 'review',
+        depth = 'standard',
+        focusAreas = null,
+        dateRange = null,
+        contextText = null,
+        citationStyle = 'chicago'
+    } = options;
 
     // Set up progress interval (every 30 seconds)
     let progressInterval = null;
@@ -32,11 +178,20 @@ async function deepResearch(query, options = {}) {
     }
 
     try {
+        // Build format-specific prompt
+        const prompt = buildResearchPrompt(query, {
+            format,
+            depth,
+            focusAreas,
+            dateRange,
+            contextText
+        });
+
         const response = await axios.post(OPENROUTER_URL, {
             model: DEEP_RESEARCH_MODEL,
             messages: [{
                 role: 'user',
-                content: `Research the following topic comprehensively. Provide detailed analysis with sources and citations:\n\n${query}`
+                content: prompt
             }],
             max_tokens: 8000,
             temperature: 0.3,
@@ -86,6 +241,8 @@ async function deepResearch(query, options = {}) {
             content: cleanContent,
             citations: apiCitations,
             citationMap: citationMap,
+            citationStyle: citationStyle,
+            format: format,
             usage: response.data.usage
         };
     } catch (error) {
@@ -463,9 +620,338 @@ function generateReportHTML(result, query) {
     return { html, slug, filename: `src/search/${slug}.html` };
 }
 
+/**
+ * Generate format-specific HTML report
+ * @param {object} result - Result from deepResearch() with content, citations, format, citationStyle
+ * @param {string} query - Original query
+ * @param {object} options - Additional options for formatting
+ * @returns {object} - { html: string, slug: string, filename: string }
+ */
+function generateFormattedReportHTML(result, query, options = {}) {
+    const format = result.format || 'review';
+    const citationStyle = result.citationStyle || 'chicago';
+
+    // Check if this is a cover-letter format (special handling)
+    if (format === 'cover-letter') {
+        return generateCoverLetterHTML(result, query, citationStyle);
+    } else if (format === 'taxonomy') {
+        return generateTaxonomyHTML(result, query, citationStyle);
+    } else {
+        // Default to review format (existing behavior)
+        return generateReportHTML(result, query);
+    }
+}
+
+/**
+ * Generate HTML for taxonomy format
+ * Hierarchical bullet-point structure with dates and citations
+ * @param {object} result - Research result
+ * @param {string} query - Original query
+ * @param {string} citationStyle - Citation style to use
+ * @returns {object} - { html: string, slug: string, filename: string }
+ */
+function generateTaxonomyHTML(result, query, citationStyle = 'chicago') {
+    const slug = generateSlug(query) + '-taxonomy';
+    const title = generateTitle(query);
+    const displayDate = new Date().toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+    });
+
+    const citationMap = result.citationMap || {};
+
+    // Build citations section
+    let citationsHTML = '';
+    const citationNumbers = Object.keys(citationMap).map(Number).sort((a, b) => a - b);
+
+    if (citationNumbers.length > 0) {
+        const citationItems = citationNumbers
+            .map(num => formatCitationByStyle(num, citationMap[num], citationStyle))
+            .join('\n');
+
+        citationsHTML = `
+    <section class="citations" id="citations">
+        <h2>Sources</h2>
+        <ol>
+            ${citationItems}
+        </ol>
+    </section>`;
+    }
+
+    // Convert content - for taxonomy, preserve the hierarchical structure better
+    const taxonomyContent = contentToHTML(result.content, citationMap);
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            line-height: 1.6;
+            padding: 40px 20px 60px;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        a { color: #00ffff; text-decoration: none; }
+        a:hover { color: #ff0000; text-decoration: underline; }
+        .home-link { display: inline-block; margin-bottom: 30px; font-size: 13px; }
+        .home-link::before { content: '← '; }
+        header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        header h1 { color: #ff0000; font-size: 20px; font-weight: normal; margin-bottom: 8px; }
+        header .meta { font-size: 12px; color: #555; }
+        article { color: #7ec8e3; }
+        article h1 { color: #00ffff; font-size: 17px; font-weight: normal; margin: 35px 0 15px; }
+        article h2 { color: #ff0000; font-size: 15px; font-weight: normal; margin: 30px 0 12px; }
+        article h3 { color: #7ec8e3; font-size: 14px; font-weight: normal; margin: 20px 0 10px; }
+        article p { margin-bottom: 16px; }
+        article ul, article ol { margin-left: 20px; margin-bottom: 16px; }
+        article li { margin-bottom: 8px; }
+        article strong { color: #00ffff; font-weight: normal; }
+        article em { font-style: normal; color: #888; }
+
+        /* Citation styling */
+        .citation { font-size: 0.75em; vertical-align: super; line-height: 0; }
+        .citation a { color: #ff0000; padding: 0 1px; }
+        .citation a:hover { color: #ff9999; text-decoration: underline; }
+
+        /* Citations/References section */
+        .citations {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #333;
+        }
+        .citations h2 {
+            color: #ff0000;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .citations ol {
+            list-style: none;
+            padding: 0;
+        }
+        .citations li {
+            font-size: 12px;
+            margin: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            line-height: 1.5;
+            word-break: break-word;
+            color: #666;
+        }
+        .citations .back-ref {
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #ff0000;
+            text-decoration: none;
+            font-size: 11px;
+        }
+        .citations .back-ref:hover { color: #ff9999; }
+        .citations .cite-num {
+            color: #666;
+            margin-right: 8px;
+        }
+        .citations li a:not(.back-ref) {
+            color: #00ffff;
+            word-break: break-all;
+        }
+        .citations li a:not(.back-ref):hover { color: #ff0000; }
+
+        footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 11px; color: #444; }
+        @media (max-width: 600px) {
+            body { padding: 25px 15px 40px; }
+            header h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../../index.html"></a>
+    <header>
+        <h1>${title}</h1>
+        <div class="meta">researched ${displayDate} · dug up by sportello</div>
+    </header>
+    <article>
+        ${taxonomyContent}
+    </article>
+    ${citationsHTML}
+    <footer>filed under: things worth knowing</footer>
+</body>
+</html>`;
+
+    return { html, slug, filename: `src/search/${slug}.html` };
+}
+
+/**
+ * Generate HTML for cover-letter format
+ * Professional letter format with research-informed content
+ * @param {object} result - Research result
+ * @param {string} query - Original query
+ * @param {string} citationStyle - Citation style to use
+ * @returns {object} - { html: string, slug: string, filename: string }
+ */
+function generateCoverLetterHTML(result, query, citationStyle = 'chicago') {
+    const slug = generateSlug(query) + '-cover-letter';
+    const title = generateTitle(query);
+    const displayDate = new Date().toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+    });
+
+    const citationMap = result.citationMap || {};
+
+    // Build citations section
+    let citationsHTML = '';
+    const citationNumbers = Object.keys(citationMap).map(Number).sort((a, b) => a - b);
+
+    if (citationNumbers.length > 0) {
+        const citationItems = citationNumbers
+            .map(num => formatCitationByStyle(num, citationMap[num], citationStyle))
+            .join('\n');
+
+        citationsHTML = `
+    <section class="letter-sources" id="sources">
+        <h3>Research Sources</h3>
+        <ol>
+            ${citationItems}
+        </ol>
+    </section>`;
+    }
+
+    // Clean letter content (remove citation numbers for letter format, they'll be in sources)
+    let letterContent = result.content
+        .replace(/\[\d+\]/g, '') // Remove citation brackets
+        .replace(/\n{3,}/g, '\n\n') // Normalize line breaks
+        .trim();
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cover Letter - ${title}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            line-height: 1.65;
+            padding: 60px 20px 80px;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+        a { color: #00ffff; text-decoration: none; }
+        a:hover { color: #ff0000; text-decoration: underline; }
+        .home-link { display: inline-block; margin-bottom: 40px; font-size: 13px; }
+        .home-link::before { content: '← '; }
+        header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        header h1 { color: #ff0000; font-size: 16px; font-weight: normal; margin-bottom: 8px; }
+        header .meta { font-size: 11px; color: #555; }
+
+        .letter-body {
+            color: #7ec8e3;
+            margin: 30px 0;
+        }
+        .letter-body p {
+            margin-bottom: 20px;
+            text-align: justify;
+            letter-spacing: 0.3px;
+        }
+        .letter-body p:first-letter {
+            margin-right: 2px;
+        }
+
+        /* Citation styling in letter */
+        .citation { font-size: 0.75em; vertical-align: super; line-height: 0; }
+        .citation a { color: #ff0000; padding: 0 1px; }
+        .citation a:hover { color: #ff9999; text-decoration: underline; }
+
+        /* Research sources section */
+        .letter-sources {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #333;
+        }
+        .letter-sources h3 {
+            color: #ff0000;
+            font-size: 12px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .letter-sources ol {
+            list-style: none;
+            padding: 0;
+        }
+        .letter-sources li {
+            font-size: 11px;
+            margin: 10px 0;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.4;
+            word-break: break-word;
+            color: #666;
+        }
+        .letter-sources .back-ref {
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #ff0000;
+            text-decoration: none;
+            font-size: 10px;
+        }
+        .letter-sources .cite-num {
+            color: #666;
+            margin-right: 6px;
+        }
+        .letter-sources li a:not(.back-ref) {
+            color: #00ffff;
+            word-break: break-all;
+        }
+        .letter-sources li a:not(.back-ref):hover { color: #ff0000; }
+
+        footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 10px; color: #444; }
+        .generated-note { font-size: 10px; color: #555; margin-top: 10px; }
+
+        @media (max-width: 600px) {
+            body { padding: 40px 15px 60px; }
+            header h1 { font-size: 14px; }
+            .letter-body p { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../../index.html"></a>
+    <header>
+        <h1>Research-Informed Cover Letter</h1>
+        <div class="meta">generated ${displayDate} · for application: ${title}</div>
+    </header>
+    <div class="letter-body">
+        ${letterContent.split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('')}
+    </div>
+    ${citationsHTML}
+    <footer>
+        <p>filed under: job applications · powered by deep research</p>
+        <p class="generated-note">This cover letter was generated using scholarly research and synthesized with job requirements. Customize as needed for your application.</p>
+    </footer>
+</body>
+</html>`;
+
+    return { html, slug, filename: `src/search/${slug}.html` };
+}
+
 module.exports = {
     deepResearch,
     formatForDiscord,
     generateReportHTML,
+    generateFormattedReportHTML,
+    buildResearchPrompt,
+    formatCitationByStyle,
     DEEP_RESEARCH_MODEL
 };

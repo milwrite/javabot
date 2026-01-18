@@ -223,11 +223,38 @@ const ALL_TOOLS = [
         type: 'function',
         function: {
             name: 'deep_research',
-            description: 'Comprehensive multi-step research with citations and sources. ONLY use when user explicitly says the words "deep research" in their message. Do NOT use for general research questions. Takes 1-3 minutes.',
+            description: 'Comprehensive multi-step research with citations and sources. ONLY use when user explicitly says the words "deep research" in their message. Do NOT use for general research questions. Takes 1-3 minutes. Supports multiple output formats: review (comprehensive analysis), taxonomy (hierarchical bullets), cover-letter (job application focused).',
             parameters: {
                 type: 'object',
                 properties: {
-                    query: { type: 'string', description: 'Detailed research question or topic' }
+                    query: { type: 'string', description: 'Detailed research question or topic' },
+                    format: {
+                        type: 'string',
+                        enum: ['review', 'taxonomy', 'cover-letter'],
+                        description: 'Output format: review (comprehensive narrative), taxonomy (hierarchical bullets with dates), cover-letter (job application). Default: review'
+                    },
+                    context_url: {
+                        type: 'string',
+                        description: 'Optional URL to scrape for context (e.g., job posting, reference document). Enhances research with specific requirements.'
+                    },
+                    depth: {
+                        type: 'string',
+                        enum: ['focused', 'standard', 'comprehensive'],
+                        description: 'Research thoroughness: focused (3-5 sources), standard (8-12 sources), comprehensive (15+ sources). Default: standard'
+                    },
+                    focus_areas: {
+                        type: 'string',
+                        description: 'Comma-separated focus areas to emphasize (e.g., "history,current trends,future outlook")'
+                    },
+                    date_range: {
+                        type: 'string',
+                        description: 'Source date filter (e.g., "2020-present", "2015-2020", "after 2020"). Prioritizes recent or historical sources.'
+                    },
+                    citation_style: {
+                        type: 'string',
+                        enum: ['chicago', 'apa', 'numbered'],
+                        description: 'Citation formatting: chicago (default), apa, numbered'
+                    }
                 },
                 required: ['query']
             }

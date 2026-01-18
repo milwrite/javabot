@@ -17,7 +17,8 @@ const { generateRoutingPlan, buildRoutingGuidance } = require('./services/llmRou
 // Filesystem and Git tools (Phase 2 extraction)
 const { listFiles: listFilesService, fileExists: fileExistsService, readFile: readFileService, writeFile: writeFileService, editFile: editFileService, deleteFile: deleteFileService, moveFile: moveFileService, searchFiles: searchFilesService } = require('./services/filesystem');
 const { pushFileViaAPI } = require('./services/gitHelper');
-const { deepResearch, formatForDiscord: formatDeepResearchForDiscord, generateReportHTML, DEEP_RESEARCH_MODEL } = require('./services/deepResearch');
+const { deepResearch, formatForDiscord: formatDeepResearchForDiscord, generateReportHTML, generateFormattedReportHTML, DEEP_RESEARCH_MODEL } = require('./services/deepResearch');
+const { scrapeURL } = require('./services/webScraper');
 const { generateImage, saveToGallery, getStyleContext, updateStyleCache, clearStyleCache } = require('./services/vision/imageGenerator');
 
 // Modular imports (Phase 1 extraction)
@@ -1840,9 +1841,29 @@ async function executeReadOnlyTool(functionName, args, parsePathArg, fileReadCac
         searchResults.push({ query: args.query, results: result });
         return result;
     } else if (functionName === 'deep_research') {
-        const researchResult = await deepResearch(args.query);
-        const result = `## Deep Research Results\n\n${researchResult.content}\n\n### Sources\n${researchResult.citations.map((c, i) => `${i + 1}. ${c}`).join('\n')}`;
-        searchResults.push({ query: args.query, results: result, type: 'deep' });
+        // Scrape context URL if provided
+        let contextText = null;
+        if (args.context_url) {
+            const scrapeResult = await scrapeURL(args.context_url);
+            if (scrapeResult.success) {
+                contextText = scrapeResult.text;
+            }
+        }
+
+        // Execute deep research with all options
+        const researchResult = await deepResearch(args.query, {
+            format: args.format || 'review',
+            depth: args.depth || 'standard',
+            focusAreas: args.focus_areas,
+            dateRange: args.date_range,
+            contextText: contextText,
+            citationStyle: args.citation_style || 'chicago'
+        });
+
+        // Format result based on format type
+        let result = `## Deep Research Results (${args.format || 'review'})\n\n${researchResult.content}\n\n### Sources\n${researchResult.citations.map((c, i) => `${i + 1}. ${c}`).join('\n')}`;
+
+        searchResults.push({ query: args.query, results: result, type: 'deep', format: args.format || 'review' });
         return result;
     }
     return `Error: Unknown read-only tool: ${functionName}`;
@@ -2496,7 +2517,46 @@ const commands = [
         .addStringOption(option =>
             option.setName('query')
                 .setDescription('What do you want to research in depth?')
-                .setRequired(true)),
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('format')
+                .setDescription('Output format style')
+                .setRequired(false)
+                .addChoices(
+                    { name: 'Comprehensive Review (default)', value: 'review' },
+                    { name: 'Annotated Taxonomy', value: 'taxonomy' },
+                    { name: 'Cover Letter (job applications)', value: 'cover-letter' }
+                ))
+        .addStringOption(option =>
+            option.setName('context_url')
+                .setDescription('URL to scrape for context (e.g., job posting)')
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('depth')
+                .setDescription('Research thoroughness level')
+                .setRequired(false)
+                .addChoices(
+                    { name: 'Focused (3-5 sources)', value: 'focused' },
+                    { name: 'Standard (8-12 sources)', value: 'standard' },
+                    { name: 'Comprehensive (15+ sources)', value: 'comprehensive' }
+                ))
+        .addStringOption(option =>
+            option.setName('focus_areas')
+                .setDescription('Comma-separated focus areas (e.g., "history,current trends")')
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('date_range')
+                .setDescription('Source date filter (e.g., "2020-present", "2015-2020")')
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('citation_style')
+                .setDescription('Citation formatting preference')
+                .setRequired(false)
+                .addChoices(
+                    { name: 'Chicago (default)', value: 'chicago' },
+                    { name: 'APA', value: 'apa' },
+                    { name: 'Numbered', value: 'numbered' }
+                )),
 
     new SlashCommandBuilder()
         .setName('image')
@@ -3888,11 +3948,38 @@ async function handleLogs(interaction) {
 
 // Deep Research handler - comprehensive research with citations
 async function handleDeepResearch(interaction) {
+    // Extract all parameters
     const query = interaction.options.getString('query');
+    const format = interaction.options.getString('format') || 'review';
+    const contextUrl = interaction.options.getString('context_url');
+    const depth = interaction.options.getString('depth') || 'standard';
+    const focusAreas = interaction.options.getString('focus_areas');
+    const dateRange = interaction.options.getString('date_range');
+    const citationStyle = interaction.options.getString('citation_style') || 'chicago';
 
     try {
         // Initial thinking message
-        await safeEditReply(interaction, `${getBotResponse('thinking')} diving deep into "${query.substring(0, 50)}${query.length > 50 ? '...' : ''}"...`);
+        let thinkingMsg = `${getBotResponse('thinking')} diving deep into "${query.substring(0, 50)}${query.length > 50 ? '...' : ''}"...`;
+
+        // Scrape context URL if provided
+        let contextText = null;
+        let contextTitle = null;
+        let scrapingError = null;
+
+        if (contextUrl) {
+            thinkingMsg += '\n⏳ scraping context...';
+            const scrapeResult = await scrapeURL(contextUrl);
+            if (scrapeResult.success) {
+                contextText = scrapeResult.text;
+                contextTitle = scrapeResult.title;
+                thinkingMsg = thinkingMsg.replace('⏳ scraping context...', `✓ scraped context from ${contextTitle}`);
+            } else {
+                scrapingError = scrapeResult.error;
+                thinkingMsg += `\n⚠️ context url failed (${scrapingError}), continuing without context`;
+            }
+        }
+
+        await safeEditReply(interaction, thinkingMsg);
 
         // Progress callback for long research
         const onProgress = async (message) => {
@@ -3903,27 +3990,36 @@ async function handleDeepResearch(interaction) {
             }
         };
 
-        // Execute deep research
-        const result = await deepResearch(query, { onProgress });
+        // Execute deep research with all options
+        const result = await deepResearch(query, {
+            onProgress,
+            format,
+            depth,
+            focusAreas,
+            dateRange,
+            contextText,
+            citationStyle
+        });
 
-        // Generate HTML report and push to GitHub
-        const { html, slug } = generateReportHTML(result, query);
-        const reportPath = `src/search/${slug}.html`;
+        // Generate format-specific HTML report
+        const { html, slug, filename } = generateFormattedReportHTML(result, query);
+        const reportPath = filename;
         const liveUrl = `https://bot.inference-arcade.com/${reportPath}`;
 
         try {
             await pushFileViaAPI(reportPath, html, `add deep research: ${query.substring(0, 50)}`, 'main');
-            console.log(`[DEEP_RESEARCH] Pushed report: ${reportPath}`);
+            console.log(`[DEEP_RESEARCH] Pushed ${format} report: ${reportPath}`);
         } catch (pushError) {
             console.error('[DEEP_RESEARCH] Push failed:', pushError.message);
         }
 
-        // Format for Discord
+        // Format for Discord embed
         const { embed } = formatDeepResearchForDiscord(result, query);
 
-        // Add link to full report
+        // Add format information to footer
+        const formatLabel = { 'review': 'Comprehensive Review', 'taxonomy': 'Annotated Taxonomy', 'cover-letter': 'Research-Informed Cover Letter' }[format] || format;
         embed.setURL(liveUrl);
-        embed.setFooter({ text: `full report → ${liveUrl}` });
+        embed.setFooter({ text: `${formatLabel} · full report → ${liveUrl}` });
 
         await interaction.editReply({ embeds: [embed] });
 
