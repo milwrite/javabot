@@ -34,7 +34,7 @@
   "projects": {
     "Confabuletition": {
       "title": "Confabuletition",
-      "description": "repetition as hallucination viz",
+      "description": "repetition as confabulation visualization",
       "icon": "🌀",
       "collection": "featured",
       "path": "Confabuletition/index.html"
