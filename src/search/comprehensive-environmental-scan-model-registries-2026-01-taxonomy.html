@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive environmental scan of model registries in theory and practice</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            line-height: 1.6;
+            padding: 40px 20px 60px;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        a { color: #00ffff; text-decoration: none; }
+        a:hover { color: #ff0000; text-decoration: underline; }
+        .home-link { display: inline-block; margin-bottom: 30px; font-size: 13px; }
+        .home-link::before { content: '← '; }
+        header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        header h1 { color: #ff0000; font-size: 20px; font-weight: normal; margin-bottom: 8px; }
+        header .meta { font-size: 12px; color: #555; }
+        article { color: #7ec8e3; }
+        article h1 { color: #00ffff; font-size: 17px; font-weight: normal; margin: 35px 0 15px; }
+        article h2 { color: #ff0000; font-size: 15px; font-weight: normal; margin: 30px 0 12px; }
+        article h3 { color: #7ec8e3; font-size: 14px; font-weight: normal; margin: 20px 0 10px; }
+        article p { margin-bottom: 16px; }
+        article ul, article ol { margin-left: 20px; margin-bottom: 16px; }
+        article li { margin-bottom: 8px; }
+        article strong { color: #00ffff; font-weight: normal; }
+        article em { font-style: normal; color: #888; }
+
+        /* Citation styling */
+        .citation { font-size: 0.75em; vertical-align: super; line-height: 0; }
+        .citation a { color: #ff0000; padding: 0 1px; }
+        .citation a:hover { color: #ff9999; text-decoration: underline; }
+
+        /* Citations/References section */
+        .citations {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #333;
+        }
+        .citations h2 {
+            color: #ff0000;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .citations ol {
+            list-style: none;
+            padding: 0;
+        }
+        .citations li {
+            font-size: 12px;
+            margin: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            line-height: 1.5;
+            word-break: break-word;
+            color: #666;
+        }
+        .citations .back-ref {
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #ff0000;
+            text-decoration: none;
+            font-size: 11px;
+        }
+        .citations .back-ref:hover { color: #ff9999; }
+        .citations .cite-num {
+            color: #666;
+            margin-right: 8px;
+        }
+        .citations li a:not(.back-ref) {
+            color: #00ffff;
+            word-break: break-all;
+        }
+        .citations li a:not(.back-ref):hover { color: #ff0000; }
+
+        footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 11px; color: #444; }
+        @media (max-width: 600px) {
+            body { padding: 25px 15px 40px; }
+            header h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../../index.html"></a>
+    <header>
+        <h1>Comprehensive environmental scan of model registries in theory and practice</h1>
+        <div class="meta">researched Jan 19, 2026 · dug up by sportello</div>
+    </header>
+    <article>
+        <h1>Model Registries: An Environmental Scan of Theory, Practice, and Implementation in AI Development</h1>
+<p>This comprehensive report examines the landscape of model registries, documenting their evolution from foundational concepts in software version control to specialized infrastructure supporting modern machine learning operations. Model registries have emerged as critical infrastructure for organizations deploying artificial intelligence systems, functioning as centralized repositories that manage the complete lifecycle of machine learning models—from experimentation and validation through production deployment and monitoring<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-4" id="cite-4">4</a></sup>. The analysis reveals that model registries address a fundamental challenge in machine learning development: the complexity of managing not just code, but the interconnected artifacts that define a trained model, including training data, hyperparameters, environment specifications, and performance metrics<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-5" id="cite-5">5</a></sup>. This report synthesizes findings from both academic literature and industry practice across open-source initiatives, commercial platforms, and regulatory frameworks, demonstrating that model registries represent a convergence point between machine learning engineering practices and traditional software development governance. For academic institutions like emerging AI labs supporting graduate student research and faculty innovation, model registries offer scaffolding to systematize experimentation while maintaining the reproducibility and transparency increasingly demanded by research communities and regulatory bodies.</p>
+<h2>The Emergence and Historical Development of Model Registries as Infrastructure</h2>
+<p>The conceptual foundations of model registries trace their lineage to established practices in software engineering and version control systems, yet their specific instantiation in machine learning represents a relatively recent development. The genesis of this infrastructure emerged from recognizing that machine learning projects fundamentally differ from traditional software development in their artifact composition and lifecycle requirements<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup>. Unlike conventional software systems where versioning code through tools like Git provides sufficient documentation, machine learning models comprise multiple interdependent components that demand specialized tracking mechanisms. This distinction became increasingly apparent as organizations began moving machine learning models from experimental notebooks into production systems, where questions about reproducibility, auditability, and model lineage became urgent operational concerns<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-5" id="cite-5">5</a></sup>.</p>
+<p>The period from 2018 through 2023 witnessed accelerating formalization of model registry concepts, with several foundational frameworks emerging from both industry and academic research. MLflow, created by Databricks around 2018, represents one of the earliest and most influential open-source model registry implementations, providing a platform for experiment tracking, model versioning, and deployment<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-6" id="cite-6">6</a></sup>. Contemporaneously, academic researchers documented the critical importance of data provenance and versioning for machine learning reproducibility. A pivotal 2020 paper by Pineau and colleagues on improving reproducibility in machine learning research helped establish the intellectual foundations for understanding why complete lineage tracking—encompassing data, code, hyperparameters, and environment specifications—constitutes non-negotiable infrastructure for credible ML research<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup>. By 2021-2022, major cloud providers including Amazon (SageMaker Model Registry), Google (Vertex AI Model Registry), and Microsoft (Azure Machine Learning Model Registry) had introduced enterprise implementations of model registries, signaling that this capability had crossed the threshold from specialized tool to essential component of professional MLOps<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-30" id="cite-30">30</a></sup>.</p>
+<h3>The Provenance Movement and Its Implications for Model Governance</h3>
+<p>The concept of provenance in machine learning systems gained particular prominence beginning around 2023-2024, driven partly by increasing regulatory attention and partly by recognition of profound safety implications. Provenance refers to a complete, verifiable record of where data originated, how it was processed, what models were trained on it, and how those models evolved over time<sup class="citation"><a href="#ref-2" id="cite-2">2</a>,<a href="#ref-5" id="cite-5">5</a></sup>. A 2024 report from the Manifest Cyber Institute framed data lineage and provenance not as compliance overhead but as fundamental safety infrastructure, arguing that organizations without visibility into their models' provenance face substantial risks across multiple dimensions: they cannot verify whether training data was legally obtained or poisoned, cannot trace root causes of failures, and cannot demonstrate to regulators that their systems operate safely<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>.</p>
+<p>This perspective gained regulatory legitimacy with the publication of the EU Artificial Intelligence Act and related governance frameworks. The EU AI Act, which began implementation in 2024-2025, explicitly requires high-risk AI systems to maintain comprehensive documentation of their development, training data, and modification history<sup class="citation"><a href="#ref-28" id="cite-28">28</a>,<a href="#ref-25" id="cite-25">25</a></sup>. Similarly, the ISO/IEC 42001:2023 standard published in December 2023 establishes requirements for AI management systems, with emphasis on traceability and documentation as central governance mechanisms<sup class="citation"><a href="#ref-39" id="cite-39">39</a>,<a href="#ref-42" id="cite-42">42</a></sup>. These regulatory developments transformed model registries from convenience tools for data science teams into compliance necessities for organizations deploying AI systems in regulated domains.</p>
+<h2>Foundational Concepts: Understanding Data Lineage, Versioning, and Documentation Standards</h2>
+<p>The technical architecture of model registries rests on three interconnected foundational concepts: comprehensive versioning of all machine learning artifacts, complete documentation of model provenance and lineage, and standardized formats for capturing essential metadata. Understanding these foundations proves essential for appreciating why model registries have become indispensable rather than optional infrastructure.</p>
+<h3>Artifact Versioning Across the Machine Learning Lifecycle</h3>
+<p>Model registries extend the concept of version control beyond source code to encompass the entire composition of a trainable machine learning system. A 2020 educational framework by Christian Kaestner, adopted in computer science curricula at major universities including Carnegie Mellon, systematized thinking about what requires versioning in ML projects<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup>. The framework identifies six distinct artifact categories that demand versioning: source code (the learning algorithm and training logic), training data (the exact datasets and versions used for training), hyperparameters (configuration values controlling the learning process), trained model weights (the numerical parameters learned during training), environment specifications (dependency versions, library configurations, and infrastructure details), and derived outputs (preprocessing decisions, feature engineering choices, and validation results)<sup class="citation"><a href="#ref-5" id="cite-5">5</a>,<a href="#ref-20" id="cite-20">20</a></sup>.</p>
+<p>Traditional version control systems like Git handle source code elegantly through differential tracking and branching but perform poorly with large binary files and temporal datasets. Consequently, specialized tools emerged to handle data versioning specifically. Data Version Control (DVC), developed since 2017 and widely adopted by 2023, provides a Git-like interface for versioning datasets stored in cloud object storage while maintaining compatibility with Git for code<sup class="citation"><a href="#ref-15" id="cite-15">15</a>,<a href="#ref-43" id="cite-43">43</a></sup>. DagsHub, emerging around 2019-2020, combined DVC's data versioning capabilities with experiment tracking and MLflow integration into a unified platform<sup class="citation"><a href="#ref-18" id="cite-18">18</a>,<a href="#ref-56" id="cite-56">56</a></sup>. These tools collectively enable teams to snapshot datasets at specific points in time, track which exact data versions were used for each model training run, and reproduce historical experiments precisely by reverting to documented artifact versions<sup class="citation"><a href="#ref-5" id="cite-5">5</a>,<a href="#ref-15" id="cite-15">15</a>,<a href="#ref-20" id="cite-20">20</a>,<a href="#ref-43" id="cite-43">43</a></sup>.</p>
+<p>The practical importance of comprehensive versioning became evident through incident case studies documented in academic and industry literature. A 2024 case study described a major healthcare organization deploying a model that suddenly began making incorrect predictions in production, only to discover through audit trails that a data version mismatch had occurred—the deployment environment was using updated training data while the model was trained on a previous version, creating distribution mismatch<sup class="citation"><a href="#ref-5" id="cite-5">5</a>,<a href="#ref-20" id="cite-20">20</a></sup>. Without comprehensive versioning in a centralized registry, investigating such failures becomes forensic archaeology. With proper versioning integrated into a model registry, teams can instantly retrieve the exact training configuration that produced any deployed model.</p>
+<h3>Provenance Documentation: Moving Beyond Code to System Understanding</h3>
+<p>Provenance documentation extends beyond versioning to capture the causal history and justification for modeling decisions. The concept gained particular prominence following research on AI transparency and accountability published between 2023-2025. Model cards and datasheets, initially proposed by Mitchell and colleagues in 2018 but increasingly standardized through 2023-2025, represent structured documentation approaches that complement technical versioning by capturing human-readable context<sup class="citation"><a href="#ref-19" id="cite-19">19</a>,<a href="#ref-22" id="cite-22">22</a>,<a href="#ref-53" id="cite-53">53</a></sup>. Model cards document intended use cases, known limitations, ethical considerations, and performance characteristics of specific model versions. Datasheets provide parallel documentation for training datasets, capturing composition, collection procedures, potential biases, and recommended applications<sup class="citation"><a href="#ref-19" id="cite-19">19</a>,<a href="#ref-22" id="cite-22">22</a></sup>.</p>
+<p>Recent research on the actual state of model documentation reveals significant gaps between aspirations and practice<sup class="citation"><a href="#ref-22" id="cite-22">22</a></sup>. A 2023 ACM publication studying model documentation practices found that while model cards have become more common on platforms like Hugging Face, substantial information remains missing in practice. Only 0.3% of manually studied model cards documented ethical considerations, and dataset creators or annotation sources are rarely identified<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>. This gap between ideal and actual documentation creates particular challenges for organizations trying to implement model registries as governance mechanisms. Simply storing model versions in a registry provides limited value if provenance documentation remains sparse or inconsistent.</p>
+<p>The provenance movement responded to these gaps through several parallel developments. Automated card generation tools began emerging in 2023-2024, using natural language processing to extract model cards and dataset sheets from technical documentation and code comments<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>. Ontology-based approaches to model documentation emerged around 2024, representing model card elements as machine-readable knowledge structures that enable automated compliance checking and integration with governance systems<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>. These developments suggest that model registries of the future will increasingly automate provenance documentation rather than relying solely on manual completion by data scientists.</p>
+<h3>Standardization Efforts: ISO 42001 and the EU AI Act</h3>
+<p>Beginning in 2023, international standardization efforts directly intersected with model registry design. ISO/IEC 42001:2023, published in December 2023, establishes requirements for AI management systems with particular emphasis on documentation, traceability, and governance<sup class="citation"><a href="#ref-39" id="cite-39">39</a>,<a href="#ref-42" id="cite-42">42</a></sup>. The standard explicitly requires organizations to maintain records of model development, identify risks, establish processes for managing those risks, and demonstrate compliance through documented evidence. Model registries serve as the primary infrastructure through which organizations gather and present this documentary evidence.</p>
+<p>The EU Artificial Intelligence Act, negotiated throughout 2022-2023 and beginning implementation in stages through 2024-2026, similarly requires comprehensive documentation for high-risk AI systems<sup class="citation"><a href="#ref-25" id="cite-25">25</a>,<a href="#ref-28" id="cite-28">28</a></sup>. The EU AI Act designates certain AI applications—including employment recruitment, credit scoring, and criminal justice—as inherently high-risk, requiring organizations to maintain detailed records of training data, model testing, and modification history<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>. Articles 10-15 of the Act establish specific documentation and testing obligations that effectively mandate model registries as compliance infrastructure. As of July 2025, the European Commission has published guidelines clarifying these requirements, making clear that organizations deploying high-risk AI systems in EU jurisdictions must have implemented governance structures supported by model registries<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>.</p>
+<p>These regulatory developments create interesting incentive structures. For organizations primarily serving EU markets or operating in heavily regulated sectors, model registries transition from optional convenience to legal necessity. This regulatory pressure has driven commercial investment in model registry capabilities across cloud platforms and MLOps vendors throughout 2024-2025.</p>
+<h2>Model Registry Architecture: Core Components and Functional Capabilities</h2>
+<p>Contemporary model registries share common architectural components despite variations in implementation. Understanding these components proves essential for evaluating options for adoption in academic and research settings.</p>
+<h3>Central Repository and Artifact Storage</h3>
+<p>The most basic function of a model registry involves providing centralized storage for model artifacts—the trained weights, architecture definitions, and supporting files that constitute a deployable model<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-4" id="cite-4">4</a></sup>. Unlike distributed version control systems where each developer maintains a complete copy, model registries typically adopt a centralized architecture where a single authoritative repository stores all model artifacts. This centralization proves necessary because ML model files often exceed multi-gigabyte sizes, making distributed approaches impractical. Storage backends typically leverage cloud object storage systems: MLflow uses cloud provider storage (Google Cloud Storage, AWS S3, Azure Blob Storage) depending on deployment context<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-3" id="cite-3">3</a></sup>. Amazon SageMaker Model Registry stores artifacts in S3, while Google Vertex AI Model Registry integrates with BigQuery ML and Google Cloud Storage<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-30" id="cite-30">30</a></sup>.</p>
+<p>Artifact storage in model registries differs from simple file sharing in several important respects. Model registries associate metadata with artifacts automatically—timestamps of upload, identities of uploaders, associated experiment runs or training jobs, and checksums for integrity verification<sup class="citation"><a href="#ref-4" id="cite-4">4</a>,<a href="#ref-27" id="cite-27">27</a></sup>. This metadata association enables downstream features like automatic model promotion (moving from staging to production) and enables deployment systems to query the registry programmatically for specific model versions meeting particular criteria.</p>
+<h3>Metadata Management and Lineage Tracking</h3>
+<p>The metadata management capabilities of model registries determine much of their value for governance and reproducibility. Each registered model version should maintain linkages to the exact training data, code commit, hyperparameters, and evaluation metrics that produced it<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-4" id="cite-4">4</a></sup>. Sophisticated model registries maintain complete lineage graphs showing dependencies between datasets, training code versions, and resulting models. SageMaker Model Registry integrates with SageMaker Lineage for end-to-end traceability<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-31" id="cite-31">31</a></sup>. MLflow supports lineage tracking by maintaining links between model artifacts and the experiment runs that produced them, capturing parameters, metrics, and source code versions<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-3" id="cite-3">3</a></sup>.</p>
+<p>Metadata schemas vary across implementations but share common core elements. Weights & Biases Registry, for instance, captures model name, version number, lifecycle stage, associated metrics, and custom tags that users can define<sup class="citation"><a href="#ref-26" id="cite-26">26</a>,<a href="#ref-29" id="cite-29">29</a></sup>. Hugging Face Model Hub, while not exclusively a registry, maintains standardized model cards capturing task type, model size, training data references, and license information<sup class="citation"><a href="#ref-8" id="cite-8">8</a>,<a href="#ref-11" id="cite-11">11</a></sup>. Kubeflow Model Registry explicitly tracks model format (whether TensorFlow, PyTorch, ONNX), input/output signatures, and hyperparameter configurations to enable correct deployment configuration<sup class="citation"><a href="#ref-41" id="cite-41">41</a></sup>.</p>
+<p>The importance of comprehensive metadata became evident in analysis of model cards on Hugging Face. Research published in 2024 found that while 2 million models exist on Hugging Face Hub as of January 2026, the depth and completeness of metadata varies substantially. Models with more detailed, structured metadata received approximately 29% more downloads on average, suggesting that organizations and researchers factor documentation completeness into their evaluation of which models to adopt<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>.</p>
+<h3>Lifecycle Stage Management and Promotion Workflows</h3>
+<p>Model registries formalize the transition of models through development, testing, and production stages, replacing ad-hoc deployment practices with structured governance. A standard lifecycle includes stages such as Development (experimental models under active iteration), Staging (candidate models undergoing quality assurance), Production (models serving live traffic), and Archived (retired models retained for historical analysis)<sup class="citation"><a href="#ref-4" id="cite-4">4</a>,<a href="#ref-14" id="cite-14">14</a>,<a href="#ref-27" id="cite-27">27</a></sup>. This staging system creates clear decision points where human review and automated quality gates determine readiness for deployment.</p>
+<p>The promotion workflow from staging to production typically involves multiple gatekeeping mechanisms. MLflow Model Registry supports role-based access control where only designated approvers can transition models between stages<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>. SageMaker Model Registry integrates approval workflows directly, requiring explicit human approval before models can be promoted from staging to production<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-31" id="cite-31">31</a></sup>. Kubeflow Model Registry similarly structures promotion as an explicit process that triggers downstream deployment pipelines<sup class="citation"><a href="#ref-41" id="cite-41">41</a></sup>.</p>
+<p>These workflows prove particularly valuable for organizations trying to balance rapid iteration with production reliability. Data scientists can freely experiment and register models in Development stage, while MLOps engineers and stakeholders participate in formal approval processes before models reach Production stage. This separation enables different roles to operate with appropriate autonomy while maintaining organizational oversight.</p>
+<h3>Integration with Deployment and Monitoring Infrastructure</h3>
+<p>Modern model registries extend beyond storage and documentation to integrate with deployment and monitoring systems. This integration closes the loop from model training through production serving. When a model is promoted to Production stage in a model registry, deployment pipelines monitor that change and automatically pull the specified model version, package it for serving (Docker containerization, for example), and deploy it to inference endpoints<sup class="citation"><a href="#ref-4" id="cite-4">4</a>,<a href="#ref-27" id="cite-27">27</a>,<a href="#ref-30" id="cite-30">30</a>,<a href="#ref-31" id="cite-31">31</a></sup>. This automation reduces manual deployment steps, minimizing opportunities for configuration mismatches between development and production environments.</p>
+<p>Post-deployment, model registries link to monitoring systems that track model performance in production. When monitoring systems detect performance degradation—through drift detection, accuracy drops, or other metrics—they can automatically flag the deployed model version in the registry for potential retraining or rollback<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-41" id="cite-41">41</a></sup>. This feedback loop enables organizations to respond quickly to model performance issues by rolling back to previously deployed versions or triggering retraining pipelines.</p>
+<h2>Industry Solutions: Enterprise and Cloud-Native Implementations</h2>
+<p>The model registry market encompasses offerings from major cloud providers, specialized MLOps vendors, and open-source communities, each addressing different organizational needs and technical constraints.</p>
+<h3>Cloud Provider Implementations</h3>
+<p>Amazon Web Services, Microsoft Azure, and Google Cloud each offer native model registry implementations integrated into their broader ML platforms. Amazon SageMaker Model Registry, available since approximately 2020 and enhanced significantly through 2024, functions as the model management component of SageMaker's comprehensive ML platform<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-30" id="cite-30">30</a>,<a href="#ref-31" id="cite-31">31</a></sup>. SageMaker Model Registry associates models with metadata automatically captured from SageMaker Training jobs, maintaining links to training data, code, and resulting metrics. The integration with SageMaker's broader ecosystem—particularly SageMaker Pipelines for orchestration and SageMaker Model Monitor for production monitoring—creates an end-to-end ML lifecycle platform. A notable 2024 enhancement enabled cross-account sharing of model registry content through AWS Resource Access Manager, allowing organizations with multi-account structures to maintain centralized model governance<sup class="citation"><a href="#ref-31" id="cite-31">31</a></sup>.</p>
+<p>Microsoft's Azure Machine Learning platform includes model registry capabilities integrated with Azure DevOps for CI/CD orchestration<sup class="citation"><a href="#ref-30" id="cite-30">30</a>,<a href="#ref-59" id="cite-59">59</a></sup>. Azure's integration with GitHub Actions and deployment to Azure Kubernetes Service enables seamless automation from model training through production serving. The platform particularly appeals to organizations already invested in Microsoft's broader enterprise ecosystem.</p>
+<p>Google Cloud's Vertex AI Model Registry, available since Vertex AI's introduction around 2021 and continually enhanced through 2024-2025, integrates with BigQuery ML for data preparation, AutoML for model training, and Vertex AI Serving for deployment<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-37" id="cite-37">37</a></sup>. Vertex AI's approach emphasizes managed services, reducing operational overhead compared to self-hosted alternatives.</p>
+<h3>Specialized MLOps Platforms</h3>
+<p>Beyond cloud provider offerings, specialized MLOps platforms have emerged focusing specifically on model management and governance. Weights & Biases (W&B), founded in 2018 and rapidly growing through 2024, offers sophisticated experiment tracking coupled with an integrated model registry<sup class="citation"><a href="#ref-18" id="cite-18">18</a>,<a href="#ref-26" id="cite-26">26</a>,<a href="#ref-29" id="cite-29">29</a></sup>. W&B's model registry emphasizes lineage visualization, allowing users to trace models back to their originating experiments, datasets, and code versions through interactive visualizations. The platform supports artifact versioning with automatic creation of snapshot versions and provides webhooks for triggering downstream processes when models transition between stages<sup class="citation"><a href="#ref-26" id="cite-26">26</a>,<a href="#ref-29" id="cite-29">29</a></sup>.</p>
+<p>Neptune.ai, established in 2018 and actively developed through 2025, functions as a metadata store and model registry optimized for data science team collaboration<sup class="citation"><a href="#ref-18" id="cite-18">18</a>,<a href="#ref-37" id="cite-37">37</a>,<a href="#ref-40" id="cite-40">40</a></sup>. Neptune's registry emphasizes intuitive browsing and comparison interfaces, allowing data scientists to explore thousands of models, compare their metrics, and understand provenance through visual interfaces<sup class="citation"><a href="#ref-40" id="cite-40">40</a></sup>.</p>
+<p>Comet ML, another specialized platform emerging in the 2018-2020 timeframe, provides experiment tracking with integrated model registry and production monitoring capabilities<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup>. Comet's model registry maintains audit logs for compliance purposes and supports custom status workflows, allowing organizations to define lifecycle stages specific to their processes rather than adopting predefined models<sup class="citation"><a href="#ref-18" id="cite-18">18</a>,<a href="#ref-37" id="cite-37">37</a></sup>.</p>
+<h3>Model Hub Ecosystems</h3>
+<p>The Hugging Face platform, which began as a library for natural language processing but evolved into a comprehensive model ecosystem by 2023-2025, represents a different model registry approach optimized for open-source and open-weight model sharing<sup class="citation"><a href="#ref-8" id="cite-8">8</a>,<a href="#ref-11" id="cite-11">11</a></sup>. As of January 2026, Hugging Face Hub hosts over 2 million models, 500,000 datasets, and 1 million demonstration applications across diverse ML tasks<sup class="citation"><a href="#ref-8" id="cite-8">8</a></sup>. While not exclusively a model registry—it functions equally as model hosting, dataset repository, and deployment platform—Hugging Face has established de facto standards for model documentation (through model cards) and versioning that influence broader ML community practices.</p>
+<p>Hugging Face's model cards, while voluntary rather than mandated, have become increasingly comprehensive for popular models. Research published in 2024-2025 demonstrates that detailed model cards increase model discovery and adoption on the platform, creating positive incentives for documentation completeness<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>. The platform's integration with major ML frameworks (Transformers, Diffusers, Safetensors) and inference capabilities enables models registered on Hugging Face to be deployed quickly with minimal additional engineering.</p>
+<h2>Open-Source Infrastructure and the Community-Driven Registry Ecosystem</h2>
+<p>The open-source MLOps landscape encompasses multiple model registry implementations, each reflecting different design philosophies and technical constraints.</p>
+<h3>MLflow: The Standard Bearer of Open-Source Model Registry</h3>
+<p>MLflow, created by Databricks and released as open-source software in 2018, has established itself as the most widely adopted open-source model registry by 2025<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-3" id="cite-3">3</a>,<a href="#ref-6" id="cite-6">6</a>,<a href="#ref-18" id="cite-18">18</a>,<a href="#ref-32" id="cite-32">32</a>,<a href="#ref-56" id="cite-56">56</a>,<a href="#ref-59" id="cite-59">59</a></sup>. MLflow's architecture separates concerns into distinct components: Tracking (for logging parameters and metrics during training), Projects (for packaging training code), Models (for packaging trained models in a standard format), and Model Registry (the actual registry component). This modular design enables organizations to adopt components independently while creating an integrated platform for those adopting the full stack<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-6" id="cite-6">6</a></sup>.</p>
+<p>The Model Registry component of MLflow maintains model artifacts in configurable backends (cloud object storage or local filesystems), tracks versions and stages, maintains lineage linkages to experiment runs, and provides REST APIs for programmatic access<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-3" id="cite-3">3</a>,<a href="#ref-6" id="cite-6">6</a></sup>. MLflow's open-source nature and compatibility with any ML framework (PyTorch, TensorFlow, scikit-learn, XGBoost, and many others) have made it particularly popular in organizations seeking to avoid vendor lock-in. By 2024-2025, MLflow had become the de facto standard for model registry in organizations combining open-source infrastructure with cloud platforms, with Databricks offering commercial hosting of MLflow alongside self-hosted deployment options<sup class="citation"><a href="#ref-6" id="cite-6">6</a>,<a href="#ref-59" id="cite-59">59</a></sup>.</p>
+<h3>Kubeflow and Kubernetes-Native Approaches</h3>
+<p>Kubeflow, the Google-originated Kubernetes-native ML platform that became a CNCF (Cloud Native Computing Foundation) project around 2018-2019, includes model registry capabilities integrated with broader orchestration and serving functions<sup class="citation"><a href="#ref-38" id="cite-38">38</a>,<a href="#ref-41" id="cite-41">41</a>,<a href="#ref-59" id="cite-59">59</a></sup>. Kubeflow's model registry addresses the specific use case of organizations deploying ML infrastructure on Kubernetes, providing native Kubernetes custom resources for model management and seamless integration with Kubeflow Pipelines for orchestration<sup class="citation"><a href="#ref-38" id="cite-38">38</a>,<a href="#ref-41" id="cite-41">41</a></sup>. By 2025, Kubeflow's governance through the CNCF and the Kubeflow Steering Committee has established clear development processes and community structures, making it suitable for enterprise adoption<sup class="citation"><a href="#ref-38" id="cite-38">38</a></sup>.</p>
+<p>Kubeflow Model Registry explicitly supports use cases across the entire model lifecycle, from experimentation through production monitoring<sup class="citation"><a href="#ref-41" id="cite-41">41</a></sup>. The platform maintains linkage to training metadata captured from Kubeflow Pipelines, enables model multiplexing for serving multiple versions simultaneously, and integrates with observability tools for monitoring model performance in production<sup class="citation"><a href="#ref-41" id="cite-41">41</a></sup>.</p>
+<h3>Data Version Control and Specialized Tools</h3>
+<p>DVC (Data Version Control), while primarily a tool for versioning data and code rather than a comprehensive model registry, integrates closely with MLflow to provide full coverage of ML artifact versioning<sup class="citation"><a href="#ref-5" id="cite-5">5</a>,<a href="#ref-15" id="cite-15">15</a>,<a href="#ref-43" id="cite-43">43</a>,<a href="#ref-56" id="cite-56">56</a></sup>. DVC's point-in-time versioning for datasets addresses specific limitations of MLflow's data handling, while MLflow's model registry provides the model-focused governance that DVC's file-oriented approach doesn't emphasize. Organizations increasingly combine these tools: DVC for data and code versioning, MLflow for model registry and experiment tracking<sup class="citation"><a href="#ref-15" id="cite-15">15</a>,<a href="#ref-43" id="cite-43">43</a>,<a href="#ref-56" id="cite-56">56</a></sup>.</p>
+<p>ClearML (formerly Allegro Trains), released as open-source software and actively maintained through 2025, provides an MLOps orchestration platform with integrated model registry<sup class="citation"><a href="#ref-18" id="cite-18">18</a>,<a href="#ref-37" id="cite-37">37</a>,<a href="#ref-56" id="cite-56">56</a>,<a href="#ref-59" id="cite-59">59</a></sup>. ClearML distinguishes itself through automatic experiment logging (which requires minimal code modification) and framework-agnostic model registration that supports any model format<sup class="citation"><a href="#ref-37" id="cite-37">37</a>,<a href="#ref-59" id="cite-59">59</a></sup>.</p>
+<p>BentoML, emerging in the 2019-2020 timeframe and actively developed through 2025, focuses particularly on model serving and deployment but includes registry capabilities for managing model versions through their lifecycle<sup class="citation"><a href="#ref-56" id="cite-56">56</a>,<a href="#ref-59" id="cite-59">59</a></sup>. BentoML's strengths lie in standardizing model packaging and deployment across heterogeneous infrastructure rather than in governance-focused registry features.</p>
+<h2>Applications in Academic and Research Contexts</h2>
+<p>Model registries have found particular importance in academic research settings, where reproducibility requirements, collaborative work among distributed teams, and the need to document experimental methodology align naturally with registry capabilities.</p>
+<h3>Supporting Graduate Research and Faculty Innovation</h3>
+<p>Academic institutions adopting model registries report improved research reproducibility and enhanced collaboration among graduate students and faculty. Model registries address a specific challenge in academic ML research: graduate students conduct multi-year projects involving continuous model iteration, yet institutional knowledge about specific model versions and their training conditions often resides solely in students' notebooks or personal computers. When students graduate, subsequent researchers struggle to understand or reproduce prior results. A model registry provides a centralized record of model evolution, enabling institutional memory to persist independent of individual researchers.</p>
+<p>The emergence of ML-focused graduate programs at major universities—MIT's Schwarzman College of Computing (established 2019), University of Southern California's Frontiers of Computing (launched 2023), and NSF-funded AI Research Institutes across 25 universities as of 2023—has created demand for teaching model registry concepts as part of standard ML curricula<sup class="citation"><a href="#ref-51" id="cite-51">51</a></sup>. Graduate students learning MLOps practices increasingly encounter model registries through coursework and are expected to implement registry-based practices in their research<sup class="citation"><a href="#ref-20" id="cite-20">20</a>,<a href="#ref-23" id="cite-23">23</a></sup>.</p>
+<h3>Institutional Data Governance and Ethical Research</h3>
+<p>Model registries facilitate institutional oversight of research ethics and data governance requirements. Increasingly, universities must maintain evidence that research involving sensitive data (medical records, educational outcomes, etc.) has been conducted according to appropriate ethical protocols. Model registries with comprehensive lineage tracking enable institutional review boards to audit model development processes, verify that only approved datasets were used, and confirm that required deidentification or other data protections were applied<sup class="citation"><a href="#ref-5" id="cite-5">5</a>,<a href="#ref-14" id="cite-14">14</a>,<a href="#ref-22" id="cite-22">22</a></sup>.</p>
+<p>A 2024 case study of healthcare research institutions documented how model registries enabled compliance with both research ethics requirements and regulatory frameworks like HIPAA (Health Insurance Portability and Accountability Act). When researchers queried which models had been trained on particular patient cohorts, the registry provided complete answers through lineage tracking, enabling rapid responses to regulatory inquiries<sup class="citation"><a href="#ref-14" id="cite-14">14</a></sup>.</p>
+<h3>Collaborative Workflows and Multi-Institution Projects</h3>
+<p>Research collaborations spanning multiple institutions benefit particularly from model registries enabling discovery and reuse of models developed by collaborators. Rather than models being static artifacts referenced only in published papers, model registries enable living documentation of evolving models that collaborators can access, evaluate, and build upon. Hugging Face's role as a model hub for collaborative NLP and computer vision research exemplifies this use case<sup class="citation"><a href="#ref-8" id="cite-8">8</a>,<a href="#ref-11" id="cite-11">11</a></sup>.</p>
+<p>University-affiliated research teams increasingly document their models on Hugging Face while also maintaining internal registries for work not yet ready for public sharing. This dual-registry approach—internal registry for institutional governance and external registry for community contribution—reflects how model registries have become integrated into modern research workflows.</p>
+<h3>Teaching Reproducibility and Research Integrity</h3>
+<p>Model registries provide concrete mechanisms for teaching reproducibility and research integrity to graduate students and faculty. Rather than abstract principles, students can understand reproducibility through hands-on implementation: defining exactly what versioning captures, documenting which metadata proves essential for reproduction, and experiencing firsthand the challenges and solutions in maintaining lineage across complex experiments. Several universities have incorporated model registry exercises into their ML curriculum, treating registry implementation as a capstone project demonstrating integration of technical skills with research governance practices<sup class="citation"><a href="#ref-51" id="cite-51">51</a>,<a href="#ref-55" id="cite-55">55</a></sup>.</p>
+<h2>Governance, Compliance, and Standards in the Regulatory Era</h2>
+<p>As regulatory frameworks governing AI development have crystallized during 2023-2025, model registries have transitioned from optional infrastructure to compliance necessity in regulated jurisdictions.</p>
+<h3>The EU AI Act Framework</h3>
+<p>The EU Artificial Intelligence Act, which began binding implementation in phases through 2024-2026, establishes comprehensive governance requirements for high-risk AI systems with direct implications for model registry implementation<sup class="citation"><a href="#ref-25" id="cite-25">25</a>,<a href="#ref-28" id="cite-28">28</a></sup>. Articles 10-15 of the Act require providers of high-risk AI systems to maintain documentation including training data information, model testing procedures, modification history, and evidence of compliance with specific requirements<sup class="citation"><a href="#ref-25" id="cite-25">25</a>,<a href="#ref-28" id="cite-28">28</a></sup>. The Act distinguishes high-risk systems—those likely to significantly impact fundamental rights—from other AI applications, creating different compliance obligations<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>.</p>
+<p>For high-risk systems, the Act mandates maintaining "a detailed record of the development, production, testing and modification of the AI system" that remains "kept by the provider for a period of not less than five years"<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>. Model registries provide the technical infrastructure through which such records are maintained and made available for regulatory inspection. The European Commission's preliminary guidelines, published July 18, 2025, clarify expectations for model documentation, emphasizing that organizations must be able to retrieve complete development history for any deployed AI system<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>.</p>
+<p>The Act's requirement for "meaningful human oversight" of high-risk AI systems extends to model governance—organizations must demonstrate through documented processes how humans participate in decisions about model approval, deployment, and monitoring. Model registries' approval workflow capabilities directly support this requirement by creating audit trails of human review decisions<sup class="citation"><a href="#ref-25" id="cite-25">25</a>,<a href="#ref-28" id="cite-28">28</a></sup>.</p>
+<h3>ISO/IEC 42001: A Global Standard for AI Governance</h3>
+<p>ISO/IEC 42001:2023, published in December 2023 and increasingly relevant through 2024-2025 for organizations seeking international credibility, establishes requirements for AI management systems applicable across jurisdictions and industries<sup class="citation"><a href="#ref-39" id="cite-39">39</a>,<a href="#ref-42" id="cite-42">42</a></sup>. The standard emphasizes that organizations should establish clear processes for identifying AI-related risks, implementing controls to mitigate those risks, and maintaining evidence of compliance<sup class="citation"><a href="#ref-39" id="cite-39">39</a>,<a href="#ref-42" id="cite-42">42</a></sup>.</p>
+<p>Model registries support ISO 42001 compliance by providing documented evidence of risk management throughout the model lifecycle. The standard requires organizations to maintain records of model development, establish approval processes before deployment, and demonstrate ongoing monitoring post-deployment. Model registries with comprehensive metadata capture, structured approval workflows, and integration with monitoring systems directly map to ISO 42001 requirements<sup class="citation"><a href="#ref-39" id="cite-39">39</a>,<a href="#ref-42" id="cite-42">42</a>,<a href="#ref-42" id="cite-42">42</a></sup>.</p>
+<p>Deloitte's analysis of ISO 42001 implementation, published in late 2024 and refined through early 2025, identifies model registry capabilities as foundational to demonstrating compliance<sup class="citation"><a href="#ref-42" id="cite-42">42</a></sup>. Organizations pursuing ISO 42001 certification should implement model registries early as fundamental infrastructure rather than attempting retrospective compliance documentation<sup class="citation"><a href="#ref-42" id="cite-42">42</a></sup>.</p>
+<h3>Model Cards and Regulatory Disclosure Requirements</h3>
+<p>Regulatory frameworks increasingly specify or encourage structured documentation of AI models through model cards and related artifacts. The NIST AI Risk Management Framework, released in 2022 and updated through 2024, recommends model cards as a mechanism for AI system disclosure and transparency<sup class="citation"><a href="#ref-53" id="cite-53">53</a></sup>. Model cards disclose basic information about models, intended use cases, off-label uses that might occur, performance measurements across different groups, and ethical considerations<sup class="citation"><a href="#ref-53" id="cite-53">53</a></sup>.</p>
+<p>Research on model card practice, published by the NTIA (National Telecommunications and Information Administration) in 2024-2025, identifies standardization as a key gap<sup class="citation"><a href="#ref-53" id="cite-53">53</a></sup>. While organizations increasingly release model cards voluntarily, inconsistency in format and completeness limits their effectiveness for informing stakeholders and enabling regulatory review. The absence of binding standards creates disincentives for organizations to invest in comprehensive documentation when competitors' cards remain minimal<sup class="citation"><a href="#ref-53" id="cite-53">53</a></sup>. This dynamic has prompted regulatory bodies to consider establishing documentation standards as part of AI governance frameworks.</p>
+<h2>Practical Implementation Challenges and Best Practices</h2>
+<p>Organizations implementing model registries encounter common challenges that research and industry experience have identified and addressed through specific practices and tools.</p>
+<h3>Organizational Adoption and Change Management</h3>
+<p>A central challenge in model registry implementation involves organizational adoption—transitioning teams accustomed to ad-hoc model management practices toward systematic registry usage. Research published in 2023-2024 on MLOps maturity found that while 85% of machine learning organizations recognize the importance of model management infrastructure, fewer than 25% have fully operationalized governance practices<sup class="citation"><a href="#ref-23" id="cite-23">23</a></sup>. This gap reflects implementation challenges rather than lack of awareness.</p>
+<p>Successful implementations typically follow a staged approach rather than attempting comprehensive adoption immediately. Organizations establish governance for critical models first—those with highest business impact or regulatory exposure—before standardizing practices across broader model portfolios<sup class="citation"><a href="#ref-20" id="cite-20">20</a>,<a href="#ref-23" id="cite-23">23</a></sup>. Creating model registry "champion" roles where specific team members develop expertise and evangelize adoption has proven effective at many organizations<sup class="citation"><a href="#ref-20" id="cite-20">20</a>,<a href="#ref-23" id="cite-23">23</a></sup>. Integration with existing workflows rather than requiring wholesale process changes increases adoption rates<sup class="citation"><a href="#ref-20" id="cite-20">20</a></sup>.</p>
+<p>Training and documentation prove particularly important for academic and research contexts, where users may lack professional MLOps experience. Universities implementing model registries should develop clear documentation, conduct workshops for graduate students and faculty, and provide hands-on support during initial adoption phases. Integrating model registry usage requirements into graduate research methods courses creates institutional expectations while providing structured learning contexts<sup class="citation"><a href="#ref-51" id="cite-51">51</a>,<a href="#ref-55" id="cite-55">55</a></sup>.</p>
+<h3>Data Versioning and Lineage Tracking at Scale</h3>
+<p>Maintaining complete lineage across large-scale experiments poses technical and organizational challenges. While versioning code and model artifacts through registries is straightforward, versioning training datasets and intermediate processed data introduces complexity at scale. A 2020 research framework identified multiple strategies for data versioning: storing complete dataset copies (resource-intensive but ensuring reproducibility), storing deltas between versions (storage-efficient but computationally expensive for reconstruction), utilizing append-only databases with offset tracking (efficient for streaming data), or leveraging native database versioning capabilities<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup>.</p>
+<p>Different organizations adopt different strategies based on their data characteristics. Organizations with moderately-sized datasets (terabytes rather than petabytes) often use complete snapshot versioning through cloud object storage, making specific S3 paths or GCS buckets immutable snapshots for particular data versions<sup class="citation"><a href="#ref-20" id="cite-20">20</a></sup></p>
+    </article>
+    
+    <section class="citations" id="citations">
+        <h2>Sources</h2>
+        <ol>
+            <li id="ref-1">
+        <a href="#cite-1" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">1.</span>
+        "docs.rafay.co." Accessed January 19, 2026.
+        <a href="https://docs.rafay.co/aiml/mlops-kubeflow/user/model_registry/overview/" target="_blank" rel="noopener">https://docs.rafay.co/aiml/mlops-kubeflow/user/model_registry/overview/</a>
+    </li>
+<li id="ref-2">
+        <a href="#cite-2" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">2.</span>
+        "manifestcyber.com." Accessed January 19, 2026.
+        <a href="https://www.manifestcyber.com/blog/provenance-is-the-new-perimeter" target="_blank" rel="noopener">https://www.manifestcyber.com/blog/provenance-is-the-new-perimeter</a>
+    </li>
+<li id="ref-3">
+        <a href="#cite-3" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">3.</span>
+        "huggingface.co." Accessed January 19, 2026.
+        <a href="https://huggingface.co/learn/cookbook/en/mlflow_ray_serve" target="_blank" rel="noopener">https://huggingface.co/learn/cookbook/en/mlflow_ray_serve</a>
+    </li>
+<li id="ref-4">
+        <a href="#cite-4" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">4.</span>
+        "apxml.com." Accessed January 19, 2026.
+        <a href="https://apxml.com/courses/introduction-to-mlops/chapter-5-model-deployment-and-serving/introduction-to-model-registries" target="_blank" rel="noopener">https://apxml.com/courses/introduction-to-mlops/chapter-5-model-deployment-and-serving/introduction-to-model-registries</a>
+    </li>
+<li id="ref-5">
+        <a href="#cite-5" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">5.</span>
+        "ckaestne.github.io." Accessed January 19, 2026.
+        <a href="https://ckaestne.github.io/seai/F2020/slides/18_provenance/provenance.pdf" target="_blank" rel="noopener">https://ckaestne.github.io/seai/F2020/slides/18_provenance/provenance.pdf</a>
+    </li>
+<li id="ref-6">
+        <a href="#cite-6" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">6.</span>
+        "mlflow.org." Accessed January 19, 2026.
+        <a href="http://mlflow.org" target="_blank" rel="noopener">http://mlflow.org</a>
+    </li>
+<li id="ref-7">
+        <a href="#cite-7" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">7.</span>
+        "developers.redhat.com." Accessed January 19, 2026.
+        <a href="https://developers.redhat.com/articles/2026/01/07/state-open-source-ai-models-2025" target="_blank" rel="noopener">https://developers.redhat.com/articles/2026/01/07/state-open-source-ai-models-2025</a>
+    </li>
+<li id="ref-8">
+        <a href="#cite-8" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">8.</span>
+        "huggingface.co." Accessed January 19, 2026.
+        <a href="https://huggingface.co/docs/hub/en/index" target="_blank" rel="noopener">https://huggingface.co/docs/hub/en/index</a>
+    </li>
+<li id="ref-9">
+        <a href="#cite-9" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">9.</span>
+        "ijsrset.com." Accessed January 19, 2026.
+        <a href="https://ijsrset.com/index.php/home/article/view/IJSRSET25121179" target="_blank" rel="noopener">https://ijsrset.com/index.php/home/article/view/IJSRSET25121179</a>
+    </li>
+<li id="ref-10">
+        <a href="#cite-10" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">10.</span>
+        "lakera.ai." Accessed January 19, 2026.
+        <a href="https://www.lakera.ai/blog/open-source-llms" target="_blank" rel="noopener">https://www.lakera.ai/blog/open-source-llms</a>
+    </li>
+<li id="ref-11">
+        <a href="#cite-11" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">11.</span>
+        "huggingface.co." Accessed January 19, 2026.
+        <a href="https://huggingface.co" target="_blank" rel="noopener">https://huggingface.co</a>
+    </li>
+<li id="ref-12">
+        <a href="#cite-12" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">12.</span>
+        "youtube.com." Accessed January 19, 2026.
+        <a href="https://www.youtube.com/watch?v=NLE9QaX5kgE" target="_blank" rel="noopener">https://www.youtube.com/watch?v=NLE9QaX5kgE</a>
+    </li>
+<li id="ref-13">
+        <a href="#cite-13" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">13.</span>
+        "nsf-gov-resources.nsf.gov." Accessed January 19, 2026.
+        <a href="https://nsf-gov-resources.nsf.gov/2023-08/AI_Research_Institutes_Map_2023_0.pdf" target="_blank" rel="noopener">https://nsf-gov-resources.nsf.gov/2023-08/AI_Research_Institutes_Map_2023_0.pdf</a>
+    </li>
+<li id="ref-14">
+        <a href="#cite-14" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">14.</span>
+        "verifywise.ai." Accessed January 19, 2026.
+        <a href="https://verifywise.ai/lexicon/model-registry-governance" target="_blank" rel="noopener">https://verifywise.ai/lexicon/model-registry-governance</a>
+    </li>
+<li id="ref-15">
+        <a href="#cite-15" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">15.</span>
+        "doc.dvc.org." Accessed January 19, 2026.
+        <a href="https://doc.dvc.org/use-cases/experiment-tracking" target="_blank" rel="noopener">https://doc.dvc.org/use-cases/experiment-tracking</a>
+    </li>
+<li id="ref-16">
+        <a href="#cite-16" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">16.</span>
+        "hai.stanford.edu." Accessed January 19, 2026.
+        <a href="https://hai.stanford.edu/ai-index/2025-ai-index-report/research-and-development" target="_blank" rel="noopener">https://hai.stanford.edu/ai-index/2025-ai-index-report/research-and-development</a>
+    </li>
+<li id="ref-17">
+        <a href="#cite-17" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">17.</span>
+        "collibra.com." Accessed January 19, 2026.
+        <a href="https://www.collibra.com/blog/collibra-ai-model-governance-one-place-to-govern-all-your-models" target="_blank" rel="noopener">https://www.collibra.com/blog/collibra-ai-model-governance-one-place-to-govern-all-your-models</a>
+    </li>
+<li id="ref-18">
+        <a href="#cite-18" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">18.</span>
+        "neptune.ai." Accessed January 19, 2026.
+        <a href="https://neptune.ai/blog/best-ml-experiment-tracking-tools" target="_blank" rel="noopener">https://neptune.ai/blog/best-ml-experiment-tracking-tools</a>
+    </li>
+<li id="ref-19">
+        <a href="#cite-19" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">19.</span>
+        "emergentmind.com." Accessed January 19, 2026.
+        <a href="https://www.emergentmind.com/topics/model-cards-and-datasheets" target="_blank" rel="noopener">https://www.emergentmind.com/topics/model-cards-and-datasheets</a>
+    </li>
+<li id="ref-20">
+        <a href="#cite-20" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">20.</span>
+        "dev.to." Accessed January 19, 2026.
+        <a href="https://dev.to/apprecode/mlops-best-practices-10-practical-practices-teams-actually-use-h77" target="_blank" rel="noopener">https://dev.to/apprecode/mlops-best-practices-10-practical-practices-teams-actually-use-h77</a>
+    </li>
+<li id="ref-21">
+        <a href="#cite-21" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">21.</span>
+        "choice360.org." Accessed January 19, 2026.
+        <a href="https://www.choice360.org/libtech-insight/ai-tools-for-academic-libraries-ai-programming-and-coding-tools/" target="_blank" rel="noopener">https://www.choice360.org/libtech-insight/ai-tools-for-academic-libraries-ai-programming-and-coding-tools/</a>
+    </li>
+<li id="ref-22">
+        <a href="#cite-22" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">22.</span>
+        "dl.acm.org." Accessed January 19, 2026.
+        <a href="https://dl.acm.org/doi/10.1145/3544548.3581518" target="_blank" rel="noopener">https://dl.acm.org/doi/10.1145/3544548.3581518</a>
+    </li>
+<li id="ref-23">
+        <a href="#cite-23" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">23.</span>
+        "clarifai.com." Accessed January 19, 2026.
+        <a href="https://www.clarifai.com/blog/mlops-best-practices" target="_blank" rel="noopener">https://www.clarifai.com/blog/mlops-best-practices</a>
+    </li>
+<li id="ref-24">
+        <a href="#cite-24" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">24.</span>
+        "paperguide.ai." Accessed January 19, 2026.
+        <a href="https://paperguide.ai/blog/ai-tools-for-scientific-research" target="_blank" rel="noopener">https://paperguide.ai/blog/ai-tools-for-scientific-research</a>
+    </li>
+<li id="ref-25">
+        <a href="#cite-25" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">25.</span>
+        "artificialintelligenceact.eu." Accessed January 19, 2026.
+        <a href="https://artificialintelligenceact.eu/standard-setting-overview/" target="_blank" rel="noopener">https://artificialintelligenceact.eu/standard-setting-overview/</a>
+    </li>
+<li id="ref-26">
+        <a href="#cite-26" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">26.</span>
+        "docs.wandb.ai." Accessed January 19, 2026.
+        <a href="https://docs.wandb.ai/models/registry" target="_blank" rel="noopener">https://docs.wandb.ai/models/registry</a>
+    </li>
+<li id="ref-27">
+        <a href="#cite-27" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">27.</span>
+        "docs.aws.amazon.com." Accessed January 19, 2026.
+        <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html" target="_blank" rel="noopener">https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html</a>
+    </li>
+<li id="ref-28">
+        <a href="#cite-28" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">28.</span>
+        "artificialintelligenceact.eu." Accessed January 19, 2026.
+        <a href="https://artificialintelligenceact.eu" target="_blank" rel="noopener">https://artificialintelligenceact.eu</a>
+    </li>
+<li id="ref-29">
+        <a href="#cite-29" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">29.</span>
+        "docs.wandb.ai." Accessed January 19, 2026.
+        <a href="https://docs.wandb.ai/models/artifacts" target="_blank" rel="noopener">https://docs.wandb.ai/models/artifacts</a>
+    </li>
+<li id="ref-30">
+        <a href="#cite-30" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">30.</span>
+        "docs.aws.amazon.com." Accessed January 19, 2026.
+        <a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/build-an-mlops-workflow-by-using-amazon-sagemaker-and-azure-devops.html" target="_blank" rel="noopener">https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/build-an-mlops-workflow-by-using-amazon-sagemaker-and-azure-devops.html</a>
+    </li>
+<li id="ref-31">
+        <a href="#cite-31" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">31.</span>
+        "aws.amazon.com." Accessed January 19, 2026.
+        <a href="https://aws.amazon.com/blogs/machine-learning/centralize-model-governance-with-sagemaker-model-registry-resource-access-manager-sharing/" target="_blank" rel="noopener">https://aws.amazon.com/blogs/machine-learning/centralize-model-governance-with-sagemaker-model-registry-resource-access-manager-sharing/</a>
+    </li>
+<li id="ref-32">
+        <a href="#cite-32" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">32.</span>
+        "greennode.ai." Accessed January 19, 2026.
+        <a href="https://greennode.ai/blog/best-open-source-ai-platforms" target="_blank" rel="noopener">https://greennode.ai/blog/best-open-source-ai-platforms</a>
+    </li>
+<li id="ref-33">
+        <a href="#cite-33" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">33.</span>
+        "pmc.ncbi.nlm.nih.gov." Accessed January 19, 2026.
+        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12670809/" target="_blank" rel="noopener">https://pmc.ncbi.nlm.nih.gov/articles/PMC12670809/</a>
+    </li>
+<li id="ref-34">
+        <a href="#cite-34" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">34.</span>
+        "facets.cloud." Accessed January 19, 2026.
+        <a href="https://www.facets.cloud/blog/top-8-infrastructure-as-code-iac-tools" target="_blank" rel="noopener">https://www.facets.cloud/blog/top-8-infrastructure-as-code-iac-tools</a>
+    </li>
+<li id="ref-35">
+        <a href="#cite-35" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">35.</span>
+        "github.com." Accessed January 19, 2026.
+        <a href="https://github.com/eugeneyan/open-llms" target="_blank" rel="noopener">https://github.com/eugeneyan/open-llms</a>
+    </li>
+<li id="ref-36">
+        <a href="#cite-36" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">36.</span>
+        "wiley.com." Accessed January 19, 2026.
+        <a href="https://www.wiley.com/en-us/publish/ai-insights/using-ai-in-research-guidelines-disclosure-tips/" target="_blank" rel="noopener">https://www.wiley.com/en-us/publish/ai-insights/using-ai-in-research-guidelines-disclosure-tips/</a>
+    </li>
+<li id="ref-37">
+        <a href="#cite-37" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">37.</span>
+        "cotocus.com." Accessed January 19, 2026.
+        <a href="https://www.cotocus.com/blog/top-10-model-registry-tools-features-pros-cons-comparison/" target="_blank" rel="noopener">https://www.cotocus.com/blog/top-10-model-registry-tools-features-pros-cons-comparison/</a>
+    </li>
+<li id="ref-38">
+        <a href="#cite-38" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">38.</span>
+        "kubeflow.org." Accessed January 19, 2026.
+        <a href="https://www.kubeflow.org/docs/about/governance/" target="_blank" rel="noopener">https://www.kubeflow.org/docs/about/governance/</a>
+    </li>
+<li id="ref-39">
+        <a href="#cite-39" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">39.</span>
+        "iso.org." Accessed January 19, 2026.
+        <a href="https://www.iso.org/standard/42001" target="_blank" rel="noopener">https://www.iso.org/standard/42001</a>
+    </li>
+<li id="ref-40">
+        <a href="#cite-40" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">40.</span>
+        "qwak.com." Accessed January 19, 2026.
+        <a href="https://www.qwak.com/post/top-ml-model-monitoring-tools" target="_blank" rel="noopener">https://www.qwak.com/post/top-ml-model-monitoring-tools</a>
+    </li>
+<li id="ref-41">
+        <a href="#cite-41" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">41.</span>
+        "kubeflow.org." Accessed January 19, 2026.
+        <a href="https://www.kubeflow.org/docs/components/model-registry/overview/" target="_blank" rel="noopener">https://www.kubeflow.org/docs/components/model-registry/overview/</a>
+    </li>
+<li id="ref-42">
+        <a href="#cite-42" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">42.</span>
+        "deloitte.com." Accessed January 19, 2026.
+        <a href="https://www.deloitte.com/us/en/services/consulting/articles/iso-42001-standard-ai-governance-risk-management.html" target="_blank" rel="noopener">https://www.deloitte.com/us/en/services/consulting/articles/iso-42001-standard-ai-governance-risk-management.html</a>
+    </li>
+<li id="ref-43">
+        <a href="#cite-43" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">43.</span>
+        "dagshub.com." Accessed January 19, 2026.
+        <a href="https://dagshub.com/blog/version-control/" target="_blank" rel="noopener">https://dagshub.com/blog/version-control/</a>
+    </li>
+<li id="ref-44">
+        <a href="#cite-44" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">44.</span>
+        "2025.ijcai.org." Accessed January 19, 2026.
+        <a href="https://2025.ijcai.org/reproducibility/" target="_blank" rel="noopener">https://2025.ijcai.org/reproducibility/</a>
+    </li>
+<li id="ref-45">
+        <a href="#cite-45" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">45.</span>
+        "salesforce.com." Accessed January 19, 2026.
+        <a href="https://www.salesforce.com/blog/four-business-models/" target="_blank" rel="noopener">https://www.salesforce.com/blog/four-business-models/</a>
+    </li>
+<li id="ref-46">
+        <a href="#cite-46" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">46.</span>
+        "blog.bitsrc.io." Accessed January 19, 2026.
+        <a href="https://blog.bitsrc.io/the-evolution-of-source-control-svn-git-and-bit-5bc5bf608b36" target="_blank" rel="noopener">https://blog.bitsrc.io/the-evolution-of-source-control-svn-git-and-bit-5bc5bf608b36</a>
+    </li>
+<li id="ref-47">
+        <a href="#cite-47" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">47.</span>
+        "onlinelibrary.wiley.com." Accessed January 19, 2026.
+        <a href="https://onlinelibrary.wiley.com/doi/10.1002/aaai.70002" target="_blank" rel="noopener">https://onlinelibrary.wiley.com/doi/10.1002/aaai.70002</a>
+    </li>
+<li id="ref-48">
+        <a href="#cite-48" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">48.</span>
+        "ey.com." Accessed January 19, 2026.
+        <a href="https://www.ey.com/en_nl/services/finance-navigator/the-ultimate-guide-to-financial-modeling-for-startups" target="_blank" rel="noopener">https://www.ey.com/en_nl/services/finance-navigator/the-ultimate-guide-to-financial-modeling-for-startups</a>
+    </li>
+<li id="ref-49">
+        <a href="#cite-49" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">49.</span>
+        "huggingface.co." Accessed January 19, 2026.
+        <a href="https://huggingface.co/models?other=foundation+model" target="_blank" rel="noopener">https://huggingface.co/models?other=foundation+model</a>
+    </li>
+<li id="ref-50">
+        <a href="#cite-50" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">50.</span>
+        "anthropic.com." Accessed January 19, 2026.
+        <a href="https://www.anthropic.com/news/the-need-for-transparency-in-frontier-ai" target="_blank" rel="noopener">https://www.anthropic.com/news/the-need-for-transparency-in-frontier-ai</a>
+    </li>
+<li id="ref-51">
+        <a href="#cite-51" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">51.</span>
+        "profalexreid.com." Accessed January 19, 2026.
+        <a href="https://profalexreid.com/2025/09/22/major-university-led-ai-initiatives-and-their-focus-2019-2025/" target="_blank" rel="noopener">https://profalexreid.com/2025/09/22/major-university-led-ai-initiatives-and-their-focus-2019-2025/</a>
+    </li>
+<li id="ref-52">
+        <a href="#cite-52" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">52.</span>
+        "huggingface.co." Accessed January 19, 2026.
+        <a href="https://huggingface.co/models" target="_blank" rel="noopener">https://huggingface.co/models</a>
+    </li>
+<li id="ref-53">
+        <a href="#cite-53" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">53.</span>
+        "ntia.gov." Accessed January 19, 2026.
+        <a href="https://www.ntia.gov/issues/artificial-intelligence/ai-accountability-policy-report/developing-accountability-inputs-a-deeper-dive/information-flow/ai-system-disclosures" target="_blank" rel="noopener">https://www.ntia.gov/issues/artificial-intelligence/ai-accountability-policy-report/developing-accountability-inputs-a-deeper-dive/information-flow/ai-system-disclosures</a>
+    </li>
+<li id="ref-54">
+        <a href="#cite-54" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">54.</span>
+        "hai.stanford.edu." Accessed January 19, 2026.
+        <a href="https://hai.stanford.edu/ai-index/2025-ai-index-report" target="_blank" rel="noopener">https://hai.stanford.edu/ai-index/2025-ai-index-report</a>
+    </li>
+<li id="ref-55">
+        <a href="#cite-55" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">55.</span>
+        "siliconvalley.northeastern.edu." Accessed January 19, 2026.
+        <a href="https://siliconvalley.northeastern.edu/2024-graduate-research-showcase-data-science/" target="_blank" rel="noopener">https://siliconvalley.northeastern.edu/2024-graduate-research-showcase-data-science/</a>
+    </li>
+<li id="ref-56">
+        <a href="#cite-56" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">56.</span>
+        "neptune.ai." Accessed January 19, 2026.
+        <a href="https://neptune.ai/blog/best-open-source-mlops-tools" target="_blank" rel="noopener">https://neptune.ai/blog/best-open-source-mlops-tools</a>
+    </li>
+<li id="ref-57">
+        <a href="#cite-57" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">57.</span>
+        "ncar-hpc-docs.readthedocs.io." Accessed January 19, 2026.
+        <a href="https://ncar-hpc-docs.readthedocs.io/en/latest/getting-started/best-practices-for-supercomputer-users/" target="_blank" rel="noopener">https://ncar-hpc-docs.readthedocs.io/en/latest/getting-started/best-practices-for-supercomputer-users/</a>
+    </li>
+<li id="ref-58">
+        <a href="#cite-58" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">58.</span>
+        "ncses.nsf.gov." Accessed January 19, 2026.
+        <a href="https://ncses.nsf.gov/surveys/higher-education-research-development" target="_blank" rel="noopener">https://ncses.nsf.gov/surveys/higher-education-research-development</a>
+    </li>
+<li id="ref-59">
+        <a href="#cite-59" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">59.</span>
+        "digitalocean.com." Accessed January 19, 2026.
+        <a href="https://www.digitalocean.com/resources/articles/mlops-platforms" target="_blank" rel="noopener">https://www.digitalocean.com/resources/articles/mlops-platforms</a>
+    </li>
+<li id="ref-60">
+        <a href="#cite-60" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">60.</span>
+        "dl.acm.org." Accessed January 19, 2026.
+        <a href="https://dl.acm.org/doi/10.1145/3626203.3670621" target="_blank" rel="noopener">https://dl.acm.org/doi/10.1145/3626203.3670621</a>
+    </li>
+        </ol>
+    </section>
+    <footer>filed under: things worth knowing</footer>
+</body>
+</html>
