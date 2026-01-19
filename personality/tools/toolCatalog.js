@@ -223,7 +223,7 @@ const ALL_TOOLS = [
         type: 'function',
         function: {
             name: 'deep_research',
-            description: 'Comprehensive multi-step research with citations and sources. ONLY use when user explicitly says the words "deep research" in their message. Do NOT use for general research questions. Takes 1-3 minutes. Supports multiple output formats: review (comprehensive analysis), taxonomy (hierarchical bullets), cover-letter (job application focused).',
+            description: 'In-depth research with citations (1-3 minutes). Use when user requests: deep/thorough/extensive research, literature review, taxonomy/timeline, cover letter research, or comprehensive analysis on a topic. Format options: review (narrative analysis), taxonomy (hierarchical bullets with dates - good for timelines/histories), cover-letter (job application focused - requires context_url for job posting).',
             parameters: {
                 type: 'object',
                 properties: {
