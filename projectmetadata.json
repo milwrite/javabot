@@ -32,6 +32,13 @@
     }
   },
   "projects": {
+    "Confabuletition": {
+      "title": "Confabuletition",
+      "description": "repetition as hallucination viz",
+      "icon": "🌀",
+      "collection": "featured",
+      "path": "Confabuletition/index.html"
+    },
     "amtrak-journey": {
       "title": "Zach & Cen's Amtrak Journey",
       "description": "Rail trip arcade story",
