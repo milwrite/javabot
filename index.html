@@ -320,8 +320,24 @@
         const statusLine = document.getElementById('status-line');
         const collectionsContainer = document.getElementById('collections');
 
-        function formatLink(slug) {
-            return `src/${encodeURIComponent(slug)}.html`;
+        function encodePathSegments(path) {
+            return path
+                .split('/')
+                .filter(Boolean)
+                .map(segment => encodeURIComponent(segment))
+                .join('/');
+        }
+
+        function formatLink(slug, project = {}) {
+            const rawPath = project.path ? project.path : `${slug}.html`;
+
+            if (/^(https?:)?\/\//.test(rawPath)) {
+                return rawPath;
+            }
+
+            const normalized = rawPath.replace(/^\.?\//, '');
+            const prefixed = normalized.startsWith('src/') ? normalized : `src/${normalized}`;
+            return encodePathSegments(prefixed);
         }
 
         function createProjectCard(slug, project) {
@@ -342,7 +358,7 @@
 
             const link = document.createElement('a');
             link.className = 'project-link';
-            link.href = formatLink(slug);
+            link.href = formatLink(slug, project);
             link.textContent = 'OPEN →';
 
             link.setAttribute('aria-label', `Open ${project.title || slug}`);
