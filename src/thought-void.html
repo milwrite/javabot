@@ -16,7 +16,8 @@
         body {
             padding: 0;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         .skip {
@@ -72,16 +73,15 @@
         .layout {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 14px 16px;
+            padding: 14px 16px 40px;
             display: grid;
             grid-template-columns: 320px 1fr;
             gap: 14px;
-            height: calc(100vh - 80px);
+            min-height: calc(100vh - 80px);
         }
         @media (max-width: 900px) {
             .layout {
                 grid-template-columns: 1fr;
-                height: auto;
             }
         }
 

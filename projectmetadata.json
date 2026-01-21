@@ -73,7 +73,7 @@
       "title": "Task Warning Beacon",
       "description": "Flashing caution beacon",
       "icon": "⚠️",
-      "collection": "featured"
+      "collection": "utilities-apps"
     },
     "terminal-memory": {
       "title": "Terminal Memory",
@@ -85,7 +85,7 @@
       "title": "Thought Void",
       "icon": "🕳️",
       "description": "drag thoughts into the void",
-      "collection": "featured",
+      "collection": "utilities-apps",
       "hidden": false
     },
     "tv-intervention-infomercial": {
