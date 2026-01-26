@@ -108,6 +108,18 @@
       "description": "Interactive visualization of project structure and history.",
       "collection": "meta"
     },
+    "confabuletition": {
+      "title": "Confabuletition",
+      "icon": "🌀",
+      "description": "Repetition-as-confabulation exhibit",
+      "collection": "featured"
+    },
+    "2026-kafkaesque-picasso": {
+      "title": "2026: Kafkaesque Picasso Vision",
+      "icon": "🎨",
+      "description": "Bureaucratic cubist poster",
+      "collection": "stories-content"
+    },
     "site-inventory": {
       "title": "Site Inventory",
       "icon": "🗂️",

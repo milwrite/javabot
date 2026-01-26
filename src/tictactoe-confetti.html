@@ -4,23 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic Tac Toe - Confetti</title>
+    <link rel="stylesheet" href="../page-theme.css">
     <link rel="icon" type="image/jpeg" href="../default.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            color-scheme: light;
-            --bg: #fff5e1;
-            --bg-alt: #e5fff5;
-            --ink: #1f1b16;
-            --muted: #5d5146;
-            --primary: #ff6b4a;
-            --primary-dark: #e94c2d;
-            --secondary: #1b998b;
-            --secondary-dark: #0e6f64;
-            --gold: #f4b740;
-            --card: #ffffff;
-            --shadow: 0 24px 60px rgba(31, 27, 22, 0.18);
+            /* Align with arcade noir palette */
+            color-scheme: dark;
+            --bg: #0a0a0a;
+            --bg-alt: #050505;
+            --ink: #7ec8e3;
+            --muted: rgba(126, 200, 227, 0.75);
+            --primary: #ff0000;
+            --primary-dark: #c40000;
+            --secondary: #00ffff;
+            --secondary-dark: #00bcbc;
+            --gold: #00ff41;
+            --card: rgba(0, 0, 0, 0.55);
+            --shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
         }
 
         * {
@@ -32,9 +34,9 @@
         body {
             font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
             background:
-                radial-gradient(circle at 10% 20%, rgba(255, 214, 165, 0.65), transparent 45%),
-                radial-gradient(circle at 85% 10%, rgba(140, 224, 255, 0.45), transparent 42%),
-                radial-gradient(circle at 80% 90%, rgba(255, 170, 212, 0.35), transparent 45%),
+                radial-gradient(circle at 12% 18%, rgba(0, 255, 255, 0.10), transparent 45%),
+                radial-gradient(circle at 82% 12%, rgba(255, 0, 0, 0.10), transparent 42%),
+                radial-gradient(circle at 82% 88%, rgba(0, 255, 65, 0.06), transparent 45%),
                 linear-gradient(135deg, var(--bg), var(--bg-alt));
             min-height: 100vh;
             display: flex;
@@ -526,7 +528,6 @@
     </style>
 
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../page-theme.css">
 </head>
 <body>
     <a href="../index.html" class="home-link">←</a>

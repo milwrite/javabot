@@ -1,19 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>Agentic Visualization</title>
-    <link rel="stylesheet" href="agentic-visualization.css">
-</head>
-<body>
-    <a class="home-link" href="../index.html"></a>
-    <div id="canvas"></div>
-    <div id="controls">
-        <button id="force-layout">Force</button>
-        <button id="tree-layout">Tree</button>
-        <button id="circular-layout">Circle</button>
+
+    <!-- Noir theme (required) -->
+    <link rel="stylesheet" href="../page-theme.css" />
+
+    <!-- Page-specific styles -->
+    <link rel="stylesheet" href="agentic-visualization.css" />
+  </head>
+
+  <body>
+    <!-- Back button (required) -->
+    <a href="../index.html" class="home-link"></a>
+
+    <!--
+      Lightweight instructions overlay.
+      (This page is mostly canvas-driven; this block makes the UX self-explanatory
+      and keeps the page “content complete” for audits.)
+    -->
+    <div
+      id="instructions"
+      style="
+        position: fixed;
+        top: 10px;
+        left: 70px;
+        z-index: 15;
+        max-width: 340px;
+        padding: 10px 12px;
+        background: rgba(0, 0, 0, 0.55);
+        border: 1px solid rgba(126, 200, 227, 0.25);
+        border-radius: 10px;
+        color: rgba(126, 200, 227, 0.9);
+        font-size: 12px;
+        line-height: 1.35;
+      "
+    >
+      <strong style="color: var(--secondary);">Agentic Visualization</strong>
+      <div style="height: 6px"></div>
+      <div>
+        Drag to pan.
+        <br />
+        Scroll / pinch to zoom.
+        <br />
+        Tap nodes to reveal labels on mobile.
+      </div>
+      <div style="height: 6px"></div>
+      <div>
+        Use the layout buttons (Force / Tree / Circle) to reorganize the graph.
+      </div>
     </div>
+
+    <!-- Render target for the visualization -->
+    <div id="canvas"></div>
+
+    <!-- Layout controls (also used on mobile, see CSS) -->
+    <div id="controls">
+      <button id="force-layout" type="button">Force</button>
+      <button id="tree-layout" type="button">Tree</button>
+      <button id="circular-layout" type="button">Circle</button>
+    </div>
+
     <script src="agentic-visualization.js"></script>
-</body>
+  </body>
 </html>

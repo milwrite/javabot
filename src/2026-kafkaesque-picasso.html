@@ -4,21 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026: Kafkaesque Picasso Vision</title>
+    <link rel="stylesheet" href="../page-theme.css">
     <style>
         body {
-            background: #1a1a1a;
+            background: var(--bg);
             margin: 0;
             padding: 2rem;
             font-family: 'Courier New', monospace;
-            color: #e0e0e0;
+            color: var(--text);
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
         }
         .image-frame {
-            background: #2a2a2a;
-            border: 3px solid #444;
+            background: rgba(255, 255, 255, 0.04);
+            border: 3px solid rgba(126, 200, 227, 0.25);
             padding: 2rem;
             margin: 2rem 0;
             position: relative;
@@ -44,19 +45,29 @@
             transform: rotate(-15deg);
         }
         h1 {
-            color: #d4af37;
+            color: var(--secondary);
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 0.75rem;
         }
         .description {
             font-style: italic;
             text-align: center;
-            margin: 1rem 0;
-            color: #aaa;
+            margin: 0.25rem 0 1.25rem 0;
+            color: rgba(126, 200, 227, 0.75);
         }
+        .instructions {
+            margin: 1.25rem 0 0 0;
+            padding: 1rem 1.1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(126, 200, 227, 0.25);
+            background: rgba(0,0,0,0.22);
+        }
+        .instructions h3 { margin: 0 0 0.5rem 0; color: var(--primary); }
+        .instructions p { margin: 0; line-height: 1.45; color: rgba(126,200,227,0.9); }
     </style>
 </head>
 <body>
+    <a href="../index.html" class="home-link"></a>
     <div class="container">
         <h1>2026: Kafkaesque Picasso Vision</h1>
         <p class="description">A bureaucratic nightmare meets cubist distortion - the future through fractured lenses</p>
@@ -76,9 +87,17 @@
             <div class="bureaucracy-text" style="top: 285px; left: 190px;">APPROVAL PENDING</div>
         </div>
         
-        <p style="text-align: center; margin-top: 2rem;">
-            <em>A vision where forms multiply and faces fragment - 2026 awaits</em>
+        <p style="text-align: center; margin-top: 2rem; color: rgba(126,200,227,0.9);">
+            <em>A vision where forms multiply and faces fragment — 2026 awaits.</em>
         </p>
+
+        <div class="instructions">
+          <h3>What you’re looking at</h3>
+          <p>
+            A deliberately low-fi “poster” built from shapes and labels: a future-relic where bureaucracy becomes a design system
+            and the human face becomes a form. (Scroll, stare, then hit back.)
+          </p>
+        </div>
     </div>
 </body>
 </html>

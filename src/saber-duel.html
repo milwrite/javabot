@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Saber Duel</title>
+  <link rel="stylesheet" href="../page-theme.css" />
+  <style>
+    .container { max-width: 900px; margin: 0 auto; padding: 28px 20px; }
+    .panel { border: 1px solid rgba(126,200,227,0.25); border-radius: 14px; padding: 16px; background: rgba(0,0,0,0.25); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    a.card {
+      display: block;
+      text-decoration: none;
+      border: 1px solid rgba(126,200,227,0.25);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(0,0,0,0.18);
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    a.card:hover { transform: translateY(-2px); border-color: rgba(0,255,255,0.65); }
+    .card h3 { margin: 0 0 8px 0; color: var(--secondary); }
+    .card p { margin: 0; color: rgba(126,200,227,0.85); line-height: 1.4; }
+    .note { color: rgba(126,200,227,0.75); }
+
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <a href="../index.html" class="home-link"></a>
+
+  <div class="container">
+    <h1>Saber Duel</h1>
+
+    <div class="panel">
+      <p class="note">
+        This entry was a broken/empty page. It now serves as a clean launchpad to the two saber games already in the arcade.
+      </p>
+    </div>
+
+    <div style="height: 14px"></div>
+
+    <div class="grid" aria-label="Saber games">
+      <a class="card" href="lightsaber-duel.html">
+        <h3>Lightsaber Duel</h3>
+        <p>Two-player duel mechanics and scoring.</p>
+      </a>
+      <a class="card" href="lightsaber-combat.html">
+        <h3>Lightsaber Combat</h3>
+        <p>Combat variant with different feel + pacing.</p>
+      </a>
+    </div>
+
+    <div style="height: 18px"></div>
+
+    <section class="panel" aria-label="How to play">
+      <h2 style="margin: 0 0 10px 0; color: var(--primary);">How to play</h2>
+      <ul style="margin: 0; padding-left: 18px; line-height: 1.55; color: rgba(126,200,227,0.9);">
+        <li>On desktop: use keyboard controls shown in each game.</li>
+        <li>On mobile: rotate to landscape for more room.</li>
+        <li>If controls feel "stuck", tap once on the play area to focus input.</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>
