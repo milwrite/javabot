@@ -26,6 +26,23 @@ function cleanMarkdownCodeBlocks(content, type = 'html') {
 }
 
 /**
+ * Determine if Phaser should be used for this game
+ * @param {object} plan - Architect's plan
+ * @returns {boolean} - True if Phaser should be used
+ */
+function shouldUsePhaser(plan) {
+    const contentType = plan.contentType || plan.type;
+
+    // Phaser is DEFAULT for all arcade games
+    if (contentType === 'arcade-game') {
+        return true;
+    }
+
+    // Raw Canvas for non-games
+    return false;
+}
+
+/**
  * Build game files from plan
  * @param {object} options - Build options
  * @param {object} options.plan - Architect's plan
@@ -41,6 +58,9 @@ async function buildGame({ plan, attempt, lastIssues = [], buildId, onStatusUpda
     // Prepare prompt based on content type and interaction pattern
     const contentType = plan.contentType || plan.type; // Support both field names for compatibility
     const pattern = plan.interactionPattern || 'direct-touch'; // Default to direct-touch if missing
+
+    // Determine if Phaser should be used
+    const usePhaserFramework = shouldUsePhaser(plan);
 
     // Get pattern-specific control requirements
     const controlRequirements = {
@@ -60,17 +80,18 @@ Plan details:
 - Key features: ${(plan.features || plan.mechanics || []).join(', ')}
 - Interaction pattern: ${pattern}
 - Collection: ${plan.metadata.collection}
+${usePhaserFramework ? '- Framework: Phaser 3 (use CDN: https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js)' : '- Framework: Raw Canvas API'}
 
 CRITICAL CONTROL REQUIREMENTS FOR PATTERN "${pattern}":
 ${controlRequirements[pattern] || controlRequirements['direct-touch']}
 
-Requirements:
+${usePhaserFramework ? 'PHASER FRAMEWORK REQUIREMENTS:\n- Include Phaser CDN in <head>\n- Use transparent: true in config to show page-theme.css background\n- Wire D-pad buttons to Phaser cursors for directional-movement pattern\n- Use noir color palette: 0x7ec8e3 (player), 0xff0000 (enemies), 0x00ffff (collectibles)\n- Reference examples in /src/examples/phaser/ for working patterns\n\n' : ''}Requirements:
 1. Generate COMPLETE, working code appropriate for ${contentType}
 2. Include all required mobile-first elements (viewport, responsive breakpoints)
 3. Use noir terminal theme consistently
 4. Follow the EXACT control requirements for interaction pattern "${pattern}" above
 5. NO placeholders or TODO comments
-6. Check Builder prompt's TEMPLATE_PROMPT section for pattern-specific examples
+6. Check Builder prompt's ${usePhaserFramework ? 'PHASER_TEMPLATE' : 'TEMPLATE_PROMPT'} section for pattern-specific examples
 
 Generate the HTML file content now.`;
 
