@@ -126,10 +126,76 @@ function runAutomatedChecks(html, plan) {
         });
     }
 
+    // Detect if this is a Phaser game
+    const isPhaserGame = html.includes('phaser@3') || html.includes('phaser.min.js');
+
+    if (isPhaserGame) {
+        // Phaser-specific validation
+
+        // 1. Check for Phaser CDN script
+        if (!html.includes('phaser@3') && !html.includes('phaser.min.js')) {
+            issues.push({
+                code: 'MISSING_PHASER_CDN',
+                message: 'Phaser game missing CDN script tag',
+                severity: 'critical'
+            });
+        }
+
+        // 2. Check for proper Phaser config structure
+        if (!html.includes('Phaser.Game') && !html.includes('new Phaser.Game')) {
+            issues.push({
+                code: 'MISSING_PHASER_INIT',
+                message: 'Phaser game missing game initialization (new Phaser.Game)',
+                severity: 'critical'
+            });
+        }
+
+        // 3. Check for scene methods (create/update)
+        if (!html.includes('function create()') && !html.includes('create:')) {
+            warnings.push({
+                code: 'MISSING_PHASER_SCENE',
+                message: 'Phaser game should have create() scene method',
+                severity: 'warning'
+            });
+        }
+
+        // 4. Check for noir theme integration (transparent config)
+        if (!html.includes('transparent: true') && !html.includes('transparent:true')) {
+            warnings.push({
+                code: 'PHASER_NOT_TRANSPARENT',
+                message: 'Phaser config should use transparent: true to show page-theme.css background',
+                severity: 'warning'
+            });
+        }
+
+        // 5. Check for responsive scaling
+        if (!html.includes('Phaser.Scale.FIT') && !html.includes('scale:')) {
+            warnings.push({
+                code: 'PHASER_NO_SCALING',
+                message: 'Phaser config should include scale settings for mobile responsiveness',
+                severity: 'warning'
+            });
+        }
+    }
+
     // Pattern-specific validation (CRITICAL for correct controls)
     const contentType = plan.contentType || plan.type;
     const pattern = plan.interactionPattern || 'direct-touch';
     const isGame = contentType === 'arcade-game';
+
+    // Additional Phaser validation for directional-movement pattern
+    if (isPhaserGame && pattern === 'directional-movement') {
+        if (html.includes('mobile-controls')) {
+            // Has D-pad, check for wiring to Phaser cursors
+            if (!html.includes('addEventListener') || !html.includes('cursors')) {
+                issues.push({
+                    code: 'PHASER_DPAD_NOT_WIRED',
+                    message: 'Directional-movement Phaser game must wire D-pad buttons to Phaser cursors',
+                    severity: 'critical'
+                });
+            }
+        }
+    }
 
     // Validate controls match interaction pattern
     if (pattern === 'directional-movement') {
