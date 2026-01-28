@@ -173,6 +173,81 @@ REQUIRED STORY MOBILE BREAKPOINTS:
 }
 `.trim();
 
+// Phaser 3 framework template (for arcade games) - Reference: src/examples/phaser/
+const PHASER_TEMPLATE = `
+PHASER 3 FRAMEWORK TEMPLATE (Default for arcade games):
+
+WHEN TO USE PHASER:
+- All arcade-game content types (default)
+- Games with physics, collision detection, or multiple entities
+
+REQUIRED STRUCTURE:
+1. Phaser CDN in <head>: <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+2. Phaser container div: <div id="phaser-container"></div>
+3. Phaser config with transparent: true
+4. Scene with create() and update() functions
+5. For directional-movement: D-pad buttons wired to cursors
+
+PHASER CONFIG TEMPLATE:
+const config = {
+    type: Phaser.AUTO,
+    parent: 'phaser-container',
+    transparent: true,  // CRITICAL: Shows page-theme.css background
+    width: 400,
+    height: 400,
+    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+    physics: { default: 'arcade', arcade: { gravity: { y: 0 } } },  // y: 300 for platformers
+    scene: { create, update }
+};
+
+NOIR COLORS (0x prefix for Phaser):
+- Player: 0x7ec8e3 (cyan-blue)
+- Enemies: 0xff0000 (red)
+- Collectibles: 0x00ffff (cyan)
+
+PHASER CREATE() FUNCTION:
+function create() {
+    // Create game objects
+    this.player = this.physics.add.sprite(200, 300, null).setDisplaySize(20, 20).setTint(0x00ffff);
+
+    // Setup input
+    this.cursors = this.input.keyboard.createCursorKeys();
+
+    // Setup collisions
+    this.physics.add.collider(obj1, obj2, callback);
+
+    // Wire mobile controls
+    setupMobileControls(this);
+}
+
+D-PAD WIRING (directional-movement pattern):
+function setupMobileControls(scene) {
+    const btnUp = document.getElementById('btnUp');
+    if (!btnUp) return;  // No D-pad for direct-touch games
+
+    ['touchstart', 'click'].forEach(eventType => {
+        btnUp.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            scene.cursors.up.isDown = true;
+            setTimeout(() => scene.cursors.up.isDown = false, 100);
+        }, { passive: false });
+        // Repeat for down, left, right
+    });
+}
+
+PHASER UPDATE() FUNCTION:
+function update() {
+    if (this.cursors.left.isDown) this.player.setVelocityX(-160);
+    else if (this.cursors.right.isDown) this.player.setVelocityX(160);
+    else this.player.setVelocityX(0);
+}
+
+EXAMPLE GAMES (use read_file() to reference):
+- Space Shooter: /src/examples/phaser/phaser-space-shooter.html (hybrid-controls)
+- Platformer: /src/examples/phaser/phaser-platformer-demo.html (directional-movement)
+- Breakout: /src/examples/phaser/phaser-breakout.html (direct-touch)
+`.trim();
+
 // Role-specific prompts
 const ROLE_PROMPTS = {
     architect: `Architect for Bot Sportello noir web collection. ${BASE_SYSTEM_CONTEXT}
@@ -208,6 +283,8 @@ TASK: Generate complete HTML from Architect plan. No TODOs/placeholders.
 ${TEMPLATE_PROMPT}
 
 ${STORY_TEMPLATE}
+
+${PHASER_TEMPLATE}
 
 CONTROL REQUIREMENTS BY PATTERN:
 - directional-movement: Include D-pad .mobile-controls, handleDirection()
