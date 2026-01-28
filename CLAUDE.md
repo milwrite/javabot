@@ -395,6 +395,50 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - Discord shows truncated version with file path
 - Applies to chat, search, and mention responses
 
+### Phaser Game Framework Integration
+
+**Status**: Active (default for arcade games as of phaser branch)
+
+The bot uses **Phaser 3** (HTML5 game framework) as the default for all arcade game generation. Phaser provides built-in physics, collision detection, sprite management, and input handling, reducing boilerplate code by 40-60% compared to raw Canvas.
+
+**When Phaser is Used**:
+- All `contentType: 'arcade-game'` requests
+- Games with physics (collision, gravity, movement)
+- Platformers, shooters, puzzle games, space games
+
+**When Raw Canvas is Used** (Fallback):
+- Very simple games with minimal logic
+- Text-based games
+- Games with unusual rendering requirements
+- If Phaser generation fails validation
+
+**Phaser Configuration Requirements**:
+- CDN: `https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js`
+- Config must use `transparent: true` to show page-theme.css noir background
+- Config must use `Phaser.Scale.FIT` for mobile responsiveness
+- D-pad buttons must be wired to Phaser cursors for directional-movement games
+
+**Noir Theme Integration**:
+- Phaser colors use 0x prefix: `0x7ec8e3` (player), `0xff0000` (enemies), `0x00ffff` (collectibles)
+- Text objects use Courier Prime font: `{ fontFamily: 'Courier Prime' }`
+- Canvas rendered with `transparent: true` to show page-theme.css background
+
+**Example Games**:
+- Space Shooter: `/src/examples/phaser/phaser-space-shooter.html`
+- Platformer: `/src/examples/phaser/phaser-platformer-demo.html`
+- Breakout: `/src/examples/phaser/phaser-breakout.html`
+
+**Validation**:
+- Tester validates Phaser CDN presence, config structure, and scene methods
+- D-pad wiring validated for directional-movement games
+- Transparent config and scaling settings checked as warnings
+
+**Troubleshooting**:
+- If Phaser game fails to render: Check browser console for CDN load errors
+- If D-pad doesn't work: Verify `setupMobileControls()` function called in `create()`
+- If theme looks wrong: Ensure `transparent: true` in Phaser config
+- If controls lag: Reduce game loop complexity in `update()` function
+
 ### Content Generation Flow
 
 Pages are created via the `write_file()` tool when users ask for new pages, games, or features:
