@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../page-theme.css">
+    <title>Phaser Platformer Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+</head>
+<body>
+    <a href="../../index.html" class="home-link"></a>
+
+    <div class="container">
+        <h1>Platformer Demo</h1>
+        <p class="subtitle">Phaser physics with gravity</p>
+
+        <div class="game-wrapper">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-label">Score</span>
+                    <span class="stat-value" id="score">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Collected</span>
+                    <span class="stat-value" id="collected">0 / 10</span>
+                </div>
+            </div>
+
+            <div id="phaser-container"></div>
+
+            <!-- Directional-movement controls: D-pad with jump -->
+            <div class="mobile-controls">
+                <div class="control-btn empty"></div>
+                <button class="control-btn" id="btnJump">↑</button>
+                <div class="control-btn empty"></div>
+                <button class="control-btn" id="btnLeft">←</button>
+                <div class="control-btn empty"></div>
+                <button class="control-btn" id="btnRight">→</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Noir color palette (Phaser format)
+        const CYAN_BLUE = 0x7ec8e3;
+        const RED = 0xff0000;
+        const CYAN = 0x00ffff;
+        const WHITE = 0xffffff;
+
+        // Game state
+        let score = 0;
+        let collected = 0;
+        let totalCoins = 10;
+        let player, platforms, coins;
+        let cursors;
+        let jumpKey;
+
+        // Phaser config with gravity for platformer
+        const config = {
+            type: Phaser.AUTO,
+            parent: 'phaser-container',
+            transparent: true,  // CRITICAL: Shows page-theme.css background
+            width: 400,
+            height: 500,
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 300 },  // Gravity for platformer
+                    debug: false
+                }
+            },
+            scene: {
+                create: create,
+                update: update
+            }
+        };
+
+        const game = new Phaser.Game(config);
+
+        function create() {
+            // Create player
+            player = this.physics.add.sprite(200, 400, null)
+                .setDisplaySize(20, 30)
+                .setTint(CYAN);
+            player.setBounce(0.1);
+            player.setCollideWorldBounds(true);
+
+            // Create platforms group
+            platforms = this.physics.add.staticGroup();
+
+            // Ground platform
+            const ground = this.add.rectangle(200, 490, 400, 20, CYAN_BLUE);
+            this.physics.add.existing(ground, true);
+            platforms.add(ground);
+
+            // Platform 1
+            const plat1 = this.add.rectangle(100, 400, 100, 15, CYAN_BLUE);
+            this.physics.add.existing(plat1, true);
+            platforms.add(plat1);
+
+            // Platform 2
+            const plat2 = this.add.rectangle(300, 320, 100, 15, CYAN_BLUE);
+            this.physics.add.existing(plat2, true);
+            platforms.add(plat2);
+
+            // Platform 3
+            const plat3 = this.add.rectangle(150, 240, 80, 15, CYAN_BLUE);
+            this.physics.add.existing(plat3, true);
+            platforms.add(plat3);
+
+            // Platform 4
+            const plat4 = this.add.rectangle(320, 160, 80, 15, CYAN_BLUE);
+            this.physics.add.existing(plat4, true);
+            platforms.add(plat4);
+
+            // Create coins group
+            coins = this.physics.add.group();
+
+            // Spawn coins on platforms
+            spawnCoin(this, 100, 370);
+            spawnCoin(this, 70, 370);
+            spawnCoin(this, 130, 370);
+            spawnCoin(this, 300, 290);
+            spawnCoin(this, 270, 290);
+            spawnCoin(this, 330, 290);
+            spawnCoin(this, 150, 210);
+            spawnCoin(this, 180, 210);
+            spawnCoin(this, 320, 130);
+            spawnCoin(this, 350, 130);
+
+            // Collisions
+            this.physics.add.collider(player, platforms);
+            this.physics.add.collider(coins, platforms);
+            this.physics.add.overlap(player, coins, collectCoin, null, this);
+
+            // Keyboard input
+            cursors = this.input.keyboard.createCursorKeys();
+            jumpKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+            // Wire mobile controls
+            setupMobileControls(this);
+
+            // Instructions
+            this.add.text(200, 30, 'COLLECT ALL COINS', {
+                fontFamily: 'Courier Prime',
+                fontSize: '16px',
+                color: '#7ec8e3',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+
+            this.add.text(200, 55, 'ARROW KEYS / D-PAD TO MOVE', {
+                fontFamily: 'Courier Prime',
+                fontSize: '12px',
+                color: '#00ffff',
+                stroke: '#000000',
+                strokeThickness: 1
+            }).setOrigin(0.5);
+        }
+
+        function update() {
+            // Horizontal movement
+            if (cursors.left.isDown) {
+                player.setVelocityX(-160);
+            } else if (cursors.right.isDown) {
+                player.setVelocityX(160);
+            } else {
+                player.setVelocityX(0);
+            }
+
+            // Jumping (only when on ground)
+            if ((cursors.up.isDown || jumpKey.isDown) && player.body.touching.down) {
+                player.setVelocityY(-250);
+            }
+        }
+
+        function spawnCoin(scene, x, y) {
+            const coin = scene.physics.add.sprite(x, y, null)
+                .setDisplaySize(12, 12)
+                .setTint(CYAN);
+            coin.setBounce(0.3);
+            coins.add(coin);
+        }
+
+        function collectCoin(player, coin) {
+            coin.destroy();
+            collected++;
+            score += 10;
+            updateHUD();
+
+            if (collected >= totalCoins) {
+                winGame.call(this);
+            }
+        }
+
+        function winGame() {
+            // Freeze player
+            player.setVelocity(0, 0);
+
+            // Show win text
+            this.add.text(200, 250, 'YOU WIN!', {
+                fontFamily: 'Courier Prime',
+                fontSize: '32px',
+                color: '#00ffff',
+                stroke: '#000000',
+                strokeThickness: 3
+            }).setOrigin(0.5);
+
+            this.add.text(200, 290, `FINAL SCORE: ${score}`, {
+                fontFamily: 'Courier Prime',
+                fontSize: '16px',
+                color: '#7ec8e3',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+        }
+
+        function setupMobileControls(scene) {
+            const btnJump = document.getElementById('btnJump');
+            const btnLeft = document.getElementById('btnLeft');
+            const btnRight = document.getElementById('btnRight');
+
+            if (!btnJump) return;
+
+            // Touch + click for mobile + desktop
+            ['touchstart', 'click'].forEach(eventType => {
+                btnJump.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    if (player.body.touching.down) {
+                        cursors.up.isDown = true;
+                        setTimeout(() => cursors.up.isDown = false, 100);
+                    }
+                }, { passive: false });
+
+                btnLeft.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    cursors.left.isDown = true;
+                    setTimeout(() => cursors.left.isDown = false, 100);
+                }, { passive: false });
+
+                btnRight.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    cursors.right.isDown = true;
+                    setTimeout(() => cursors.right.isDown = false, 100);
+                }, { passive: false });
+            });
+
+            // Continuous press for movement buttons
+            ['touchend', 'mouseup'].forEach(eventType => {
+                btnLeft.addEventListener(eventType, (e) => {
+                    cursors.left.isDown = false;
+                });
+
+                btnRight.addEventListener(eventType, (e) => {
+                    cursors.right.isDown = false;
+                });
+            });
+        }
+
+        // Update HUD
+        function updateHUD() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('collected').textContent = `${collected} / ${totalCoins}`;
+        }
+    </script>
+
+    <style>
+        #phaser-container canvas {
+            max-width: 100%;
+            height: auto;
+            border: 3px solid var(--color-text);
+            box-shadow: 0 0 30px rgba(126, 200, 227, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            #phaser-container canvas {
+                max-width: 95vw;
+                max-height: 60vh;
+            }
+        }
+    </style>
+</body>
+</html>

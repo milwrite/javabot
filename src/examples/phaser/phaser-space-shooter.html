@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../page-theme.css">
+    <title>Phaser Space Shooter</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+</head>
+<body>
+    <a href="../../index.html" class="home-link"></a>
+
+    <div class="container">
+        <h1>Space Shooter</h1>
+        <p class="subtitle">Phaser framework demonstration</p>
+
+        <div class="game-wrapper">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-label">Score</span>
+                    <span class="stat-value" id="score">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Lives</span>
+                    <span class="stat-value" id="lives">3</span>
+                </div>
+            </div>
+
+            <div id="phaser-container"></div>
+
+            <!-- Hybrid controls: D-pad movement + shoot button -->
+            <div class="mobile-controls">
+                <div class="control-btn empty"></div>
+                <button class="control-btn" id="btnUp">↑</button>
+                <div class="control-btn empty"></div>
+                <button class="control-btn" id="btnLeft">←</button>
+                <button class="control-btn" id="btnDown">↓</button>
+                <button class="control-btn" id="btnRight">→</button>
+            </div>
+
+            <div class="control-actions">
+                <button class="btn btn-primary" id="btnShoot">FIRE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Noir color palette (Phaser format)
+        const CYAN_BLUE = 0x7ec8e3;
+        const RED = 0xff0000;
+        const CYAN = 0x00ffff;
+        const WHITE = 0xffffff;
+
+        // Game state
+        let score = 0;
+        let lives = 3;
+        let gameOver = false;
+        let player, enemies, bullets;
+        let cursors, shootKey;
+        let lastFired = 0;
+        let fireRate = 300; // ms between shots
+        let enemySpawnTimer;
+
+        // Phaser config with noir theme integration
+        const config = {
+            type: Phaser.AUTO,
+            parent: 'phaser-container',
+            transparent: true,  // CRITICAL: Shows page-theme.css background
+            width: 400,
+            height: 500,
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scene: {
+                create: create,
+                update: update
+            }
+        };
+
+        const game = new Phaser.Game(config);
+
+        function create() {
+            // Create player ship
+            player = this.physics.add.sprite(200, 450, null)
+                .setDisplaySize(20, 20)
+                .setTint(CYAN);
+            player.setCollideWorldBounds(true);
+
+            // Create groups
+            enemies = this.physics.add.group();
+            bullets = this.physics.add.group();
+
+            // Keyboard input
+            cursors = this.input.keyboard.createCursorKeys();
+            shootKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+            // Collisions
+            this.physics.add.overlap(bullets, enemies, hitEnemy, null, this);
+            this.physics.add.overlap(player, enemies, hitPlayer, null, this);
+
+            // Spawn enemies periodically
+            enemySpawnTimer = this.time.addEvent({
+                delay: 1500,
+                callback: spawnEnemy,
+                callbackScope: this,
+                loop: true
+            });
+
+            // Wire mobile controls
+            setupMobileControls(this);
+
+            // Instructions
+            this.add.text(200, 30, 'DESTROY THE INVADERS', {
+                fontFamily: 'Courier Prime',
+                fontSize: '16px',
+                color: '#7ec8e3',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+        }
+
+        function update(time) {
+            if (gameOver) return;
+
+            // Player movement
+            if (cursors.left.isDown) {
+                player.setVelocityX(-200);
+            } else if (cursors.right.isDown) {
+                player.setVelocityX(200);
+            } else {
+                player.setVelocityX(0);
+            }
+
+            if (cursors.up.isDown) {
+                player.setVelocityY(-200);
+            } else if (cursors.down.isDown) {
+                player.setVelocityY(200);
+            } else {
+                player.setVelocityY(0);
+            }
+
+            // Shooting
+            if ((shootKey.isDown || cursors.space?.isDown) && time > lastFired + fireRate) {
+                shoot(this);
+                lastFired = time;
+            }
+
+            // Remove off-screen bullets
+            bullets.children.entries.forEach(bullet => {
+                if (bullet.y < -10) {
+                    bullet.destroy();
+                }
+            });
+
+            // Remove off-screen enemies
+            enemies.children.entries.forEach(enemy => {
+                if (enemy.y > 510) {
+                    enemy.destroy();
+                }
+            });
+        }
+
+        function shoot(scene) {
+            const bullet = scene.physics.add.sprite(player.x, player.y - 15, null)
+                .setDisplaySize(4, 12)
+                .setTint(CYAN);
+            bullet.setVelocityY(-400);
+            bullets.add(bullet);
+        }
+
+        function spawnEnemy() {
+            if (gameOver) return;
+
+            const x = Phaser.Math.Between(20, 380);
+            const enemy = this.physics.add.sprite(x, -20, null)
+                .setDisplaySize(20, 20)
+                .setTint(RED);
+            enemy.setVelocityY(Phaser.Math.Between(80, 150));
+            enemies.add(enemy);
+        }
+
+        function hitEnemy(bullet, enemy) {
+            bullet.destroy();
+            enemy.destroy();
+            score += 10;
+            updateScore();
+        }
+
+        function hitPlayer(player, enemy) {
+            enemy.destroy();
+            lives--;
+            updateLives();
+
+            if (lives <= 0) {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            gameOver = true;
+            enemySpawnTimer.remove();
+
+            // Flash player red
+            player.setTint(RED);
+
+            // Show game over text
+            const gameOverText = this.add.text(200, 250, 'GAME OVER', {
+                fontFamily: 'Courier Prime',
+                fontSize: '32px',
+                color: '#ff0000',
+                stroke: '#000000',
+                strokeThickness: 3
+            }).setOrigin(0.5);
+
+            const finalScore = this.add.text(200, 290, `FINAL SCORE: ${score}`, {
+                fontFamily: 'Courier Prime',
+                fontSize: '16px',
+                color: '#7ec8e3',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+        }
+
+        function setupMobileControls(scene) {
+            const btnUp = document.getElementById('btnUp');
+            const btnDown = document.getElementById('btnDown');
+            const btnLeft = document.getElementById('btnLeft');
+            const btnRight = document.getElementById('btnRight');
+            const btnShoot = document.getElementById('btnShoot');
+
+            if (!btnUp) return;  // No D-pad for direct-touch games
+
+            // Touch + click for mobile + desktop
+            ['touchstart', 'click'].forEach(eventType => {
+                btnUp.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    cursors.up.isDown = true;
+                    setTimeout(() => cursors.up.isDown = false, 100);
+                }, { passive: false });
+
+                btnDown.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    cursors.down.isDown = true;
+                    setTimeout(() => cursors.down.isDown = false, 100);
+                }, { passive: false });
+
+                btnLeft.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    cursors.left.isDown = true;
+                    setTimeout(() => cursors.left.isDown = false, 100);
+                }, { passive: false });
+
+                btnRight.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    cursors.right.isDown = true;
+                    setTimeout(() => cursors.right.isDown = false, 100);
+                }, { passive: false });
+
+                btnShoot.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    if (!gameOver && Date.now() > lastFired + fireRate) {
+                        shoot(scene);
+                        lastFired = Date.now();
+                    }
+                }, { passive: false });
+            });
+        }
+
+        // Update HUD
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        function updateLives() {
+            document.getElementById('lives').textContent = lives;
+        }
+    </script>
+
+    <style>
+        #phaser-container canvas {
+            max-width: 100%;
+            height: auto;
+            border: 3px solid var(--color-text);
+            box-shadow: 0 0 30px rgba(126, 200, 227, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            #phaser-container canvas {
+                max-width: 95vw;
+                max-height: 60vh;
+            }
+        }
+
+        .control-actions {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .control-actions button {
+            min-width: 120px;
+            font-size: 18px;
+        }
+    </style>
+</body>
+</html>

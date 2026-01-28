@@ -236,11 +236,11 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 - **Zero Data Retention (ZDR) ENFORCED** - all requests use `provider.data_collection: 'deny'`
 - Only ZDR-compliant models allowed (no OpenAI - they don't support ZDR on OpenRouter)
 - Swappable models via `MODEL_PRESETS` (ZDR-compliant only)
-- Default: `z-ai/glm-4.7`
-- Available: GLM 4.7, Kimi K2, DeepSeek V3.1, Qwen 3, MiMo
+- Default: `moonshotai/kimi-k2.5`
+- Available: Kimi K2.5, GLM 4.6, DeepSeek V3.1, Qwen 3, MiMo
 - `set_model(model)` - Switch AI model: glm, kimi, deepseek, qwen, mimo (equivalent to `/set-model`)
-- `glm` - GLM 4.7 (default)
-- `kimi` - K2 (with reasoning)
+- `kimi` - Kimi K2.5 (default, with reasoning)
+- `glm` - GLM 4.6 Exacto
 - `deepseek` - DeepSeek V3.1 Terminus
 - Function calling support (filesystem tools, web search)
 - 10,000 token output limit for detailed responses
@@ -462,6 +462,13 @@ personality/
 - `core/repository.js` - Emphasizes `src/site-inventory.html` as THE source of truth for file discovery
 - `tools/fileOperations.js` - "NEVER HALLUCINATE - ALWAYS VERIFY" rules at top of module
 
+**Conversational-First Behavior** (Jan 2026 tuning):
+- **Router**: Vague create requests ("make a game", "build something") now route to chat for clarification instead of immediate building
+- **Create triggers**: Only route to build intent when request includes specific name, type, AND features/details
+- **Exploration rules**: Added "ask for specifics before building" - bot clarifies ambiguous requests first
+- **Identity**: Updated personality to emphasize "chat before diving in" - helpful but conversational
+- **Effect**: Bot asks "what kind?" before building, reducing over-development and wasted effort
+
 **Usage**: Call `getBotResponse(category)` for random selection from category.
 
 ### Environment Variables
@@ -567,8 +574,8 @@ MODEL = MODEL_PRESETS[modelChoice];
 ```
 
 Available presets (ZDR-compliant only):
-- `glm` - GLM 4.7 (default)
-- `kimi` - Kimi K2 Thinking (reasoning)
+- `kimi` - Kimi K2.5 (default, with reasoning)
+- `glm` - GLM 4.6 Exacto
 - `deepseek` - DeepSeek V3.1 Terminus
 - `qwen` - Qwen 3 Coder (Alibaba)
 - `mimo` - MiMo V2 Flash (Xiaomi)

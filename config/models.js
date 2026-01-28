@@ -9,7 +9,7 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL_PRESETS = {
     'glm': 'z-ai/glm-4.6:exacto',
     'deepseek': 'deepseek/deepseek-v3.1-terminus:exacto',
-    'kimi': 'moonshotai/kimi-k2-thinking',
+    'kimi': 'moonshotai/kimi-k2.5',
     'kimi-fast': 'moonshotai/kimi-k2-0905:exacto',
     'qwen': 'qwen/qwen3-coder:exacto',
     'minimax': 'minimax/minimax-m2.1',
@@ -19,8 +19,8 @@ const MODEL_PRESETS = {
 // Human-readable display names for each model
 const MODEL_DISPLAY_NAMES = {
     'glm': 'GLM 4.6 Exacto',
-    'deepseek': 'DeepSeek V3.1 Terminus (Default)',
-    'kimi': 'Kimi K2 Thinking',
+    'deepseek': 'DeepSeek V3.1 Terminus',
+    'kimi': 'Kimi K2.5 (Default)',
     'kimi-fast': 'Kimi K2 Fast',
     'qwen': 'Qwen 3 Coder',
     'minimax': 'Minimax M2.1',
@@ -28,12 +28,14 @@ const MODEL_DISPLAY_NAMES = {
 };
 
 // SINGLE SOURCE OF TRUTH: Default model for all operations
-const DEFAULT_MODEL = 'deepseek';
+const DEFAULT_MODEL = 'kimi';
 
 // Reasoning configuration per model (interleaved thinking support)
 // Models that support reasoning will expose thinking during tool-calling workflows
 const REASONING_CONFIG = {
-    // Kimi K2 thinking - mandatory reasoning with <think> tokens
+    // Kimi K2.5 - supports reasoning with extended context
+    'moonshotai/kimi-k2.5': { effort: 'low' },
+    // Kimi K2 thinking (legacy) - mandatory reasoning with <think> tokens
     'moonshotai/kimi-k2-thinking': { effort: 'low' },
     // Models without reasoning support - graceful skip
     'deepseek/deepseek-v3.1-terminus:exacto': null,

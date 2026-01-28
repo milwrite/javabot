@@ -177,12 +177,27 @@ function patternRoute(userMessage, context = {}) {
         plan.expectedIterations = 3;
         plan.reasoning = `Pronoun resolved to recent file: ${recentFile}`;
     }
-    // Create intent - use write_file for content creation
+    // Create intent - ONLY if specific details provided (name, type, or clear description)
+    // Vague requests like "make a game" or "build something" → chat for clarification
     else if (/\b(create|build|make|generate|new)\b/.test(lower)) {
-        plan.intent = 'create';
-        plan.toolSequence = ['list_files', 'write_file'];
-        plan.expectedIterations = 2;
-        plan.reasoning = 'Content creation request';
+        // Check for specific indicators: filenames, types, or detailed descriptions
+        const hasSpecificName = /\b(called|named)\s+[\w-]+/.test(lower) || informalMatch;
+        const hasType = /\b(game|page|feature|calculator|timer|todo|list|quiz|puzzle)\b/.test(lower);
+        const hasDetails = userMessage.split(' ').length > 8; // More than 8 words suggests detail
+
+        if (hasSpecificName || (hasType && hasDetails)) {
+            plan.intent = 'create';
+            plan.toolSequence = ['list_files', 'write_file'];
+            plan.expectedIterations = 2;
+            plan.reasoning = 'Content creation request with specific details';
+        } else {
+            // Vague create request - route to chat for clarification
+            plan.intent = 'chat';
+            plan.confidence = 0.6;
+            plan.clarifyFirst = true;
+            plan.clarifyQuestion = 'What kind of content would you like? (e.g., game type, page purpose, specific features)';
+            plan.reasoning = 'Vague create request - needs clarification before building';
+        }
     }
     // Commit intent
     else if (/\b(commit|push|save|deploy)\b/.test(lower)) {

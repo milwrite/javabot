@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../page-theme.css">
+    <title>Phaser Breakout</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+</head>
+<body>
+    <a href="../../index.html" class="home-link"></a>
+
+    <div class="container">
+        <h1>Breakout</h1>
+        <p class="subtitle">Touch/click to move paddle</p>
+
+        <div class="game-wrapper">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-label">Score</span>
+                    <span class="stat-value" id="score">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Bricks</span>
+                    <span class="stat-value" id="bricks">24</span>
+                </div>
+            </div>
+
+            <div id="phaser-container"></div>
+
+            <!-- NO D-pad controls for direct-touch game -->
+        </div>
+    </div>
+
+    <script>
+        // Noir color palette (Phaser format)
+        const CYAN_BLUE = 0x7ec8e3;
+        const RED = 0xff0000;
+        const CYAN = 0x00ffff;
+        const WHITE = 0xffffff;
+
+        // Game state
+        let score = 0;
+        let bricksRemaining = 0;
+        let gameStarted = false;
+        let gameOver = false;
+        let paddle, ball, bricks;
+        let ballOnPaddle = true;
+
+        // Phaser config for breakout
+        const config = {
+            type: Phaser.AUTO,
+            parent: 'phaser-container',
+            transparent: true,  // CRITICAL: Shows page-theme.css background
+            width: 400,
+            height: 500,
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scene: {
+                create: create,
+                update: update
+            }
+        };
+
+        const game = new Phaser.Game(config);
+
+        function create() {
+            // Create paddle
+            paddle = this.add.rectangle(200, 460, 80, 15, CYAN_BLUE);
+            this.physics.add.existing(paddle);
+            paddle.body.immovable = true;
+            paddle.body.setCollideWorldBounds(true);
+
+            // Create ball
+            ball = this.add.circle(200, 440, 8, WHITE);
+            this.physics.add.existing(ball);
+            ball.body.setBounce(1);
+            ball.body.setCollideWorldBounds(true);
+
+            // Create bricks
+            bricks = this.physics.add.staticGroup();
+            const rows = 4;
+            const cols = 6;
+            const brickWidth = 55;
+            const brickHeight = 20;
+            const padding = 10;
+            const offsetX = 35;
+            const offsetY = 80;
+
+            const colors = [RED, CYAN, CYAN_BLUE, 0xffffff];
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const x = offsetX + col * (brickWidth + padding);
+                    const y = offsetY + row * (brickHeight + padding);
+                    const brick = this.add.rectangle(x, y, brickWidth, brickHeight, colors[row]);
+                    this.physics.add.existing(brick, true);
+                    bricks.add(brick);
+                    bricksRemaining++;
+                }
+            }
+
+            updateBricksDisplay();
+
+            // Collisions
+            this.physics.add.collider(ball, paddle, ballHitPaddle, null, this);
+            this.physics.add.collider(ball, bricks, ballHitBrick, null, this);
+
+            // Mouse/touch controls for paddle
+            this.input.on('pointermove', (pointer) => {
+                // Clamp paddle position to world bounds
+                let newX = pointer.x;
+                if (newX < 40) newX = 40;
+                if (newX > 360) newX = 360;
+                paddle.x = newX;
+
+                // If ball is on paddle, move ball with paddle
+                if (ballOnPaddle) {
+                    ball.x = paddle.x;
+                }
+            });
+
+            // Click/tap to launch ball
+            this.input.on('pointerdown', () => {
+                if (ballOnPaddle && !gameOver) {
+                    launchBall();
+                }
+            });
+
+            // Spacebar to launch
+            this.input.keyboard.on('keydown-SPACE', () => {
+                if (ballOnPaddle && !gameOver) {
+                    launchBall();
+                }
+            });
+
+            // Instructions
+            this.add.text(200, 30, 'CLICK TO LAUNCH', {
+                fontFamily: 'Courier Prime',
+                fontSize: '16px',
+                color: '#7ec8e3',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+
+            this.add.text(200, 55, 'MOVE MOUSE/FINGER TO CONTROL PADDLE', {
+                fontFamily: 'Courier Prime',
+                fontSize: '10px',
+                color: '#00ffff',
+                stroke: '#000000',
+                strokeThickness: 1
+            }).setOrigin(0.5);
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            // Check if ball falls off bottom
+            if (ball.y > 500) {
+                endGame.call(this);
+            }
+        }
+
+        function launchBall() {
+            ballOnPaddle = false;
+            gameStarted = true;
+
+            // Launch ball at angle
+            const angle = Phaser.Math.Between(-45, 45);
+            const radians = Phaser.Math.DegToRad(angle);
+            const speed = 250;
+
+            ball.body.setVelocity(
+                Math.sin(radians) * speed,
+                -Math.cos(radians) * speed
+            );
+        }
+
+        function ballHitPaddle(ball, paddle) {
+            // Add spin based on where ball hits paddle
+            const diff = ball.x - paddle.x;
+            ball.body.setVelocityX(diff * 5);
+        }
+
+        function ballHitBrick(ball, brick) {
+            brick.destroy();
+            bricksRemaining--;
+            score += 10;
+
+            updateScore();
+            updateBricksDisplay();
+
+            if (bricksRemaining === 0) {
+                winGame.call(this);
+            }
+        }
+
+        function endGame() {
+            gameOver = true;
+            ball.body.setVelocity(0, 0);
+
+            // Show game over text
+            this.add.text(200, 250, 'GAME OVER', {
+                fontFamily: 'Courier Prime',
+                fontSize: '32px',
+                color: '#ff0000',
+                stroke: '#000000',
+                strokeThickness: 3
+            }).setOrigin(0.5);
+
+            this.add.text(200, 290, `FINAL SCORE: ${score}`, {
+                fontFamily: 'Courier Prime',
+                fontSize: '16px',
+                color: '#7ec8e3',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+        }
+
+        function winGame() {
+            gameOver = true;
+            ball.body.setVelocity(0, 0);
+
+            // Show win text
+            this.add.text(200, 250, 'VICTORY!', {
+                fontFamily: 'Courier Prime',
+                fontSize: '32px',
+                color: '#00ffff',
+                stroke: '#000000',
+                strokeThickness: 3
+            }).setOrigin(0.5);
+
+            this.add.text(200, 290, `PERFECT SCORE: ${score}`, {
+                fontFamily: 'Courier Prime',
+                fontSize: '16px',
+                color: '#7ec8e3',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+        }
+
+        // Update HUD
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        function updateBricksDisplay() {
+            document.getElementById('bricks').textContent = bricksRemaining;
+        }
+    </script>
+
+    <style>
+        #phaser-container canvas {
+            max-width: 100%;
+            height: auto;
+            border: 3px solid var(--color-text);
+            box-shadow: 0 0 30px rgba(126, 200, 227, 0.4);
+            cursor: none; /* Hide cursor over game area */
+        }
+
+        @media (max-width: 768px) {
+            #phaser-container canvas {
+                max-width: 95vw;
+                max-height: 60vh;
+            }
+        }
+    </style>
+</body>
+</html>
