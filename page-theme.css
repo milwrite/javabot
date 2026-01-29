@@ -389,6 +389,14 @@ h1 {
     text-align: center;
 }
 
+.subtitle {
+    color: var(--color-secondary);
+    font-size: var(--font-size-sm);
+    text-align: center;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
 @keyframes titleGlitch {
     0% { transform: translate(0, 0); color: #ff0000; }
     20% { transform: translate(-2px, 2px); color: #7ec8e3; }
@@ -461,6 +469,7 @@ button:hover, .btn:hover {
 
 button:active, .btn:active {
     transform: skew(-3deg) scale(0.98);
+    box-shadow: 0 0 20px var(--color-primary);
 }
 
 button:focus-visible, .btn:focus-visible {
@@ -714,6 +723,31 @@ td {
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 15px;
     margin: 20px 0;
+}
+
+/* Stats bar for game HUDs */
+.stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-6);
+    margin: 0 0 var(--space-5) 0;
+}
+
+.stats-bar .stat {
+    min-width: 100px;
+    padding: var(--space-3) var(--space-5);
+}
+
+.stats-bar .stat-label {
+    display: block;
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--space-1);
+}
+
+.stats-bar .stat-value {
+    display: block;
+    font-size: var(--font-size-xl);
+    font-weight: bold;
 }
 
 .stat-box, .stat-card, .stat, .nutrition-card {
@@ -2567,6 +2601,7 @@ canvas {
 .control-btn:hover, .control-btn:active {
     background: rgba(126, 200, 227, 0.3);
     transform: scale(0.95);
+    box-shadow: 0 0 10px var(--color-primary);
 }
 
 .control-btn.empty {

@@ -2,16 +2,16 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../../page-theme.css">
+    <link rel="stylesheet" href="../../../page-theme.css">
     <title>Phaser Breakout</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 </head>
 <body>
-    <a href="../../index.html" class="home-link"></a>
+    <a href="../../../index.html" class="home-link"></a>
 
     <div class="container">
         <h1>Breakout</h1>
-        <p class="subtitle">Touch/click to move paddle</p>
+        <p class="subtitle">Arrow keys or mouse/touch controls</p>
 
         <div class="game-wrapper">
             <div class="stats-bar">
@@ -28,6 +28,10 @@
             <div id="phaser-container"></div>
 
             <!-- NO D-pad controls for direct-touch game -->
+
+            <div id="restart-container" class="restart-container" style="display: none;">
+                <button class="btn btn-primary" id="btnRestart" aria-label="Restart game">RESTART</button>
+            </div>
         </div>
     </div>
 
@@ -38,12 +42,22 @@
         const CYAN = 0x00ffff;
         const WHITE = 0xffffff;
 
+        // Game constants
+        const PADDLE_SPEED = 400;
+        const PADDLE_WIDTH = 80;
+        const PADDLE_HEIGHT = 15;
+        const BALL_SPEED = 250;
+        const BALL_RADIUS = 8;
+        const BALL_BOUNCE = 1;
+        const MIN_PADDLE_X = 40;
+        const MAX_PADDLE_X = 360;
+
         // Game state
         let score = 0;
         let bricksRemaining = 0;
         let gameStarted = false;
         let gameOver = false;
-        let paddle, ball, bricks;
+        let paddle, ball, bricks, cursors;
         let ballOnPaddle = true;
 
         // Phaser config for breakout
@@ -55,7 +69,7 @@
             height: 500,
             scale: {
                 mode: Phaser.Scale.FIT,
-                autoCenter: Phaser.Scale.CENTER_BOTH
+                autoCenter: Phaser.Scale.NO_CENTER
             },
             physics: {
                 default: 'arcade',
@@ -74,16 +88,17 @@
 
         function create() {
             // Create paddle
-            paddle = this.add.rectangle(200, 460, 80, 15, CYAN_BLUE);
+            paddle = this.add.rectangle(200, 460, PADDLE_WIDTH, PADDLE_HEIGHT, CYAN_BLUE);
             this.physics.add.existing(paddle);
             paddle.body.immovable = true;
             paddle.body.setCollideWorldBounds(true);
 
             // Create ball
-            ball = this.add.circle(200, 440, 8, WHITE);
+            ball = this.add.circle(200, 440, BALL_RADIUS, WHITE);
             this.physics.add.existing(ball);
-            ball.body.setBounce(1);
-            ball.body.setCollideWorldBounds(true);
+            ball.body.setBounce(BALL_BOUNCE);
+            // Don't use world bounds - we handle collisions manually in update()
+            ball.body.setCollideWorldBounds(false);
 
             // Create bricks
             bricks = this.physics.add.staticGroup();
@@ -114,12 +129,15 @@
             this.physics.add.collider(ball, paddle, ballHitPaddle, null, this);
             this.physics.add.collider(ball, bricks, ballHitBrick, null, this);
 
+            // Keyboard input
+            cursors = this.input.keyboard.createCursorKeys();
+
             // Mouse/touch controls for paddle
             this.input.on('pointermove', (pointer) => {
                 // Clamp paddle position to world bounds
                 let newX = pointer.x;
-                if (newX < 40) newX = 40;
-                if (newX > 360) newX = 360;
+                if (newX < MIN_PADDLE_X) newX = MIN_PADDLE_X;
+                if (newX > MAX_PADDLE_X) newX = MAX_PADDLE_X;
                 paddle.x = newX;
 
                 // If ball is on paddle, move ball with paddle
@@ -142,6 +160,12 @@
                 }
             });
 
+            // Wire restart button
+            const btnRestart = document.getElementById('btnRestart');
+            if (btnRestart) {
+                btnRestart.addEventListener('click', () => location.reload());
+            }
+
             // Instructions
             this.add.text(200, 30, 'CLICK TO LAUNCH', {
                 fontFamily: 'Courier Prime',
@@ -151,7 +175,7 @@
                 strokeThickness: 2
             }).setOrigin(0.5);
 
-            this.add.text(200, 55, 'MOVE MOUSE/FINGER TO CONTROL PADDLE', {
+            this.add.text(200, 55, 'ARROW KEYS OR MOUSE/TOUCH TO MOVE', {
                 fontFamily: 'Courier Prime',
                 fontSize: '10px',
                 color: '#00ffff',
@@ -162,6 +186,40 @@
 
         function update() {
             if (gameOver) return;
+
+            // Keyboard paddle controls
+            const paddleSpeed = PADDLE_SPEED;
+            if (cursors.left.isDown) {
+                paddle.x -= paddleSpeed * (1/60);  // 60 FPS
+                if (paddle.x < 40) paddle.x = 40;
+            } else if (cursors.right.isDown) {
+                paddle.x += paddleSpeed * (1/60);
+                if (paddle.x > 360) paddle.x = 360;
+            }
+
+            // Keep ball on paddle if not launched
+            if (ballOnPaddle) {
+                ball.x = paddle.x;
+            }
+
+            // Manual wall bouncing (top, left, right only)
+            // Left wall
+            if (ball.x - BALL_RADIUS < 0) {
+                ball.x = BALL_RADIUS;
+                ball.body.setVelocityX(-ball.body.velocity.x);
+            }
+
+            // Right wall
+            if (ball.x + BALL_RADIUS > 400) {
+                ball.x = 400 - BALL_RADIUS;
+                ball.body.setVelocityX(-ball.body.velocity.x);
+            }
+
+            // Top wall
+            if (ball.y - BALL_RADIUS < 0) {
+                ball.y = BALL_RADIUS;
+                ball.body.setVelocityY(-ball.body.velocity.y);
+            }
 
             // Check if ball falls off bottom
             if (ball.y > 500) {
@@ -176,11 +234,10 @@
             // Launch ball at angle
             const angle = Phaser.Math.Between(-45, 45);
             const radians = Phaser.Math.DegToRad(angle);
-            const speed = 250;
 
             ball.body.setVelocity(
-                Math.sin(radians) * speed,
-                -Math.cos(radians) * speed
+                Math.sin(radians) * BALL_SPEED,
+                -Math.cos(radians) * BALL_SPEED
             );
         }
 
@@ -223,6 +280,9 @@
                 stroke: '#000000',
                 strokeThickness: 2
             }).setOrigin(0.5);
+
+            // Show restart button
+            document.getElementById('restart-container').style.display = 'block';
         }
 
         function winGame() {
@@ -245,6 +305,9 @@
                 stroke: '#000000',
                 strokeThickness: 2
             }).setOrigin(0.5);
+
+            // Show restart button
+            document.getElementById('restart-container').style.display = 'block';
         }
 
         // Update HUD
@@ -255,15 +318,31 @@
         function updateBricksDisplay() {
             document.getElementById('bricks').textContent = bricksRemaining;
         }
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (game) {
+                game.destroy(true);
+            }
+        });
     </script>
 
     <style>
+        #phaser-container {
+            margin: 0 auto;
+            width: fit-content;
+            touch-action: manipulation;
+        }
+
         #phaser-container canvas {
+            display: block;
+            margin: 0 auto;
             max-width: 100%;
             height: auto;
             border: 3px solid var(--color-text);
             box-shadow: 0 0 30px rgba(126, 200, 227, 0.4);
-            cursor: none; /* Hide cursor over game area */
+            cursor: none;
+            touch-action: manipulation;
         }
 
         @media (max-width: 768px) {
@@ -272,6 +351,13 @@
                 max-height: 60vh;
             }
         }
+
+        .restart-container {
+            margin-top: 10px;
+            text-align: center;
+        }
     </style>
+
+    <script src="../../../stars.js" defer></script>
 </body>
 </html>

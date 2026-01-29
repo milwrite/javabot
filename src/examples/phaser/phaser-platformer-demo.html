@@ -2,16 +2,16 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../../page-theme.css">
+    <link rel="stylesheet" href="../../../page-theme.css">
     <title>Phaser Platformer Demo</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 </head>
 <body>
-    <a href="../../index.html" class="home-link"></a>
+    <a href="../../../index.html" class="home-link"></a>
 
     <div class="container">
         <h1>Platformer Demo</h1>
-        <p class="subtitle">Phaser physics with gravity</p>
+        <p class="subtitle">Arrow keys or D-pad controls</p>
 
         <div class="game-wrapper">
             <div class="stats-bar">
@@ -30,11 +30,15 @@
             <!-- Directional-movement controls: D-pad with jump -->
             <div class="mobile-controls">
                 <div class="control-btn empty"></div>
-                <button class="control-btn" id="btnJump">↑</button>
+                <button class="control-btn" id="btnJump" aria-label="Jump">↑</button>
                 <div class="control-btn empty"></div>
-                <button class="control-btn" id="btnLeft">←</button>
+                <button class="control-btn" id="btnLeft" aria-label="Move left">←</button>
                 <div class="control-btn empty"></div>
-                <button class="control-btn" id="btnRight">→</button>
+                <button class="control-btn" id="btnRight" aria-label="Move right">→</button>
+            </div>
+
+            <div id="restart-container" class="restart-container" style="display: none;">
+                <button class="btn btn-primary" id="btnRestart" aria-label="Restart game">RESTART</button>
             </div>
         </div>
     </div>
@@ -46,6 +50,13 @@
         const CYAN = 0x00ffff;
         const WHITE = 0xffffff;
 
+        // Game constants
+        const PLAYER_SPEED = 160;
+        const JUMP_VELOCITY = -250;
+        const GRAVITY = 300;
+        const PLAYER_BOUNCE = 0.1;
+        const COIN_BOUNCE = 0.3;
+
         // Game state
         let score = 0;
         let collected = 0;
@@ -53,6 +64,7 @@
         let player, platforms, coins;
         let cursors;
         let jumpKey;
+        let mobileJumpPressed = false;
 
         // Phaser config with gravity for platformer
         const config = {
@@ -63,12 +75,12 @@
             height: 500,
             scale: {
                 mode: Phaser.Scale.FIT,
-                autoCenter: Phaser.Scale.CENTER_BOTH
+                autoCenter: Phaser.Scale.NO_CENTER
             },
             physics: {
                 default: 'arcade',
                 arcade: {
-                    gravity: { y: 300 },  // Gravity for platformer
+                    gravity: { y: GRAVITY },  // Gravity for platformer
                     debug: false
                 }
             },
@@ -85,7 +97,7 @@
             player = this.physics.add.sprite(200, 400, null)
                 .setDisplaySize(20, 30)
                 .setTint(CYAN);
-            player.setBounce(0.1);
+            player.setBounce(PLAYER_BOUNCE);
             player.setCollideWorldBounds(true);
 
             // Create platforms group
@@ -164,16 +176,16 @@
         function update() {
             // Horizontal movement
             if (cursors.left.isDown) {
-                player.setVelocityX(-160);
+                player.setVelocityX(-PLAYER_SPEED);
             } else if (cursors.right.isDown) {
-                player.setVelocityX(160);
+                player.setVelocityX(PLAYER_SPEED);
             } else {
                 player.setVelocityX(0);
             }
 
             // Jumping (only when on ground)
-            if ((cursors.up.isDown || jumpKey.isDown) && player.body.touching.down) {
-                player.setVelocityY(-250);
+            if ((cursors.up.isDown || jumpKey.isDown || mobileJumpPressed) && player.body.touching.down) {
+                player.setVelocityY(JUMP_VELOCITY);
             }
         }
 
@@ -181,7 +193,7 @@
             const coin = scene.physics.add.sprite(x, y, null)
                 .setDisplaySize(12, 12)
                 .setTint(CYAN);
-            coin.setBounce(0.3);
+            coin.setBounce(COIN_BOUNCE);
             coins.add(coin);
         }
 
@@ -216,47 +228,63 @@
                 stroke: '#000000',
                 strokeThickness: 2
             }).setOrigin(0.5);
+
+            // Show restart button
+            document.getElementById('restart-container').style.display = 'block';
         }
 
         function setupMobileControls(scene) {
             const btnJump = document.getElementById('btnJump');
             const btnLeft = document.getElementById('btnLeft');
             const btnRight = document.getElementById('btnRight');
+            const btnRestart = document.getElementById('btnRestart');
 
             if (!btnJump) return;
 
-            // Touch + click for mobile + desktop
-            ['touchstart', 'click'].forEach(eventType => {
+            // Wire restart button
+            if (btnRestart) {
+                btnRestart.addEventListener('click', () => location.reload());
+            }
+
+            // Jump button (press and release)
+            ['touchstart', 'mousedown'].forEach(eventType => {
                 btnJump.addEventListener(eventType, (e) => {
                     e.preventDefault();
-                    if (player.body.touching.down) {
-                        cursors.up.isDown = true;
-                        setTimeout(() => cursors.up.isDown = false, 100);
-                    }
+                    mobileJumpPressed = true;
                 }, { passive: false });
+            });
 
+            ['touchend', 'mouseup', 'touchcancel'].forEach(eventType => {
+                btnJump.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    mobileJumpPressed = false;
+                }, { passive: false });
+            });
+
+            // Continuous movement for left/right
+            ['touchstart', 'mousedown'].forEach(eventType => {
                 btnLeft.addEventListener(eventType, (e) => {
                     e.preventDefault();
                     cursors.left.isDown = true;
-                    setTimeout(() => cursors.left.isDown = false, 100);
                 }, { passive: false });
 
                 btnRight.addEventListener(eventType, (e) => {
                     e.preventDefault();
                     cursors.right.isDown = true;
-                    setTimeout(() => cursors.right.isDown = false, 100);
                 }, { passive: false });
             });
 
-            // Continuous press for movement buttons
-            ['touchend', 'mouseup'].forEach(eventType => {
+            // Release movement buttons
+            ['touchend', 'mouseup', 'touchcancel'].forEach(eventType => {
                 btnLeft.addEventListener(eventType, (e) => {
+                    e.preventDefault();
                     cursors.left.isDown = false;
-                });
+                }, { passive: false });
 
                 btnRight.addEventListener(eventType, (e) => {
+                    e.preventDefault();
                     cursors.right.isDown = false;
-                });
+                }, { passive: false });
             });
         }
 
@@ -265,14 +293,30 @@
             document.getElementById('score').textContent = score;
             document.getElementById('collected').textContent = `${collected} / ${totalCoins}`;
         }
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (game) {
+                game.destroy(true);
+            }
+        });
     </script>
 
     <style>
+        #phaser-container {
+            margin: 0 auto;
+            width: fit-content;
+            touch-action: manipulation;
+        }
+
         #phaser-container canvas {
+            display: block;
+            margin: 0 auto;
             max-width: 100%;
             height: auto;
             border: 3px solid var(--color-text);
             box-shadow: 0 0 30px rgba(126, 200, 227, 0.4);
+            touch-action: manipulation;
         }
 
         @media (max-width: 768px) {
@@ -281,6 +325,13 @@
                 max-height: 60vh;
             }
         }
+
+        .restart-container {
+            margin-top: 10px;
+            text-align: center;
+        }
     </style>
+
+    <script src="../../../stars.js" defer></script>
 </body>
 </html>
