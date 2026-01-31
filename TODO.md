@@ -1,45 +1,31 @@
-# Modularization TODO
+# Dissertation Research Ideas - Bridge Roles & Cross-Platform Analysis
 
-## Phase 2 - High-value extractions
+## Current Focus: Reddit Environmental Scan
+Based on: https://bot.inference-arcade.com/src/search/conduct-environmental-scan-reddit-focusing-2026-01.html
 
-- [ ] **Extract agentLoop** (`services/agentLoop.js`) - ~680 lines
-  - `getLLMResponse()` function (lines 2077-2757)
-  - The agentic loop with tool execution
-  - Biggest complexity reduction opportunity
+## TODO List
 
-- [ ] **Extract mentionHandler** (`services/mentionHandler.js`) - ~626 lines
-  - `handleMentionAsync()` function
-  - @mention processing logic
-  - Second-biggest function in codebase
+### [ ] Bridge Role Typology
+- **Output**: Typology of bridge roles (prosocial vs antisocial brokerage)
+- **Research**: Identify patterns of user behavior in bridging positions
+- **Methods**: Network analysis, user behavior tracking
 
-## Phase 3 - Organization
+### [ ] Cross-Platform Bridging Scan
+- **Focus**: Bridge users connecting Reddit ↔ Discord, X, YouTube, Telegram, Substack, GitHub
+- **Patterns**: Link-sharing behaviors, migration events between platforms
+- **Data**: Cross-platform user activity, content migration patterns
 
-- [ ] **Extract command handlers** (`commands/handlers.js`) - ~500 lines
-  - `handleCommit`, `handleSearch`, `handleSetModel`, `handleStatus`
-  - `handlePoll`, `handleLogs`, `handleDeepResearch`
-  - Cleaner separation of Discord interaction logic
+### [ ] Language/Identity/Subculture Translation Scan
+- **Analysis**: How bridge users translate jargon, norms, and "epistemic styles" across communities
+- **Examples**: Expertise subs → mainstream subs translation patterns
+- **Output**: Qualitative coding scheme + examples of translation moves
 
-- [ ] **Extract validation service** (`services/validation.js`) - ~180 lines
-  - `validateHTMLContent`, `validateJSContent`
-  - `calculateQualityScore`, `buildValidationFeedback`
-  - Reusable across content generation features
+### [ ] Intervention Scan: Platform Design for Bridging
+- **Existing interventions**: Quarantine, crowd control, automod filters, cross-sub linking policies, comment throttling
+- **Research**: What interventions affect bridging without killing discovery
+- **Output**: Recommendations for platform design that supports positive bridging
 
-- [ ] **Extract metadata service** (`services/metadata.js`) - ~200 lines
-  - `updateIndexWithPage`, `syncIndexWithSrcFiles`
-  - `getIconForDescription`, `formatProjectTitle`, `condenseDescription`
-  - Project metadata management
-
-- [ ] **Extract command definitions** (`commands/definitions.js`) - ~115 lines
-  - `const commands = [...]` array
-  - Slash command builders
-
-- [ ] **Extract GUI logger** (`utils/guiLogger.js`) - ~100 lines
-  - `logToGUI`, `logToolCall`, `logFileChange`
-  - `startAgentLoop`, `updateAgentLoop`, `endAgentLoop`
-
-## Completed
-
-- [x] **Phase 1: Remove duplicate filesystem functions** - 444 lines removed
-  - Deleted local `listFiles`, `fileExists`, `readFile`, `writeFile`, `searchFiles`
-  - Updated tool handlers to use `services/filesystem.js` imports
-  - Added `onFileChange` callbacks for GUI logging
+## Next Steps
+- Conduct targeted web searches in #research channel focused on Reddit data
+- Expand environmental scan to include specific bridge user examples
+- Develop coding framework for qualitative analysis
