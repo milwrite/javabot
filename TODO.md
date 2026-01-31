@@ -1,31 +1,45 @@
-# Dissertation Research Ideas - Bridge Roles & Cross-Platform Analysis
+# Dissertation Research Kanban - Bridge User Analysis
 
-## Current Focus: Reddit Environmental Scan
-Based on: https://bot.inference-arcade.com/src/search/conduct-environmental-scan-reddit-focusing-2026-01.html
+**Focus:** Reddit bridge users connecting adjacent subreddits and cross-platform pathways
+**Primary Data Source:** Reddit-focused environmental scans and web searches
+**Last Updated:** $(date)
 
-## TODO List
+## TODO (Backlog)
 
-### [ ] Bridge Role Typology
-- **Output**: Typology of bridge roles (prosocial vs antisocial brokerage)
-- **Research**: Identify patterns of user behavior in bridging positions
-- **Methods**: Network analysis, user behavior tracking
+### Typology of Bridge Roles
+- [ ] Define prosocial vs antisocial brokerage patterns
+- [ ] Identify key behavioral markers for each role type
+- [ ] Map role distribution across different subreddit types
+- [ ] Analyze temporal evolution of bridge roles
 
-### [ ] Cross-Platform Bridging Scan
-- **Focus**: Bridge users connecting Reddit ↔ Discord, X, YouTube, Telegram, Substack, GitHub
-- **Patterns**: Link-sharing behaviors, migration events between platforms
-- **Data**: Cross-platform user activity, content migration patterns
+### Cross-Platform Bridging Scan
+- [ ] Map Reddit ↔ Discord connection patterns
+- [ ] Analyze Reddit ↔ X (Twitter) link-sharing behaviors
+- [ ] Track Reddit ↔ YouTube content migration events
+- [ ] Investigate Reddit ↔ Telegram/Substack/GitHub pathways
+- [ ] Document data traces available for cross-platform analysis
 
-### [ ] Language/Identity/Subculture Translation Scan
-- **Analysis**: How bridge users translate jargon, norms, and "epistemic styles" across communities
-- **Examples**: Expertise subs → mainstream subs translation patterns
-- **Output**: Qualitative coding scheme + examples of translation moves
+### Language/Identity Translation Analysis
+- [ ] Develop qualitative coding scheme for translation moves
+- [ ] Collect examples of jargon/norm translation across communities
+- [ ] Analyze epistemic style adaptation (expertise → mainstream subs)
+- [ ] Study subculture boundary crossing mechanisms
 
-### [ ] Intervention Scan: Platform Design for Bridging
-- **Existing interventions**: Quarantine, crowd control, automod filters, cross-sub linking policies, comment throttling
-- **Research**: What interventions affect bridging without killing discovery
-- **Output**: Recommendations for platform design that supports positive bridging
+### Platform Intervention Research
+- [ ] Catalog existing bridge-affecting interventions
+- [ ] Analyze quarantine policies impact on bridging
+- [ ] Study crowd control and automod filter effects
+- [ ] Evaluate cross-sub linking policies
+- [ ] Assess comment throttling impact on discovery vs control
 
-## Next Steps
-- Conduct targeted web searches in #research channel focused on Reddit data
-- Expand environmental scan to include specific bridge user examples
-- Develop coding framework for qualitative analysis
+## IN PROGRESS
+
+*None currently*
+
+## COMPLETED
+
+- [x] Initial environmental scan of Reddit bridge user research
+- [x] Identification of key research gaps and follow-up lines
+
+---
+*Maintained by Bot Sportello - Focused on web searches in designated channels*
