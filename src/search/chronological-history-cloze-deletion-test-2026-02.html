@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronological history of the “cloze deletion test” first in the educational h...</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #111;
+            color: #999;
+            line-height: 1.6;
+            padding: 40px 20px 60px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+        a { color: #888; }
+        a:hover { color: #ccc; }
+        .back { display: inline-block; margin-bottom: 30px; font-size: 13px; text-decoration: none; }
+        .back:before { content: '← '; }
+        header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        header h1 { color: #ccc; font-size: 20px; font-weight: normal; margin-bottom: 8px; }
+        header .meta { font-size: 12px; color: #555; }
+        article { color: #aaa; }
+        article h1 { color: #bbb; font-size: 17px; font-weight: normal; margin: 35px 0 15px; }
+        article h2 { color: #999; font-size: 15px; font-weight: normal; margin: 30px 0 12px; text-transform: lowercase; }
+        article h3 { color: #777; font-size: 14px; font-weight: normal; margin: 20px 0 10px; }
+        article p { margin-bottom: 16px; }
+        article strong { color: #ccc; font-weight: normal; }
+        article em { font-style: normal; color: #888; }
+
+        /* Chicago-style citation styling */
+        .citation { font-size: 0.75em; vertical-align: super; line-height: 0; }
+        .citation a {
+            color: #ff6b6b;
+            text-decoration: none;
+            padding: 0 1px;
+            transition: color 0.2s;
+        }
+        .citation a:hover { color: #ff9999; text-decoration: underline; }
+
+        /* References section */
+        .references {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #333;
+        }
+        .references h2 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .references ol {
+            list-style: none;
+            padding: 0;
+        }
+        .references li {
+            font-size: 12px;
+            margin: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+        .references .back-ref {
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #ff6b6b;
+            text-decoration: none;
+            font-size: 11px;
+        }
+        .references .back-ref:hover { color: #ff9999; }
+        .references .cite-num {
+            color: #666;
+            margin-right: 8px;
+        }
+        .references li a:not(.back-ref) {
+            color: #666;
+            word-break: break-all;
+        }
+        .references li a:not(.back-ref):hover { color: #999; }
+
+        footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 11px; color: #444; }
+        @media (max-width: 600px) {
+            body { padding: 25px 15px 40px; }
+            header h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <a class="back" href="../../index.html">back</a>
+    <header>
+        <h1>Chronological history of the “cloze deletion test” first in the educational h...</h1>
+        <div class="meta">researched Feb 2, 2026 · dug up by sportello</div>
+    </header>
+    <article>
+        <h1>The Evolution of Cloze Deletion Tests: From Educational Assessment to Natural Language Processing Evaluation</h1>
+<p>The cloze deletion test represents one of the most enduring and versatile assessment methodologies in contemporary education and artificial intelligence research, having undergone remarkable transformation across seven decades of pedagogical and computational application. Originating in 1953 as a psychological tool for measuring readability by psychologist Wilson L. Taylor, the cloze procedure has evolved from a relatively simple gap-filling exercise into a foundational framework for both evaluating human language comprehension and pre-training state-of-the-art neural language models.<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-10" id="cite-10">10</a></sup> This comprehensive historical examination traces the trajectory of cloze testing through its emergence in educational literacy assessment during the 1950s and 1960s, its consolidation as a standard reading comprehension evaluation tool throughout the 1970s and 1980s, and finally its revolutionary adaptation as a core pre-training objective for transformer-based language models beginning in the 2010s. The convergence of cloze methodology between human literacy education and machine learning represents a remarkable instance of cross-domain knowledge transfer, wherein pedagogical insights about human language processing have directly informed the design of artificial intelligence systems that now outperform many traditional evaluation methods at predicting contextual word usage.</p>
+<h2>The Origins and Theoretical Foundations of Cloze Testing in Educational Practice</h2>
+<p>The cloze deletion test was first formally introduced by Wilson L. Taylor in 1953 as an innovative psychological measurement tool grounded in Gestalt theory.<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-10" id="cite-10">10</a></sup> Taylor's seminal work, published in the journal <em>Journalism & Mass Communication Quarterly</em>, represented a significant departure from existing readability measurement approaches by proposing a methodology derived from the Gestalt psychological concept of "closure"—the human tendency to complete incomplete familiar patterns.<sup class="citation"><a href="#ref-7" id="cite-7">7</a></sup> This theoretical foundation proved remarkably prescient, as it recognized that human language processing operates holistically, with readers naturally supplying missing elements based on their accumulated linguistic knowledge and contextual understanding. Taylor's initial formulation involved a mechanical deletion system, typically removing every fifth word from a passage, and requiring participants to fill in the blanks from their own knowledge rather than selecting from predetermined options.<sup class="citation"><a href="#ref-7" id="cite-7">7</a></sup> The elegance of this approach lay in its automatability and its requirement for minimal human intervention in test construction, a characteristic that would later prove invaluable for scaling cloze tests to massive datasets.</p>
+<p>The theoretical underpinnings of cloze testing rested upon what researchers termed the "pragmatic expectancy grammar," a concept that would be extensively developed throughout subsequent decades.<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup> According to this framework, test-takers employ the same linguistic prediction mechanisms and rule systems when completing cloze tasks as they would in any other authentic language comprehension scenario.<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup> This assumption suggested that cloze tests could measure not merely discrete vocabulary knowledge but rather integrated comprehension abilities, requiring readers to understand semantic relationships, grammatical constraints, discourse coherence, and contextual appropriateness simultaneously. The theoretical elegance of this approach attracted immediate scholarly attention, and by the late 1950s and early 1960s, educational researchers had begun systematic investigation of cloze testing's validity and reliability as a measurement instrument.</p>
+<p>Throughout the 1960s and 1970s, foundational research established that cloze tests possessed genuine pedagogical utility and psychometric rigor. Bormuth's influential 1967 study provided comprehensive evidence for the cloze procedure's validity in evaluating the comprehension difficulty of written instructional materials, demonstrating that cloze testing resulted in valid measurements and possessed several significant advantages over existing readability formulas.<sup class="citation"><a href="#ref-31" id="cite-31">31</a></sup> Bormuth's research identified multiple strengths of the cloze methodology: test items could be easily constructed, irrelevant sources of variance could be minimized, results demonstrated greater validity than contemporary readability formulas, and the procedure proved applicable across a wide range of evaluation contexts.<sup class="citation"><a href="#ref-31" id="cite-31">31</a></sup> This foundational validation work was crucial in establishing cloze testing as a legitimate assessment tool within educational institutions. By the early 1970s, systematic investigation of cloze test characteristics had revealed important nuances about how the procedure functioned and what cognitive processes it engaged.</p>
+<h2>Consolidation and Refinement of Cloze Testing in Educational Literacy Assessment, 1970-1990</h2>
+<p>The 1970s and 1980s witnessed a remarkable proliferation of cloze-focused educational research, during which scholars systematically investigated methodological variations, construction procedures, and the cognitive dimensions that cloze tests actually measured. Historical reviews of comprehension research from this period explicitly identified cloze testing as one of four major research strands that defined contemporary understanding of reading comprehension, alongside readability research, factor-analytic studies, and psycholinguistic approaches.<sup class="citation"><a href="#ref-13" id="cite-13">13</a></sup> This recognition of cloze testing's centrality to comprehension theory and practice reflected the substantial body of accumulated evidence supporting its utility. The period from 1970 to 1985 represented what scholars termed "the comprehension revolution," during which fundamental assumptions about reading comprehension underwent substantial revision, with cloze testing playing an instrumental role in both generating new data and testing emerging theories.</p>
+<p>During this consolidation period, researchers identified critical considerations regarding cloze test construction that would influence practices for decades to come. The mechanical deletion strategy—typically removing every fifth, sixth, or seventh word—was recognized as having significant limitations due to sampling variability; different versions of the same text created through mechanical deletion could yield substantially different difficulty levels, introducing what researchers termed "sampling error."<sup class="citation"><a href="#ref-12" id="cite-12">12</a>,<a href="#ref-25" id="cite-25">25</a></sup> To address this problem, scholars developed more sophisticated deletion strategies, including "rational" or "modified" cloze procedures in which test designers selectively deleted words based on their pedagogical relevance and linguistic properties rather than applying mechanical deletion algorithms.<sup class="citation"><a href="#ref-40" id="cite-40">40</a></sup> These rational cloze approaches, pioneered by Greene in 1965 and subsequently refined by other researchers, were demonstrated to produce more reliable tests with superior item characteristics and greater variance in difficulty levels.<sup class="citation"><a href="#ref-40" id="cite-40">40</a></sup> The distinction between mechanical and rational deletion strategies would prove foundational to subsequent improvements in cloze test design.</p>
+<p>Scoring procedures also emerged as a critical methodological consideration during this period. Educational researchers discovered that the method employed for scoring cloze responses substantially influenced psychometric properties and interpretability of results.<sup class="citation"><a href="#ref-12" id="cite-12">12</a>,<a href="#ref-25" id="cite-25">25</a></sup> Two primary scoring approaches crystallized: "exact scoring," which accepted only the originally deleted word (typically including minor spelling variations), and "semantic scoring" or "acceptable word scoring," which permitted originally deleted words and synonymous alternatives that were semantically appropriate within the broader discourse context.<sup class="citation"><a href="#ref-12" id="cite-12">12</a>,<a href="#ref-25" id="cite-25">25</a></sup> Research comparing these approaches revealed that semantic scoring produced substantially higher reliability estimates, ranging from 0.60 to 0.97, compared to exact scoring which ranged from 0.14 to 0.99, indicating far greater instability.<sup class="citation"><a href="#ref-12" id="cite-12">12</a>,<a href="#ref-25" id="cite-25">25</a></sup> Furthermore, semantic scoring demonstrated consistent reliability across different cloze tests, typically never dropping below 0.70, a finding that suggested semantic scoring approached the reliability standards of established reading comprehension tests.<sup class="citation"><a href="#ref-12" id="cite-12">12</a></sup> This empirical evidence contributed to gradually shifting educational practice toward semantic scoring procedures, though exact scoring remained prevalent in many educational contexts.</p>
+<p>The cognitive dimensions engaged by cloze tests also received intensive scrutiny during this period. Educational psychologists recognized that not all cloze deletions measured identical cognitive abilities, and that test performance varied substantially depending on which words were deleted and what linguistic constraints they involved.<sup class="citation"><a href="#ref-32" id="cite-32">32</a></sup> Bachman's influential research demonstrated that cloze test performance reflected a "complex combination of morpheme- to discourse-level rules," with higher-proficiency learners and intermediate-proficiency learners performing differently on items of varying complexity.<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup> Similarly, studies comparing different cloze item types—syntactic items involving within-clause grammatical points, semantic items dependent on meaning relationships, and connective items requiring understanding of discourse coherence across sentence boundaries—revealed that these item types engaged distinct cognitive capacities and demonstrated varying sensitivity to language proficiency levels.<sup class="citation"><a href="#ref-32" id="cite-32">32</a></sup> This recognition that cloze tests measured multidimensional constructs rather than unitary language abilities complicated interpretation of cloze scores but also suggested that carefully designed cloze tests could provide nuanced assessment of diverse linguistic competencies.</p>
+<h2>Expansion of Cloze Testing Applications in Language Assessment and Educational Diagnostics, 1980-2000</h2>
+<p>The decade of the 1980s witnessed substantial expansion of cloze testing applications beyond basic reading comprehension assessment into specialized domains of language evaluation and literacy diagnostics. Researchers developed specialized cloze test variants tailored to particular assessment objectives, including the C-test developed by Klein-Braley and Raatz in 1981 as an alternative to traditional cloze procedures, and various format modifications such as oral cloze tests designed to assess listening comprehension rather than reading ability.<sup class="citation"><a href="#ref-40" id="cite-40">40</a></sup> These innovations demonstrated the fundamental robustness and flexibility of the cloze framework; the core principle of contextual prediction could be adapted across multiple modalities and assessment contexts while retaining its theoretical coherence and psychometric validity.</p>
+<p>Educational testing in diverse linguistic and cultural contexts increasingly incorporated cloze testing, with particular emphasis on second-language and English-as-a-foreign-language assessment. By the 1990s, major standardized language proficiency examinations such as the TOEFL and TOEIC had incorporated cloze test sections, and extensive research documented correlations between cloze test performance and other measures of language proficiency, reading ability, and vocabulary knowledge.<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup> Studies examining the construct validity of cloze tests in these high-stakes assessment contexts revealed that while cloze tests reliably measured integrative language ability, they particularly assessed grammatical form and meaning on both sentential and suprasentential levels, with somewhat lesser emphasis on discourse-level comprehension skills compared to some theoretical predictions.<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup> This pattern of findings suggested that while cloze tests possessed sufficient validity for use in language testing, their performance profile differed from other language assessments in ways that warranted careful interpretation and supplementation with other assessment approaches.</p>
+<p>Literacy researchers also developed specialized applications of cloze testing for diagnostic purposes with struggling readers and learners with language-based learning disabilities. The cloze framework enabled educators to identify three reading proficiency profiles based on error patterns: frustrated readers (achieving up to 44 percent correct responses), instructional-level readers (scoring between 45 and 57 percent correct), and independent readers (exceeding 57 percent correct).<sup class="citation"><a href="#ref-49" id="cite-49">49</a></sup> This three-tiered classification system proved valuable for educational placement decisions and for designing appropriately scaffolded literacy instruction. Moreover, researchers investigating error types in cloze performance discovered that different student populations exhibited distinct patterns of errors; higher-achieving students tended to make more syntactic and linguistic errors while lower-achieving students demonstrated more semantic errors, suggesting that struggling readers employed qualitatively different comprehension strategies than their more proficient peers.<sup class="citation"><a href="#ref-49" id="cite-49">49</a></sup> These insights from cloze-based assessment contributed to emerging understandings of reading disability and informed development of more targeted literacy interventions.</p>
+<p>During this period, the cloze procedure also became established as a practical tool for assessing and improving native language reading comprehension even among non-impaired populations. Teachers recognized that cloze exercises, despite their apparent simplicity, engaged sophisticated cognitive processes by forcing readers to attend carefully to textual meaning and employ context clues for prediction—strategies that could be explicitly taught and practiced.<sup class="citation"><a href="#ref-14" id="cite-14">14</a></sup> The procedure's ease of implementation and low cost relative to alternative assessment approaches made it particularly attractive for classroom use. Furthermore, research demonstrated that learners could benefit from cloze exercises through multiple mechanisms: by engaging indirect mental processing techniques such as planning, evaluating, seeking opportunities for learning, and controlling anxiety, students demonstrated superior cloze test performance compared to those relying on direct memorization or simple analysis strategies.<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup> This finding suggested that cloze testing could serve not merely as an assessment instrument but as an active learning tool that promoted development of sophisticated reading comprehension strategies.</p>
+<h2>Methodological Advances and Contemporary Refinements in Cloze Testing, 2000-2020</h2>
+<p>The early twenty-first century witnessed continued refinement of cloze testing methodology, with particular attention to improving validity and addressing identified limitations. The development of the HyTeC-cloze (Hybrid Text Comprehension cloze) test represented one significant advancement, employing a hybrid mechanical-rational deletion strategy designed to select words that were non-locally predictable based on immediate context, thereby measuring higher-order comprehension rather than mere lexical recall.<sup class="citation"><a href="#ref-12" id="cite-12">12</a>,<a href="#ref-25" id="cite-25">25</a>,<a href="#ref-46" id="cite-46">46</a></sup> The HyTeC-cloze approach achieved notably superior reliability compared to traditional cloze tests, with semantic scoring producing Cronbach's alpha values consistently above 0.70 and correlating meaningfully with independent measures of reading ability (mean correlation 0.606 with reading ability scores and 0.604 with vocabulary scores).<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup> These performance characteristics indicated that carefully designed modern cloze tests approached the psychometric standards of established standardized reading assessments.</p>
+<p>Research on cloze predictability during this period revealed important insights about which words readers found most difficult and why. Linguistic analysis of words selected as cloze gaps in well-designed tests demonstrated that selected words possessed significantly lower forward probability (the likelihood of prediction based on preceding words) than words not selected as gaps; specifically, gap words were on average approximately 23 times less probable based on their preceding two-word contexts compared to non-gapped words.<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup> Similarly, gap words demonstrated backward probability (predictability based on following context) approximately 34 times lower than non-gapped words.<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup> This linguistic analysis confirmed that systematic selection processes could identify genuinely challenging words that required sophisticated contextual reasoning for successful completion, supporting the construct validity of rationally-designed cloze tests.</p>
+<p>Multiple studies during this period examined how reading ability and linguistic expertise influenced cloze test performance, revealing that proficiency-level differences were not merely quantitative but involved qualitative differences in comprehension processing. Eye-tracking studies of cloze test takers demonstrated that lower-ability test-takers consulted the word bank (multiple-choice options) substantially more frequently than higher-ability test-takers, with the frequency of word bank consultation serving as a significant predictor of accuracy.<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup> Higher-performing participants retained, recalled, or naturally supplied correct words more rapidly than lower performers, suggesting that proficiency differences reflected both differences in explicit word knowledge and differences in the automaticity and fluency of contextual comprehension processes.<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup> These findings aligned with emerging theories emphasizing the importance of automaticity and fluency in skilled reading comprehension.</p>
+<h2>The Transition to Natural Language Processing: Cloze Testing Enters the Machine Learning Domain</h2>
+<p>The convergence between cloze testing methodology and natural language processing research began as modern neural network approaches to language modeling gained prominence in the late 2000s and early 2010s. Computational linguists and machine learning researchers recognized that the cloze framework provided an elegant self-supervised learning objective that could leverage vast quantities of unannotated text—the same raw textual data that educational researchers had long used for cloze test construction.<sup class="citation"><a href="#ref-48" id="cite-48">48</a></sup> The fundamental insight was that the same contextual reasoning required of human readers completing cloze tests could be formalized as a machine learning objective: given a sequence of word tokens with certain positions masked or occluded, a trained language model could learn to predict the masked positions based solely on surrounding context.<sup class="citation"><a href="#ref-48" id="cite-48">48</a></sup></p>
+<p>This recognition transformed cloze testing from a primarily educational assessment tool into a central component of modern natural language processing infrastructure. The cloze-like task represented what researchers termed a "self-supervised learning" objective, wherein supervisory signals directing model learning were automatically present within the data itself rather than requiring human annotation.<sup class="citation"><a href="#ref-48" id="cite-48">48</a></sup> Because the true identity of each masked word was already available in the original unannotated text, large-scale language models could be trained on billions of words of raw text without requiring expensive human labeling of training data—a dramatic economic and practical advantage over traditional supervised learning approaches. This capacity to leverage unannotated textual data at massive scale would prove revolutionary for language model development.</p>
+<h2>BERT and the Ascendance of Masked Language Modeling in Pre-training</h2>
+<p>The publication of the BERT model (Bidirectional Encoder Representations from Transformers) in October 2018 by researchers at Google represented a watershed moment in the integration of cloze testing principles into modern machine learning.<sup class="citation"><a href="#ref-15" id="cite-15">15</a>,<a href="#ref-18" id="cite-18">18</a></sup> BERT explicitly adopted the cloze task, termed "masked language modeling" (MLM) in the NLP literature, as a primary pre-training objective.<sup class="citation"><a href="#ref-15" id="cite-15">15</a>,<a href="#ref-18" id="cite-18">18</a>,<a href="#ref-24" id="cite-24">24</a></sup> The BERT architecture employed transformer encoder layers that processed text bidirectionally, enabling each word position to attend to words both preceding and following it—a crucial difference from earlier unidirectional language models that only accessed preceding context.<sup class="citation"><a href="#ref-15" id="cite-15">15</a>,<a href="#ref-18" id="cite-18">18</a>,<a href="#ref-24" id="cite-24">24</a></sup> BERT's training procedure involved randomly masking approximately 15 percent of input tokens and training the model to predict the original vocabulary identity of masked tokens based on contextual information from all other tokens in the sequence.<sup class="citation"><a href="#ref-15" id="cite-15">15</a>,<a href="#ref-24" id="cite-24">24</a>,<a href="#ref-33" id="cite-33">33</a></sup></p>
+<p>The BERT training procedure implemented a sophisticated masking strategy that improved model robustness and generalization. Rather than consistently replacing masked positions with a special [MASK] token, BERT employed a probabilistic approach: for 80 percent of selected tokens, the [MASK] token replaced the original word; for 10 percent of selected tokens, a random word replaced the original word; and for the remaining 10 percent, the original word was retained unchanged.<sup class="citation"><a href="#ref-11" id="cite-11">11</a>,<a href="#ref-24" id="cite-24">24</a>,<a href="#ref-33" id="cite-33">33</a></sup> This variation forced the model to learn without perfect masking cues, preventing overfitting to specific masking patterns and promoting development of more generalizable contextual representations. The asymmetry between the masking used during pre-training (where [MASK] tokens appeared frequently) and the fine-tuning stage (where no [MASK] tokens appeared) created what researchers termed a "pre-training/fine-tuning mismatch," which the probabilistic masking strategy partially mitigated.<sup class="citation"><a href="#ref-11" id="cite-11">11</a>,<a href="#ref-24" id="cite-24">24</a></sup></p>
+<p>BERT's adoption of masked language modeling as a pre-training objective proved extraordinarily effective, enabling the model to achieve state-of-the-art performance on an extensive range of downstream NLP tasks without substantial task-specific architectural modifications.<sup class="citation"><a href="#ref-15" id="cite-15">15</a>,<a href="#ref-18" id="cite-18">18</a></sup> The model obtained new state-of-the-art results on eleven diverse NLP benchmarks, including pushing the GLUE (General Language Understanding Evaluation) benchmark score to 80.5 percent, representing a 7.7 percentage-point absolute improvement over prior approaches.<sup class="citation"><a href="#ref-15" id="cite-15">15</a>,<a href="#ref-18" id="cite-18">18</a></sup> BERT's success demonstrated the remarkable effectiveness of the cloze-inspired masked language modeling objective for pre-training deep bidirectional transformer representations that captured both syntactic and semantic aspects of language in contextualized form.</p>
+<p>The theoretical foundations for BERT's effectiveness in learning language representations through masked language modeling have been elucidated through subsequent research examining the mechanisms by which masking-based objectives support superior model learning. When masking is employed as a learning objective, models learn context more effectively than alternatives lacking masking components.<sup class="citation"><a href="#ref-11" id="cite-11">11</a></sup> The cloze-like task forces transformer models to undergo a distinctive two-phase cognitive process: first, the model must understand and encode the broader textual context surrounding the masked position, and second, the model must then predict a specific token based on that contextual understanding.<sup class="citation"><a href="#ref-11" id="cite-11">11</a>,<a href="#ref-21" id="cite-21">21</a></sup> This two-step process—context understanding followed by targeted prediction—appears to foster development of richer, more semantically and syntactically informed representations than approaches lacking this explicit two-step structure. Additionally, the requirement that models process context bidirectionally (considering both preceding and following words when predicting masked positions) enables richer contextual encoding than unidirectional models that only access left context.<sup class="citation"><a href="#ref-11" id="cite-11">11</a></sup></p>
+<h2>Expansion of Cloze-Based Pre-training Beyond BERT: The Proliferation of Masked Language Models</h2>
+<p>Following BERT's remarkable success, the machine learning research community rapidly developed numerous variants and extensions of the masked language modeling framework, demonstrating the flexibility and robustness of the cloze-inspired pre-training approach. RoBERTa (Robustly Optimized BERT Pretraining Approach), released shortly after BERT, employed masked language modeling without the additional next-sentence prediction task that BERT had used, demonstrating that the MLM objective alone proved sufficient for excellent pre-training results.<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup> RoBERTa achieved improved performance compared to BERT through enhanced training procedures including longer training duration, larger training datasets (ten times BERT's data), larger batch sizes, and dynamic masking in which masks were generated differently during each training pass rather than determined statically.<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup></p>
+<p>ELMo (Embeddings from Language Models), although developed contemporaneously with but independently of BERT, employed bidirectional LSTM architectures to generate contextualized word embeddings that captured multiple layers of linguistic abstraction.<sup class="citation"><a href="#ref-36" id="cite-36">36</a>,<a href="#ref-39" id="cite-39">39</a></sup> ELMo represented an important precursor to BERT, demonstrating the effectiveness of training deep bidirectional models to generate contextualized representations through prediction of surrounding context—principles that BERT would later apply to transformer architectures.<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup> The success of both BERT and ELMo contributed to a fundamental shift in the NLP research paradigm, wherein pre-training large models on massive unannotated corpora and subsequently fine-tuning on downstream tasks became the dominant approach for achieving state-of-the-art performance across diverse language understanding benchmarks.</p>
+<p>Subsequent variants of BERT incorporated refinements to the masked language modeling objective and pre-training procedures. DistilBERT compressed BERT into a smaller, more efficient model through knowledge distillation while maintaining strong performance, demonstrating that the masked language modeling objective remained effective across models of varying scale.<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup> ALBERT (A Lite BERT) introduced parameter sharing and n-gram masking (masking consecutive sequences of up to three tokens rather than individual tokens) to improve both efficiency and effectiveness.<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup> ELECTRA experimented with replaced token detection—training a generator model to produce plausible replacements for positions, then training the main model to detect whether tokens had been replaced—an alternative to standard masking that emphasized learning about token appropriateness rather than precise vocabulary prediction.<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup> Across these diverse variants, the fundamental principle of learning from contextual prediction remained central to achieving strong pre-training results.</p>
+<h2>The Consolidation of Cloze-Based Objectives in Contemporary Language Model Pre-training</h2>
+<p>By the early 2020s, masked language modeling objectives derived from the cloze testing framework had become ubiquitous in language model pre-training across multiple architectures and training paradigms. The T5 (Text-to-Text Transfer Transformer) model employed a span-corruption objective related to cloze testing, wherein consecutive sequences of tokens were randomly replaced by special tokens and the model was trained to reconstruct the original sequences.<sup class="citation"><a href="#ref-42" id="cite-42">42</a>,<a href="#ref-48" id="cite-48">48</a></sup> This extension of cloze-like objectives to multi-token sequences preserved the fundamental principle of learning from masked context prediction while enabling richer modeling of longer-range dependencies. GPT-style decoder-only models, while employing next-token prediction (rather than masked-language-modeling objectives) as their primary pre-training objective, could be understood as employing a sequential variant of the cloze principle—predicting the next token based on all preceding tokens.<sup class="citation"><a href="#ref-21" id="cite-21">21</a>,<a href="#ref-48" id="cite-48">48</a></sup></p>
+<p>Large language models including GPT-2, GPT-3, and their successors achieved remarkable capabilities through training on massive corpora using next-token prediction—a closely related objective that, while not identical to cloze testing, engaged similar contextual reasoning and demonstrated how prediction-based pre-training objectives could scale to exceptional model sizes and capabilities.<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-42" id="cite-42">42</a></sup> Recent developments including DeepSeek R1 and other inference-scaling approaches have demonstrated renewed interest in structured prediction and reasoning-based training objectives that extend beyond simple token prediction, suggesting ongoing evolution of the prediction-based pre-training paradigm.<sup class="citation"><a href="#ref-27" id="cite-27">27</a></sup> However, even these advanced approaches build fundamentally upon the insights about contextual prediction that the cloze testing framework had established decades earlier in educational contexts.</p>
+<h2>Contemporary Research on Cloze Task Performance and Language Model Evaluation</h2>
+<p>Modern research investigating how language models perform on cloze-style tasks has revealed important insights about the continuities and differences between human and machine contextual prediction. When large-scale human-generated cloze datasets are compared with predictions from contemporary language models, substantial discrepancies emerge.<sup class="citation"><a href="#ref-6" id="cite-6">6</a>,<a href="#ref-45" id="cite-45">45</a></sup> Language models tend to under-estimate the probabilities of human responses, over-rank rare completions while under-ranking top human responses, and produce semantic spaces that diverge substantially from human-generated cloze responses.<sup class="citation"><a href="#ref-6" id="cite-6">6</a>,<a href="#ref-45" id="cite-45">45</a></sup> These findings indicate that while language models have learned to perform cloze-style prediction with remarkable accuracy on downstream tasks, their underlying probability distributions do not perfectly align with human linguistic knowledge and expectations.<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup> This divergence suggests that contemporary language models, despite their exceptional performance on many NLP benchmarks, may employ somewhat different contextual reasoning strategies than humans employ when completing cloze tests.</p>
+<p>The development of novel cloze test datasets has enabled systematic evaluation of language model comprehension abilities in ways that parallel traditional educational cloze testing. The CLOTH dataset (Large-scale Cloze Test Dataset Created by Teachers), released in 2018, represented the first large-scale human-created cloze test dataset, containing multiple-choice cloze items from middle-school and high-school language exams authored by experienced teachers.<sup class="citation"><a href="#ref-26" id="cite-26">26</a>,<a href="#ref-29" id="cite-29">29</a></sup> Unlike automatically-generated cloze datasets, CLOTH involved careful curation of gap positions by teachers and deliberate design of distractor options to be semantically and contextually plausible—making the task substantially more challenging for language models than previous automatically-generated datasets.<sup class="citation"><a href="#ref-26" id="cite-26">26</a>,<a href="#ref-29" id="cite-29">29</a></sup> Research on CLOTH demonstrated that while baseline language models trained on billion-word corpora achieved approximately 50-55 percent accuracy, human test-takers achieved approximately 86 percent accuracy, revealing substantial performance gaps.<sup class="citation"><a href="#ref-26" id="cite-26">26</a>,<a href="#ref-29" id="cite-29">29</a></sup> Investigation of the source of this performance gap identified limited ability to comprehend long-term context and synthesize information across sentence boundaries as the key bottleneck limiting machine performance.<sup class="citation"><a href="#ref-26" id="cite-26">26</a>,<a href="#ref-29" id="cite-29">29</a></sup></p>
+<p>The CLOTH benchmark and subsequent cloze test datasets have proven valuable for evaluating and comparing language models, enabling quantitative assessment of comprehension abilities in ways that parallel traditional reading comprehension evaluation.<sup class="citation"><a href="#ref-20" id="cite-20">20</a>,<a href="#ref-23" id="cite-23">23</a></sup> Cloze task performance has become incorporated into comprehensive benchmarking suites that evaluate language models across diverse dimensions, including the WinoGrande dataset's fill-in-the-blank cloze task format for evaluating pronoun reference resolution and the CodeXGLUE benchmark's inclusion of code-based cloze tests.<sup class="citation"><a href="#ref-23" id="cite-23">23</a></sup> These applications demonstrate the continued relevance and utility of cloze testing principles as evaluation methodologies in contemporary machine learning contexts.</p>
+<h2>Personalized and Adaptive Cloze Testing in Educational Technology</h2>
+<p>Recent developments in language model applications to education have explored the possibility of leveraging large language models for generating personalized cloze tests tailored to individual learner proficiency levels. The Personalized Cloze Test Generation (PCGL) Framework utilizes LLMs to generate cloze tests that automatically adjust difficulty levels based on estimated learner proficiency, addressing longstanding challenges in cloze test construction wherein generating appropriately calibrated tests for heterogeneous learner populations has proven time-consuming.<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup> The PCGL framework demonstrates how cloze testing principles—now embedded within modern language models—can be leveraged to improve educational practice through automated generation of individualized assessment instruments.<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup></p>
+<h2>Contemporary Challenges and Future Directions in Cloze Testing Research</h2>
+<p>Despite the remarkable successes of cloze-based approaches in educational assessment and language model pre-training, ongoing research continues to identify methodological challenges and opportunities for refinement. One significant challenge involves the appropriate design of deletion strategies that balance between pedagogical or research objectives on one hand and test psychometric properties on the other. The relationship between word clozability—the likelihood that a deleted word will be predicted correctly by readers or language models—and word properties such as frequency and synonymy remains incompletely understood.<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup> Words with large numbers of synonyms display lower clozability scores as the probability of guessing the exact correct word decreases, while words with few synonyms display higher clozability scores.<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup> This relationship suggests that designers of cloze tests must carefully balance between selecting words that provide meaningful comprehension assessment and ensuring that selected words possess sufficient predictability to differentiate among test-takers.</p>
+<p>Another ongoing challenge involves understanding the precise cognitive and linguistic constructs that cloze tests measure. While decades of research have established that cloze tests reliably measure something meaningful about language comprehension and linguistic knowledge, the exact nature of these constructs remains somewhat contested in the literature.<sup class="citation"><a href="#ref-43" id="cite-43">43</a>,<a href="#ref-52" id="cite-52">52</a></sup> Some researchers argue that traditional cloze tests measure primarily sentential and suprasentential grammatical knowledge rather than true discourse-level comprehension, while others contend that rationally-designed cloze tests successfully engage genuine reading comprehension abilities including synthesis of information across sentence boundaries.<sup class="citation"><a href="#ref-43" id="cite-43">43</a>,<a href="#ref-52" id="cite-52">52</a></sup> This ongoing debate reflects the complexity of reading comprehension itself and the challenge of designing assessment instruments that validly measure multidimensional cognitive abilities.</p>
+<p>The emergence of very large language models has also raised new questions about the relationship between cloze task performance and true language understanding. While models like GPT-3 achieve exceptional performance on many downstream tasks despite not being explicitly pre-trained with masked language modeling objectives, the relationship between cloze-like pre-training and robust language understanding remains complex and incompletely characterized.<sup class="citation"><a href="#ref-27" id="cite-27">27</a></sup> Some research suggests that language models trained with inference-time scaling approaches may employ reasoning mechanisms distinct from simple token prediction, raising questions about whether future advances in language model capabilities might ultimately move beyond prediction-based training objectives.<sup class="citation"><a href="#ref-27" id="cite-27">27</a></sup> However, the continued prominence of cloze-inspired objectives in contemporary model designs suggests that the framework remains fundamentally relevant to modern machine learning infrastructure.</p>
+<h2>Conclusion: The Remarkable Persistence and Evolution of the Cloze Testing Framework Across Seven Decades</h2>
+<p>The historical trajectory of cloze deletion testing from its origins in educational psychology in 1953 through its emergence as a foundational component of contemporary natural language processing pre-training represents a remarkable case study in how pedagogical insights can inform machine learning research and how advances in one domain can productively inform practice in another. Wilson L. Taylor's original insight—grounded in Gestalt psychology's recognition that humans naturally complete incomplete patterns—proved sufficiently robust to sustain generations of refinement in educational contexts while simultaneously providing theoretical and practical foundations for revolutionary advances in artificial intelligence. The consolidation of cloze testing as a standard literacy assessment tool throughout the 1970s and 1980s, accompanied by systematic investigation of its validity, reliability, and psychometric properties, generated a substantial body of research that would later prove directly applicable to machine learning contexts.</p>
+<p>The transition of cloze-based approaches into natural language processing, crystallized through BERT's adoption of masked language modeling as a pre-training objective, demonstrates how insights from educational assessment can scale to influence the design of systems impacting millions of users globally. BERT's remarkable success in achieving state-of-the-art performance across diverse NLP benchmarks through masked language modeling validated the fundamental effectiveness of the cloze principle—that sophisticated language understanding emerges from training on contextual prediction tasks—at a scale and level of sophistication that would have been inconceivable when Taylor first proposed the cloze procedure in 1953. Subsequent variants and refinements of the masked language modeling framework, implemented across diverse model architectures and applied to challenges ranging from machine translation to mathematical reasoning, have demonstrated the flexibility and generalizability of prediction-based training objectives rooted in cloze testing principles.</p>
+<p>Looking forward, the cloze testing framework appears likely to remain significant in educational, psychological, and computational contexts, even as both educational practice and machine learning research continue to evolve. In educational settings, cloze testing has proven so effective and efficient as a comprehension assessment tool that it continues to appear in high-stakes language proficiency examinations and classroom literacy instruction globally, with contemporary technological advances enabling increasingly sophisticated personalized and adaptive implementation through language models. In machine learning contexts, while the specific instantiation of pre-training objectives continues to evolve and alternative training paradigms emerge, the fundamental principles underlying cloze testing—that contextual prediction drives language learning, that bidirectional context processing enables sophisticated language understanding, and that self-supervised objectives leveraging unannotated data can scale to enable exceptional model capabilities—appear to have become foundational to modern NLP infrastructure in ways that will likely influence the field for years to come. The remarkable persistence of cloze testing methodology across both educational and computational domains, with continuous refinement addressing identified limitations in each context, testifies to the power of the underlying framework and suggests that the theory of contextual prediction that Taylor articulated seven decades ago will continue to inform advances in language assessment and language modeling for the foreseeable future.</p>
+    </article>
+    
+    <section class="references" id="references">
+        <h2>References</h2>
+        <ol>
+            <li id="ref-1">
+        <a href="#cite-1" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">1.</span>
+        "clozemaster.com." Accessed February 2, 2026.
+        <a href="https://www.clozemaster.com/blog/cloze-test/" target="_blank" rel="noopener">https://www.clozemaster.com/blog/cloze-test/</a>
+    </li>
+<li id="ref-2">
+        <a href="#cite-2" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">2.</span>
+        "eric.ed.gov." Accessed February 2, 2026.
+        <a href="https://eric.ed.gov/?id=ED079670" target="_blank" rel="noopener">https://eric.ed.gov/?id=ED079670</a>
+    </li>
+<li id="ref-3">
+        <a href="#cite-3" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">3.</span>
+        "arxiv.org." Accessed February 2, 2026.
+        <a href="https://arxiv.org/abs/2112.01867" target="_blank" rel="noopener">https://arxiv.org/abs/2112.01867</a>
+    </li>
+<li id="ref-4">
+        <a href="#cite-4" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">4.</span>
+        "en.wikipedia.org." Accessed February 2, 2026.
+        <a href="https://en.wikipedia.org/wiki/Cloze_test" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Cloze_test</a>
+    </li>
+<li id="ref-5">
+        <a href="#cite-5" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">5.</span>
+        "ir.library.oregonstate.edu." Accessed February 2, 2026.
+        <a href="https://ir.library.oregonstate.edu/downloads/h702q8600?locale=en" target="_blank" rel="noopener">https://ir.library.oregonstate.edu/downloads/h702q8600?locale=en</a>
+    </li>
+<li id="ref-6">
+        <a href="#cite-6" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">6.</span>
+        "pmc.ncbi.nlm.nih.gov." Accessed February 2, 2026.
+        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11458034/" target="_blank" rel="noopener">https://pmc.ncbi.nlm.nih.gov/articles/PMC11458034/</a>
+    </li>
+<li id="ref-7">
+        <a href="#cite-7" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">7.</span>
+        "gwern.net." Accessed February 2, 2026.
+        <a href="https://gwern.net/doc/psychology/writing/1953-taylor.pdf" target="_blank" rel="noopener">https://gwern.net/doc/psychology/writing/1953-taylor.pdf</a>
+    </li>
+<li id="ref-8">
+        <a href="#cite-8" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">8.</span>
+        "web.stanford.edu." Accessed February 2, 2026.
+        <a href="https://web.stanford.edu/class/archive/cs/cs224n/cs224n.1194/reports/custom/15791768.pdf" target="_blank" rel="noopener">https://web.stanford.edu/class/archive/cs/cs224n/cs224n.1194/reports/custom/15791768.pdf</a>
+    </li>
+<li id="ref-9">
+        <a href="#cite-9" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">9.</span>
+        "aclanthology.org." Accessed February 2, 2026.
+        <a href="https://aclanthology.org/2024.inlg-main.26.pdf" target="_blank" rel="noopener">https://aclanthology.org/2024.inlg-main.26.pdf</a>
+    </li>
+<li id="ref-10">
+        <a href="#cite-10" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">10.</span>
+        "journals.sagepub.com." Accessed February 2, 2026.
+        <a href="https://journals.sagepub.com/doi/10.1177/107769905303000401" target="_blank" rel="noopener">https://journals.sagepub.com/doi/10.1177/107769905303000401</a>
+    </li>
+<li id="ref-11">
+        <a href="#cite-11" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">11.</span>
+        "neptune.ai." Accessed February 2, 2026.
+        <a href="https://neptune.ai/blog/unmasking-bert-transformer-model-performance" target="_blank" rel="noopener">https://neptune.ai/blog/unmasking-bert-transformer-model-performance</a>
+    </li>
+<li id="ref-12">
+        <a href="#cite-12" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">12.</span>
+        "journals.sagepub.com." Accessed February 2, 2026.
+        <a href="https://journals.sagepub.com/doi/10.1177/0265532219840382" target="_blank" rel="noopener">https://journals.sagepub.com/doi/10.1177/0265532219840382</a>
+    </li>
+<li id="ref-13">
+        <a href="#cite-13" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">13.</span>
+        "files.eric.ed.gov." Accessed February 2, 2026.
+        <a href="https://files.eric.ed.gov/fulltext/ED253851.pdf" target="_blank" rel="noopener">https://files.eric.ed.gov/fulltext/ED253851.pdf</a>
+    </li>
+<li id="ref-14">
+        <a href="#cite-14" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">14.</span>
+        "decoda.ca." Accessed February 2, 2026.
+        <a href="https://decoda.ca/back-to-basics-cloze-procedure/" target="_blank" rel="noopener">https://decoda.ca/back-to-basics-cloze-procedure/</a>
+    </li>
+<li id="ref-15">
+        <a href="#cite-15" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">15.</span>
+        "aclanthology.org." Accessed February 2, 2026.
+        <a href="https://aclanthology.org/N19-1423.pdf" target="_blank" rel="noopener">https://aclanthology.org/N19-1423.pdf</a>
+    </li>
+<li id="ref-16">
+        <a href="#cite-16" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">16.</span>
+        "journals.sagepub.com." Accessed February 2, 2026.
+        <a href="https://journals.sagepub.com/doi/10.1177/026553229301000201" target="_blank" rel="noopener">https://journals.sagepub.com/doi/10.1177/026553229301000201</a>
+    </li>
+<li id="ref-17">
+        <a href="#cite-17" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">17.</span>
+        "twinkl.com." Accessed February 2, 2026.
+        <a href="https://www.twinkl.com/teaching-wiki/cloze-procedure" target="_blank" rel="noopener">https://www.twinkl.com/teaching-wiki/cloze-procedure</a>
+    </li>
+<li id="ref-18">
+        <a href="#cite-18" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">18.</span>
+        "arxiv.org." Accessed February 2, 2026.
+        <a href="https://arxiv.org/abs/1810.04805" target="_blank" rel="noopener">https://arxiv.org/abs/1810.04805</a>
+    </li>
+<li id="ref-19">
+        <a href="#cite-19" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">19.</span>
+        "tesl.tcnj.edu." Accessed February 2, 2026.
+        <a href="https://tesl.tcnj.edu/resources/resources-for-esl-teachers/reference-materials/assessment-options/" target="_blank" rel="noopener">https://tesl.tcnj.edu/resources/resources-for-esl-teachers/reference-materials/assessment-options/</a>
+    </li>
+<li id="ref-20">
+        <a href="#cite-20" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">20.</span>
+        "emergentmind.com." Accessed February 2, 2026.
+        <a href="https://www.emergentmind.com/topics/cloze-task-for-training" target="_blank" rel="noopener">https://www.emergentmind.com/topics/cloze-task-for-training</a>
+    </li>
+<li id="ref-21">
+        <a href="#cite-21" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">21.</span>
+        "heidloff.net." Accessed February 2, 2026.
+        <a href="https://heidloff.net/article/foundation-models-transformers-bert-and-gpt/" target="_blank" rel="noopener">https://heidloff.net/article/foundation-models-transformers-bert-and-gpt/</a>
+    </li>
+<li id="ref-22">
+        <a href="#cite-22" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">22.</span>
+        "teaching-esl-to-adults.com." Accessed February 2, 2026.
+        <a href="https://www.teaching-esl-to-adults.com/esl-cloze-exercises.html" target="_blank" rel="noopener">https://www.teaching-esl-to-adults.com/esl-cloze-exercises.html</a>
+    </li>
+<li id="ref-23">
+        <a href="#cite-23" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">23.</span>
+        "evidentlyai.com." Accessed February 2, 2026.
+        <a href="https://www.evidentlyai.com/llm-guide/llm-benchmarks" target="_blank" rel="noopener">https://www.evidentlyai.com/llm-guide/llm-benchmarks</a>
+    </li>
+<li id="ref-24">
+        <a href="#cite-24" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">24.</span>
+        "en.wikipedia.org." Accessed February 2, 2026.
+        <a href="https://en.wikipedia.org/wiki/BERT_(language_model)" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/BERT_(language_model)</a>
+    </li>
+<li id="ref-25">
+        <a href="#cite-25" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">25.</span>
+        "journals.sagepub.com." Accessed February 2, 2026.
+        <a href="https://journals.sagepub.com/doi/abs/10.1177/0265532219840382" target="_blank" rel="noopener">https://journals.sagepub.com/doi/abs/10.1177/0265532219840382</a>
+    </li>
+<li id="ref-26">
+        <a href="#cite-26" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">26.</span>
+        "arxiv.org." Accessed February 2, 2026.
+        <a href="https://arxiv.org/abs/1711.03225" target="_blank" rel="noopener">https://arxiv.org/abs/1711.03225</a>
+    </li>
+<li id="ref-27">
+        <a href="#cite-27" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">27.</span>
+        "magazine.sebastianraschka.com." Accessed February 2, 2026.
+        <a href="https://magazine.sebastianraschka.com/p/state-of-llms-2025" target="_blank" rel="noopener">https://magazine.sebastianraschka.com/p/state-of-llms-2025</a>
+    </li>
+<li id="ref-28">
+        <a href="#cite-28" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">28.</span>
+        "teval.jalt.org." Accessed February 2, 2026.
+        <a href="https://teval.jalt.org/test/po_we.htm" target="_blank" rel="noopener">https://teval.jalt.org/test/po_we.htm</a>
+    </li>
+<li id="ref-29">
+        <a href="#cite-29" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">29.</span>
+        "aclanthology.org." Accessed February 2, 2026.
+        <a href="https://aclanthology.org/D18-1257/" target="_blank" rel="noopener">https://aclanthology.org/D18-1257/</a>
+    </li>
+<li id="ref-30">
+        <a href="#cite-30" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">30.</span>
+        "arxiv.org." Accessed February 2, 2026.
+        <a href="https://arxiv.org/pdf/2406.08446.pdf" target="_blank" rel="noopener">https://arxiv.org/pdf/2406.08446.pdf</a>
+    </li>
+<li id="ref-31">
+        <a href="#cite-31" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">31.</span>
+        "eric.ed.gov." Accessed February 2, 2026.
+        <a href="https://eric.ed.gov/?id=ED010983" target="_blank" rel="noopener">https://eric.ed.gov/?id=ED010983</a>
+    </li>
+<li id="ref-32">
+        <a href="#cite-32" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">32.</span>
+        "files.eric.ed.gov." Accessed February 2, 2026.
+        <a href="https://files.eric.ed.gov/fulltext/EJ1193854.pdf" target="_blank" rel="noopener">https://files.eric.ed.gov/fulltext/EJ1193854.pdf</a>
+    </li>
+<li id="ref-33">
+        <a href="#cite-33" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">33.</span>
+        "jalammar.github.io." Accessed February 2, 2026.
+        <a href="https://jalammar.github.io/illustrated-bert/" target="_blank" rel="noopener">https://jalammar.github.io/illustrated-bert/</a>
+    </li>
+<li id="ref-34">
+        <a href="#cite-34" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">34.</span>
+        "cresst.org." Accessed February 2, 2026.
+        <a href="https://cresst.org/wp-content/uploads/R004.pdf" target="_blank" rel="noopener">https://cresst.org/wp-content/uploads/R004.pdf</a>
+    </li>
+<li id="ref-35">
+        <a href="#cite-35" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">35.</span>
+        "semanticscholar.org." Accessed February 2, 2026.
+        <a href="https://www.semanticscholar.org/paper/Semantically-Acceptable-Scoring-Procedures-(-SEMAC-Litz-Smith/f2219957f356116887f4283bfb98398fe023f8de" target="_blank" rel="noopener">https://www.semanticscholar.org/paper/Semantically-Acceptable-Scoring-Procedures-(-SEMAC-Litz-Smith/f2219957f356116887f4283bfb98398fe023f8de</a>
+    </li>
+<li id="ref-36">
+        <a href="#cite-36" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">36.</span>
+        "en.wikipedia.org." Accessed February 2, 2026.
+        <a href="https://en.wikipedia.org/wiki/ELMo" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/ELMo</a>
+    </li>
+<li id="ref-37">
+        <a href="#cite-37" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">37.</span>
+        "eric.ed.gov." Accessed February 2, 2026.
+        <a href="https://eric.ed.gov/?id=ED094337" target="_blank" rel="noopener">https://eric.ed.gov/?id=ED094337</a>
+    </li>
+<li id="ref-38">
+        <a href="#cite-38" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">38.</span>
+        "techhq.com." Accessed February 2, 2026.
+        <a href="https://techhq.com/news/8-llm-evaluation-tools-you-should-know-in-2026/" target="_blank" rel="noopener">https://techhq.com/news/8-llm-evaluation-tools-you-should-know-in-2026/</a>
+    </li>
+<li id="ref-39">
+        <a href="#cite-39" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">39.</span>
+        "tungmphung.com." Accessed February 2, 2026.
+        <a href="https://tungmphung.com/a-review-of-pre-trained-language-models-from-bert-roberta-to-electra-deberta-bigbird-and-more/" target="_blank" rel="noopener">https://tungmphung.com/a-review-of-pre-trained-language-models-from-bert-roberta-to-electra-deberta-bigbird-and-more/</a>
+    </li>
+<li id="ref-40">
+        <a href="#cite-40" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">40.</span>
+        "readingmatrix.com." Accessed February 2, 2026.
+        <a href="https://www.readingmatrix.com/articles/april_2014/sadeghi.pdf" target="_blank" rel="noopener">https://www.readingmatrix.com/articles/april_2014/sadeghi.pdf</a>
+    </li>
+<li id="ref-41">
+        <a href="#cite-41" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">41.</span>
+        "arxiv.org." Accessed February 2, 2026.
+        <a href="https://arxiv.org/abs/2505.20206" target="_blank" rel="noopener">https://arxiv.org/abs/2505.20206</a>
+    </li>
+<li id="ref-42">
+        <a href="#cite-42" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">42.</span>
+        "d2l.ai." Accessed February 2, 2026.
+        <a href="https://d2l.ai/chapter_attention-mechanisms-and-transformers/large-pretraining-transformers.html" target="_blank" rel="noopener">https://d2l.ai/chapter_attention-mechanisms-and-transformers/large-pretraining-transformers.html</a>
+    </li>
+<li id="ref-43">
+        <a href="#cite-43" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">43.</span>
+        "michiganassessment.org." Accessed February 2, 2026.
+        <a href="https://michiganassessment.org/wp-content/uploads/2020/02/20.02.pdf.Res_.InvestigatingtheConstructValidityoftheClozeSectionintheExaminationfortheCertificateofProficiencyinEnglish.pdf" target="_blank" rel="noopener">https://michiganassessment.org/wp-content/uploads/2020/02/20.02.pdf.Res_.InvestigatingtheConstructValidityoftheClozeSectionintheExaminationfortheCertificateofProficiencyinEnglish.pdf</a>
+    </li>
+<li id="ref-44">
+        <a href="#cite-44" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">44.</span>
+        "onlinelibrary.wiley.com." Accessed February 2, 2026.
+        <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-1770.1971.tb00057.x" target="_blank" rel="noopener">https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-1770.1971.tb00057.x</a>
+    </li>
+<li id="ref-45">
+        <a href="#cite-45" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">45.</span>
+        "arxiv.org." Accessed February 2, 2026.
+        <a href="https://arxiv.org/html/2410.12057v2" target="_blank" rel="noopener">https://arxiv.org/html/2410.12057v2</a>
+    </li>
+<li id="ref-46">
+        <a href="#cite-46" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">46.</span>
+        "journals.sagepub.com." Accessed February 2, 2026.
+        <a href="https://journals.sagepub.com/doi/10.1177/0265532219840382" target="_blank" rel="noopener">https://journals.sagepub.com/doi/10.1177/0265532219840382</a>
+    </li>
+<li id="ref-47">
+        <a href="#cite-47" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">47.</span>
+        "onlinelibrary.wiley.com." Accessed February 2, 2026.
+        <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-1770.1973.tb00100.x" target="_blank" rel="noopener">https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-1770.1973.tb00100.x</a>
+    </li>
+<li id="ref-48">
+        <a href="#cite-48" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">48.</span>
+        "stackoverflow.blog." Accessed February 2, 2026.
+        <a href="https://stackoverflow.blog/2025/04/28/how-self-supervised-language-revolutionized-natural-language-processing-and-gen-ai/" target="_blank" rel="noopener">https://stackoverflow.blog/2025/04/28/how-self-supervised-language-revolutionized-natural-language-processing-and-gen-ai/</a>
+    </li>
+<li id="ref-49">
+        <a href="#cite-49" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">49.</span>
+        "cadernos.abralin.org." Accessed February 2, 2026.
+        <a href="https://cadernos.abralin.org/index.php/cadernos/article/view/787" target="_blank" rel="noopener">https://cadernos.abralin.org/index.php/cadernos/article/view/787</a>
+    </li>
+<li id="ref-50">
+        <a href="#cite-50" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">50.</span>
+        "pubmed.ncbi.nlm.nih.gov." Accessed February 2, 2026.
+        <a href="https://pubmed.ncbi.nlm.nih.gov/470647/" target="_blank" rel="noopener">https://pubmed.ncbi.nlm.nih.gov/470647/</a>
+    </li>
+<li id="ref-51">
+        <a href="#cite-51" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">51.</span>
+        "nlp.stanford.edu." Accessed February 2, 2026.
+        <a href="https://nlp.stanford.edu/pubs/rajpurkar2016squad.pdf" target="_blank" rel="noopener">https://nlp.stanford.edu/pubs/rajpurkar2016squad.pdf</a>
+    </li>
+<li id="ref-52">
+        <a href="#cite-52" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">52.</span>
+        "hawaii.edu." Accessed February 2, 2026.
+        <a href="https://www.hawaii.edu/sls/wp-content/uploads/2014/09/McKameyTreela.pdf" target="_blank" rel="noopener">https://www.hawaii.edu/sls/wp-content/uploads/2014/09/McKameyTreela.pdf</a>
+    </li>
+<li id="ref-53">
+        <a href="#cite-53" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">53.</span>
+        "facultyfocus.com." Accessed February 2, 2026.
+        <a href="https://www.facultyfocus.com/articles/educational-assessment/multiple-choice-tests-pros-cons/" target="_blank" rel="noopener">https://www.facultyfocus.com/articles/educational-assessment/multiple-choice-tests-pros-cons/</a>
+    </li>
+<li id="ref-54">
+        <a href="#cite-54" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">54.</span>
+        "rajpurkar.github.io." Accessed February 2, 2026.
+        <a href="https://rajpurkar.github.io/SQuAD-explorer/" target="_blank" rel="noopener">https://rajpurkar.github.io/SQuAD-explorer/</a>
+    </li>
+<li id="ref-55">
+        <a href="#cite-55" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">55.</span>
+        "scribd.com." Accessed February 2, 2026.
+        <a href="https://www.scribd.com/document/928338173/The-Rise-of-Artificial-Intelligence-Cloze-Test" target="_blank" rel="noopener">https://www.scribd.com/document/928338173/The-Rise-of-Artificial-Intelligence-Cloze-Test</a>
+    </li>
+<li id="ref-56">
+        <a href="#cite-56" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">56.</span>
+        "aclanthology.org." Accessed February 2, 2026.
+        <a href="https://aclanthology.org/2020.coling-main.589/" target="_blank" rel="noopener">https://aclanthology.org/2020.coling-main.589/</a>
+    </li>
+<li id="ref-57">
+        <a href="#cite-57" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">57.</span>
+        "aclanthology.org." Accessed February 2, 2026.
+        <a href="https://aclanthology.org/D19-1539.pdf" target="_blank" rel="noopener">https://aclanthology.org/D19-1539.pdf</a>
+    </li>
+<li id="ref-58">
+        <a href="#cite-58" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">58.</span>
+        "ailiteracy.institute." Accessed February 2, 2026.
+        <a href="https://ailiteracy.institute/ai-literacy-tests/" target="_blank" rel="noopener">https://ailiteracy.institute/ai-literacy-tests/</a>
+    </li>
+<li id="ref-59">
+        <a href="#cite-59" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">59.</span>
+        "github.com." Accessed February 2, 2026.
+        <a href="https://github.com/ymcui/Chinese-RC-Datasets" target="_blank" rel="noopener">https://github.com/ymcui/Chinese-RC-Datasets</a>
+    </li>
+<li id="ref-60">
+        <a href="#cite-60" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">60.</span>
+        "emergentmind.com." Accessed February 2, 2026.
+        <a href="https://www.emergentmind.com/topics/cloze-task-for-training" target="_blank" rel="noopener">https://www.emergentmind.com/topics/cloze-task-for-training</a>
+    </li>
+        </ol>
+    </section>
+    <footer>filed under: things worth knowing</footer>
+</body>
+</html>
