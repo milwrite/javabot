@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>research archive — sportello deep research</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            line-height: 1.6;
+            padding: 40px 20px 60px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        a { color: #00ffff; text-decoration: none; }
+        a:hover { color: #ff0000; text-decoration: underline; }
+        .home-link { display: inline-block; margin-bottom: 30px; font-size: 13px; }
+        .home-link::before { content: '← '; }
+
+        header { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        header h1 { color: #ff0000; font-size: 20px; font-weight: normal; margin-bottom: 4px; }
+        header .meta { font-size: 12px; color: #555; }
+
+        /* filters */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #222;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+        .filter-group label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+        .filter-group select,
+        .filter-group input {
+            background: #111;
+            color: #7ec8e3;
+            border: 1px solid #333;
+            padding: 6px 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            outline: none;
+        }
+        .filter-group select:focus,
+        .filter-group input:focus { border-color: #00ffff; }
+        .filter-group select option { background: #111; color: #7ec8e3; }
+        .search-input { min-width: 200px; flex: 1; }
+
+        /* stats bar */
+        .stats {
+            font-size: 11px;
+            color: #555;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stats .count { color: #00ffff; }
+        .clear-btn {
+            background: none;
+            border: 1px solid #333;
+            color: #555;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            padding: 2px 8px;
+            cursor: pointer;
+        }
+        .clear-btn:hover { color: #ff0000; border-color: #ff0000; }
+
+        /* theme section headers */
+        .theme-header {
+            font-size: 13px;
+            color: #ff0000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 28px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #222;
+        }
+        .theme-header:first-of-type { margin-top: 0; }
+
+        /* report cards */
+        .report {
+            display: block;
+            padding: 12px 0;
+            border-bottom: 1px solid #1a1a1a;
+            transition: background 0.15s;
+        }
+        .report:hover { background: #111; padding-left: 8px; }
+        .report-title {
+            color: #7ec8e3;
+            font-size: 14px;
+            line-height: 1.4;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .report:hover .report-title { color: #00ffff; }
+        .report-meta {
+            font-size: 11px;
+            color: #444;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .report-meta .tag {
+            color: #555;
+            border: 1px solid #222;
+            padding: 1px 6px;
+            font-size: 10px;
+        }
+        .report-meta .format-tag { color: #ff0000; border-color: #331111; }
+        .report-meta .theme-tag { color: #00ffff; border-color: #112233; }
+
+        .no-results {
+            color: #444;
+            font-size: 13px;
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 20px 15px 40px; }
+            .filters { flex-direction: column; }
+            .filter-group select, .filter-group input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../../index.html"></a>
+
+    <header>
+        <h1>research archive</h1>
+        <div class="meta">deep research runs · dug up by sportello</div>
+    </header>
+
+    <div class="filters">
+        <div class="filter-group">
+            <label>theme</label>
+            <select id="filter-theme">
+                <option value="">all themes</option>
+                <option value="arts-culture">arts & culture</option>
+                <option value="academic">academic research</option>
+                <option value="job-search">job search</option>
+                <option value="sports">sports</option>
+                <option value="policy-history">policy & history</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>format</label>
+            <select id="filter-format">
+                <option value="">all formats</option>
+                <option value="review">review</option>
+                <option value="taxonomy">taxonomy</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>month</label>
+            <select id="filter-month">
+                <option value="">all dates</option>
+                <option value="2026-01">jan 2026</option>
+                <option value="2025-12">dec 2025</option>
+            </select>
+        </div>
+        <div class="filter-group" style="flex:1;">
+            <label>search</label>
+            <input type="text" id="filter-search" class="search-input" placeholder="filter by title...">
+        </div>
+    </div>
+
+    <div class="stats">
+        <span>showing <span class="count" id="result-count">0</span> reports</span>
+        <button class="clear-btn" id="clear-filters">clear filters</button>
+    </div>
+
+    <div id="report-list"></div>
+
+    <script>
+    const REPORTS = [
+        { title: "Lincoln Center for the Performing Arts: Education Programs, Young Artist Pipeline, and Arts Education Initiatives", file: "deep-lincoln-center-performing-arts-2026-01.html", date: "2026-01-12", format: "review", theme: "arts-culture" },
+        { title: "The Jerome Robbins Dance Division of NYPL: The World's Largest Dance Archive and Its Oral History Project", file: "you-deep-jerome-robbins-dance-2026-01.html", date: "2026-01-11", format: "review", theme: "arts-culture" },
+        { title: "Roundabout Theatre Company: Mission, Community Impact, and Institutional Challenges", file: "you-roundabout-theatre-company-identify-2026-01.html", date: "2026-01-08", format: "review", theme: "arts-culture" },
+        { title: "Fort Ticonderoga: Institutional Legacy, Collections, Educational Mission, and the Pell Graduate Fellowship", file: "deep-fort-ticonderoga-its-institutional-2026-01.html", date: "2026-01-17", format: "review", theme: "arts-culture" },
+        { title: "The Museum of Modern Art's Development and Research Department: Institutional Research, Preservation, and Innovation", file: "moma-developement-department-2026-01.html", date: "2026-01-12", format: "review", theme: "arts-culture" },
+        { title: "MoMA Research and Development Department: Strategic Innovation, Institutional Impact, and Challenges", file: "you-development-department-moma-propose-2026-01.html", date: "2026-01-18", format: "review", theme: "arts-culture" },
+        { title: "New York State Council on the Arts: History, Grant Programs, Statewide Initiatives, and Staff Responsibilities", file: "deep-new-york-council-arts-2026-01.html", date: "2026-01-17", format: "review", theme: "arts-culture" },
+        { title: "Albany Institute of History & Art: Collections Stewardship and Associate Curator Requirements", file: "1436782482967101491-you-deep-institute-history-2025-12.html", date: "2025-12-23", format: "review", theme: "arts-culture" },
+        { title: "The 1911 Albany Capitol Fire and the Transformation of New York State Educational Records", file: "locate-available-commentary-records-1911-2026-01.html", date: "2026-01-26", format: "review", theme: "arts-culture" },
+        { title: "Critical University Studies: Urban Universities, Technology, Institutional Critique, and Higher Education Transformation", file: "literature-review-critical-university-studies-2026-01-taxonomy.html", date: "2026-01-18", format: "taxonomy", theme: "academic" },
+        { title: "A Comprehensive Literature Review of Reddit Research: Community, Education, Discourse, and Literacy", file: "literature-review-reddit-2026-01-taxonomy.html", date: "2026-01-18", format: "taxonomy", theme: "academic" },
+        { title: "Reddit as a Knowledge Commons and Networked Public: Governance, Participatory Practice, and Digital Scholarship", file: "scholarship-reddit-discusses-commons-based-2026-01.html", date: "2026-01-19", format: "review", theme: "academic" },
+        { title: "CUNY Reddit Discussions in March 2020: Student Voices During the COVID-19 Transition", file: "deep-cuny-subreddit-posts-march-2026-01.html", date: "2026-01-11", format: "review", theme: "academic" },
+        { title: "Model Registries: An Environmental Scan of Theory, Practice, and Implementation in AI Development", file: "comprehensive-environmental-scan-model-registries-2026-01-taxonomy.html", date: "2026-01-19", format: "taxonomy", theme: "academic" },
+        { title: "The Common School Movement in the United States and New York State: Secondary Scholarship Analysis", file: "you-secondary-scholarship-new-york-2026-01.html", date: "2026-01-22", format: "review", theme: "academic" },
+        { title: "PhD Theatre and Performance Studies Job Opportunities in Museums and Cultural Institutions (Nov-Dec 2025)", file: "job-openings-phd-theatre-performance-2025-12.html", date: "2025-12-23", format: "review", theme: "job-search" },
+        { title: "Job Openings for PhD in Theatre: Archival Work, Exhibition Development, Public Programming (Nov-Dec 2025)", file: "search-job-openings-for-a-phd-in-theatre-and-perfo.html", date: "2025-12-23", format: "review", theme: "job-search" },
+        { title: "Theatre and Performance Studies Employment: Archival Work, Exhibition Development in Cultural Institutions", file: "examination-of-current-job-openings-qualifying-for.html", date: "2025-12-23", format: "review", theme: "job-search" },
+        { title: "Career Opportunities and Professional Development at The Museum of Modern Art", file: "deep-job-https-recruiting-ultipro-2026-01.html", date: "2026-01-12", format: "review", theme: "job-search" },
+        { title: "Comprehensive Guide to Applying for a Project Management Position Through ADP Workforce Now", file: "you-deep-everyting-know-order-2025-12.html", date: "2025-12-28", format: "review", theme: "job-search" },
+        { title: "Lakers vs. Rockets Christmas Classic: Constructing a Four-Leg Parlay Analysis", file: "construct-four-leg-parlay-lakers-2025-12.html", date: "2025-12-26", format: "review", theme: "sports" },
+        { title: "Ascending Scoring Trends in the Los Angeles Lakers: 2025-26 Season Analysis", file: "player-trending-upward-scoring-lakers-2025-12.html", date: "2025-12-26", format: "review", theme: "sports" },
+        { title: "New York Knicks Next Five Games: Sportsbook Market Odds and Movement (Jan 2026)", file: "you-sports-betting-analyst-today-2026-01.html", date: "2026-01-08", format: "review", theme: "sports" },
+        { title: "The Evolution of New York City's Organizational Structure: Administrative Change and Reform", file: "history-organization-changes-new-york-2025-12.html", date: "2025-12-27", format: "review", theme: "policy-history" }
+    ];
+
+    const THEME_LABELS = {
+        'arts-culture': 'arts & culture',
+        'academic': 'academic research',
+        'job-search': 'job search',
+        'sports': 'sports',
+        'policy-history': 'policy & history'
+    };
+
+    const THEME_ORDER = ['arts-culture', 'academic', 'job-search', 'sports', 'policy-history'];
+
+    const filterTheme = document.getElementById('filter-theme');
+    const filterFormat = document.getElementById('filter-format');
+    const filterMonth = document.getElementById('filter-month');
+    const filterSearch = document.getElementById('filter-search');
+    const clearBtn = document.getElementById('clear-filters');
+    const resultCount = document.getElementById('result-count');
+    const reportList = document.getElementById('report-list');
+
+    function filterReports() {
+        const theme = filterTheme.value;
+        const format = filterFormat.value;
+        const month = filterMonth.value;
+        const search = filterSearch.value.toLowerCase().trim();
+
+        const filtered = REPORTS.filter(r => {
+            if (theme && r.theme !== theme) return false;
+            if (format && r.format !== format) return false;
+            if (month && !r.date.startsWith(month)) return false;
+            if (search && !r.title.toLowerCase().includes(search)) return false;
+            return true;
+        });
+
+        filtered.sort((a, b) => b.date.localeCompare(a.date));
+
+        resultCount.textContent = filtered.length;
+        renderReports(filtered);
+    }
+
+    function renderReports(reports) {
+        if (reports.length === 0) {
+            reportList.innerHTML = '<div class="no-results">no matching reports found</div>';
+            return;
+        }
+
+        const grouped = {};
+        THEME_ORDER.forEach(t => { grouped[t] = []; });
+        reports.forEach(r => {
+            if (!grouped[r.theme]) grouped[r.theme] = [];
+            grouped[r.theme].push(r);
+        });
+
+        let html = '';
+        THEME_ORDER.forEach(theme => {
+            const items = grouped[theme];
+            if (!items || items.length === 0) return;
+
+            html += '<div class="theme-header">' + THEME_LABELS[theme] + ' (' + items.length + ')</div>';
+            items.forEach(r => {
+                const dateObj = new Date(r.date + 'T12:00:00');
+                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toLowerCase();
+                html += '<a class="report" href="' + r.file + '">' +
+                    '<span class="report-title">' + escapeHtml(r.title) + '</span>' +
+                    '<span class="report-meta">' +
+                        '<span>' + dateStr + '</span>' +
+                        '<span class="tag format-tag">' + r.format + '</span>' +
+                        '<span class="tag theme-tag">' + THEME_LABELS[r.theme] + '</span>' +
+                    '</span>' +
+                '</a>';
+            });
+        });
+
+        reportList.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+        const d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
+
+    filterTheme.addEventListener('change', filterReports);
+    filterFormat.addEventListener('change', filterReports);
+    filterMonth.addEventListener('change', filterReports);
+    filterSearch.addEventListener('input', filterReports);
+    clearBtn.addEventListener('click', () => {
+        filterTheme.value = '';
+        filterFormat.value = '';
+        filterMonth.value = '';
+        filterSearch.value = '';
+        filterReports();
+    });
+
+    filterReports();
+    </script>
+</body>
+</html>
