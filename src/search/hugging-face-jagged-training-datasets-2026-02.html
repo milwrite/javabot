@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search hugging face and jagged for training datasets for Llora, focusing on c...</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #111;
+            color: #999;
+            line-height: 1.6;
+            padding: 40px 20px 60px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+        a { color: #888; }
+        a:hover { color: #ccc; }
+        .back { display: inline-block; margin-bottom: 30px; font-size: 13px; text-decoration: none; }
+        .back:before { content: '← '; }
+        header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        header h1 { color: #ccc; font-size: 20px; font-weight: normal; margin-bottom: 8px; }
+        header .meta { font-size: 12px; color: #555; }
+        article { color: #aaa; }
+        article h1 { color: #bbb; font-size: 17px; font-weight: normal; margin: 35px 0 15px; }
+        article h2 { color: #999; font-size: 15px; font-weight: normal; margin: 30px 0 12px; text-transform: lowercase; }
+        article h3 { color: #777; font-size: 14px; font-weight: normal; margin: 20px 0 10px; }
+        article p { margin-bottom: 16px; }
+        article strong { color: #ccc; font-weight: normal; }
+        article em { font-style: normal; color: #888; }
+
+        /* Chicago-style citation styling */
+        .citation { font-size: 0.75em; vertical-align: super; line-height: 0; }
+        .citation a {
+            color: #ff6b6b;
+            text-decoration: none;
+            padding: 0 1px;
+            transition: color 0.2s;
+        }
+        .citation a:hover { color: #ff9999; text-decoration: underline; }
+
+        /* References section */
+        .references {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #333;
+        }
+        .references h2 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .references ol {
+            list-style: none;
+            padding: 0;
+        }
+        .references li {
+            font-size: 12px;
+            margin: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+        .references .back-ref {
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #ff6b6b;
+            text-decoration: none;
+            font-size: 11px;
+        }
+        .references .back-ref:hover { color: #ff9999; }
+        .references .cite-num {
+            color: #666;
+            margin-right: 8px;
+        }
+        .references li a:not(.back-ref) {
+            color: #666;
+            word-break: break-all;
+        }
+        .references li a:not(.back-ref):hover { color: #999; }
+
+        footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 11px; color: #444; }
+        @media (max-width: 600px) {
+            body { padding: 25px 15px 40px; }
+            header h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <a class="back" href="../../index.html">back</a>
+    <header>
+        <h1>Search hugging face and jagged for training datasets for Llora, focusing on c...</h1>
+        <div class="meta">researched Feb 4, 2026 · dug up by sportello</div>
+    </header>
+    <article>
+        <h1>Comprehensive Research on Training Datasets for LoRA Fine-Tuning: Conversational Learning, Pedagogical Scaffolding, and Multilingual Dialogue Systems</h1>
+<p>This report synthesizes research on parameter-efficient fine-tuning methods, particularly Low-Rank Adaptation (LoRA), for training conversational AI systems that incorporate pedagogical principles of scaffolding and mentorship across multiple languages. The analysis reveals that the intersection of efficient fine-tuning techniques, educational learning theories, and multilingual natural language processing creates powerful opportunities for developing culturally-sensitive, cognitively-grounded dialogue systems capable of supporting learners across diverse linguistic and educational contexts.</p>
+<h2>Understanding LoRA and Parameter-Efficient Fine-Tuning in the Context of Dialogue Training</h2>
+<p>Parameter-efficient fine-tuning has emerged as a transformative approach in machine learning, fundamentally addressing the computational constraints that have historically limited the democratization of large language model adaptation. Low-Rank Adaptation represents a paradigm shift in how researchers and practitioners can customize powerful pre-trained models without the computational overhead traditionally associated with full-parameter training<sup class="citation"><a href="#ref-17" id="cite-17">17</a>,<a href="#ref-20" id="cite-20">20</a></sup>. Rather than updating all model weights during fine-tuning, LoRA freezes the original model parameters and introduces small trainable adapter modules that capture task-specific knowledge in a compressed form. This architectural innovation dramatically reduces memory requirements, accelerates training speed, and maintains model stability while achieving performance comparable to full fine-tuning<sup class="citation"><a href="#ref-17" id="cite-17">17</a>,<a href="#ref-36" id="cite-36">36</a></sup>.</p>
+<p>The significance of LoRA becomes particularly pronounced when training conversational dialogue systems intended for educational purposes. Traditional fine-tuning approaches for dialogue models require substantial computational resources and pose risks of catastrophic forgetting, where models lose previously learned capabilities when adapted to new domains<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>. For dialogue tutoring systems, where pedagogical effectiveness depends on maintaining foundational language understanding while acquiring specialized domain knowledge, LoRA's parameter-efficient approach offers distinct advantages. The method enables practitioners to fine-tune large multilingual models on conversational datasets without requiring enterprise-level hardware infrastructure<sup class="citation"><a href="#ref-20" id="cite-20">20</a></sup>. This accessibility is particularly valuable when developing dialogue systems for underrepresented languages or specialized educational domains where computational budgets are constrained<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup>.</p>
+<p>The mathematics underlying LoRA involves decomposing weight updates into low-rank matrices, typically with ranks ranging from 8 to 64, combined with scaling factors that control the magnitude of adaptations<sup class="citation"><a href="#ref-17" id="cite-17">17</a>,<a href="#ref-36" id="cite-36">36</a></sup>. For a dialogue fine-tuning task, this means the model learns specialized conversational patterns through a small set of additional parameters while preserving the rich linguistic knowledge acquired during pre-training. Quantized variants like QLoRA further extend efficiency by enabling fine-tuning of quantized models to 4-bit or 8-bit precision without sacrificing performance<sup class="citation"><a href="#ref-17" id="cite-17">17</a></sup>, opening possibilities for training on consumer-grade GPUs<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>. When designing dataset pipelines for LoRA-based dialogue training, practitioners must consider how the efficiency gains translate to pedagogical benefits, enabling more rapid iteration on dialogue quality and potentially supporting deployment on resource-constrained educational platforms<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup>.</p>
+<h2>Pedagogical Foundations for Dialogue-Based Learning Systems</h2>
+<p>Scaffolding, a foundational concept in educational psychology originating from Vygotsky's theory of the zone of proximal development, provides crucial theoretical grounding for designing effective dialogue-based learning systems<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-25" id="cite-25">25</a>,<a href="#ref-28" id="cite-28">28</a></sup>. Scaffolding refers to the provision of structured support that guides learners toward progressively more complex tasks and deeper understanding, with support gradually withdrawn as competence increases<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>. In the context of AI-mediated dialogue, scaffolding mechanisms transform conversational interactions from passive information transfer into active knowledge co-construction processes. When training dialogue tutoring models on LoRA-adapted base models, dataset design must explicitly encode these pedagogical principles through dialogue annotations that capture when and how models should provide explanatory support, pose guiding questions, and adapt complexity based on student performance<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>.</p>
+<p>Research on pedagogical dialogue systems reveals four fundamental learning theories that should inform dialogue dataset construction and model training approaches: knowledge construction, inquiry-based learning, dialogic teaching, and zone of proximal development<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>. Knowledge construction emphasizes learners actively building understanding by connecting new information to existing knowledge schemas. Inquiry-based learning positions students as investigators who generate hypotheses, conduct investigations, and interpret findings through guided exploration<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>. Dialogic teaching emphasizes genuine two-way dialogue where multiple perspectives are considered, prior knowledge is activated, and ideas are collaboratively refined through questioning and discussion<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>. The zone of proximal development captures the insight that learners benefit most from support calibrated to the gap between their current independent capability and their potential with expert guidance<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>. These theories collectively suggest that effective dialogue tutoring datasets should capture multi-turn interactions where the tutor dynamically adjusts scaffolding intensity, employs questioning strategies to activate prior knowledge, and provides explanatory support proportional to student confusion signals<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-11" id="cite-11">11</a></sup>.</p>
+<p>The "Trace-and-Verify" approach to building effective dialogue tutoring agents demonstrates how pedagogical principles translate to model architecture and training methodology<sup class="citation"><a href="#ref-11" id="cite-11">11</a></sup>. Rather than generating tutor responses through simple next-token prediction, this framework explicitly estimates student knowledge state at each dialogue turn using knowledge tracing techniques, then ranks candidate tutor utterances through a turn-by-turn verifier that ensures responses prioritize goal-driven guidance<sup class="citation"><a href="#ref-11" id="cite-11">11</a></sup>. When fine-tuning models on LoRA-adapted bases, training datasets structured to support knowledge tracing—where each dialogue turn includes metadata about which knowledge components students have mastered—enable models to learn pedagogically-informed generation strategies. Mentor Collective's research on conversation starters provides empirical grounding for why structured dialogue matters: seventy-four percent of mentees report hesitation before reaching out to mentors, with nearly half struggling specifically with not knowing what to say<sup class="citation"><a href="#ref-3" id="cite-3">3</a></sup>. This research suggests that fine-tuned dialogue models should encode explicit conversation-starting strategies, supportive framing, and confidence-building dialogue patterns that reduce social barriers to interaction<sup class="citation"><a href="#ref-3" id="cite-3">3</a></sup>.</p>
+<h2>Multilingual Datasets for Conversational Learning Systems</h2>
+<p>The landscape of available multilingual dialogue datasets reveals both substantial progress and persistent gaps in coverage, particularly for lower-resource languages and specialized educational contexts. The Multilingual Dialogue Dataset repositories serve as aggregation points for understanding current dataset diversity<sup class="citation"><a href="#ref-8" id="cite-8">8</a></sup>, while contemporary research demonstrates the viability of scaling dialogue instruction tuning across numerous language pairs. OpenStaxQA represents a significant contribution to multilingual educational dialogue training data, providing approximately 18,332 problem-solution pairs derived from 43 open-source college-level textbooks spanning English, Spanish, and Polish<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>. The dataset construction process involved systematic web scraping of end-of-chapter exercises and their solutions, followed by rigorous deduplication to eliminate overlapping content across textbook editions<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>. Researchers fine-tuned open-source models using QLoRA techniques on this dataset and evaluated performance through automated assessment using GPT-4, demonstrating that quantized LoRA fine-tuning preserves educational dialogue quality while dramatically reducing computational requirements<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>.</p>
+<p>The cross-lingual transfer capabilities enabled by multilingual fine-tuning present both opportunities and challenges for dialogue tutoring system development. The XTREME benchmark, encompassing 40 typologically diverse languages across 12 language families and 9 distinct tasks, provides systematic evaluation of multilingual model performance<sup class="citation"><a href="#ref-31" id="cite-31">31</a></sup>. This benchmark reveals that while models achieve near-human performance on English tasks, significant performance gaps emerge in cross-lingual transfer settings, particularly on syntactic understanding and sentence retrieval tasks<sup class="citation"><a href="#ref-31" id="cite-31">31</a></sup>. For dialogue system developers, these findings underscore the importance of including diverse language families in training datasets, as genetic linguistic similarities do not automatically guarantee effective transfer<sup class="citation"><a href="#ref-30" id="cite-30">30</a></sup>. Research directly examining multilingual instruction tuning on the BLOOM model found that expanding language coverage in instruction datasets proves beneficial for downstream performance<sup class="citation"><a href="#ref-30" id="cite-30">30</a></sup>. Crucially, accuracy significantly improves when the test language appears in the instruction mixture itself, suggesting that dialogue datasets should include representation from target deployment languages rather than relying solely on zero-shot cross-lingual transfer<sup class="citation"><a href="#ref-30" id="cite-30">30</a></sup>.</p>
+<p>SpokenNativQA introduces multilingual considerations often overlooked in text-only dialogue research: the challenges of speech variability, accents, and phonetic diversity in conversational interactions<sup class="citation"><a href="#ref-48" id="cite-48">48</a></sup>. The dataset comprises approximately 33,000 naturally spoken questions and answers across multiple languages, including low-resource and dialect-rich variants<sup class="citation"><a href="#ref-48" id="cite-48">48</a></sup>. This resource addresses a critical gap in dialogue system evaluation, as most existing multilingual datasets focus on written text while conversational learning often occurs through spoken interaction. For practitioners fine-tuning models for educational dialogue, the inclusion of speech-based data suggests that training datasets should incorporate phonetic transcriptions or audio inputs to develop models robust to natural speech variations encountered in real classrooms<sup class="citation"><a href="#ref-48" id="cite-48">48</a></sup>. The comparative analysis between no-ASR (using gold question transcriptions) and ASR-cascaded setups reveals performance variations that have direct implications for dialogue system reliability in educational deployment<sup class="citation"><a href="#ref-48" id="cite-48">48</a></sup>.</p>
+<p>Comparative analysis of existing multilingual dialogue datasets reveals complementary strengths and limitations across major resources. The DREAM dataset, containing 10,197 multiple-choice questions for 6,444 dialogues drawn from English-as-a-Foreign-Language examinations, provides dialogue understanding benchmarks but lacks the conversational nature of training-appropriate dialogue datasets<sup class="citation"><a href="#ref-53" id="cite-53">53</a></sup>. CoQA and QuAC offer multi-turn dialogue interactions but with uneven multilingual coverage<sup class="citation"><a href="#ref-54" id="cite-54">54</a></sup>. These datasets illustrate that while dialogue comprehension benchmarks exist for multiple languages, truly multilingual datasets specifically designed for fine-tuning conversational tutoring models remain sparse. This gap suggests opportunities for practitioners to construct specialized dialogue datasets by combining existing resources through careful adaptation and translation pipelines, a strategy documented in "Let's Play Across Cultures," which includes 33,000 questions spanning two modalities and three categories across multiple languages<sup class="citation"><a href="#ref-22" id="cite-22">22</a></sup>.</p>
+<h2>Specialized Dialogue Tutoring Datasets and Pedagogical Annotation Frameworks</h2>
+<p>MathDial represents a paradigmatic example of how pedagogical principles translate into structured dialogue datasets optimized for fine-tuning educational AI systems<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup>. The dataset comprises 3,000 one-to-one teacher-student tutoring dialogues grounded in multi-step mathematical reasoning problems, with extensive annotations capturing pedagogical properties<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup>. Crucially, MathDial demonstrates that effective educational dialogue datasets must go beyond simple question-answer pairs to capture the dynamic scaffolding strategies expert tutors employ. Each dialogue includes annotations of teacher moves drawn from a taxonomy reflecting different pedagogical approaches: focusing attention, hinting at problem-solving strategies, providing direct explanations, and managing social-emotional dimensions of learning<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup>. When fine-tuning LoRA-adapted models on MathDial, practitioners can train models to recognize which teacher moves are appropriate given current student understanding, enabling models to learn context-sensitive pedagogical reasoning rather than generic dialogue generation<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup>. The authors demonstrate that models fine-tuned on MathDial achieve substantially better performance in interactive tutoring settings compared to models trained on general question-answering datasets, with improvements particularly pronounced in balancing student success rates against avoiding premature solution revelation<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup>.</p>
+<p>Book2Dial extends the MathDial paradigm by systematizing the process of generating synthetic teacher-student dialogue datasets from educational textbooks<sup class="citation"><a href="#ref-37" id="cite-37">37</a>,<a href="#ref-40" id="cite-40">40</a></sup>. The framework employs two distinct language models—one playing the student role with limited textbook context and one playing the teacher with complete textbook information—to generate natural-seeming educational dialogue<sup class="citation"><a href="#ref-37" id="cite-37">37</a></sup>. Three complementary generation approaches are implemented: multi-turn question generation paired with question-answering, dialogue inpainting where both participants share complete context but collaborate to reconstruct missing dialogue segments, and role-playing where models simulate realistic teacher-student interactions<sup class="citation"><a href="#ref-37" id="cite-37">37</a></sup>. Evaluation results demonstrate that role-playing approaches generate superior dialogue quality across multiple dimensions including informativeness, groundedness in source material, and pedagogical appropriateness<sup class="citation"><a href="#ref-37" id="cite-37">37</a>,<a href="#ref-40" id="cite-40">40</a></sup>. For LoRA fine-tuning practitioners, Book2Dial's methodology suggests that synthetic dialogue generation, when carefully designed around pedagogical principles, can create large-scale training datasets suitable for parameter-efficient adaptation. The approach proves particularly valuable for educational domains where privacy concerns limit access to authentic student-teacher interactions<sup class="citation"><a href="#ref-37" id="cite-37">37</a></sup>.</p>
+<p>Scaffolding Language Learning via Multi-modal Tutoring Systems provides a comprehensive framework for understanding how pedagogical instructions embedded in model prompts enable effective dialogue scaffolding<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>. The research constructs different types of tutoring systems grounded in four fundamental learning theories and develops a seven-dimension rubric to evaluate scaffolding effectiveness: feeding back on student contributions, providing hints toward problem-solving, instructing through direct explanation, explaining reasoning processes, modeling expert problem-solving, questioning to guide discovery, and offering social-emotional support<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>. When designing datasets for LoRA fine-tuning, these seven dimensions suggest that dialogue annotations should capture not just what tutor utterances accomplish but which scaffolding mechanism they employ. This enriched annotation enables fine-tuned models to learn when each scaffolding approach is pedagogically appropriate, developing calibrated response strategies rather than generic conversational patterns<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>. The research demonstrates that GPT-4V, despite remarkable general capabilities, benefits substantially from explicit pedagogical instructions in prompts, suggesting that even state-of-the-art foundation models require scaffolding-aware training data to achieve educational dialogue quality<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>.</p>
+<h2>Instruction Tuning and Conversational Fine-Tuning Methodologies</h2>
+<p>Instruction tuning, defined as further training language models on datasets of instruction-output pairs, provides the theoretical foundation for adapting models toward conversational dialogue tasks<sup class="citation"><a href="#ref-29" id="cite-29">29</a></sup>. Unlike next-word prediction during pre-training, instruction tuning bridges the gap between the model's original objective and the user's intention to have models follow specific instructions and engage in helpful dialogue<sup class="citation"><a href="#ref-29" id="cite-29">29</a></sup>. The methodology involves collecting or generating instruction datasets, training models on these data to internalize instruction-following patterns, and empirically evaluating whether instruction-tuned models exhibit better controllability and task performance<sup class="citation"><a href="#ref-29" id="cite-29">29</a></sup>. For dialogue system developers using LoRA, instruction tuning principles suggest that training datasets should be explicitly formatted as conversational interactions with clear role designations (student, tutor, mentor), task objectives (learning a concept, debugging code, exploring an idea), and expected response characteristics (encouraging scaffolding, requesting clarification when appropriate, providing actionable guidance)<sup class="citation"><a href="#ref-29" id="cite-29">29</a></sup>.</p>
+<p>The Stanford Alpaca project demonstrates how instruction tuning at scale becomes feasible through synthetic data generation and efficient fine-tuning<sup class="citation"><a href="#ref-38" id="cite-38">38</a></sup>. The dataset comprises 52,000 instruction-following examples generated by prompting text-davinci-003 with carefully designed prompts that yield diverse task types: open-ended questions, closed-ended questions, information extraction from Wikipedia, summarization, brainstorming, classification, and creative writing<sup class="citation"><a href="#ref-38" id="cite-38">38</a></sup>. Critically, the Alpaca approach achieves this dataset at remarkably low cost (under $500) through aggressive batch decoding and simplified data generation pipelines<sup class="citation"><a href="#ref-38" id="cite-38">38</a></sup>. For educators and researchers developing dialogue tutoring systems with limited budgets, the Alpaca methodology suggests viable pathways for generating large-scale synthetic dialogue datasets. The resulting 7B and 13B Alpaca models, fine-tuned with standard hyperparameters (2e-5 learning rate, 3-5 epochs, 512 maximum length), achieve substantial performance improvements over base models while remaining runnable on consumer-level GPUs<sup class="citation"><a href="#ref-38" id="cite-38">38</a></sup>. This accessibility is particularly important for developing dialogue systems in languages or domains where commercial APIs dominate, as open-source fine-tuned models enable community contributions to multilingual educational AI<sup class="citation"><a href="#ref-38" id="cite-38">38</a></sup>.</p>
+<p>Monolingual or Multilingual Instruction Tuning research directly compares cost-efficient strategies for scaling dialogue system training across multiple languages<sup class="citation"><a href="#ref-33" id="cite-33">33</a></sup>. The study employs the Alpaca dataset and machine translations to form multilingual training data, then fine-tunes multiple base models (BLOOM, LLaMA, Baichuan-2, Pythia, OpenLLaMA) using either LoRA or full-parameter training under controlled computation budgets<sup class="citation"><a href="#ref-33" id="cite-33">33</a></sup>. A critical finding emerges: multilingual instruction tuning outperforms or matches single-language tuning when trained under equivalent computational budgets, particularly for larger models<sup class="citation"><a href="#ref-33" id="cite-33">33</a></sup>. Furthermore, multilingual tuning with downsampled data can achieve comparable performance to full-scale monolingual approaches while maintaining greater robustness across languages<sup class="citation"><a href="#ref-33" id="cite-33">33</a></sup>. For dialogue system practitioners, this research justifies investment in truly multilingual training rather than developing separate models for each language, a strategic decision with substantial implications for system maintainability and resource efficiency. The work demonstrates that five different base models with varying language coverage profiles all benefit from multilingual instruction exposure, though models with stronger baseline multilingual capabilities (BLOOM, Baichuan-2) show more pronounced improvements than English-centric models<sup class="citation"><a href="#ref-33" id="cite-33">33</a></sup>.</p>
+<h2>Technical Implementation: LoRA Configuration and Training Infrastructure</h2>
+<p>The practical implementation of LoRA fine-tuning for dialogue systems requires careful configuration of architectural parameters and training hyperparameters to balance model adaptation with computational efficiency. PEFT (Parameter-Efficient Fine-Tuning) provides the primary open-source implementation framework, offering streamlined interfaces for configuring and applying LoRA adapters to diverse model architectures<sup class="citation"><a href="#ref-17" id="cite-17">17</a></sup>. A typical LoRA configuration specifies a rank parameter (r), typically ranging from 8 to 64, that controls the dimensionality of low-rank weight decompositions; a scaling factor alpha that modulates the magnitude of LoRA updates relative to base model outputs; and target modules specifying which model components (typically query and value projection layers in attention mechanisms) receive LoRA adapters<sup class="citation"><a href="#ref-17" id="cite-17">17</a></sup>. The tradeoff between these parameters reflects a fundamental principle: higher ranks increase model adaptation capacity at the cost of additional parameters and memory consumption, while smaller ranks maximize computational efficiency at potential cost to dialogue quality<sup class="citation"><a href="#ref-17" id="cite-17">17</a></sup>.</p>
+<p>Practical code implementation demonstrates how PEFT integrates with standard Hugging Face training infrastructure<sup class="citation"><a href="#ref-17" id="cite-17">17</a></sup>. After loading a base model through the AutoModelForCausalLM interface, practitioners define a LoraConfig specifying architectural parameters, then wrap the model through get_peft_model to create trainable adapter layers<sup class="citation"><a href="#ref-17" id="cite-17">17</a></sup>. The resulting configuration reveals the computational advantage: a 3-billion parameter model with LoRA adapters of rank 16 introduces only approximately 3.7 million trainable parameters—less than 0.12% of the base model<sup class="citation"><a href="#ref-17" id="cite-17">17</a></sup>. This efficiency enables practitioners to fine-tune models on dialogue datasets requiring multiple epochs on standard hardware while maintaining reasonable training times<sup class="citation"><a href="#ref-36" id="cite-36">36</a>,<a href="#ref-39" id="cite-39">39</a></sup>. For dialogue applications where dialogue quality often improves through multiple training passes on carefully curated interactions, this efficiency gain proves essential<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>.</p>
+<p>Supervised Fine-Tuning with LoRA on Fireworks AI illustrates contemporary production deployment patterns that practitioners can adapt for educational dialogue systems<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>. The process begins with dataset preparation in JSONL format, where each line represents a complete training example with a messages array containing roles (system, user, assistant) and corresponding content<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>. For dialogue tutoring, this format cleanly captures multi-turn interactions with explicit system prompts that encode pedagogical intent. Training hyperparameters require careful consideration: learning rate typically ranges from 1e-5 to 5e-5 (with smaller rates preferred to preserve base model knowledge); batch sizes depend on available VRAM but typically range from 2-8 for efficient LoRA training; and gradient accumulation enables effective larger batch simulation on memory-constrained hardware<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>. The maximum context length (often 2048-8192 tokens) must accommodate full dialogue interactions, a critical consideration for multi-turn educational conversations where dialogue history provides essential context for appropriate scaffolding decisions<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>.</p>
+<p>Fine-Tuning LLaMA with LoRA demonstrates how these principles apply to specific model families commonly used in open-source educational applications<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup>. Using Llama 3.2 1B for dialogue summarization tasks, practitioners configure LoRA with rank 8, alpha 16, and target modules including query, value, and down-projection layers<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup>. The training configuration employs a single epoch for efficiency while leveraging gradient checkpointing to manage memory usage<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup>. Critically, the dataset preparation masks loss computation for all tokens preceding the target completion (e.g., the dialogue context), ensuring the model learns to predict summaries given dialogue inputs rather than memorizing dialogue content itself<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup>. This masking strategy proves essential for dialogue tutoring fine-tuning, where LoRA models should learn to generate pedagogically appropriate responses conditional on dialogue history rather than predictably reproducing student utterances<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup>.</p>
+<h2>Conversational Few-Shot Learning and In-Context Adaptation</h2>
+<p>While LoRA fine-tuning provides efficient parameter adaptation, complementary techniques for in-context learning enable rapid adaptation to new dialogue contexts without additional training. Conversational few-shot prompting restructures few-shot examples as multi-turn dialogue between users and assistants rather than single input-output demonstrations<sup class="citation"><a href="#ref-41" id="cite-41">41</a></sup>. This approach better aligns with how instruction-tuned chat models like those based on LoRA fine-tuning actually process information, showing particular effectiveness in low-shot scenarios where few training examples are available<sup class="citation"><a href="#ref-41" id="cite-41">41</a></sup>. For dialogue tutoring applications, conversational few-shot prompting suggests that rather than providing standalone example responses, practitioners should structure dialogue samples as complete multi-turn interactions demonstrating how tutors respond across multiple dialogue turns<sup class="citation"><a href="#ref-41" id="cite-41">41</a></sup>. This structuring improves model's generalization by showing patterns across dialogue context rather than isolated responses<sup class="citation"><a href="#ref-41" id="cite-41">41</a></sup>.</p>
+<p>Theory-guided scaffolding instruction frameworks demonstrate how pedagogical reasoning can enhance in-context learning effectiveness for metaphor detection and other complex linguistic reasoning<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>. The framework constructs metaphor knowledge graphs grounded in cognitive theory, then generates scaffolding questions that guide models through step-by-step reasoning toward understanding metaphorical language<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>. When adapted to dialogue tutoring, this approach suggests embedding theory-grounded scaffolding question sequences directly into few-shot examples, enabling models to learn not just how to respond but how to structure reasoning processes. The research finds that models guided by theory-scaffolded instruction substantially outperform both LLM-based reasoning methods and state-of-the-art non-LLM approaches<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>, demonstrating that pedagogical structure compensates for smaller model size.</p>
+<h2>Implementation Frameworks and Practical Resources</h2>
+<p>LLaMA Factory provides a unified framework for implementing LoRA fine-tuning across numerous model architectures including LLaMA, Qwen, DeepSeek, Gemma, and others<sup class="citation"><a href="#ref-47" id="cite-47">47</a></sup>. The framework integrates with Hugging Face infrastructure, supports various LoRA variants including QLoRA for quantized models, and includes advanced training techniques like GaLore, DoRA, and LoftQ that extend LoRA's capabilities<sup class="citation"><a href="#ref-47" id="cite-47">47</a></sup>. For dialogue system development, LLaMA Factory's multi-turn dialogue support enables practitioners to directly fine-tune on structured conversation datasets without custom preprocessing<sup class="citation"><a href="#ref-47" id="cite-47">47</a></sup>. The framework's modular design allows practitioners to combine LoRA fine-tuning with reinforcement learning from human feedback (RLHF), enabling iterative improvement of dialogue quality through human evaluation of model responses<sup class="citation"><a href="#ref-47" id="cite-47">47</a></sup>.</p>
+<p>Levanter provides an alternative fine-tuning framework emphasizing code clarity and configurability for practitioners building custom dialogue training pipelines<sup class="citation"><a href="#ref-35" id="cite-35">35</a></sup>. The framework's Alpaca fine-tuning example demonstrates how to structure instruction-following dialogue datasets where loss computation masks context portions, ensuring models learn task-appropriate conditioning rather than context memorization<sup class="citation"><a href="#ref-35" id="cite-35">35</a></sup>. For dialogue tutoring applications, Levanter's flexibility enables practitioners to define custom data loading routines that implement pedagogical-specific functionality like knowledge state tracking or difficulty calibration<sup class="citation"><a href="#ref-35" id="cite-35">35</a></sup>.</p>
+<h2>Cross-Lingual Transfer and Low-Resource Dialogue Systems</h2>
+<p>Cross-lingual transfer learning provides crucial strategies for developing dialogue tutoring systems in low-resource languages where limited annotated data exists. Research on multilingual task-oriented dialogue presents three distinct cross-lingual transfer approaches: translating English training data into target languages, using cross-lingual pre-trained embeddings shared across languages, and employing multilingual machine translation encoders as contextual word representations<sup class="citation"><a href="#ref-42" id="cite-42">42</a>,<a href="#ref-45" id="cite-45">45</a></sup>. Evaluation across English, Spanish, and Thai demonstrates that given several hundred target-language training examples, cross-lingual embedding approaches outperform simple translation, while multilingual contextual representations surpass static embeddings in very low-resource settings<sup class="citation"><a href="#ref-42" id="cite-42">42</a>,<a href="#ref-45" id="cite-45">45</a></sup>. For dialogue system practitioners targeting underrepresented languages, this research suggests that rather than translating English dialogue datasets and fine-tuning separately, practitioners achieve better results by strategically sampling target-language examples and fine-tuning multilingual base models where cross-lingual connections remain activated<sup class="citation"><a href="#ref-42" id="cite-42">42</a>,<a href="#ref-45" id="cite-45">45</a></sup>.</p>
+<p>FLUID QA, the first multilingual benchmark evaluating figurative language usage in dialogue across English, Korean, and Chinese, reveals language-specific challenges in pragmatic dialogue reasoning that affect dialogue tutoring quality<sup class="citation"><a href="#ref-50" id="cite-50">50</a></sup>. The benchmark demonstrates that while figurative language recognition improves with model scale, performance degradation in dialogue production (actual usage) intensifies across non-English languages, particularly for Chinese<sup class="citation"><a href="#ref-50" id="cite-50">50</a></sup>. This finding suggests that dialogue tutoring systems targeting non-English languages require specific training data demonstrating culturally-appropriate figurative language usage, not merely translation of English dialogue examples<sup class="citation"><a href="#ref-50" id="cite-50">50</a></sup>. For practitioners fine-tuning models for multilingual education, the research emphasizes the importance of including cultural adaptation during dataset creation, ensuring dialogue examples reflect culturally-appropriate communication styles rather than literal translations<sup class="citation"><a href="#ref-50" id="cite-50">50</a></sup>.</p>
+<h2>Pedagogical Scaffolding in AI-Mediated Dialogue</h2>
+<p>Enhancing LLM Instruction via Cognitive Scaffolding introduces symbolic scaffolding mechanisms paired with short-term memory schemas designed to promote adaptive, structured reasoning in Socratic tutoring<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>. Rather than relying solely on model scaling, this approach embeds cognitive control policies directly into prompts through transparent runtime loops<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>. The research evaluates dialogue tutoring across five system variants using expert-designed rubrics covering scaffolding effectiveness, responsiveness to student signals, symbolic reasoning quality, and conversational memory maintenance<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>. Results demonstrate that fuzzy symbolic frameworks improve coherence, responsiveness, and scaffolding adaptivity compared to ablated baselines<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>. For practitioners fine-tuning LoRA-adapted models on dialogue datasets, these findings suggest that incorporating explicit state representation in model inputs—where model states encode current student knowledge levels, confusion signals, and previous guidance provided—enables more effective pedagogically-informed generation<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>.</p>
+<p>Dialogic AI Scaffolding: A Proof-of-Concept Protocol presents a pedagogically grounded framework for integrating generative AI into educational settings as collaborative dialogue partners rather than answer sources<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. The four-phase protocol guides students from task comprehension through guided AI intervention to reflective self-assessment, grounding the approach in Bruner's theory of education and dialogic instructional models<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. A pilot implementation in a university programming course demonstrates student perception of the protocol as helpful for learning, problem-solving, and metacognitive development<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. For dialogue dataset design, the protocol's emphasis on Socratic questioning and structured reflection suggests that educational dialogue datasets should include explicit transition markers indicating when tutors shift from problem-solving guidance to metacognitive reflection, enabling fine-tuned models to recognize appropriate moments for deeper learning engagement<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>.</p>
+<p>AI Pedagogy: Dialogic Social Learning for Artificial Agents investigates how pedagogical interactions between two LLMs through dialogue support knowledge co-construction<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>. The approach positions one LLM as teacher possessing structured knowledge and another as learner discovering knowledge through guided interaction<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>. Results demonstrate that pedagogically structured dialogue enables knowledge acquisition more effectively than direct access to structured data, highlighting dialogue's unique role in learning processes<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>. Critically, the research shows that dialogic bottom-up approaches combining teacher explanations with learner-driven questioning achieve superior performance to monologic methods or passive data access<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>. For practitioners fine-tuning dialogue models, this research suggests that training on datasets capturing genuine dialogue where both participants contribute to meaning-making produces better educational outcomes than unidirectional datasets where tutors provide monologues<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>.</p>
+<h2>Data Quality, Annotation, and Human-in-the-Loop Approaches</h2>
+<p>The effectiveness of LoRA fine-tuning fundamentally depends on training data quality, making annotation methodologies and human oversight essential components of dialogue dataset construction<sup class="citation"><a href="#ref-29" id="cite-29">29</a>,<a href="#ref-51" id="cite-51">51</a></sup>. Advanced fine-tuning techniques emphasize that even the most sophisticated models underperform when trained on noisy, imbalanced, or insufficiently representative domain-specific data<sup class="citation"><a href="#ref-51" id="cite-51">51</a></sup>. For dialogue tutoring datasets, data quality encompasses multiple dimensions: pedagogical appropriateness (does the dialogue actually employ sound teaching strategies?), factual accuracy (are explanations and answers correct?), linguistic naturalness (do dialogues sound like authentic human interaction?), and cognitive appropriateness (is guidance calibrated to learner levels?)<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-37" id="cite-37">37</a></sup>.</p>
+<p>The Mentoring for Effective Teaching Practicum Instrument provides a validated framework for assessing mentorship quality that adapts directly to dialogue system evaluation<sup class="citation"><a href="#ref-16" id="cite-16">16</a></sup>. The instrument measures six dimensions across mentor-mentee relationships: personal attributes, system requirements, pedagogical knowledge, modeling, feedback, and information-communication technology integration<sup class="citation"><a href="#ref-16" id="cite-16">16</a></sup>. When constructing dialogue tutoring datasets, human annotators can apply analogous dimensions to evaluate whether dialogue examples demonstrate effective mentoring practices. MathDial's extensive annotation with teacher move taxonomies illustrates how structured annotation frameworks enable fine-tuned models to learn pedagogically-grounded dialogue patterns<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup>. The framework's success in producing models superior to general question-answering approaches demonstrates that pedagogical annotation investment yields substantial returns in dialogue quality<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup>.</p>
+<p>Mentor Collective's analysis of mentorship engagement challenges, where 74% of mentees report hesitation contacting mentors with 49% struggling specifically with what to say, provides empirical grounding for dialogue dataset design priorities<sup class="citation"><a href="#ref-3" id="cite-3">3</a></sup>. Rather than maximizing dialogue quantity, practitioners should prioritize quality examples demonstrating how mentors initiate conversations, establish psychological safety, and invite participation in ways that reduce activation barriers<sup class="citation"><a href="#ref-3" id="cite-3">3</a></sup>. This finding suggests that dialogue datasets should deliberately include examples of mentor communications addressing social-emotional dimensions of engagement, not merely content-focused exchanges<sup class="citation"><a href="#ref-3" id="cite-3">3</a></sup>.</p>
+<h2>Emerging Trends and Future Directions for Multilingual Dialogue Tutoring</h2>
+<p>The convergence of parameter-efficient fine-tuning, multilingual model development, and pedagogically-grounded dialogue research creates unprecedented opportunities for scaling educational dialogue systems across languages and resource contexts. Contemporary research reveals persistent gaps: while multilingual instruction tuning demonstrates clear benefits, most available datasets remain English-centric<sup class="citation"><a href="#ref-30" id="cite-30">30</a>,<a href="#ref-33" id="cite-33">33</a></sup>. OpenStaxQA's inclusion of Spanish and Polish alongside English provides a partial remedy, but languages representing billions of speakers remain underrepresented<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>. SpokenNativQA's focus on spoken multilingual dialogue addresses conversational modality gaps while FLUID QA highlights pragmatic reasoning challenges in cross-linguistic transfer<sup class="citation"><a href="#ref-48" id="cite-48">48</a>,<a href="#ref-50" id="cite-50">50</a></sup>.</p>
+<p>Future dialogue tutoring dataset development should prioritize: (1) Systematic collection of authentic teacher-student interactions in diverse languages and educational contexts, addressing privacy through anonymization and synthetic augmentation; (2) Explicit pedagogical annotation capturing scaffolding strategies, knowledge component dependencies, and student confusion signals that enable fine-tuned models to learn context-sensitive guidance; (3) Integration of multimodal content including images, video, and mathematical notation common in STEM education; (4) Longitudinal dialogue collections capturing how student understanding evolves across multiple interaction sessions, enabling models to learn individualized learning trajectory adaptation; (5) Cultural adaptation strategies ensuring dialogue examples reflect communication norms, educational philosophies, and metaphorical language patterns appropriate to target communities.</p>
+<p>The PEFT ecosystem's continuing evolution, including emerging techniques like DoRA and LoftQ that enhance LoRA's adaptation capacity<sup class="citation"><a href="#ref-17" id="cite-17">17</a>,<a href="#ref-47" id="cite-47">47</a></sup>, creates technical pathways for handling increasingly complex pedagogical patterns without scaling to full model re-training. Simultaneously, advances in efficient inference through quantization and distillation enable deployment of fine-tuned dialogue models on educational platforms lacking enterprise infrastructure<sup class="citation"><a href="#ref-36" id="cite-36">36</a>,<a href="#ref-39" id="cite-39">39</a></sup>. These developments suggest that barriers to developing culturally-responsive, pedagogically-grounded multilingual dialogue tutoring systems are becoming increasingly technological rather than conceptual, creating opportunities for educational communities to participate directly in AI system development.</p>
+<h2>Conclusion: Synthesizing Theory, Technology, and Practice</h2>
+<p>Training effective dialogue tutoring systems using LoRA fine-tuning requires integrating three complementary knowledge domains: understanding parameter-efficient adaptation techniques enabling practical model customization; grounding dialogue design in pedagogical theories of scaffolding, zone of proximal development, and dialogic learning; and leveraging emerging multilingual datasets and transfer learning approaches that extend educational dialogue systems beyond English-centric contexts<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-17" id="cite-17">17</a>,<a href="#ref-39" id="cite-39">39</a></sup>. The research synthesized across these domains reveals that successful dialogue tutoring systems are not simply smaller models fine-tuned on question-answering data, but rather carefully designed conversational agents trained on pedagogically-annotated dialogue examples that explicitly encode scaffolding strategies, knowledge state tracking, and culturally-appropriate communication patterns<sup class="citation"><a href="#ref-18" id="cite-18">18</a>,<a href="#ref-28" id="cite-28">28</a>,<a href="#ref-37" id="cite-37">37</a>,<a href="#ref-43" id="cite-43">43</a></sup>.</p>
+<p>The convergence of these approaches creates practical pathways for educators, researchers, and community organizations to develop dialogue tutoring systems tailored to their linguistic, cultural, and pedagogical contexts. Open-source frameworks like PEFT, LLaMA</p>
+    </article>
+    
+    <section class="references" id="references">
+        <h2>References</h2>
+        <ol>
+            <li id="ref-1">
+        <a href="#cite-1" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">1.</span>
+        "kaggle.com." Accessed February 4, 2026.
+        <a href="https://www.kaggle.com/questions-and-answers/496951" target="_blank" rel="noopener">https://www.kaggle.com/questions-and-answers/496951</a>
+    </li>
+<li id="ref-2">
+        <a href="#cite-2" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">2.</span>
+        "aclanthology.org." Accessed February 4, 2026.
+        <a href="https://aclanthology.org/2025.nlpai4health-main.6.pdf" target="_blank" rel="noopener">https://aclanthology.org/2025.nlpai4health-main.6.pdf</a>
+    </li>
+<li id="ref-3">
+        <a href="#cite-3" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">3.</span>
+        "mentorcollective.org." Accessed February 4, 2026.
+        <a href="https://www.mentorcollective.org/blog/conversation-sparks" target="_blank" rel="noopener">https://www.mentorcollective.org/blog/conversation-sparks</a>
+    </li>
+<li id="ref-4">
+        <a href="#cite-4" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">4.</span>
+        "github.com." Accessed February 4, 2026.
+        <a href="https://github.com/orgs/community/discussions/181971" target="_blank" rel="noopener">https://github.com/orgs/community/discussions/181971</a>
+    </li>
+<li id="ref-5">
+        <a href="#cite-5" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">5.</span>
+        "dl.acm.org." Accessed February 4, 2026.
+        <a href="https://dl.acm.org/doi/10.1145/3746252.3761531" target="_blank" rel="noopener">https://dl.acm.org/doi/10.1145/3746252.3761531</a>
+    </li>
+<li id="ref-6">
+        <a href="#cite-6" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">6.</span>
+        "conf.researchr.org." Accessed February 4, 2026.
+        <a href="https://conf.researchr.org/details/icse-2025/botse-2025-papers/10/Towards-a-Newcomers-Dataset-to-Assess-Conversational-Agent-s-Efficacy-in-Mentoring-Ne" target="_blank" rel="noopener">https://conf.researchr.org/details/icse-2025/botse-2025-papers/10/Towards-a-Newcomers-Dataset-to-Assess-Conversational-Agent-s-Efficacy-in-Mentoring-Ne</a>
+    </li>
+<li id="ref-7">
+        <a href="#cite-7" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">7.</span>
+        "arxiv.org." Accessed February 4, 2026.
+        <a href="https://arxiv.org/abs/2404.03429" target="_blank" rel="noopener">https://arxiv.org/abs/2404.03429</a>
+    </li>
+<li id="ref-8">
+        <a href="#cite-8" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">8.</span>
+        "github.com." Accessed February 4, 2026.
+        <a href="https://github.com/evgeniiaraz/datasets_multiling_dialogue" target="_blank" rel="noopener">https://github.com/evgeniiaraz/datasets_multiling_dialogue</a>
+    </li>
+<li id="ref-9">
+        <a href="#cite-9" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">9.</span>
+        "arxiv.org." Accessed February 4, 2026.
+        <a href="https://arxiv.org/pdf/2404.03429.pdf" target="_blank" rel="noopener">https://arxiv.org/pdf/2404.03429.pdf</a>
+    </li>
+<li id="ref-10">
+        <a href="#cite-10" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">10.</span>
+        "kaggle.com." Accessed February 4, 2026.
+        <a href="https://www.kaggle.com/datasets/thedevastator/multi-language-dialogue-dataset-for-gpt-4" target="_blank" rel="noopener">https://www.kaggle.com/datasets/thedevastator/multi-language-dialogue-dataset-for-gpt-4</a>
+    </li>
+<li id="ref-11">
+        <a href="#cite-11" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">11.</span>
+        "arxiv.org." Accessed February 4, 2026.
+        <a href="https://arxiv.org/html/2502.13311v1" target="_blank" rel="noopener">https://arxiv.org/html/2502.13311v1</a>
+    </li>
+<li id="ref-12">
+        <a href="#cite-12" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">12.</span>
+        "discuss.huggingface.co." Accessed February 4, 2026.
+        <a href="https://discuss.huggingface.co/t/how-to-group-sentences-in-dataset-for-muti-turn-dialogue-conversation/48164" target="_blank" rel="noopener">https://discuss.huggingface.co/t/how-to-group-sentences-in-dataset-for-muti-turn-dialogue-conversation/48164</a>
+    </li>
+<li id="ref-13">
+        <a href="#cite-13" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">13.</span>
+        "ojdla.com." Accessed February 4, 2026.
+        <a href="https://ojdla.com/articles/an-exploration-of-mentoring-programs-for-online-instructional-designers-in-higher-education" target="_blank" rel="noopener">https://ojdla.com/articles/an-exploration-of-mentoring-programs-for-online-instructional-designers-in-higher-education</a>
+    </li>
+<li id="ref-14">
+        <a href="#cite-14" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">14.</span>
+        "youtube.com." Accessed February 4, 2026.
+        <a href="https://www.youtube.com/watch?v=uikZs6y0qgI" target="_blank" rel="noopener">https://www.youtube.com/watch?v=uikZs6y0qgI</a>
+    </li>
+<li id="ref-15">
+        <a href="#cite-15" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">15.</span>
+        "discuss.huggingface.co." Accessed February 4, 2026.
+        <a href="https://discuss.huggingface.co/t/conversational-ai-question-answering-model/20480" target="_blank" rel="noopener">https://discuss.huggingface.co/t/conversational-ai-question-answering-model/20480</a>
+    </li>
+<li id="ref-16">
+        <a href="#cite-16" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">16.</span>
+        "pedocs.de." Accessed February 4, 2026.
+        <a href="https://www.pedocs.de/volltexte/2023/27855/pdf/cepsj_2023_3_PlojVirtic_et_al_Development_and_validation.pdf" target="_blank" rel="noopener">https://www.pedocs.de/volltexte/2023/27855/pdf/cepsj_2023_3_PlojVirtic_et_al_Development_and_validation.pdf</a>
+    </li>
+<li id="ref-17">
+        <a href="#cite-17" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">17.</span>
+        "github.com." Accessed February 4, 2026.
+        <a href="https://github.com/huggingface/peft" target="_blank" rel="noopener">https://github.com/huggingface/peft</a>
+    </li>
+<li id="ref-18">
+        <a href="#cite-18" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">18.</span>
+        "github.com." Accessed February 4, 2026.
+        <a href="https://github.com/eth-nlped/mathdial" target="_blank" rel="noopener">https://github.com/eth-nlped/mathdial</a>
+    </li>
+<li id="ref-19">
+        <a href="#cite-19" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">19.</span>
+        "arxiv.org." Accessed February 4, 2026.
+        <a href="https://arxiv.org/html/2510.06239v1" target="_blank" rel="noopener">https://arxiv.org/html/2510.06239v1</a>
+    </li>
+<li id="ref-20">
+        <a href="#cite-20" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">20.</span>
+        "heidloff.net." Accessed February 4, 2026.
+        <a href="https://heidloff.net/article/efficient-fine-tuning-lora/" target="_blank" rel="noopener">https://heidloff.net/article/efficient-fine-tuning-lora/</a>
+    </li>
+<li id="ref-21">
+        <a href="#cite-21" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">21.</span>
+        "tessl.io." Accessed February 4, 2026.
+        <a href="https://tessl.io/skills/github/huggingface/skills/hugging-face-datasets" target="_blank" rel="noopener">https://tessl.io/skills/github/huggingface/skills/hugging-face-datasets</a>
+    </li>
+<li id="ref-22">
+        <a href="#cite-22" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">22.</span>
+        "aclanthology.org." Accessed February 4, 2026.
+        <a href="https://aclanthology.org/2025.emnlp-main.769.pdf" target="_blank" rel="noopener">https://aclanthology.org/2025.emnlp-main.769.pdf</a>
+    </li>
+<li id="ref-23">
+        <a href="#cite-23" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">23.</span>
+        "hatespeechdata.com." Accessed February 4, 2026.
+        <a href="https://hatespeechdata.com" target="_blank" rel="noopener">https://hatespeechdata.com</a>
+    </li>
+<li id="ref-24">
+        <a href="#cite-24" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">24.</span>
+        "github.com." Accessed February 4, 2026.
+        <a href="https://github.com/DAMO-NLP-SG/multilingual-safety-for-LLMs" target="_blank" rel="noopener">https://github.com/DAMO-NLP-SG/multilingual-safety-for-LLMs</a>
+    </li>
+<li id="ref-25">
+        <a href="#cite-25" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">25.</span>
+        "arxiv.org." Accessed February 4, 2026.
+        <a href="https://arxiv.org/html/2508.21204v1" target="_blank" rel="noopener">https://arxiv.org/html/2508.21204v1</a>
+    </li>
+<li id="ref-26">
+        <a href="#cite-26" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">26.</span>
+        "kaggle.com." Accessed February 4, 2026.
+        <a href="https://www.kaggle.com/datasets/mrmorj/hate-speech-and-offensive-language-dataset" target="_blank" rel="noopener">https://www.kaggle.com/datasets/mrmorj/hate-speech-and-offensive-language-dataset</a>
+    </li>
+<li id="ref-27">
+        <a href="#cite-27" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">27.</span>
+        "kaggle.com." Accessed February 4, 2026.
+        <a href="https://www.kaggle.com/code/rsmits/multi-lingual-nlp-models-comparison" target="_blank" rel="noopener">https://www.kaggle.com/code/rsmits/multi-lingual-nlp-models-comparison</a>
+    </li>
+<li id="ref-28">
+        <a href="#cite-28" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">28.</span>
+        "aclanthology.org." Accessed February 4, 2026.
+        <a href="https://aclanthology.org/2024.naacl-long.428/" target="_blank" rel="noopener">https://aclanthology.org/2024.naacl-long.428/</a>
+    </li>
+<li id="ref-29">
+        <a href="#cite-29" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">29.</span>
+        "arxiv.org." Accessed February 4, 2026.
+        <a href="https://arxiv.org/html/2308.10792v5" target="_blank" rel="noopener">https://arxiv.org/html/2308.10792v5</a>
+    </li>
+<li id="ref-30">
+        <a href="#cite-30" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">30.</span>
+        "arxiv.org." Accessed February 4, 2026.
+        <a href="https://arxiv.org/abs/2404.04850" target="_blank" rel="noopener">https://arxiv.org/abs/2404.04850</a>
+    </li>
+<li id="ref-31">
+        <a href="#cite-31" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">31.</span>
+        "proceedings.mlr.press." Accessed February 4, 2026.
+        <a href="http://proceedings.mlr.press/v119/hu20b/hu20b.pdf" target="_blank" rel="noopener">http://proceedings.mlr.press/v119/hu20b/hu20b.pdf</a>
+    </li>
+<li id="ref-32">
+        <a href="#cite-32" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">32.</span>
+        "marketplace.databricks.com." Accessed February 4, 2026.
+        <a href="https://marketplace.databricks.com/details/43f80d00-479f-4fa7-b538-f78fbf0ef419/Bitext-Innovation-International_Media-QA-Pairs-for-LLM-Conversational-FineTuning" target="_blank" rel="noopener">https://marketplace.databricks.com/details/43f80d00-479f-4fa7-b538-f78fbf0ef419/Bitext-Innovation-International_Media-QA-Pairs-for-LLM-Conversational-FineTuning</a>
+    </li>
+<li id="ref-33">
+        <a href="#cite-33" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">33.</span>
+        "helda.helsinki.fi." Accessed February 4, 2026.
+        <a href="https://helda.helsinki.fi/server/api/core/bitstreams/f847160c-e6dd-4e01-ae6c-3838b3dbf357/content" target="_blank" rel="noopener">https://helda.helsinki.fi/server/api/core/bitstreams/f847160c-e6dd-4e01-ae6c-3838b3dbf357/content</a>
+    </li>
+<li id="ref-34">
+        <a href="#cite-34" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">34.</span>
+        "dl.acm.org." Accessed February 4, 2026.
+        <a href="https://dl.acm.org/doi/10.5555/3524938.3525348" target="_blank" rel="noopener">https://dl.acm.org/doi/10.5555/3524938.3525348</a>
+    </li>
+<li id="ref-35">
+        <a href="#cite-35" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">35.</span>
+        "levanter.readthedocs.io." Accessed February 4, 2026.
+        <a href="https://levanter.readthedocs.io/en/latest/Fine-Tuning/" target="_blank" rel="noopener">https://levanter.readthedocs.io/en/latest/Fine-Tuning/</a>
+    </li>
+<li id="ref-36">
+        <a href="#cite-36" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">36.</span>
+        "fireworks.ai." Accessed February 4, 2026.
+        <a href="https://fireworks.ai/blog/supervised-fine-tuning-tutorial" target="_blank" rel="noopener">https://fireworks.ai/blog/supervised-fine-tuning-tutorial</a>
+    </li>
+<li id="ref-37">
+        <a href="#cite-37" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">37.</span>
+        "arxiv.org." Accessed February 4, 2026.
+        <a href="https://arxiv.org/html/2403.03307v1" target="_blank" rel="noopener">https://arxiv.org/html/2403.03307v1</a>
+    </li>
+<li id="ref-38">
+        <a href="#cite-38" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">38.</span>
+        "github.com." Accessed February 4, 2026.
+        <a href="https://github.com/tatsu-lab/stanford_alpaca" target="_blank" rel="noopener">https://github.com/tatsu-lab/stanford_alpaca</a>
+    </li>
+<li id="ref-39">
+        <a href="#cite-39" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">39.</span>
+        "clearintelligence.substack.com." Accessed February 4, 2026.
+        <a href="https://clearintelligence.substack.com/p/fine-tuning-llama-llm-with-lora-a" target="_blank" rel="noopener">https://clearintelligence.substack.com/p/fine-tuning-llama-llm-with-lora-a</a>
+    </li>
+<li id="ref-40">
+        <a href="#cite-40" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">40.</span>
+        "aclanthology.org." Accessed February 4, 2026.
+        <a href="https://aclanthology.org/2024.findings-acl.578.pdf" target="_blank" rel="noopener">https://aclanthology.org/2024.findings-acl.578.pdf</a>
+    </li>
+<li id="ref-41">
+        <a href="#cite-41" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">41.</span>
+        "openreview.net." Accessed February 4, 2026.
+        <a href="https://openreview.net/forum?id=ewRkjUX4SY" target="_blank" rel="noopener">https://openreview.net/forum?id=ewRkjUX4SY</a>
+    </li>
+<li id="ref-42">
+        <a href="#cite-42" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">42.</span>
+        "arxiv.org." Accessed February 4, 2026.
+        <a href="https://arxiv.org/abs/1810.13327" target="_blank" rel="noopener">https://arxiv.org/abs/1810.13327</a>
+    </li>
+<li id="ref-43">
+        <a href="#cite-43" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">43.</span>
+        "ceur-ws.org." Accessed February 4, 2026.
+        <a href="https://ceur-ws.org/Vol-4114/12_paper.pdf" target="_blank" rel="noopener">https://ceur-ws.org/Vol-4114/12_paper.pdf</a>
+    </li>
+<li id="ref-44">
+        <a href="#cite-44" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">44.</span>
+        "promptingguide.ai." Accessed February 4, 2026.
+        <a href="https://www.promptingguide.ai/techniques/fewshot" target="_blank" rel="noopener">https://www.promptingguide.ai/techniques/fewshot</a>
+    </li>
+<li id="ref-45">
+        <a href="#cite-45" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">45.</span>
+        "aclanthology.org." Accessed February 4, 2026.
+        <a href="https://aclanthology.org/N19-1380/" target="_blank" rel="noopener">https://aclanthology.org/N19-1380/</a>
+    </li>
+<li id="ref-46">
+        <a href="#cite-46" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">46.</span>
+        "arxiv.org." Accessed February 4, 2026.
+        <a href="https://arxiv.org/html/2507.21065v2" target="_blank" rel="noopener">https://arxiv.org/html/2507.21065v2</a>
+    </li>
+<li id="ref-47">
+        <a href="#cite-47" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">47.</span>
+        "github.com." Accessed February 4, 2026.
+        <a href="https://github.com/hiyouga/LlamaFactory" target="_blank" rel="noopener">https://github.com/hiyouga/LlamaFactory</a>
+    </li>
+<li id="ref-48">
+        <a href="#cite-48" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">48.</span>
+        "arxiv.org." Accessed February 4, 2026.
+        <a href="https://arxiv.org/html/2505.19163v1" target="_blank" rel="noopener">https://arxiv.org/html/2505.19163v1</a>
+    </li>
+<li id="ref-49">
+        <a href="#cite-49" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">49.</span>
+        "digitaldividedata.com." Accessed February 4, 2026.
+        <a href="https://www.digitaldividedata.com/blog/fine-tuning-techniques-for-domain-specific-language-models" target="_blank" rel="noopener">https://www.digitaldividedata.com/blog/fine-tuning-techniques-for-domain-specific-language-models</a>
+    </li>
+<li id="ref-50">
+        <a href="#cite-50" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">50.</span>
+        "aclanthology.org." Accessed February 4, 2026.
+        <a href="https://aclanthology.org/2025.emnlp-main.1540.pdf" target="_blank" rel="noopener">https://aclanthology.org/2025.emnlp-main.1540.pdf</a>
+    </li>
+<li id="ref-51">
+        <a href="#cite-51" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">51.</span>
+        "telnyx.com." Accessed February 4, 2026.
+        <a href="https://telnyx.com/resources/domain-specific-data-ai" target="_blank" rel="noopener">https://telnyx.com/resources/domain-specific-data-ai</a>
+    </li>
+<li id="ref-52">
+        <a href="#cite-52" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">52.</span>
+        "aclanthology.org." Accessed February 4, 2026.
+        <a href="https://aclanthology.org/N19-1241/" target="_blank" rel="noopener">https://aclanthology.org/N19-1241/</a>
+    </li>
+<li id="ref-53">
+        <a href="#cite-53" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">53.</span>
+        "aclanthology.org." Accessed February 4, 2026.
+        <a href="https://aclanthology.org/Q19-1014/" target="_blank" rel="noopener">https://aclanthology.org/Q19-1014/</a>
+    </li>
+<li id="ref-54">
+        <a href="#cite-54" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">54.</span>
+        "arxiv.org." Accessed February 4, 2026.
+        <a href="https://arxiv.org/abs/1809.10735" target="_blank" rel="noopener">https://arxiv.org/abs/1809.10735</a>
+    </li>
+<li id="ref-55">
+        <a href="#cite-55" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">55.</span>
+        "dataset.org." Accessed February 4, 2026.
+        <a href="https://dataset.org/dream/" target="_blank" rel="noopener">https://dataset.org/dream/</a>
+    </li>
+        </ol>
+    </section>
+    <footer>filed under: things worth knowing</footer>
+</body>
+</html>
