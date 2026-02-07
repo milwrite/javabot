@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find conversational and dialogue datasets (any language) that help train mode...</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            line-height: 1.6;
+            padding: 40px 20px 60px;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        a { color: #00ffff; text-decoration: none; }
+        a:hover { color: #ff0000; text-decoration: underline; }
+        .home-link { display: inline-block; margin-bottom: 30px; font-size: 13px; }
+        .home-link::before { content: '← '; }
+        header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        header h1 { color: #ff0000; font-size: 20px; font-weight: normal; margin-bottom: 8px; }
+        header .meta { font-size: 12px; color: #555; }
+        article { color: #7ec8e3; }
+        article h1 { color: #00ffff; font-size: 17px; font-weight: normal; margin: 35px 0 15px; }
+        article h2 { color: #ff0000; font-size: 15px; font-weight: normal; margin: 30px 0 12px; }
+        article h3 { color: #7ec8e3; font-size: 14px; font-weight: normal; margin: 20px 0 10px; }
+        article p { margin-bottom: 16px; }
+        article ul, article ol { margin-left: 20px; margin-bottom: 16px; }
+        article li { margin-bottom: 8px; }
+        article strong { color: #00ffff; font-weight: normal; }
+        article em { font-style: normal; color: #888; }
+
+        /* Citation styling */
+        .citation { font-size: 0.75em; vertical-align: super; line-height: 0; }
+        .citation a { color: #ff0000; padding: 0 1px; }
+        .citation a:hover { color: #ff9999; text-decoration: underline; }
+
+        /* Citations/References section */
+        .citations {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #333;
+        }
+        .citations h2 {
+            color: #ff0000;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .citations ol {
+            list-style: none;
+            padding: 0;
+        }
+        .citations li {
+            font-size: 12px;
+            margin: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            line-height: 1.5;
+            word-break: break-word;
+            color: #666;
+        }
+        .citations .back-ref {
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #ff0000;
+            text-decoration: none;
+            font-size: 11px;
+        }
+        .citations .back-ref:hover { color: #ff9999; }
+        .citations .cite-num {
+            color: #666;
+            margin-right: 8px;
+        }
+        .citations li a:not(.back-ref) {
+            color: #00ffff;
+            word-break: break-all;
+        }
+        .citations li a:not(.back-ref):hover { color: #ff0000; }
+
+        footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 11px; color: #444; }
+        @media (max-width: 600px) {
+            body { padding: 25px 15px 40px; }
+            header h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../../index.html"></a>
+    <header>
+        <h1>Find conversational and dialogue datasets (any language) that help train mode...</h1>
+        <div class="meta">researched Feb 7, 2026 · dug up by sportello</div>
+    </header>
+    <article>
+        <h1>Conversational and Dialogue Datasets for Multi-Turn Instruction-Following and Contextual Learning: A Comprehensive Research Review</h1>
+<p>This report presents a comprehensive examination of conversational and dialogue datasets designed to train large language models for multi-turn instruction-following, contextual reasoning, and sequential task completion across multiple languages. The analysis encompasses datasets spanning from straightforward single-turn exchanges to complex multi-turn reasoning tasks that require maintaining coherent context across numerous dialogue turns. Key findings indicate that significant advances have been made in dataset curation specifically targeting educational dialogue systems, multi-hop reasoning, and instruction-tuning methodologies, with recent datasets from 2024-2026 demonstrating substantially improved design for capturing authentic conversational phenomena including disfluencies, code-switching, and emotional nuances. The report identifies over twenty major datasets suitable for fine-tuning instruction-following models, discusses their technical specifications and licensing information, and explains how contemporary fine-tuning techniques leverage these resources to create more capable conversational agents capable of complex reasoning and context maintenance.</p>
+<h2>Evolution and Importance of Multi-Turn Dialogue Datasets in Language Model Training</h2>
+<p>Multi-turn dialogue datasets form the foundational building blocks upon which modern conversational AI systems are constructed.<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-4" id="cite-4">4</a></sup> The field has undergone significant transformation over the past decade, evolving from relatively simple single-domain task-oriented dialogue systems to complex, multi-domain conversational agents capable of engaging in reasoning tasks, providing educational instruction, and maintaining coherent discussion across numerous sequential turns. The shift toward more sophisticated dialogue systems has necessitated the development of increasingly complex datasets that capture the nuanced characteristics of authentic human conversation, including the maintenance of context across multiple exchanges, the ability to resolve ambiguous references, and the capacity to undertake multi-step reasoning processes within conversational frameworks.</p>
+<p>The importance of this evolution cannot be overstated when considering the practical applications of dialogue systems in customer service, educational technology, information retrieval, and autonomous agent collaboration.<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup> Traditional dialogue datasets often focused on relatively narrow domains and relatively short interactions, but contemporary research recognizes that real-world conversational interactions require models to understand and track complex contextual information across extended dialogue histories. Multi-turn dialogue encompasses situations where participants must reference earlier parts of the conversation, build upon previous statements, incorporate feedback or corrections, and synthesize information from multiple dialogue turns to generate appropriate responses.<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-2" id="cite-2">2</a></sup></p>
+<p>The relationship between dialogue datasets and instruction-following capabilities has become increasingly central to language model development. Instruction-tuning, the process of fine-tuning pre-trained language models on collections of instruction-response pairs formatted with explicit task specifications, has emerged as a critical methodology for creating general-purpose language models.<sup class="citation"><a href="#ref-45" id="cite-45">45</a>,<a href="#ref-48" id="cite-48">48</a></sup> However, instruction-tuning originally developed for single-turn tasks has been extended to multi-turn conversational settings where models must follow complex instructions while maintaining dialogue context and ensuring consistency across multiple exchanges.<sup class="citation"><a href="#ref-31" id="cite-31">31</a>,<a href="#ref-44" id="cite-44">44</a></sup></p>
+<h2>Major Multi-Turn Dialogue Reasoning and Comprehension Datasets</h2>
+<p>The MuTual dataset represents an important milestone in dialogue comprehension research, particularly for tasks requiring reasoning over multi-turn exchanges.<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup> Consisting of 8,860 manually annotated dialogues sourced from Chinese student English listening comprehension examinations, MuTual was specifically designed to address the limitations of earlier dialogue datasets that did not adequately require deep reasoning capabilities. The dataset evaluation revealed that state-of-the-art models at the time achieved only seventy-one percent accuracy compared to human performance of ninety-four percent, demonstrating substantial room for improvement in reasoning capabilities.<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup> The critical contribution of MuTual lies not merely in its size but in its explicit focus on dialogue understanding that cannot be achieved through surface-level pattern matching, requiring instead genuine comprehension of turn-by-turn dialogue interactions and the logical relationships between speakers' utterances.</p>
+<p>The DREAM dataset provides a comprehensive resource for multi-turn multi-party dialogue understanding, containing 10,197 multiple-choice questions distributed across 6,444 dialogues.<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup> Unlike previous reading comprehension datasets that operated primarily at the single-sentence level, DREAM explicitly focuses on in-depth dialogue understanding, with approximately eighty-five percent of questions requiring information from multiple dialogue sentences and consideration of the turn-based dialogue structure. The dataset encompasses diverse dialogue lengths, ranging from dialogues with fewer than five turns to those containing up to forty-eight turns, and includes multiple speakers per dialogue, with an average of two speakers but some dialogues containing up to seven participants.<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup> This diversity in dialogue structure makes DREAM particularly valuable for training models on realistic conversational scenarios where speaker identification and turn tracking become critical components of comprehension.</p>
+<p>The CoQA dataset represents a substantial resource for conversational question answering, containing 127,000 questions with answers collected from 8,000 conversations.<sup class="citation"><a href="#ref-15" id="cite-15">15</a></sup> The distinctive feature of CoQA lies in its focus on conversational phenomena such as coreference resolution and pragmatic reasoning, which are characteristic of authentic dialogue but often absent from traditional reading comprehension datasets.<sup class="citation"><a href="#ref-15" id="cite-15">15</a></sup> The dataset includes questions and answers that reference earlier parts of conversations, require implicit reasoning about speaker intentions, and demand understanding of how discourse context constrains interpretation. Passages in CoQA span seven diverse domains, and the dataset provides evidence subsequences highlighting exactly which portions of passages support each answer, enabling training of models that can both generate appropriate responses and justify their reasoning by reference to supporting evidence.</p>
+<h2>Specialized Conversational Datasets for Instruction-Following and Task-Oriented Dialogue</h2>
+<p>Task-oriented dialogue systems designed to help users accomplish specific goals represent an important subdomain within conversational AI, and several large-scale datasets have been developed to support research in this area. The MultiWOZ dataset, in its original form and subsequent refinements including versions 2.1 through 2.4, provides a comprehensive resource for multi-domain task-oriented dialogue.<sup class="citation"><a href="#ref-21" id="cite-21">21</a>,<a href="#ref-24" id="cite-24">24</a></sup> At ten thousand dialogues spanning multiple domains such as hotel booking, restaurant reservation, and attraction information, MultiWOZ represents one of the largest fully-labeled collections of human-human written conversations. The importance of task-oriented dialogue datasets extends beyond simple task completion to encompassing the complex interaction patterns where users may switch between domains, modify their requirements partway through dialogue, and require the system to maintain tracking of dialogue state including which user goals have been satisfied and which information has been confirmed.<sup class="citation"><a href="#ref-21" id="cite-21">21</a></sup></p>
+<p>The MultiWOZ 2.4 refinement addressed persistent annotation noise problems that had plagued earlier versions, with corrections applied to more than forty-one percent of dialogue turns across sixty-five percent of dialogues in validation and test sets.<sup class="citation"><a href="#ref-21" id="cite-21">21</a></sup> This meticulous refinement process demonstrates the importance of high-quality annotation for dialogue datasets used in training and evaluation, as noisy annotations can provide contradictory training signals and create unreliable benchmarks. The dialogue state tracking task, central to task-oriented dialogue systems, requires models to track slot-value pairs representing user preferences and requirements as dialogue progresses, and the refined MultiWOZ dataset provides reliable ground truth for this critical capability.</p>
+<p>The PRESTO dataset introduces another dimension to task-oriented dialogue research by focusing on realistic conversational phenomena often absent from earlier datasets.<sup class="citation"><a href="#ref-33" id="cite-33">33</a></sup> Comprising roughly five hundred thousand conversational utterances across six languages including English, French, German, Hindi, Japanese, and Spanish, PRESTO explicitly includes conversational phenomena such as user revisions, disfluencies (filled pauses and repeated words), and code-switching (mixing multiple languages within single utterances). The dataset's documentation of these phenomena proves particularly valuable for training models that must function in real-world deployment scenarios where users do not produce perfectly fluent speech. The presence of structured context including user contacts, lists, and notes within PRESTO reflects the reality that virtual assistant interactions occur within broader information environments where users reference information stored on their devices.</p>
+<h2>Educational and Teacher-Student Dialogue Datasets for Instruction-Guided Learning</h2>
+<p>The emergence of large language models as potentially transformative technologies for education has driven recent development of specialized dialogue datasets capturing authentic teacher-student interactions. The EduDial dataset, released in October 2025, represents one of the most comprehensive educational dialogue resources yet created, comprising 34,250 dialogue sessions spanning 345 core knowledge points.<sup class="citation"><a href="#ref-7" id="cite-7">7</a></sup> The dataset was explicitly designed following Bloom's taxonomy of educational objectives and incorporates ten distinct questioning strategies including situational questioning, zone of proximal development questioning, and metacognitive questioning. The design reflects contemporary understanding of effective teaching practices, with particular attention to how skilled educators adjust their questioning and explanation strategies based on students' demonstrated understanding levels. The inclusion of differentiated teaching strategies for students at different cognitive levels enables research into adaptive dialogue systems that can provide appropriately-targeted instruction relative to individual learner needs.</p>
+<p>The Education Dialogue dataset from Google Research provides a complementary resource with 40,000 training examples and 7,234 test examples, generated through prompted interactions between teacher and student agents.<sup class="citation"><a href="#ref-10" id="cite-10">10</a></sup> Each conversation in this dataset includes structured metadata describing the topic to be taught, student learning preferences, teacher teaching preferences, and predicted student reactions to mismatched teaching approaches. The metadata structure enables fine-grained analysis of how dialogue characteristics vary when teaching preferences are matched or mismatched, providing insights into the conversational dynamics that emerge in educational interactions.</p>
+<p>DialogSum represents a practical resource for dialogue summarization, containing 13,460 real-life scenario dialogues with manually labeled summaries and topic classifications.<sup class="citation"><a href="#ref-46" id="cite-46">46</a>,<a href="#ref-43" id="cite-43">43</a></sup> The broader Spoken DialogSum variant, released in December 2025, extends this resource to the speech modality, comprising 13,460 emotion-diverse dialogues paired with both factual and emotion-focused summaries.<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup> The inclusion of emotion labels at the utterance level, along with paralinguistic cues such as pitch and speaking rate, positions Spoken DialogSum as valuable for research on how emotional content and prosodic features in conversation influence appropriate dialogue summarization. The dataset's construction through expressive speech synthesis aligned with paralinguistic labels demonstrates advanced methodology for creating realistic conversational data at scale.</p>
+<h2>Multi-Hop Reasoning and Complex Question Answering in Conversational Contexts</h2>
+<p>Multi-hop reasoning, the requirement to extract and integrate information from multiple sources or dialogue turns to answer questions, represents a critical capability for advanced conversational systems.<sup class="citation"><a href="#ref-2" id="cite-2">2</a>,<a href="#ref-11" id="cite-11">11</a></sup> The HotpotQA dataset provides 113,000 Wikipedia-based question-answer pairs with four key features designed specifically to evaluate multi-hop reasoning: questions require finding and reasoning over multiple supporting documents, questions are diverse and unconstrained by pre-existing knowledge schemas, sentence-level supporting facts enable strong supervision and explainability, and comparison questions test extraction and comparison capabilities.<sup class="citation"><a href="#ref-26" id="cite-26">26</a></sup> The provision of supporting facts represents a significant methodological advance, enabling training approaches that can leverage explicit supervision of intermediate reasoning steps rather than only optimizing for final answer correctness.</p>
+<p>The ToolVQA dataset, released in 2025, extends multi-step reasoning to the visual question answering domain, comprising 23,000 samples designed to evaluate and train models on tool use within multi-turn interactions.<sup class="citation"><a href="#ref-8" id="cite-8">8</a></sup> The dataset employs image-guided depth-first search with longest common subsequence-based matching to generate realistic reasoning chains averaging 2.78 steps per sample. The novel data generation pipeline described for ToolVQA, which simulates human-like tool-use reasoning patterns, provides methodological innovations applicable to other multi-step reasoning tasks beyond visual question answering.</p>
+<h2>Chain-of-Thought and Explicit Reasoning Dialogue Approaches</h2>
+<p>Chain-of-thought reasoning, where models generate intermediate reasoning steps before producing final answers, has emerged as a powerful technique for improving multi-step reasoning in language models.<sup class="citation"><a href="#ref-5" id="cite-5">5</a>,<a href="#ref-11" id="cite-11">11</a></sup> The theoretical foundation involves prompting models to break down complex problems into manageable intermediate steps that sequentially progress toward solutions, thereby making the reasoning process explicit and potentially more accurate.<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup> Research has demonstrated that models trained on chain-of-thought reasoning exhibit improved performance particularly on tasks requiring mathematical reasoning, logical inference, and multi-step problem solving.<sup class="citation"><a href="#ref-11" id="cite-11">11</a></sup></p>
+<p>The integration of chain-of-thought approaches with dialogue and conversational interaction adds particular value, as dialogue naturally provides a context where reasoning steps can be articulated and questioned by interaction partners. Several datasets discussed in this report incorporate chain-of-thought reasoning either explicitly or implicitly: EduDial includes questioning sequences that encourage students to articulate their reasoning, Spoken DialogSum tracks reasoning across multiple dialogue turns, and the Flan Collection instruction-tuning datasets include specialized chain-of-thought prompts mixed with other prompt types during training.<sup class="citation"><a href="#ref-45" id="cite-45">45</a>,<a href="#ref-48" id="cite-48">48</a></sup></p>
+<p>The methodological insight from The Flan Collection demonstrates that mixing zero-shot, few-shot, and chain-of-thought prompt formats during instruction-tuning training improves performance across all these settings at inference time.<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup> Rather than requiring a trade-off where improving chain-of-thought performance might degrade zero-shot capabilities, training with mixed prompt settings yields stronger overall performance. This finding has important implications for designing dialogue datasets and training procedures where diverse reasoning styles and prompt formats might be appropriate for different dialogue turns or interaction contexts.</p>
+<h2>Persona-Based and Open-Domain Conversational Datasets</h2>
+<p>The Persona-Chat dataset and its competition variant ConvAI2 address the challenge of generating engaging, consistent, and persona-appropriate dialogue responses in open-domain settings.<sup class="citation"><a href="#ref-17" id="cite-17">17</a></sup> The dataset was created by pairing crowdworkers who were randomly assigned personas from a set of 1,155 possible character descriptions, each consisting of at least five profile sentences. The workers were tasked with natural conversation to get to know each other, producing interesting and engaging interactions that learning agents could attempt to reproduce. The competition-based approach to dataset evaluation, where human raters assessed system performance on multiple dimensions, introduced methodological innovations for evaluating dialogue quality beyond simple automatic metrics.</p>
+<p>The NaturalConv dataset provides a Chinese-language alternative to English-centric dialogue resources, containing 19,900 conversations spanning six domains with an average of 20.1 turns per conversation.<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup> The dataset's particular strength lies in its allowance for natural topic shifting and conversational flow, where participants maintain a core topic as indicated by starting prompts (typically news articles) but are permitted to discuss related topics and extend the conversation naturally. The resulting dialogues demonstrate more authentic human conversational patterns compared to strictly question-answer-structured datasets, capturing phenomena like chitchat exchanges, scenario-based discussions, and personal experience sharing related to topics.</p>
+<h2>Multi-Modal and Multi-Image Dialogue Datasets</h2>
+<p>Recent advances in multi-modal language models have motivated the development of dialogue datasets incorporating visual information. The MMDU dataset and its associated MMDU-45k instruction-tuning dataset represent the state of the art in multi-turn multi-image dialogue, designed specifically to evaluate and train large vision-language models on realistic human-AI interaction scenarios.<sup class="citation"><a href="#ref-44" id="cite-44">44</a>,<a href="#ref-47" id="cite-47">47</a></sup> The benchmark comprises 110 high-quality multi-image multi-turn dialogues containing more than 1,600 questions with detailed long-form answers, and the associated instruction-tuning dataset contains 45,000 example conversations with characteristics including ultra-long context (averaging 5,000 image+text tokens, with maximum lengths of 17,000 tokens), extended dialogue histories (averaging nine turns per conversation with maximum of 27 turns), and multiple images per conversation (ranging from two to five images).</p>
+<p>The MMDU dataset's design reflects understanding that current open-source vision-language models lag behind closed-source counterparts specifically due to limited conversational instruction-tuning data. Fine-tuning open-source models on MMDU-45k demonstrated measurable improvements across multiple evaluation benchmarks, with gains of 1.1% on MMStar, 1.5% on MathVista, and 1.2% on ChartQA. These results demonstrate that even modest-sized instruction-tuning datasets, when specifically designed for multi-turn multi-image dialogue, can substantially improve model capabilities in real-world interaction scenarios.</p>
+<h2>Dataset Creation Methodologies and Instruction-Tuning Approaches</h2>
+<p>The methodology for creating instruction-tuning datasets has evolved significantly, moving from simple instruction-response pairs toward more sophisticated approaches that account for the complexity of real-world dialogue. The Alpaca format and ShareGPT format represent two distinct approaches for structuring multi-turn conversational data.<sup class="citation"><a href="#ref-31" id="cite-31">31</a></sup> The Alpaca format, structured as flat lists of JSON objects where each object contains instruction and output fields plus optional input, history, and system fields, proves well-suited for single-turn instruction-following tasks. In contrast, the ShareGPT format, structured as lists of conversational turns with from and value fields, accommodates multi-turn dialogue where conversation history naturally builds across sequential exchanges.</p>
+<p>The ChatAlpaca dataset, containing 10,000 (later extended to 20,000) multi-turn conversations, demonstrates the process of generating instruction-following dialogue at scale through multi-turn interaction with ChatGPT.<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup> The data generation process begins with instructions from the original Stanford Alpaca dataset, then continues conversation by having ChatGPT generate follow-up utterances from simulated users, with automated filtering to remove responses sounding like generic AI assistant output. The resulting dataset captures natural progression of multi-turn conversations while maintaining focus on instruction-following throughout the dialogue.</p>
+<p>The Flan Collection represents the most comprehensive publicly available unified collection of instruction-tuning tasks and methodologies, combining prior public collections with new templates and data augmentation techniques.<sup class="citation"><a href="#ref-45" id="cite-45">45</a>,<a href="#ref-48" id="cite-48">48</a></sup> The collection unifies diverse approaches including zero-shot prompting, few-shot prompting, and chain-of-thought prompting applied across numerous task types. Analysis of the Flan Collection's effectiveness revealed that several training design decisions prove critical: task balancing according to appropriate mixture weights, enrichment of tasks with input inversion where input and output are reversed to test genuine understanding rather than rote learning, mixing of zero-shot, few-shot, and chain-of-thought prompts during training, and careful templating to introduce input variety.</p>
+<p>Auto Evol-Instruct represents a more recent advancement in automated dataset evolution, proposing an end-to-end framework that uses large language models to evolve instruction datasets without human intervention.<sup class="citation"><a href="#ref-50" id="cite-50">50</a></sup> The framework operates in two stages: first, analyzing the evolution trajectory to identify issues in instruction evolution and provide feedback for optimization, and second, optimizing the evolving method based on identified issues. The framework demonstrated superior performance compared to human-designed instruction evolution methods on benchmarks including MT-Bench, AlpacaEval, GSM8K, and HumanEval.</p>
+<p>The use of GPT-4 for generating instruction-following data has proven particularly effective.<sup class="citation"><a href="#ref-49" id="cite-49">49</a>,<a href="#ref-52" id="cite-52">52</a></sup> Research comparing LLaMA models fine-tuned on GPT-4-generated data versus GPT-3-generated data demonstrated substantial superiority on the helpfulness criterion according to human evaluation, with LLaMA-GPT-4 approaching GPT-4's own performance on multiple dimensions.<sup class="citation"><a href="#ref-49" id="cite-49">49</a></sup> The effectiveness of GPT-4 for data generation suggests that the quality of model-generated instruction-response pairs depends significantly on the capabilities of the model generating them, with increasingly sophisticated base models producing increasingly valuable instruction-tuning data.</p>
+<h2>Multi-Lingual and Cross-Lingual Dialogue Resources</h2>
+<p>The MASSIVE dataset represents a substantial advance in massively multilingual NLU, comprising one million labeled utterances spanning 51 languages with parallel data ensuring that identical intents and slots are represented across all languages.<sup class="citation"><a href="#ref-60" id="cite-60">60</a></sup> The dataset covers eighteen domains, sixty intents, and fifty-five slots, with professional translation ensuring that utterances reflect natural patterns of native speakers rather than literal translations from English. This approach to creating parallel multilingual data proves particularly valuable for research on cross-lingual transfer, where models trained on high-resource languages like English can transfer knowledge to low-resource languages through shared semantic representations.</p>
+<p>MULTI3NLU++ extends task-oriented dialogue NLU research to the multilingual setting, specifically designed to support natural language understanding tasks of intent detection and slot labeling across multiple languages and domains.<sup class="citation"><a href="#ref-57" id="cite-57">57</a></sup> The dataset's focus on multiple intents per utterance reflects real-world complexity where users may express multiple simultaneous goals in single utterances, a phenomenon often absent from simpler multilingual dialogue datasets.</p>
+<h2>Fine-Tuning Infrastructure and Practical Implementation</h2>
+<p>The practical implementation of fine-tuning on dialogue datasets requires attention to technical infrastructure, training procedures, and hyperparameter selection. The Hugging Face transformers library and associated tools provide accessible entry points for researchers and practitioners seeking to fine-tune models on dialogue data.<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-6" id="cite-6">6</a></sup> Standard fine-tuning approaches involve loading a pretrained model checkpoint, adapting it to a specific task through continued training on task-specific data, and evaluating performance on held-out test sets.</p>
+<p>Parameter-efficient fine-tuning techniques such as low-rank adaptation (LoRA) have become increasingly important for practical applications where full model fine-tuning becomes computationally prohibitive.<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup> ChatAlpaca demonstrates LoRA fine-tuning with specific target modules (q_proj, k_proj, v_proj, o_proj) and hyperparameters like LoRA rank of 16, enabling effective fine-tuning of 7-billion-parameter models on consumer-grade hardware.<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup></p>
+<p>Dataset preparation methodologies significantly impact fine-tuning outcomes, with considerations including appropriate tokenization, handling of variable-length sequences, and proper separation between training, validation, and test splits. The report on dataset format standards for chat-based fine-tuned models illustrates common approaches including the use of special tokens to delineate speaker roles and the careful construction of conversation strings that maintain chronological order and speaker identification.<sup class="citation"><a href="#ref-34" id="cite-34">34</a></sup></p>
+<h2>Evaluation Frameworks and Performance Metrics for Dialogue Systems</h2>
+<p>Evaluating dialogue quality presents unique challenges compared to traditional supervised learning tasks, as many different responses may be appropriate in conversational contexts. Automatic metrics including BLEU, ROUGE, and METEOR, originally developed for machine translation and summarization, have been adapted for dialogue evaluation despite their limitations.<sup class="citation"><a href="#ref-59" id="cite-59">59</a></sup> BLEU, which compares n-gram overlap between generated and reference text, correlates reasonably with human judgments when evaluated across different systems but exhibits known weaknesses for dialogue evaluation where semantic equivalence and paraphrase are common.</p>
+<p>ROUGE metrics, focusing on recall of reference material, have proven more suitable for summarization tasks but similarly lack nuance for evaluating conversational appropriateness. BERTScore addresses some limitations of n-gram-based metrics by using contextualized embeddings to measure semantic similarity, though even this neural approach may miss aspects of conversational quality like engagement, coherence, and pragmatic appropriateness.<sup class="citation"><a href="#ref-59" id="cite-59">59</a></sup></p>
+<p>The most reliable evaluation approaches for dialogue systems combine automatic metrics with human evaluation. The Flan Collection evaluation approach uses multiple benchmark datasets with different characteristics to assess different dimensions of model capability: held-in evaluation on tasks present in the training collection, held-out evaluation on completely unseen tasks, and evaluation on specific challenging benchmarks like MMLU and BigBench Hard. This multi-faceted evaluation approach provides more complete understanding of model capabilities and generalization than single-metric evaluation.</p>
+<h2>Alignment and Safety Considerations in Dialogue System Training</h2>
+<p>Recent approaches to aligning conversational systems with human values have evolved beyond simple supervised fine-tuning to include reinforcement learning from human feedback and constitutional AI approaches.<sup class="citation"><a href="#ref-32" id="cite-32">32</a>,<a href="#ref-35" id="cite-35">35</a></sup> Constitutional AI trains models to critique and improve their own responses against explicit principles without requiring extensive human annotation, addressing scalability limitations of traditional reinforcement learning from human feedback. The approach demonstrates particular promise for dialogue safety, where models must reliably refuse harmful requests while remaining helpful for legitimate use cases.</p>
+<p>WikiChat addresses a specific failure mode of language model chatbots through grounding on external knowledge sources, achieving 97.3% factual accuracy in simulated conversations and 97.9% accuracy in conversations with human users about recent topics.<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-30" id="cite-30">30</a></sup> The system generates responses from language models, retains only grounded facts, and supplements them with additional information retrieved from Wikipedia, demonstrating that hybrid approaches combining learned capabilities with retrieval-based knowledge integration can substantially improve dialogue quality.</p>
+<h2>Synthesis and Future Directions for Dialogue Dataset Development</h2>
+<p>The landscape of conversational and dialogue datasets has undergone substantial evolution, particularly in the period from 2015 through 2026, reflecting growing recognition that dialogue understanding requires sophisticated reasoning capabilities, maintenance of contextual coherence across extended exchanges, and accurate modeling of the sequential logical relationships between speakers' contributions. Contemporary datasets increasingly incorporate authentic conversational phenomena, explicit reasoning chains, multi-modal information, educational structure, and support for diverse languages.</p>
+<p>The datasets reviewed in this report demonstrate convergent recognition of several key challenges in dialogue research that datasets must address: maintaining coherence and consistency across multiple turns and extended dialogue histories, resolving coreferences and anaphoric references that span dialogue turns, tracking dialogue state and user goals as they evolve across conversation, incorporating realistic speech phenomena including disfluencies and code-switching, and enabling effective transfer learning across languages and domains.</p>
+<p>Recent advances including the MMDU dataset for multi-image dialogue, EduDial for educational interaction, and Spoken DialogSum for emotion-aware dialogue summarization represent the frontier of dialogue dataset research. These datasets reflect increasing sophistication in how researchers understand dialogue phenomena and what properties dialogue datasets should exhibit to adequately support model training.</p>
+<p>The practical infrastructure for fine-tuning on dialogue datasets has similarly advanced substantially, with tools like Hugging Face transformers and parameter-efficient techniques like LoRA making sophisticated dialogue system development accessible to researchers without access to unlimited computational resources. The development of standardized formats like Alpaca and ShareGPT facilitates reproducibility and comparison across different fine-tuning efforts.</p>
+<p>Looking forward, several promising directions for dialogue dataset development emerge from this review. First, the integration of implicit reasoning chains within conversational data, where dialogue itself becomes a medium for articulating multi-step reasoning, could advance research on reasoning-aware dialogue systems. Second, continued development of multilingual and cross-lingual dialogue resources addressing the needs of low-resource languages would democratize access to conversational AI technology. Third, datasets that explicitly model uncertainty and disagreement in dialogue, reflecting realistic situations where conversational partners maintain different perspectives or possess incomplete information, could advance research on more robust and nuanced dialogue systems. Fourth, dialogue datasets explicitly designed to support research on harmful content detection, bias mitigation, and alignment with human values would advance safety-critical dialogue applications.</p>
+<p>The datasets and methodologies reviewed in this report demonstrate that the field of conversational AI has moved substantially beyond simple pattern matching toward genuine multi-turn reasoning and context maintenance. The proliferation of specialized datasets for educational dialogue, multi-hop reasoning, multi-modal interaction, and diverse languages reflects recognition that dialogue systems supporting complex real-world applications require training on diverse, sophisticated resources reflecting the complexity of authentic conversational interaction. The convergence of large-scale datasets, improved fine-tuning methodologies, and advances in model architectures suggests that substantially more capable conversational systems will continue emerging from this foundation.</p>
+<p>Researchers and practitioners working with conversational systems would benefit from considering the specific dialogue phenomena most relevant to their intended applications: datasets emphasizing logical reasoning capabilities like HotpotQA and MuTual for reasoning-intensive applications, domain-specific task-oriented datasets like MultiWOZ for goal-directed dialogue, educational datasets like EduDial for instructional applications, and multilingual resources like MASSIVE for global applications. The choice of dataset fundamentally shapes the capabilities a model develops, making thoughtful selection of training resources critical for achieving desired dialogue system properties.</p>
+<h2>Conclusion</h2>
+<p>The comprehensive landscape of conversational and dialogue datasets available as of February 2026 provides unprecedented opportunity for advancing dialogue research and building more capable conversational systems. The datasets reviewed in this report, spanning from foundational resources like CoQA and DailyDialog through recent specialized resources like MMDU and Spoken DialogSum, demonstrate how the field has evolved to address increasingly sophisticated challenges in dialogue understanding and generation. Practitioners implementing multi-turn instruction-following systems for educational, task-oriented, or open-domain conversational applications now have access to high-quality resources spanning numerous languages and conversation types.</p>
+<p>The combination of large-scale dialogue datasets, proven fine-tuning methodologies, and modern language model architectures has created conditions where substantial advances in conversational AI capabilities appear achievable through systematic application of appropriate training resources. The integration of chain-of-thought reasoning, instruction-tuning, and multi-turn dialogue understanding represents a coherent approach to developing conversational systems capable of sophisticated interaction while maintaining context and reasoning across extended dialogue histories. Future developments in dialogue systems will likely build upon the foundation established by these datasets and methodologies, progressively incorporating additional nuances of authentic conversational phenomena while maintaining the ability to train models at scale on diverse dialogue types and languages.</p>
+    </article>
+    
+    <section class="citations" id="citations">
+        <h2>Sources</h2>
+        <ol>
+            <li id="ref-1">
+        <a href="#cite-1" class="back-ref" title="Back to text">↩</a>
+        <a href="https://aclanthology.org/2020.acl-main.130/" target="_blank" rel="noopener">[1] https://aclanthology.org/2020.acl-main.130/</a>
+    </li>
+<li id="ref-2">
+        <a href="#cite-2" class="back-ref" title="Back to text">↩</a>
+        <a href="https://arxiv.org/html/2204.09140v2" target="_blank" rel="noopener">[2] https://arxiv.org/html/2204.09140v2</a>
+    </li>
+<li id="ref-3">
+        <a href="#cite-3" class="back-ref" title="Back to text">↩</a>
+        <a href="https://github.com/MjdMahasneh/LLM-Fine-Tuning-With-Hugging-Face-Transformers" target="_blank" rel="noopener">[3] https://github.com/MjdMahasneh/LLM-Fine-Tuning-With-Hugging-Face-Transformers</a>
+    </li>
+<li id="ref-4">
+        <a href="#cite-4" class="back-ref" title="Back to text">↩</a>
+        <a href="https://dl.acm.org/doi/full/10.1145/3771090" target="_blank" rel="noopener">[4] https://dl.acm.org/doi/full/10.1145/3771090</a>
+    </li>
+<li id="ref-5">
+        <a href="#cite-5" class="back-ref" title="Back to text">↩</a>
+        <a href="https://www.ibm.com/think/topics/chain-of-thoughts" target="_blank" rel="noopener">[5] https://www.ibm.com/think/topics/chain-of-thoughts</a>
+    </li>
+<li id="ref-6">
+        <a href="#cite-6" class="back-ref" title="Back to text">↩</a>
+        <a href="https://github.com/philschmid/deep-learning-pytorch-huggingface/blob/main/training/fine-tune-llms-in-2025.ipynb" target="_blank" rel="noopener">[6] https://github.com/philschmid/deep-learning-pytorch-huggingface/blob/main/training/fine-tune-llms-in-2025.ipynb</a>
+    </li>
+<li id="ref-7">
+        <a href="#cite-7" class="back-ref" title="Back to text">↩</a>
+        <a href="https://arxiv.org/abs/2510.12899" target="_blank" rel="noopener">[7] https://arxiv.org/abs/2510.12899</a>
+    </li>
+<li id="ref-8">
+        <a href="#cite-8" class="back-ref" title="Back to text">↩</a>
+        <a href="https://fugtemypt123.github.io/ToolVQA-website/" target="_blank" rel="noopener">[8] https://fugtemypt123.github.io/ToolVQA-website/</a>
+    </li>
+<li id="ref-9">
+        <a href="#cite-9" class="back-ref" title="Back to text">↩</a>
+        <a href="https://www.kaggle.com/code/kreeshrajani/fine-tune-t5-for-conversational-model" target="_blank" rel="noopener">[9] https://www.kaggle.com/code/kreeshrajani/fine-tune-t5-for-conversational-model</a>
+    </li>
+<li id="ref-10">
+        <a href="#cite-10" class="back-ref" title="Back to text">↩</a>
+        <a href="https://github.com/google-research-datasets/Education-Dialogue-Dataset" target="_blank" rel="noopener">[10] https://github.com/google-research-datasets/Education-Dialogue-Dataset</a>
+    </li>
+<li id="ref-11">
+        <a href="#cite-11" class="back-ref" title="Back to text">↩</a>
+        <a href="https://dl.acm.org/doi/full/10.1145/3774896" target="_blank" rel="noopener">[11] https://dl.acm.org/doi/full/10.1145/3774896</a>
+    </li>
+<li id="ref-12">
+        <a href="#cite-12" class="back-ref" title="Back to text">↩</a>
+        <a href="https://www.kaggle.com/code/aisuko/fine-tuning-llm-for-dialogue-summarization" target="_blank" rel="noopener">[12] https://www.kaggle.com/code/aisuko/fine-tuning-llm-for-dialogue-summarization</a>
+    </li>
+<li id="ref-13">
+        <a href="#cite-13" class="back-ref" title="Back to text">↩</a>
+        <a href="https://github.com/huggingface/datasets/issues/7757" target="_blank" rel="noopener">[13] https://github.com/huggingface/datasets/issues/7757</a>
+    </li>
+<li id="ref-14">
+        <a href="#cite-14" class="back-ref" title="Back to text">↩</a>
+        <a href="https://convai.io" target="_blank" rel="noopener">[14] https://convai.io</a>
+    </li>
+<li id="ref-15">
+        <a href="#cite-15" class="back-ref" title="Back to text">↩</a>
+        <a href="https://stanfordnlp.github.io/coqa/" target="_blank" rel="noopener">[15] https://stanfordnlp.github.io/coqa/</a>
+    </li>
+<li id="ref-16">
+        <a href="#cite-16" class="back-ref" title="Back to text">↩</a>
+        <a href="https://www.conll.org" target="_blank" rel="noopener">[16] https://www.conll.org</a>
+    </li>
+<li id="ref-17">
+        <a href="#cite-17" class="back-ref" title="Back to text">↩</a>
+        <a href="https://arxiv.org/pdf/1902.00098.pdf" target="_blank" rel="noopener">[17] https://arxiv.org/pdf/1902.00098.pdf</a>
+    </li>
+<li id="ref-18">
+        <a href="#cite-18" class="back-ref" title="Back to text">↩</a>
+        <a href="https://codelabsacademy.com/en/blog/the-squad-dataset" target="_blank" rel="noopener">[18] https://codelabsacademy.com/en/blog/the-squad-dataset</a>
+    </li>
+<li id="ref-19">
+        <a href="#cite-19" class="back-ref" title="Back to text">↩</a>
+        <a href="https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00264/43501/DREAM-A-Challenge-Data-Set-and-Models-for-Dialogue" target="_blank" rel="noopener">[19] https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00264/43501/DREAM-A-Challenge-Data-Set-and-Models-for-Dialogue</a>
+    </li>
+<li id="ref-20">
+        <a href="#cite-20" class="back-ref" title="Back to text">↩</a>
+        <a href="https://aclanthology.org/I17-1099.pdf" target="_blank" rel="noopener">[20] https://aclanthology.org/I17-1099.pdf</a>
+    </li>
+<li id="ref-21">
+        <a href="#cite-21" class="back-ref" title="Back to text">↩</a>
+        <a href="https://aclanthology.org/2022.sigdial-1.34.pdf" target="_blank" rel="noopener">[21] https://aclanthology.org/2022.sigdial-1.34.pdf</a>
+    </li>
+<li id="ref-22">
+        <a href="#cite-22" class="back-ref" title="Back to text">↩</a>
+        <a href="https://dataset.org/dream/" target="_blank" rel="noopener">[22] https://dataset.org/dream/</a>
+    </li>
+<li id="ref-23">
+        <a href="#cite-23" class="back-ref" title="Back to text">↩</a>
+        <a href="https://arxiv.org/pdf/2311.07006.pdf" target="_blank" rel="noopener">[23] https://arxiv.org/pdf/2311.07006.pdf</a>
+    </li>
+<li id="ref-24">
+        <a href="#cite-24" class="back-ref" title="Back to text">↩</a>
+        <a href="https://arxiv.org/abs/1810.00278" target="_blank" rel="noopener">[24] https://arxiv.org/abs/1810.00278</a>
+    </li>
+<li id="ref-25">
+        <a href="#cite-25" class="back-ref" title="Back to text">↩</a>
+        <a href="https://arxiv.org/html/2103.02548v3" target="_blank" rel="noopener">[25] https://arxiv.org/html/2103.02548v3</a>
+    </li>
+<li id="ref-26">
+        <a href="#cite-26" class="back-ref" title="Back to text">↩</a>
+        <a href="https://aclanthology.org/D18-1259/" target="_blank" rel="noopener">[26] https://aclanthology.org/D18-1259/</a>
+    </li>
+<li id="ref-27">
+        <a href="#cite-27" class="back-ref" title="Back to text">↩</a>
+        <a href="https://arxiv.org/abs/2305.14292" target="_blank" rel="noopener">[27] https://arxiv.org/abs/2305.14292</a>
+    </li>
+<li id="ref-28">
+        <a href="#cite-28" class="back-ref" title="Back to text">↩</a>
+        <a href="https://github.com/icip-cas/ChatAlpaca" target="_blank" rel="noopener">[28] https://github.com/icip-cas/ChatAlpaca</a>
+    </li>
+<li id="ref-29">
+        <a href="#cite-29" class="back-ref" title="Back to text">↩</a>
+        <a href="https://hotpotqa.github.io" target="_blank" rel="noopener">[29] https://hotpotqa.github.io</a>
+    </li>
+<li id="ref-30">
+        <a href="#cite-30" class="back-ref" title="Back to text">↩</a>
+        <a href="https://hai.stanford.edu/research/wikichat-stopping-the-hallucination-of-large-language-model-chatbots-by-few-shot-grounding-on-wikipedia" target="_blank" rel="noopener">[30] https://hai.stanford.edu/research/wikichat-stopping-the-hallucination-of-large-language-model-chatbots-by-few-shot-grounding-on-wikipedia</a>
+    </li>
+<li id="ref-31">
+        <a href="#cite-31" class="back-ref" title="Back to text">↩</a>
+        <a href="https://docs.anyscale.com/llm/fine-tuning/data-preparation" target="_blank" rel="noopener">[31] https://docs.anyscale.com/llm/fine-tuning/data-preparation</a>
+    </li>
+<li id="ref-32">
+        <a href="#cite-32" class="back-ref" title="Back to text">↩</a>
+        <a href="https://www.learn-prompting.fr/blog/rlhf-constitutional-ai-guide" target="_blank" rel="noopener">[32] https://www.learn-prompting.fr/blog/rlhf-constitutional-ai-guide</a>
+    </li>
+<li id="ref-33">
+        <a href="#cite-33" class="back-ref" title="Back to text">↩</a>
+        <a href="https://research.google/blog/presto-a-multilingual-dataset-for-parsing-realistic-task-oriented-dialogues/" target="_blank" rel="noopener">[33] https://research.google/blog/presto-a-multilingual-dataset-for-parsing-realistic-task-oriented-dialogues/</a>
+    </li>
+<li id="ref-34">
+        <a href="#cite-34" class="back-ref" title="Back to text">↩</a>
+        <a href="https://discuss.huggingface.co/t/dataset-format-standards-for-chat-based-fine-tuned-llama-models/70638" target="_blank" rel="noopener">[34] https://discuss.huggingface.co/t/dataset-format-standards-for-chat-based-fine-tuned-llama-models/70638</a>
+    </li>
+<li id="ref-35">
+        <a href="#cite-35" class="back-ref" title="Back to text">↩</a>
+        <a href="https://mbrenndoerfer.com/writing/constitutional-ai-principle-based-alignment-through-self-critique" target="_blank" rel="noopener">[35] https://mbrenndoerfer.com/writing/constitutional-ai-principle-based-alignment-through-self-critique</a>
+    </li>
+<li id="ref-36">
+        <a href="#cite-36" class="back-ref" title="Back to text">↩</a>
+        <a href="https://github.com/michen00/multilingual_speech_valence_classification_datasets" target="_blank" rel="noopener">[36] https://github.com/michen00/multilingual_speech_valence_classification_datasets</a>
+    </li>
+<li id="ref-37">
+        <a href="#cite-37" class="back-ref" title="Back to text">↩</a>
+        <a href="https://github.com/LAION-AI/Open-Assistant/discussions" target="_blank" rel="noopener">[37] https://github.com/LAION-AI/Open-Assistant/discussions</a>
+    </li>
+<li id="ref-38">
+        <a href="#cite-38" class="back-ref" title="Back to text">↩</a>
+        <a href="https://github.com/stanford-cs336/spring2024-lectures/blob/main/lecture_14.py" target="_blank" rel="noopener">[38] https://github.com/stanford-cs336/spring2024-lectures/blob/main/lecture_14.py</a>
+    </li>
+<li id="ref-39">
+        <a href="#cite-39" class="back-ref" title="Back to text">↩</a>
+        <a href="https://pangeanic.com/japanese-datasets-for-artificial-intelligence-training" target="_blank" rel="noopener">[39] https://pangeanic.com/japanese-datasets-for-artificial-intelligence-training</a>
+    </li>
+<li id="ref-40">
+        <a href="#cite-40" class="back-ref" title="Back to text">↩</a>
+        <a href="https://www.kaggle.com/datasets/snehilsanyal/oasst1" target="_blank" rel="noopener">[40] https://www.kaggle.com/datasets/snehilsanyal/oasst1</a>
+    </li>
+<li id="ref-41">
+        <a href="#cite-41" class="back-ref" title="Back to text">↩</a>
+        <a href="https://simonwillison.net/dashboard/blogmarks-that-use-markdown/" target="_blank" rel="noopener">[41] https://simonwillison.net/dashboard/blogmarks-that-use-markdown/</a>
+    </li>
+<li id="ref-42">
+        <a href="#cite-42" class="back-ref" title="Back to text">↩</a>
+        <a href="https://autonlp.ai/datasets-list/multi-lingual-language" target="_blank" rel="noopener">[42] https://autonlp.ai/datasets-list/multi-lingual-language</a>
+    </li>
+<li id="ref-43">
+        <a href="#cite-43" class="back-ref" title="Back to text">↩</a>
+        <a href="https://arxiv.org/abs/2512.14687" target="_blank" rel="noopener">[43] https://arxiv.org/abs/2512.14687</a>
+    </li>
+<li id="ref-44">
+        <a href="#cite-44" class="back-ref" title="Back to text">↩</a>
+        <a href="https://arxiv.org/html/2406.11833v1" target="_blank" rel="noopener">[44] https://arxiv.org/html/2406.11833v1</a>
+    </li>
+<li id="ref-45">
+        <a href="#cite-45" class="back-ref" title="Back to text">↩</a>
+        <a href="https://research.google/blog/the-flan-collection-advancing-open-source-methods-for-instruction-tuning/" target="_blank" rel="noopener">[45] https://research.google/blog/the-flan-collection-advancing-open-source-methods-for-instruction-tuning/</a>
+    </li>
+<li id="ref-46">
+        <a href="#cite-46" class="back-ref" title="Back to text">↩</a>
+        <a href="https://github.com/cylnlp/dialogsum" target="_blank" rel="noopener">[46] https://github.com/cylnlp/dialogsum</a>
+    </li>
+<li id="ref-47">
+        <a href="#cite-47" class="back-ref" title="Back to text">↩</a>
+        <a href="https://arxiv.org/abs/2406.11833" target="_blank" rel="noopener">[47] https://arxiv.org/abs/2406.11833</a>
+    </li>
+<li id="ref-48">
+        <a href="#cite-48" class="back-ref" title="Back to text">↩</a>
+        <a href="https://arxiv.org/pdf/2301.13688.pdf" target="_blank" rel="noopener">[48] https://arxiv.org/pdf/2301.13688.pdf</a>
+    </li>
+<li id="ref-49">
+        <a href="#cite-49" class="back-ref" title="Back to text">↩</a>
+        <a href="https://instruction-tuning-with-gpt-4.github.io" target="_blank" rel="noopener">[49] https://instruction-tuning-with-gpt-4.github.io</a>
+    </li>
+<li id="ref-50">
+        <a href="#cite-50" class="back-ref" title="Back to text">↩</a>
+        <a href="https://arxiv.org/html/2406.00770v1" target="_blank" rel="noopener">[50] https://arxiv.org/html/2406.00770v1</a>
+    </li>
+<li id="ref-51">
+        <a href="#cite-51" class="back-ref" title="Back to text">↩</a>
+        <a href="https://www.camel-ai.org" target="_blank" rel="noopener">[51] https://www.camel-ai.org</a>
+    </li>
+<li id="ref-52">
+        <a href="#cite-52" class="back-ref" title="Back to text">↩</a>
+        <a href="https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM" target="_blank" rel="noopener">[52] https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM</a>
+    </li>
+<li id="ref-53">
+        <a href="#cite-53" class="back-ref" title="Back to text">↩</a>
+        <a href="https://www.youtube.com/watch?v=5IAxCL4dHWk" target="_blank" rel="noopener">[53] https://www.youtube.com/watch?v=5IAxCL4dHWk</a>
+    </li>
+<li id="ref-54">
+        <a href="#cite-54" class="back-ref" title="Back to text">↩</a>
+        <a href="https://openreview.net/forum?id=3IyL2XWDkG" target="_blank" rel="noopener">[54] https://openreview.net/forum?id=3IyL2XWDkG</a>
+    </li>
+<li id="ref-55">
+        <a href="#cite-55" class="back-ref" title="Back to text">↩</a>
+        <a href="https://github.com/topics/huggingface-datasets?l=python&o=asc&s=stars" target="_blank" rel="noopener">[55] https://github.com/topics/huggingface-datasets?l=python&o=asc&s=stars</a>
+    </li>
+<li id="ref-56">
+        <a href="#cite-56" class="back-ref" title="Back to text">↩</a>
+        <a href="https://mbrenndoerfer.com/writing/history-bleu-metric-evaluation" target="_blank" rel="noopener">[56] https://mbrenndoerfer.com/writing/history-bleu-metric-evaluation</a>
+    </li>
+<li id="ref-57">
+        <a href="#cite-57" class="back-ref" title="Back to text">↩</a>
+        <a href="https://aclanthology.org/2023.findings-acl.230.pdf" target="_blank" rel="noopener">[57] https://aclanthology.org/2023.findings-acl.230.pdf</a>
+    </li>
+<li id="ref-58">
+        <a href="#cite-58" class="back-ref" title="Back to text">↩</a>
+        <a href="https://www.kaggle.com/datasets/yasirabdaali/hugging-face-models-dataset" target="_blank" rel="noopener">[58] https://www.kaggle.com/datasets/yasirabdaali/hugging-face-models-dataset</a>
+    </li>
+<li id="ref-59">
+        <a href="#cite-59" class="back-ref" title="Back to text">↩</a>
+        <a href="https://dagshub.com/blog/llm-evaluation-metrics/" target="_blank" rel="noopener">[59] https://dagshub.com/blog/llm-evaluation-metrics/</a>
+    </li>
+<li id="ref-60">
+        <a href="#cite-60" class="back-ref" title="Back to text">↩</a>
+        <a href="https://www.amazon.science/blog/amazon-releases-51-language-dataset-for-language-understanding" target="_blank" rel="noopener">[60] https://www.amazon.science/blog/amazon-releases-51-language-dataset-for-language-understanding</a>
+    </li>
+        </ol>
+    </section>
+    <footer>filed under: things worth knowing</footer>
+</body>
+</html>
