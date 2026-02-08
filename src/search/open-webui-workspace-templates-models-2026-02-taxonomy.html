@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open WebUI workspace templates for 1) models, 2) knowledge collections, 3) pr...</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            line-height: 1.6;
+            padding: 40px 20px 60px;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        a { color: #00ffff; text-decoration: none; }
+        a:hover { color: #ff0000; text-decoration: underline; }
+        .home-link { display: inline-block; margin-bottom: 30px; font-size: 13px; }
+        .home-link::before { content: '← '; }
+        header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        header h1 { color: #ff0000; font-size: 20px; font-weight: normal; margin-bottom: 8px; }
+        header .meta { font-size: 12px; color: #555; }
+        article { color: #7ec8e3; }
+        article h1 { color: #00ffff; font-size: 17px; font-weight: normal; margin: 35px 0 15px; }
+        article h2 { color: #ff0000; font-size: 15px; font-weight: normal; margin: 30px 0 12px; }
+        article h3 { color: #7ec8e3; font-size: 14px; font-weight: normal; margin: 20px 0 10px; }
+        article p { margin-bottom: 16px; }
+        article ul, article ol { margin-left: 20px; margin-bottom: 16px; }
+        article li { margin-bottom: 8px; }
+        article strong { color: #00ffff; font-weight: normal; }
+        article em { font-style: normal; color: #888; }
+
+        /* Citation styling */
+        .citation { font-size: 0.75em; vertical-align: super; line-height: 0; }
+        .citation a { color: #ff0000; padding: 0 1px; }
+        .citation a:hover { color: #ff9999; text-decoration: underline; }
+
+        /* Citations/References section */
+        .citations {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #333;
+        }
+        .citations h2 {
+            color: #ff0000;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .citations ol {
+            list-style: none;
+            padding: 0;
+        }
+        .citations li {
+            font-size: 12px;
+            margin: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            line-height: 1.5;
+            word-break: break-word;
+            color: #666;
+        }
+        .citations .back-ref {
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #ff0000;
+            text-decoration: none;
+            font-size: 11px;
+        }
+        .citations .back-ref:hover { color: #ff9999; }
+        .citations .cite-num {
+            color: #666;
+            margin-right: 8px;
+        }
+        .citations li a:not(.back-ref) {
+            color: #00ffff;
+            word-break: break-all;
+        }
+        .citations li a:not(.back-ref):hover { color: #ff0000; }
+
+        footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 11px; color: #444; }
+        @media (max-width: 600px) {
+            body { padding: 25px 15px 40px; }
+            header h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../../index.html"></a>
+    <header>
+        <h1>Open WebUI workspace templates for 1) models, 2) knowledge collections, 3) pr...</h1>
+        <div class="meta">researched Feb 8, 2026 · dug up by sportello</div>
+    </header>
+    <article>
+        <h1>Open WebUI Workspace Templates for Academic Teaching and Research: A Comprehensive Analysis of Models, Knowledge Collections, Prompts, Tools, Valves, and Pipes</h1>
+<p>Open WebUI represents a significant advancement in democratizing artificial intelligence capabilities within educational and research institutions by providing a self-hosted, extensible interface that enables both instructors and researchers to create, manage, and customize sophisticated AI workflows without requiring deep technical expertise<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-18" id="cite-18">18</a></sup>. This comprehensive analysis examines the architectural components and templating systems within Open WebUI's workspace infrastructure, with particular emphasis on how these elements can be effectively leveraged for university teaching and research purposes, including the critical subsystems of valves and pipes that enable advanced customization and automation<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-26" id="cite-26">26</a></sup>. The current landscape of Open WebUI, as of February 2026, reflects significant maturation in the platform's capabilities, with version 0.7.0 introducing native function calling with built-in tools that fundamentally transform how researchers and educators can orchestrate complex, multi-step AI-assisted workflows<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup>. This research synthesizes contemporary documentation, community discussions, and real-world implementation patterns to provide educators and research administrators with a practical understanding of how to design and deploy Open WebUI workspace templates that serve the specific needs of academic communities while maintaining flexibility, security, and pedagogical effectiveness.</p>
+<h2>Foundational Architecture: Understanding Open WebUI's Workspace Ecosystem</h2>
+<h3>Core Components and Design Philosophy</h3>
+<p>The Open WebUI workspace represents a paradigm shift in how educational institutions can deploy artificial intelligence infrastructure by consolidating multiple AI interaction modalities into a unified, permission-based environment<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-11" id="cite-11">11</a></sup>. The workspace is fundamentally structured around four primary artifact types—models, knowledge collections, prompts, and tools—each serving distinct but interconnected purposes within the overall system architecture<sup class="citation"><a href="#ref-19" id="cite-19">19</a>,<a href="#ref-23" id="cite-23">23</a>,<a href="#ref-42" id="cite-42">42</a></sup>. Rather than treating these components as isolated elements, Open WebUI employs a sophisticated orchestration model wherein models serve as the primary execution agents, knowledge collections function as contextual information repositories, prompts provide behavioral instruction and templating capabilities, and tools represent discrete functional extensions that models can invoke autonomously<sup class="citation"><a href="#ref-56" id="cite-56">56</a></sup>. This architectural philosophy reflects contemporary best practices in AI system design, wherein modularity, composability, and explicit permission management enable organizations to scale AI capabilities while maintaining governance and accountability<sup class="citation"><a href="#ref-29" id="cite-29">29</a></sup>.</p>
+<p>The workspace design incorporates multiple layers of abstraction that progressively hide complexity from end users while preserving the ability for advanced administrators to access lower-level configuration parameters<sup class="citation"><a href="#ref-29" id="cite-29">29</a>,<a href="#ref-41" id="cite-41">41</a></sup>. At the highest level of abstraction, educators and researchers interact with a simplified interface that emphasizes immediate utility—selecting models, composing prompts, managing document collections, and invoking tools through intuitive graphical interactions. Beneath this user-facing layer, however, lies a sophisticated backend architecture built on FastAPI, SQLAlchemy ORM, and a pluggable middleware system that enables both fine-grained access control and extensibility through custom Python code<sup class="citation"><a href="#ref-29" id="cite-29">29</a></sup>. This layered approach proves particularly valuable in academic settings where different stakeholders—from department chairs concerned with governance to graduate students focused on research productivity—require fundamentally different interfaces and capabilities for the same underlying system.</p>
+<p>The access control paradigm within Open WebUI workspaces employs a role-based system with granular permission scaffolding that maps naturally onto typical university organizational structures<sup class="citation"><a href="#ref-41" id="cite-41">41</a>,<a href="#ref-54" id="cite-54">54</a></sup>. Administrators possess unrestricted access to all workspace components and can create groups aligned with departments, research teams, or course sections. Users with standard roles can create and manage their own artifacts, while selective sharing mechanisms allow curated access to group members or individual colleagues. Critically, the system distinguishes between read access and write access, enabling scenarios where research teams can collaboratively edit knowledge bases and models while controlling modification authority to prevent accidental corruption of shared resources<sup class="citation"><a href="#ref-39" id="cite-39">39</a>,<a href="#ref-51" id="cite-51">51</a></sup>.</p>
+<h3>Workspace Workspace Redesign and Evolution</h3>
+<p>Recent updates to Open WebUI, particularly between versions 0.5.X and 0.7.0, reflect significant refinements to the workspace interface informed by community feedback and real-world deployment patterns<sup class="citation"><a href="#ref-33" id="cite-33">33</a>,<a href="#ref-45" id="cite-45">45</a></sup>. The transition from earlier versions introduced reorganized controls, server-side pagination for large artifact collections, and enhanced search functionality across all workspace components<sup class="citation"><a href="#ref-45" id="cite-45">45</a>,<a href="#ref-47" id="cite-47">47</a>,<a href="#ref-48" id="cite-48">48</a></sup>. These improvements directly address scaling challenges encountered by institutions managing hundreds of models or thousands of documents within knowledge bases—problems that academic medical centers, law schools, and large research universities have experienced when deploying prior-generation systems. The incorporation of server-side pagination, for instance, reduced initial load times from potentially minutes to under two seconds for instances with large artifact collections, transforming Open WebUI from a tool suited primarily for individual researchers into a platform capable of supporting institutional-scale deployments<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup>.</p>
+<h2>Models: Templating and Customization in Educational Contexts</h2>
+<h3>Model Architecture and Preset System</h3>
+<p>Unlike traditional language model interfaces that treat base models as monolithic units to be accessed through standardized APIs, Open WebUI implements a "preset system" that wraps any base model—whether locally deployed through Ollama or accessed through OpenAI-compatible APIs—with domain-specific configuration parameters<sup class="citation"><a href="#ref-19" id="cite-19">19</a>,<a href="#ref-20" id="cite-20">20</a></sup>. This architectural choice enables university instructors to create distinct model variants for specific pedagogical purposes without requiring duplicate base model deployments or technical modifications to underlying inference infrastructure. For instance, an instructor teaching a course on professional communication might create a custom model that wraps GPT-4o with specific system prompts instructing the model to adopt a formal business register, automatically include citations, and provide feedback on argument structure. Simultaneously, a colleague teaching creative writing could create a distinct model variant wrapping the identical base model but configured for narrative evaluation and providing feedback on descriptive language, dialogue authenticity, and character development<sup class="citation"><a href="#ref-20" id="cite-20">20</a></sup>.</p>
+<p>The template system within models encompasses multiple configurable dimensions that extend significantly beyond simple system prompt modification<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>. The core configuration includes an <strong>avatar photo</strong> that provides visual differentiation in model selector dropdowns—a feature with underestimated pedagogical value, as visual distinctiveness helps students rapidly identify which specialized model variant is appropriate for their current task. The <strong>model name and unique identifier</strong> enable semantic naming conventions that communicate purpose; for instance, "Philosophy-Argumentation-Analyzer" or "Biology-Lab-Report-Reviewer" communicate functional specialization more effectively than generic names. The <strong>base model selection</strong> allows administrators to choose the foundational inference engine while wrapping it with task-specific configuration—a critical feature for institutions managing diverse hardware with different model deployment capacities.</p>
+<p>The <strong>system prompt and dynamic variable injection</strong> system represents perhaps the most educationally powerful templating capability within Open WebUI models<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>. Rather than static system prompts, the system supports Jinja2-style template variables that enable context injection at runtime. The \( {{CURRENT_DATE}} \) variable, for instance, enables system prompts to reference temporal context, which proves invaluable for teaching time-sensitive subjects or ensuring that AI feedback reflects current information. The \( {{USER_NAME}} \) variable enables personalized interaction, allowing system prompts to construct responses that address students by name or that adapt feedback based on user identity. The \( {{USER_LANGUAGE}} \) variable facilitates multilingual education by enabling models to respond in students' preferred languages. These dynamic variables transform static models into adaptive systems that sense context and adjust behavior accordingly<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>.</p>
+<h3>Creating Domain-Specific Model Templates for Teaching</h3>
+<p>The process of creating domain-specific model templates for educational contexts follows a structured workflow that, while straightforward technologically, requires careful pedagogical consideration<sup class="citation"><a href="#ref-20" id="cite-20">20</a></sup>. Educators first identify the core learning objectives their model should support—for instance, whether the model should primarily function as a content explainer, problem validator, writing evaluator, or Socratic questioner. This pedagogical clarity then informs system prompt design, wherein the instructor articulates explicit instructions that guide model behavior toward pedagogical objectives. A mathematics instructor might create a model configured to help students develop problem-solving strategies by refusing to provide direct answers while instead asking guiding questions that progressively reveal solution pathways. Similarly, a literature instructor might configure a model to help students analyze textual evidence by first requiring students to identify specific quotations before the model offers interpretive frameworks.</p>
+<p>The knowledge source attachment within model configuration represents a critical capability for discipline-specific education<sup class="citation"><a href="#ref-19" id="cite-19">19</a>,<a href="#ref-33" id="cite-33">33</a></sup>. When creating a model template, educators can bind specific knowledge bases to that model, ensuring students using that model automatically have access to course-specific materials, research papers, institutional policies, or disciplinary standards. For instance, a legal research professor might create a model template that automatically incorporates a knowledge base containing landmark Supreme Court decisions, statutory materials, and institutional case law precedent. Students selecting this model receive automatic access to the curated legal materials without manual file selection, reducing friction while ensuring use of authoritative sources. This represents a significant pedagogical advantage over generic AI assistants, which may provide outdated legal information or conflate different jurisdictional standards.</p>
+<p>The <strong>visibility and group settings</strong> within model configuration enable sophisticated access control aligned with university governance structures<sup class="citation"><a href="#ref-19" id="cite-19">19</a></sup>. Faculty members can create models restricted to their own research group, ensuring sensitive methodologies or unpublished findings remain confidential. Alternatively, they can create models shared with specific university groups—perhaps a departmental research collective or an interdisciplinary working group—enabling collaborative configuration where multiple instructors iteratively refine model behavior based on shared experiences. The group-level write access feature, recently stabilized in v0.5.7 and later versions, enables true collaborative model curation wherein multiple educators collectively refine system prompts, evaluate knowledge source quality, and adjust advanced parameters based on student feedback<sup class="citation"><a href="#ref-39" id="cite-39">39</a>,<a href="#ref-51" id="cite-51">51</a></sup>.</p>
+<h3>Advanced Model Parameters and Chat Customization</h3>
+<p>Beyond the core configuration, Open WebUI model templates support advanced parameter customization that influences model inference behavior in subtle but pedagogically significant ways<sup class="citation"><a href="#ref-41" id="cite-41">41</a></sup>. The <strong>temperature parameter</strong>—which controls sampling randomness—can be adjusted per model to influence the creativity versus consistency of responses. For creative writing classes, instructors might configure models with higher temperatures (0.8-1.0) to encourage diverse outputs. For scientific education, lower temperatures (0.3-0.5) encourage more consistent, focused responses aligned with established scientific consensus. The <strong>top-k</strong> and <strong>top-p</strong> parameters similarly influence the diversity of token selection, enabling instructors to dial model behavior toward either exploratory variety or focused precision depending on learning objectives.</p>
+<p>The ability to designate whether models support specific features—web search, image generation, knowledge base access—at the model configuration level enables fine-grained capability management<sup class="citation"><a href="#ref-45" id="cite-45">45</a>,<a href="#ref-56" id="cite-56">56</a></sup>. An instructor might create one model template with web search enabled for research methodology classes, where students must learn to verify current information sources, while creating a second model template with web search deliberately disabled for controlled-environment learning assessments where students should focus on applying concepts to fictional scenarios rather than retrieving current information<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup>.</p>
+<h2>Knowledge Collections: Architecture, Management, and Academic Implementation</h2>
+<h3>Knowledge Base Fundamentals and Pedagogical Purpose</h3>
+<p>The knowledge collection system within Open WebUI represents a sophisticated implementation of Retrieval-Augmented Generation (RAG) specifically designed to address the core limitation of large language models: knowledge cutoffs and potential hallucination regarding domain-specific information<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-14" id="cite-14">14</a>,<a href="#ref-33" id="cite-33">33</a>,<a href="#ref-36" id="cite-36">36</a></sup>. Unlike generic language models that might provide outdated information about a university's policies or inaccurate details about proprietary research methodologies, knowledge bases enable educators and researchers to anchor model responses to authoritative source material maintained within the institution<sup class="citation"><a href="#ref-14" id="cite-14">14</a>,<a href="#ref-17" id="cite-17">17</a>,<a href="#ref-33" id="cite-33">33</a></sup>. This proves particularly valuable in academic contexts where accuracy, traceability, and alignment with institutional standards take precedence over generic informativeness.</p>
+<p>The RAG implementation in Open WebUI operates through a systematic process that begins with document ingestion, proceeds through semantic processing and embedding generation, and culminates in context-aware retrieval during inference<sup class="citation"><a href="#ref-6" id="cite-6">6</a>,<a href="#ref-14" id="cite-14">14</a></sup>. When a user references a knowledge base during conversation—either through the `#` symbol command or through agentic tool calling in Native Mode—Open WebUI searches the knowledge base using the user's query, retrieves the most semantically similar documents or passages, and injects these as context into the model's processing, enabling it to ground responses in specific, verifiable information<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-30" id="cite-30">30</a></sup>.</p>
+<h3>Knowledge Base Creation and File Management</h3>
+<p>The workflow for creating knowledge bases has evolved significantly through Open WebUI's development trajectory, particularly in versions 0.5.X and later<sup class="citation"><a href="#ref-33" id="cite-33">33</a>,<a href="#ref-45" id="cite-45">45</a></sup>. The creation process begins by navigating to <strong>Workspace → Knowledge → Create Knowledge Base</strong>, where educators specify metadata about the knowledge base including its <strong>name</strong>, <strong>purpose</strong>, and <strong>visibility settings</strong>. The visibility settings prove pedagogically significant; private knowledge bases remain exclusively accessible to their creator, while shared knowledge bases can be made available to university groups or, with recent enhancements, to individual collaborators<sup class="citation"><a href="#ref-31" id="cite-31">31</a>,<a href="#ref-33" id="cite-33">33</a></sup>. For university contexts, the purpose field proves valuable for communicating intent—whether the knowledge base supports undergraduate teaching, graduate research, institutional policy reference, or interdisciplinary collaboration.</p>
+<p>File management within knowledge bases has undergone substantial architectural improvements in recent versions<sup class="citation"><a href="#ref-45" id="cite-45">45</a>,<a href="#ref-48" id="cite-48">48</a></sup>. Earlier implementations stored file metadata as JSON arrays, limiting scalability when knowledge bases grew beyond a few hundred documents. Contemporary implementations employ dedicated database tables with server-side pagination, enabling knowledge bases to scale to thousands or tens of thousands of documents while maintaining responsive user interfaces<sup class="citation"><a href="#ref-45" id="cite-45">45</a>,<a href="#ref-48" id="cite-48">48</a></sup>. The file management interface now supports multiple upload mechanisms: individual file uploads for adding specific resources, directory synchronization for bulk uploading entire course material folders, and text content addition for cases where institutional information should be encoded directly without requiring separate document files<sup class="citation"><a href="#ref-33" id="cite-33">33</a></sup>.</p>
+<p>The supported file formats within knowledge bases span common academic content types including PDF documents (extracted via configurable content extraction engines), Markdown files, plain text documents, and Microsoft Office formats<sup class="citation"><a href="#ref-2" id="cite-2">2</a>,<a href="#ref-33" id="cite-33">33</a></sup>. The content extraction engine, which can be configured through Admin Panel settings, supports multiple backends including default PDF processors and specialized engines like Azure Document Intelligence<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup>. This architectural flexibility proves valuable for institutions with diverse document collections, enabling them to deploy extraction engines optimized for their specific document corpus characteristics.</p>
+<h3>Knowledge Base Configuration and Performance Optimization</h3>
+<p>The relationship between knowledge base performance and system configuration parameters represents a critical but often overlooked dimension of RAG implementation in educational contexts<sup class="citation"><a href="#ref-6" id="cite-6">6</a></sup>. The <strong>chunk size parameter</strong>—controlling how documents are segmented for embedding—significantly influences retrieval granularity. Smaller chunks (e.g., 256 tokens) preserve specificity but increase the number of embedding comparisons. Larger chunks (e.g., 512-1024 tokens) reduce computational overhead but risk including irrelevant content alongside relevant material. For educational contexts, chunk sizes between 256 and 512 tokens generally provide good balance, as they maintain semantic coherence within paragraphs while avoiding excessive overfitting to specific sentences<sup class="citation"><a href="#ref-6" id="cite-6">6</a></sup>.</p>
+<p>The <strong>chunk overlap parameter</strong>—controlling how segments of consecutive chunks overlap—influences context preservation across chunk boundaries. Moderate overlap (e.g., 64-128 tokens) helps ensure that important concepts straddling chunk boundaries receive adequate representation in embeddings. The <strong>top-k parameter</strong>—controlling how many similar document chunks the system retrieves—directly influences the depth of context provided to models. For educational applications where comprehensive background context improves response quality, top-k values of 20-30 generally provide good balance between informativeness and computational efficiency<sup class="citation"><a href="#ref-6" id="cite-6">6</a></sup>.</p>
+<p>The <strong>hybrid search capability</strong>—combining traditional keyword-based search with semantic vector search—proves particularly valuable in academic contexts where documents may contain domain-specific terminology not well-represented in general embedding models<sup class="citation"><a href="#ref-6" id="cite-6">6</a>,<a href="#ref-45" id="cite-45">45</a></sup>. Hybrid search can first identify documents matching specific keywords (e.g., searching for "membrane potential" in neuroscience course materials) then re-rank these results based on semantic similarity to the user query, ensuring both precision and semantic relevance. Recent enhancements enable hybrid search to index file metadata including filenames, titles, and headings alongside document content, allowing keyword queries to surface documents where search terms appear only in document structure rather than body text<sup class="citation"><a href="#ref-45" id="cite-45">45</a>,<a href="#ref-48" id="cite-48">48</a></sup>.</p>
+<h3>Creating Discipline-Specific Knowledge Bases for Teaching and Research</h3>
+<p>In practical university contexts, knowledge bases typically coalesce around discipline-specific teaching or research purposes. A history professor might create a knowledge base aggregating primary source documents, historiographical analyses, and archival materials relevant to a specific course. As students engage with the AI assistant using this knowledge base, their queries return grounded responses referencing specific primary sources that the professor has curated, enabling students to develop research skills through interaction with authentic historical materials rather than generic summaries<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-14" id="cite-14">14</a></sup>. Similarly, a computational biology research group might create a shared knowledge base containing published papers on their core research area, methods documentation, lab protocols, and institutional guidelines. When group members query this knowledge base through AI assistants, responses automatically incorporate current literature and established protocols, reducing time spent searching literature databases or institutional wiki pages while ensuring consistency in methodology references.</p>
+<p>The programmatic knowledge base management capability introduced in later versions enables automated knowledge base population through API-based workflows<sup class="citation"><a href="#ref-50" id="cite-50">50</a></sup>. Rather than manually uploading files through the web interface, educators and researchers can programmatically trigger file uploads through API calls, enabling integration with institutional document management systems or research data repositories. When a research group publishes new papers or updates protocols, automated workflows can detect these changes and populate knowledge bases without manual intervention, ensuring that AI assistants always access current institutional knowledge<sup class="citation"><a href="#ref-50" id="cite-50">50</a></sup>.</p>
+<h2>Prompts: Templating and Interactive Prompt Design for Academic Use</h2>
+<h3>Prompt Architecture and Management Framework</h3>
+<p>The Prompts section within Open WebUI's workspace enables educators and researchers to create, organize, and share reusable prompt templates that accelerate work while ensuring consistency across repeated tasks<sup class="citation"><a href="#ref-4" id="cite-4">4</a>,<a href="#ref-7" id="cite-7">7</a>,<a href="#ref-49" id="cite-49">49</a></sup>. Rather than reconstructing complex prompts repeatedly, educators can define prompts once, assign them custom slash commands (e.g., `/analyze_essay` or `/generate_quiz`), and subsequently invoke them through intuitive keyboard commands during chat interactions. This architectural choice significantly accelerates workflow iteration, particularly in contexts where specific analytical tasks recur across multiple courses or research projects.</p>
+<p>The prompt management interface provides several critical capabilities<sup class="citation"><a href="#ref-4" id="cite-4">4</a>,<a href="#ref-7" id="cite-7">7</a>,<a href="#ref-49" id="cite-49">49</a></sup>. The <strong>Create</strong> functionality enables educators to design new prompts with specific titles, descriptions, and access control settings. The <strong>Share</strong> capability enables controlled distribution of prompts across user groups, allowing department-wide sharing of standardized assessment rubrics or discipline-specific analysis prompts. The <strong>Access Control</strong> system maps naturally onto university permission structures, enabling prompts to remain private (accessible only to creators), shared with specific groups (e.g., all faculty within a department), or public (automatically appearing in prompt suggestions for all users). The <strong>Slash Commands</strong> feature transforms stored prompts into rapid-access tools; defining a prompt with the command `/essay_rubric` enables instructors to invoke comprehensive essay evaluation frameworks through a single keystroke.</p>
+<h3>Dynamic Variables and Interactive Prompt Templates</h3>
+<p>The most sophisticated capability within the prompt system is the <strong>custom input variables</strong> feature, which transforms static prompt templates into interactive form-based interfaces<sup class="citation"><a href="#ref-4" id="cite-4">4</a>,<a href="#ref-7" id="cite-7">7</a>,<a href="#ref-49" id="cite-49">49</a></sup>. Rather than requiring users to manually edit large blocks of text, custom variables create modal windows that guide users through structured input, significantly reducing cognitive load while improving consistency. The variable system employs a template syntax wherein variables are enclosed in double braces and can specify type, placeholder text, validation rules, and default values.</p>
+<p>For educational applications, custom input variables enable the creation of sophisticated learning tools that would be impractical to construct through manual prompt engineering. For instance, an instructor teaching literary analysis might create a prompt template structured as follows:</p>
+<p>```<br>Analyze the following novel excerpt for narrative technique.</p>
+<p>Excerpt: {{novel_excerpt | textarea:placeholder="Paste the text here":required}}</p>
+<p>Narrative Techniques to Analyze: {{techniques | select:options=["Point of View","Pacing","Dialogue","Interior Monologue","Flashback"]:required}}</p>
+<p>Student Level: {{level | select:options=["Introductory","Intermediate","Advanced"]:default="Intermediate"}}</p>
+<p>Focus Areas: {{focus | checkbox:label="Include discussion of historical context":default=true}}</p>
+<p>Provide analysis appropriate for {{level}} students, focusing on {{techniques}}.<br>```</p>
+<p>When invoked through the `/analyze_narrative` command, this template generates a form requesting the student level, narrative techniques to focus upon, and the text excerpt to analyze. The model receives a well-structured prompt incorporating all user inputs, ensuring consistent analytical frameworks while accommodating pedagogical flexibility<sup class="citation"><a href="#ref-4" id="cite-4">4</a>,<a href="#ref-7" id="cite-7">7</a></sup>.</p>
+<h3>System Variables and Context Injection</h3>
+<p>Beyond custom input variables, the prompt system supports <strong>system variables</strong> that automatically populate with dynamic context at runtime<sup class="citation"><a href="#ref-4" id="cite-4">4</a>,<a href="#ref-7" id="cite-7">7</a>,<a href="#ref-49" id="cite-49">49</a></sup>. The \( {{USER_NAME}} \) variable injects the current user's name, enabling personalized interaction. The \( {{CURRENT_DATE}} \) variable injects today's date, enabling prompts to incorporate temporal context—particularly valuable for current events discussions or time-sensitive assignments. The \( {{USER_LANGUAGE}} \) variable enables multilingual support by allowing prompts to instruct models to respond in students' preferred languages.</p>
+<p>These system variables prove particularly valuable in multilingual university contexts. An instructor teaching an international class might create a prompt template that includes the system variable \( {{USER_LANGUAGE}} \), instructing the model to respond in each student's preferred language while maintaining consistent pedagogical framework. Students whose first language is not English can receive feedback and guidance in their preferred language, reducing cognitive load from language processing while maintaining engagement with course content.</p>
+<h3>Prompt Library Architecture for Discipline-Specific Education</h3>
+<p>Academic institutions can develop comprehensive prompt libraries that serve discipline-specific teaching and research needs<sup class="citation"><a href="#ref-10" id="cite-10">10</a>,<a href="#ref-35" id="cite-35">35</a></sup>. Rather than individual instructors creating isolated prompts, universities can establish governance structures for prompt curation and quality assurance. A university's linguistics department, for instance, might develop a shared prompt library including prompts for syntax analysis, phonological description, historical language comparison, and linguistic fieldwork analysis. These discipline-specific prompts could be organized hierarchically with templates calibrated for different student levels, from introductory undergraduate prompts emphasizing conceptual understanding to research-level prompts requiring sophisticated linguistic metadata specification.</p>
+<p>Recent versions of Open WebUI enable prompt export and import, facilitating prompt library management at institutional scale<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-35" id="cite-35">35</a></sup>. Administrators can export curated prompt collections as portable repositories that can be shared across departments or institutions, accelerated adoption of best practices while reducing duplicate prompt development effort. The CC-BY-4.0 licensing applied to community prompt libraries like the Open WebUI Prompt Library facilitates academic sharing, enabling educators to adapt existing prompts to their specific disciplinary contexts<sup class="citation"><a href="#ref-10" id="cite-10">10</a></sup>.</p>
+<h2>Tools, Functions, and Agentic Capabilities: From Basic Functions to Advanced Automation</h2>
+<h3>Understanding Tools, Pipes, and Filters Architecture</h3>
+<p>Open WebUI's extensibility architecture employs three complementary but distinct function types—tools, pipes, and filters—each serving different purposes within the agentic reasoning framework<sup class="citation"><a href="#ref-8" id="cite-8">8</a>,<a href="#ref-9" id="cite-9">9</a>,<a href="#ref-26" id="cite-26">26</a>,<a href="#ref-27" id="cite-27">27</a>,<a href="#ref-56" id="cite-56">56</a></sup>. <strong>Tools</strong> represent discrete capabilities that models can invoke independently, ranging from web search and image generation to custom Python functions that perform domain-specific computations. <strong>Pipes</strong> function as custom model wrappers that introduce new pathways for data flow, enabling the creation of synthetic models with specialized behavior or integration points with external APIs. <strong>Filters</strong> operate as middleware that pre-processes user inputs or post-processes model outputs, enabling global transformations such as toxicity filtering, content redaction, or output reformatting<sup class="citation"><a href="#ref-25" id="cite-25">25</a>,<a href="#ref-26" id="cite-26">26</a></sup>.</p>
+<p>The distinction between these function types maps naturally onto academic workflow requirements. A research group studying climate change might develop a tool that queries climate data repositories and returns time-series data formatted for statistical analysis. The same group might develop a pipe that wraps a base model with domain-specific system prompts and knowledge bases, creating a specialized model that communicates climate science to diverse audiences. They might implement a filter that detects when users request comparisons between peer-reviewed research and fringe pseudoscientific claims, automatically prompting the model to include explicit methodological critique before responding.</p>
+<h3>Tools and Model Tool Calling</h3>
+<p>The tools subsystem within Open WebUI supports two distinct calling modes: <strong>Default Mode</strong> and <strong>Native Mode (Agentic Mode)</strong><sup class="citation"><a href="#ref-56" id="cite-56">56</a></sup>. Default Mode employs prompt-based tool selection wherein Open WebUI injects specific prompt templates guiding models to output structured tool invocations. This approach offers broad compatibility, functioning with models lacking native function calling support, but introduces additional token overhead and potential reliability issues with weaker models. Native Mode leverages models' native function calling capabilities, requiring models to return properly structured JSON tool invocations. This mode offers superior performance and reliability for high-quality models but requires models with explicit function calling support and strong reasoning capabilities<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-56" id="cite-56">56</a></sup>.</p>
+<p>The transition toward Native Mode as the default in recent Open WebUI versions reflects evolving best practices in agentic AI deployment<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-45" id="cite-45">45</a>,<a href="#ref-46" id="cite-46">46</a></sup>. For academic applications utilizing frontier models like GPT-5, Claude 4.5 Sonnet, or Gemini 3 Flash, Native Mode provides more reliable tool invocation, enabling multi-step reasoning chains wherein models autonomously determine which tools to invoke in sequence to accomplish complex tasks<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-45" id="cite-45">45</a></sup>. For institutions deploying smaller local models through Ollama, Default Mode remains valuable though with recognition that complex multi-step tool sequences may exceed smaller models' reasoning capacity<sup class="citation"><a href="#ref-27" id="cite-27">27</a>,<a href="#ref-37" id="cite-37">37</a></sup>.</p>
+<h3>Pipes: Creating Specialized Model Variants through Custom Logic</h3>
+<p>Pipes represent an architectural innovation enabling institutions to create completely novel model variants through custom Python code without requiring modifications to underlying inference infrastructure<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-26" id="cite-26">26</a>,<a href="#ref-29" id="cite-29">29</a></sup>. At their conceptual foundation, pipes implement a "plumbing system" metaphor wherein data flows through customizable pathways, with valves controlling how data flows<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-26" id="cite-26">26</a></sup>. The Pipe class defines custom logic that processes input through an asynchronous `pipe` function, with configuration options specified through a nested <strong>Valves</strong> class inherited from Pydantic BaseModel<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-26" id="cite-26">26</a></sup>.</p>
+<p>The pedagogical and research applications of pipes extend significantly beyond trivial use cases. Consider a research group conducting systematic literature reviews across multiple disciplinary databases with heterogeneous API specifications. Rather than requiring researchers to learn each API's distinct query syntax and response format, the group could implement a pipe that accepts unified query specifications, internally translates these to database-specific formats, aggregates results across sources, and returns harmonized output. This pipe would wrap a base model while transparently handling database query complexity, enabling researchers to focus on analytical objectives rather than technical integration details.</p>
+<p>Similarly, a university's writing center might develop a pipe that wraps a base model with specialized prompts for different genres of student writing—lab reports, essays, creative fiction, business proposals. When students access the writing center's model, the pipe automatically detects the document type (or prompts students to specify it) and applies appropriate analytical frameworks. The pipe could additionally integrate with the university's citation management systems, ensuring feedback incorporates the institution's preferred citation style.</p>
+<p>The ability to define custom <strong>Valves</strong> within pipes enables configurable behavior without requiring code modification<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-26" id="cite-26">26</a></sup>. A pipe implementing literature synthesis might expose valves controlling the number of sources to synthesize, disciplinary focus areas, time period constraints, and output format preferences. Rather than hard-coding these parameters in code, they appear as configuration options in the Admin UI, enabling non-technical administrators to adjust pipe behavior based on user feedback.</p>
+<h3>Filters: Global Data Transformation and Quality Assurance</h3>
+<p>Filters operate at a more global level than tools or pipes, applying transformations to all user inputs and model outputs passing through specified models or globally across all models<sup class="citation"><a href="#ref-25" id="cite-25">25</a>,<a href="#ref-26" id="cite-26">26</a></sup>. The filter architecture distinguishes between <strong>inlet</strong> functions that pre-process user inputs before reaching models and <strong>stream</strong> functions that post-process model outputs during generation. Filters can additionally include <strong>outlet</strong> functions that apply final transformations after generation completes<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>.</p>
+<p>In educational contexts, filters serve multiple critical functions. Content moderation filters can detect when models generate responses containing misinformation, triggering additional quality checks before output reaches students. Citation filters can systematically append required attribution information to all model responses. Accessibility filters can automatically generate alternative text descriptions for all generated images or reformat complex technical content into student-friendly explanations. Department-specific filters can enforce institutional citation styles, ensuring all generated content complies with departmental standards<sup class="citation"><a href="#ref-25" id="cite-25">25</a>,<a href="#ref-26" id="cite-26">26</a></sup>.</p>
+<p>The priority-based filter execution system enables sophisticated filter chaining wherein multiple filters operate sequentially, with each filter receiving the modified output from previous filters<sup class="citation"><a href="#ref-25" id="cite-25">25</a></sup>. A comprehensive academic content moderation system might implement a first filter detecting factual claims, a second filter cross-referencing these claims against knowledge bases containing authoritative sources, and a third filter generating warnings when discrepancies appear. By designing filters with appropriate priority levels, institutions can create layered quality assurance processes that operate transparently behind the scenes.</p>
+<h3>Valves and Dynamic Configuration Management</h3>
+<p>Valves represent the configuration mechanism enabling customizable behavior without code modification<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-26" id="cite-26">26</a>,<a href="#ref-28" id="cite-28">28</a></sup>. Both tools and filters expose valves that allow administrators or end users to adjust behavior through the web interface. For instance, a web search tool might expose valves controlling the number of search results to retrieve, result ranking strategy, and search engine selection. An image generation tool might expose valves for output image size, style preferences, and safety filter strictness.</p>
+<p>The distinction between <strong>System Valves</strong> and <strong>User Valves</strong> introduces dual configuration levels, enabling both administrator-level defaults and user-level customization<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>. System valves typically apply globally or per-model, reflecting institutional policy or security requirements. User valves enable individual researchers or instructors to customize tool behavior according to personal preferences or specific project requirements. An image generation tool might have system valves restricting image resolution to conserve computational resources, while exposing user valves enabling individual selection of output dimensions within those constraints<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>.</p>
+<p>Recent developments in valve management have resolved earlier challenges where system valves and user valves failed to properly propagate through certain function types<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-28" id="cite-28">28</a></sup>. Contemporary implementations correctly distinguish between valve types that should be accessed during function initialization versus runtime, enabling more sophisticated configuration patterns<sup class="citation"><a href="#ref-28" id="cite-28">28</a></sup>.</p>
+<h2>Native Function Calling and Agentic Research: Advanced Capabilities in Version 0.7.0</h2>
+<h3>Architecture of Native Function Calling</h3>
+<p>The introduction of truly native function calling in Open WebUI version 0.7.0 represents a watershed moment for agentic AI capabilities within academic contexts<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup>. Rather than Open WebUI managing tool selection through prompt injection and pattern matching, models with native function calling support can autonomously reason about which tools to invoke, in what sequence, based on task requirements<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup>. This shift from "Open WebUI decides which tool to use" to "the model decides which tools to use" fundamentally alters the character of human-AI collaboration, enabling researchers and educators to engage with models as reasoning agents rather than sophisticated text completion engines.</p>
+<p>The agentic tools built into Open WebUI 0.7.0 include <strong>query_knowledge_bases</strong> for semantic search across knowledge bases, <strong>search_web</strong> for real-time web information retrieval, <strong>fetch_url</strong> for reading full page content at specific URLs, <strong>save_to_notes</strong> for recording important findings, and <strong>generate_image</strong> for creating visual content<sup class="citation"><a href="#ref-45" id="cite-45">45</a>,<a href="#ref-50" id="cite-50">50</a>,<a href="#ref-59" id="cite-59">59</a></sup>. Critically, the model itself determines when and how to invoke these tools, enabling workflows wherein users pose complex research questions and models autonomously orchestrate multi-step investigation processes<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup>.</p>
+<h3>Agentic Research Workflows for Academic Applications</h3>
+<p>The agentic research capabilities prove particularly valuable for academic applications requiring synthesis across multiple information sources. Consider a graduate student researching recent developments in renewable energy policy across multiple jurisdictions. Rather than manually searching for energy policy documents in each country, consulting web resources for current legislative updates, and synthesizing disparate information sources, the student can pose a complex research question to an agentic model: "Summarize the major renewable energy policy developments across OECD countries in 2024-2025, comparing approaches to grid integration challenges, noting countries with particularly innovative solutions."</p>
+<p>The model receiving this question can autonomously execute a multi-step research workflow<sup class="citation"><a href="#ref-45" id="cite-45">45</a>,<a href="#ref-59" id="cite-59">59</a></sup>: First, it searches web sources for recent renewable energy policy developments, receiving result snippets from multiple sources. Recognizing that snippets provide insufficient detail for comprehensive synthesis, it invokes the <strong>fetch_url</strong> tool to read full policy documents from specific jurisdictions' government websites. Recognizing gaps in its knowledge about specific technical challenges, it searches its knowledge base for papers on grid integration challenges. It potentially iterates this process, refining searches based on initial findings and discovered references to other relevant sources. Finally, it synthesizes the gathered information into a comprehensive summary with proper citations to specific sources.</p>
+<p>The interleaved thinking capability—wherein models can reason about findings between tool invocations—enhances this process further<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup>. Rather than mechanically executing predetermined tool sequences, models can reflect on gathered information, evaluate whether additional research is needed, consider inconsistencies between sources, and adjust their research strategy accordingly. This approximates human research behavior more closely than earlier systems wherein tools were invoked according to predetermined patterns.</p>
+<h3>Deep Link Following and Autonomous Source Discovery</h3>
+<p>A particularly sophisticated capability within agentic research workflows is the model's ability to autonomously discover and follow references discovered within fetched sources<sup class="citation"><a href="#ref-59" id="cite-59">59</a></sup>. When a model uses <strong>fetch_url</strong> to read a full webpage or document, it can identify URLs mentioned within that content and autonomously decide to fetch those linked resources. For instance, when researching a technical topic, a model might fetch an overview article, identify references to peer-reviewed papers or technical specifications mentioned in that article, and autonomously fetch those linked resources for deeper investigation. This enables research workflows resembling human expertise behavior, wherein researchers follow chains of references to progressively deepen understanding rather than conducting disconnected searches.</p>
+<p>This capability proves particularly valuable in academic contexts where authoritative knowledge often exists in citation networks. When researching a historical topic, models can fetch initial overview articles, identify primary source documents referenced in those articles, and autonomously fetch those primary sources for direct analysis. This enables students to engage with authentic historical sources rather than filtered secondary interpretations while maintaining structured guidance through the research process.</p>
+<h2>Collaborative Features and Group-Based Access Control</h2>
+<h3>Permission Structures for Academic Collaboration</h3>
+<p>The permissions system within Open WebUI maps directly onto typical university organizational structures, enabling sophisticated governance models appropriate for academic collaboration<sup class="citation"><a href="#ref-39" id="cite-39">39</a>,<a href="#ref-51" id="cite-51">51</a>,<a href="#ref-54" id="cite-54">54</a></sup>. At the most granular level, creators retain ownership of artifacts and control their visibility and access permissions. At the group level, educators can share artifacts with department-level groups, course-level groups, or ad hoc research collaboration groups. The recently stabilized group-level write access feature enables true collaborative curation wherein multiple group members can collectively modify shared models, knowledge bases, or prompts based on shared experience and iterative feedback<sup class="citation"><a href="#ref-39" id="cite-39">39</a>,<a href="#ref-51" id="cite-51">51</a></sup>.</p>
+<p>This collaborative capability addresses a critical limitation of earlier AI systems in academic contexts: the inability to leverage distributed expertise. When a department develops a shared model for undergraduate instruction, multiple instructors can collectively refine system prompts, evaluate knowledge base quality, and adjust advanced parameters based on classroom experience. Rather than individual instructors developing isolated models, distributed expertise can coalesce into increasingly refined shared resources<sup class="citation"><a href="#ref-39" id="cite-39">39</a>,<a href="#ref-51" id="cite-51">51</a></sup>.</p>
+<h3>Individual User Sharing and Privacy Considerations</h3>
+<p>Recent development discussions address the capability to share artifacts with individual users rather than exclusively with groups<sup class="citation"><a href="#ref-31" id="cite-31">31</a></sup>. This feature enables scenarios where senior researchers share specialized models or knowledge bases with specific colleagues or mentors without broadcasting them to entire research groups. Similarly, it enables selective sharing of preliminary research knowledge bases with collaborators while maintaining confidentiality from the broader research community. The propose</p>
+    </article>
+    
+    <section class="citations" id="citations">
+        <h2>Sources</h2>
+        <ol>
+            <li id="ref-1">
+        <a href="#cite-1" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">1.</span>
+        "northflank.com." Accessed February 8, 2026.
+        <a href="https://northflank.com/stacks/deploy-openwebui" target="_blank" rel="noopener">https://northflank.com/stacks/deploy-openwebui</a>
+    </li>
+<li id="ref-2">
+        <a href="#cite-2" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">2.</span>
+        "documentation.suse.com." Accessed February 8, 2026.
+        <a href="https://documentation.suse.com/suse-ai/1.0/html/openwebui-configuring/index.html" target="_blank" rel="noopener">https://documentation.suse.com/suse-ai/1.0/html/openwebui-configuring/index.html</a>
+    </li>
+<li id="ref-3">
+        <a href="#cite-3" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">3.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/workspace/knowledge/" target="_blank" rel="noopener">https://docs.openwebui.com/features/workspace/knowledge/</a>
+    </li>
+<li id="ref-4">
+        <a href="#cite-4" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">4.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/workspace/prompts/" target="_blank" rel="noopener">https://docs.openwebui.com/features/workspace/prompts/</a>
+    </li>
+<li id="ref-5">
+        <a href="#cite-5" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">5.</span>
+        "docs.rancherdesktop.io." Accessed February 8, 2026.
+        <a href="https://docs.rancherdesktop.io/1.17/tutorials/working-with-llms/" target="_blank" rel="noopener">https://docs.rancherdesktop.io/1.17/tutorials/working-with-llms/</a>
+    </li>
+<li id="ref-6">
+        <a href="#cite-6" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">6.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/11821" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/11821</a>
+    </li>
+<li id="ref-7">
+        <a href="#cite-7" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">7.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/workspace/prompts/" target="_blank" rel="noopener">https://docs.openwebui.com/features/workspace/prompts/</a>
+    </li>
+<li id="ref-8">
+        <a href="#cite-8" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">8.</span>
+        "youtube.com." Accessed February 8, 2026.
+        <a href="https://www.youtube.com/watch?v=2xLNhi1VQIE" target="_blank" rel="noopener">https://www.youtube.com/watch?v=2xLNhi1VQIE</a>
+    </li>
+<li id="ref-9">
+        <a href="#cite-9" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">9.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/plugin/functions/pipe/" target="_blank" rel="noopener">https://docs.openwebui.com/features/plugin/functions/pipe/</a>
+    </li>
+<li id="ref-10">
+        <a href="#cite-10" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">10.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/danielrosehill/OpenWebUI-Prompt-Library" target="_blank" rel="noopener">https://github.com/danielrosehill/OpenWebUI-Prompt-Library</a>
+    </li>
+<li id="ref-11">
+        <a href="#cite-11" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">11.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/getting-started/" target="_blank" rel="noopener">https://docs.openwebui.com/getting-started/</a>
+    </li>
+<li id="ref-12">
+        <a href="#cite-12" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">12.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/pipelines/" target="_blank" rel="noopener">https://docs.openwebui.com/features/pipelines/</a>
+    </li>
+<li id="ref-13">
+        <a href="#cite-13" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">13.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/1692" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/1692</a>
+    </li>
+<li id="ref-14">
+        <a href="#cite-14" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">14.</span>
+        "docs.icer.msu.edu." Accessed February 8, 2026.
+        <a href="https://docs.icer.msu.edu/2025-03-05_LabNotebook_How_to_run_OpenWebUI_RAG/" target="_blank" rel="noopener">https://docs.icer.msu.edu/2025-03-05_LabNotebook_How_to_run_OpenWebUI_RAG/</a>
+    </li>
+<li id="ref-15">
+        <a href="#cite-15" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">15.</span>
+        "triare.net." Accessed February 8, 2026.
+        <a href="https://triare.net/insights/how-to-integrate-ai-into-your-lms/" target="_blank" rel="noopener">https://triare.net/insights/how-to-integrate-ai-into-your-lms/</a>
+    </li>
+<li id="ref-16">
+        <a href="#cite-16" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">16.</span>
+        "sider.ai." Accessed February 8, 2026.
+        <a href="https://sider.ai/blog/ai-tools/open-webui-review-the-most-capable-self-hosted-ai-chat-interface-in-2025" target="_blank" rel="noopener">https://sider.ai/blog/ai-tools/open-webui-review-the-most-capable-self-hosted-ai-chat-interface-in-2025</a>
+    </li>
+<li id="ref-17">
+        <a href="#cite-17" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">17.</span>
+        "corelight.com." Accessed February 8, 2026.
+        <a href="https://corelight.com/blog/llm-cybersecurity-knowledge-base" target="_blank" rel="noopener">https://corelight.com/blog/llm-cybersecurity-knowledge-base</a>
+    </li>
+<li id="ref-18">
+        <a href="#cite-18" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">18.</span>
+        "arxiv.org." Accessed February 8, 2026.
+        <a href="https://www.arxiv.org/pdf/2510.02546.pdf" target="_blank" rel="noopener">https://www.arxiv.org/pdf/2510.02546.pdf</a>
+    </li>
+<li id="ref-19">
+        <a href="#cite-19" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">19.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/workspace/models/" target="_blank" rel="noopener">https://docs.openwebui.com/features/workspace/models/</a>
+    </li>
+<li id="ref-20">
+        <a href="#cite-20" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">20.</span>
+        "youtube.com." Accessed February 8, 2026.
+        <a href="https://www.youtube.com/watch?v=Fd_1zePgCLE" target="_blank" rel="noopener">https://www.youtube.com/watch?v=Fd_1zePgCLE</a>
+    </li>
+<li id="ref-21">
+        <a href="#cite-21" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">21.</span>
+        "arxiv.org." Accessed February 8, 2026.
+        <a href="https://arxiv.org/html/2510.02546v1" target="_blank" rel="noopener">https://arxiv.org/html/2510.02546v1</a>
+    </li>
+<li id="ref-22">
+        <a href="#cite-22" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">22.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/3134" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/3134</a>
+    </li>
+<li id="ref-23">
+        <a href="#cite-23" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">23.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/" target="_blank" rel="noopener">https://docs.openwebui.com/features/</a>
+    </li>
+<li id="ref-24">
+        <a href="#cite-24" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">24.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/Haervwe/open-webui-tools" target="_blank" rel="noopener">https://github.com/Haervwe/open-webui-tools</a>
+    </li>
+<li id="ref-25">
+        <a href="#cite-25" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">25.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/plugin/functions/filter/" target="_blank" rel="noopener">https://docs.openwebui.com/features/plugin/functions/filter/</a>
+    </li>
+<li id="ref-26">
+        <a href="#cite-26" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">26.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/plugin/functions/pipe/" target="_blank" rel="noopener">https://docs.openwebui.com/features/plugin/functions/pipe/</a>
+    </li>
+<li id="ref-27">
+        <a href="#cite-27" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">27.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/11617" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/11617</a>
+    </li>
+<li id="ref-28">
+        <a href="#cite-28" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">28.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/7347" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/7347</a>
+    </li>
+<li id="ref-29">
+        <a href="#cite-29" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">29.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/10044" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/10044</a>
+    </li>
+<li id="ref-30">
+        <a href="#cite-30" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">30.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/web-search/agentic-search/" target="_blank" rel="noopener">https://docs.openwebui.com/features/web-search/agentic-search/</a>
+    </li>
+<li id="ref-31">
+        <a href="#cite-31" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">31.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/15070" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/15070</a>
+    </li>
+<li id="ref-32">
+        <a href="#cite-32" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">32.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/8218" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/8218</a>
+    </li>
+<li id="ref-33">
+        <a href="#cite-33" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">33.</span>
+        "docs.icer.msu.edu." Accessed February 8, 2026.
+        <a href="https://docs.icer.msu.edu/2025-03-05_LabNotebook_How_to_run_OpenWebUI_RAG/" target="_blank" rel="noopener">https://docs.icer.msu.edu/2025-03-05_LabNotebook_How_to_run_OpenWebUI_RAG/</a>
+    </li>
+<li id="ref-34">
+        <a href="#cite-34" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">34.</span>
+        "openwebui.com." Accessed February 8, 2026.
+        <a href="https://openwebui.com" target="_blank" rel="noopener">https://openwebui.com</a>
+    </li>
+<li id="ref-35">
+        <a href="#cite-35" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">35.</span>
+        "sider.ai." Accessed February 8, 2026.
+        <a href="https://sider.ai/blog/ai-tools/best-open-webui-tutorials-to-master-local-ai-step-by-step-picks" target="_blank" rel="noopener">https://sider.ai/blog/ai-tools/best-open-webui-tutorials-to-master-local-ai-step-by-step-picks</a>
+    </li>
+<li id="ref-36">
+        <a href="#cite-36" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">36.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/tutorials/tips/rag-tutorial/" target="_blank" rel="noopener">https://docs.openwebui.com/tutorials/tips/rag-tutorial/</a>
+    </li>
+<li id="ref-37">
+        <a href="#cite-37" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">37.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/3134" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/3134</a>
+    </li>
+<li id="ref-38">
+        <a href="#cite-38" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">38.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/getting-started/env-configuration/" target="_blank" rel="noopener">https://docs.openwebui.com/getting-started/env-configuration/</a>
+    </li>
+<li id="ref-39">
+        <a href="#cite-39" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">39.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/8847" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/8847</a>
+    </li>
+<li id="ref-40">
+        <a href="#cite-40" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">40.</span>
+        "sider.ai." Accessed February 8, 2026.
+        <a href="https://sider.ai/blog/ai-tools/open-webui-review-the-most-capable-self-hosted-ai-chat-interface-in-2025" target="_blank" rel="noopener">https://sider.ai/blog/ai-tools/open-webui-review-the-most-capable-self-hosted-ai-chat-interface-in-2025</a>
+    </li>
+<li id="ref-41">
+        <a href="#cite-41" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">41.</span>
+        "documentation.suse.com." Accessed February 8, 2026.
+        <a href="https://documentation.suse.com/suse-ai/1.0/html/openwebui-configuring/index.html" target="_blank" rel="noopener">https://documentation.suse.com/suse-ai/1.0/html/openwebui-configuring/index.html</a>
+    </li>
+<li id="ref-42">
+        <a href="#cite-42" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">42.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/" target="_blank" rel="noopener">https://docs.openwebui.com/features/</a>
+    </li>
+<li id="ref-43">
+        <a href="#cite-43" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">43.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/3746" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/3746</a>
+    </li>
+<li id="ref-44">
+        <a href="#cite-44" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">44.</span>
+        "incommon.org." Accessed February 8, 2026.
+        <a href="https://www.incommon.org/case-study-university-of-illinois-urbana-champaign/" target="_blank" rel="noopener">https://www.incommon.org/case-study-university-of-illinois-urbana-champaign/</a>
+    </li>
+<li id="ref-45">
+        <a href="#cite-45" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">45.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/releases" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/releases</a>
+    </li>
+<li id="ref-46">
+        <a href="#cite-46" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">46.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions</a>
+    </li>
+<li id="ref-47">
+        <a href="#cite-47" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">47.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/enterprise/customers/" target="_blank" rel="noopener">https://docs.openwebui.com/enterprise/customers/</a>
+    </li>
+<li id="ref-48">
+        <a href="#cite-48" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">48.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/blob/main/CHANGELOG.md" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/blob/main/CHANGELOG.md</a>
+    </li>
+<li id="ref-49">
+        <a href="#cite-49" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">49.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/workspace/prompts/" target="_blank" rel="noopener">https://docs.openwebui.com/features/workspace/prompts/</a>
+    </li>
+<li id="ref-50">
+        <a href="#cite-50" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">50.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/workspace/knowledge/" target="_blank" rel="noopener">https://docs.openwebui.com/features/workspace/knowledge/</a>
+    </li>
+<li id="ref-51">
+        <a href="#cite-51" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">51.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/8847" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/8847</a>
+    </li>
+<li id="ref-52">
+        <a href="#cite-52" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">52.</span>
+        "youtube.com." Accessed February 8, 2026.
+        <a href="https://www.youtube.com/watch?v=wwbA7QCgaBY" target="_blank" rel="noopener">https://www.youtube.com/watch?v=wwbA7QCgaBY</a>
+    </li>
+<li id="ref-53">
+        <a href="#cite-53" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">53.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/tutorials/tips/rag-tutorial/" target="_blank" rel="noopener">https://docs.openwebui.com/tutorials/tips/rag-tutorial/</a>
+    </li>
+<li id="ref-54">
+        <a href="#cite-54" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">54.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/rbac/permissions/" target="_blank" rel="noopener">https://docs.openwebui.com/features/rbac/permissions/</a>
+    </li>
+<li id="ref-55">
+        <a href="#cite-55" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">55.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/mcp/" target="_blank" rel="noopener">https://docs.openwebui.com/features/mcp/</a>
+    </li>
+<li id="ref-56">
+        <a href="#cite-56" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">56.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/plugin/tools/" target="_blank" rel="noopener">https://docs.openwebui.com/features/plugin/tools/</a>
+    </li>
+<li id="ref-57">
+        <a href="#cite-57" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">57.</span>
+        "inggrid.org." Accessed February 8, 2026.
+        <a href="https://www.inggrid.org/article/id/3866/" target="_blank" rel="noopener">https://www.inggrid.org/article/id/3866/</a>
+    </li>
+<li id="ref-58">
+        <a href="#cite-58" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">58.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/7363" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/7363</a>
+    </li>
+<li id="ref-59">
+        <a href="#cite-59" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">59.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/web-search/agentic-search/" target="_blank" rel="noopener">https://docs.openwebui.com/features/web-search/agentic-search/</a>
+    </li>
+<li id="ref-60">
+        <a href="#cite-60" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">60.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/topics/academic-research?l=python" target="_blank" rel="noopener">https://github.com/topics/academic-research?l=python</a>
+    </li>
+        </ol>
+    </section>
+    <footer>filed under: things worth knowing</footer>
+</body>
+</html>
