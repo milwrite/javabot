@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latest architectural layout and permissions system of Open WebUI with private...</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            line-height: 1.6;
+            padding: 40px 20px 60px;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        a { color: #00ffff; text-decoration: none; }
+        a:hover { color: #ff0000; text-decoration: underline; }
+        .home-link { display: inline-block; margin-bottom: 30px; font-size: 13px; }
+        .home-link::before { content: '← '; }
+        header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        header h1 { color: #ff0000; font-size: 20px; font-weight: normal; margin-bottom: 8px; }
+        header .meta { font-size: 12px; color: #555; }
+        article { color: #7ec8e3; }
+        article h1 { color: #00ffff; font-size: 17px; font-weight: normal; margin: 35px 0 15px; }
+        article h2 { color: #ff0000; font-size: 15px; font-weight: normal; margin: 30px 0 12px; }
+        article h3 { color: #7ec8e3; font-size: 14px; font-weight: normal; margin: 20px 0 10px; }
+        article p { margin-bottom: 16px; }
+        article ul, article ol { margin-left: 20px; margin-bottom: 16px; }
+        article li { margin-bottom: 8px; }
+        article strong { color: #00ffff; font-weight: normal; }
+        article em { font-style: normal; color: #888; }
+
+        /* Citation styling */
+        .citation { font-size: 0.75em; vertical-align: super; line-height: 0; }
+        .citation a { color: #ff0000; padding: 0 1px; }
+        .citation a:hover { color: #ff9999; text-decoration: underline; }
+
+        /* Citations/References section */
+        .citations {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #333;
+        }
+        .citations h2 {
+            color: #ff0000;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .citations ol {
+            list-style: none;
+            padding: 0;
+        }
+        .citations li {
+            font-size: 12px;
+            margin: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            line-height: 1.5;
+            word-break: break-word;
+            color: #666;
+        }
+        .citations .back-ref {
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #ff0000;
+            text-decoration: none;
+            font-size: 11px;
+        }
+        .citations .back-ref:hover { color: #ff9999; }
+        .citations .cite-num {
+            color: #666;
+            margin-right: 8px;
+        }
+        .citations li a:not(.back-ref) {
+            color: #00ffff;
+            word-break: break-all;
+        }
+        .citations li a:not(.back-ref):hover { color: #ff0000; }
+
+        footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 11px; color: #444; }
+        @media (max-width: 600px) {
+            body { padding: 25px 15px 40px; }
+            header h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../../index.html"></a>
+    <header>
+        <h1>Latest architectural layout and permissions system of Open WebUI with private...</h1>
+        <div class="meta">researched Feb 8, 2026 · dug up by sportello</div>
+    </header>
+    <article>
+        <h1>Open WebUI Architectural Design and Permissions System: A Comprehensive Analysis of Role-Based Access Control and Scalable User Management in 2026</h1>
+<p>Open WebUI represents a sophisticated approach to large language model deployment and collaborative access control, employing a stateless, container-first architecture combined with a multi-layered role-based access control system designed to support diverse organizational structures ranging from small teams to enterprise-scale deployments. The platform implements an additive permissions model that enables administrators to create complex access hierarchies suitable for academic institutions, research organizations, and corporate teams through the strategic combination of roles, permission flags, and group-based access control lists. This comprehensive architectural framework accommodates the nuanced needs of different user types—including default users, instructors, researchers, content creators, and administrative leaders—while maintaining security boundaries and preventing unauthorized access to sensitive resources and configurations.</p>
+<h2>Architectural Foundation and Enterprise-Scale Design</h2>
+<p>Open WebUI's underlying architecture is explicitly designed for organizational scalability and reliability, incorporating principles that distinguish it from simpler single-instance deployments. The platform follows a <strong>stateless, container-first architecture</strong>, meaning that no individual server instance maintains persistent session state for user connections<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>. This architectural decision eliminates the common bottleneck of session affinity and enables true horizontal scaling where administrators can add additional container instances as computational demand increases without requiring architectural redesign<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>. The design philosophy prioritizes the ability to deploy the same software stack across on-premise infrastructure, private cloud environments, or hybrid configurations without requiring modifications to the core application logic<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>.</p>
+<p>For organizations with demanding uptime requirements and high-concurrency workloads, Open WebUI supports production-grade high availability configurations through multiple mechanisms<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>. Load balancing distributes incoming requests across multiple container instances, ensuring that no single point of failure can disrupt service availability<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>. The platform decouples data persistence from application instances by supporting external database backends, allowing the database layer to be managed independently from the stateless application containers<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>. Flexible storage backends accommodate diverse data residency requirements and performance specifications, enabling organizations to maintain strict compliance with geographic data storage regulations while optimizing access patterns for their specific use cases<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>. Integration with modern logging and metrics tools through standard observability protocols enables proactive monitoring and rapid issue detection in production environments<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>.</p>
+<p>The architectural approach proves particularly valuable for organizations managing institution-wide AI access across distributed user populations. Universities can deploy Open WebUI across regional infrastructure while maintaining consistent system behavior and access controls<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>. Multinational enterprises can provision instances in multiple geographic regions with synchronized user management and permissions data<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>. Major organizations can scale deployments to support hundreds of thousands of concurrent users without experiencing the performance degradation typical of monolithic systems<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>. The architectural design ensures that initial investments in small pilot deployments do not become technical debt as organizations expand usage across their entire user base<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>.</p>
+<h2>Role-Based Access Control Architecture</h2>
+<p>Open WebUI implements a three-layer role-based access control system that synthesizes traditional role hierarchies with granular permission flags and group-based resource access management<sup class="citation"><a href="#ref-13" id="cite-13">13</a>,<a href="#ref-23" id="cite-23">23</a>,<a href="#ref-50" id="cite-50">50</a></sup>. The foundation of this system consists of <strong>roles</strong>, which represent high-level user classifications that establish baseline trust levels and determine which categories of actions a user is authorized to perform<sup class="citation"><a href="#ref-13" id="cite-13">13</a>,<a href="#ref-23" id="cite-23">23</a>,<a href="#ref-50" id="cite-50">50</a></sup>. The platform currently supports three predefined roles: <strong>Admin</strong>, <strong>User</strong>, and <strong>Pending</strong><sup class="citation"><a href="#ref-32" id="cite-32">32</a></sup>. Admin accounts possess full system access including administrative panels and the ability to modify system-wide configurations<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>. User accounts represent standard users who can create and interact with personal content but are restricted from system administration functions<sup class="citation"><a href="#ref-36" id="cite-36">36</a></sup>. Pending accounts represent newly registered users who require administrative activation before gaining access to any platform functionality<sup class="citation"><a href="#ref-32" id="cite-32">32</a></sup>.</p>
+<p>The second layer of the access control system comprises <strong>permissions</strong>, which are granular feature flags that enable or disable specific capabilities within the platform<sup class="citation"><a href="#ref-13" id="cite-13">13</a>,<a href="#ref-23" id="cite-23">23</a>,<a href="#ref-50" id="cite-50">50</a></sup>. Permissions operate at multiple scopes, controlling access to chat features, workspace resources, and system-wide features<sup class="citation"><a href="#ref-13" id="cite-13">13</a></sup>. Chat permissions govern actions such as deleting conversations, regenerating responses, sharing discussions, and accessing message history<sup class="citation"><a href="#ref-13" id="cite-13">13</a></sup>. Workspace permissions control the ability to create, edit, and delete models, knowledge bases, prompts, and tools<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-13" id="cite-13">13</a></sup>. Feature permissions determine whether users can access capabilities such as web search, document uploading, text-to-speech synthesis, and voice input functionality<sup class="citation"><a href="#ref-13" id="cite-13">13</a></sup>. Default permissions represent baseline authorization rules that apply to all users regardless of group membership, establishing security boundaries for users who do not explicitly belong to any permission groups<sup class="citation"><a href="#ref-25" id="cite-25">25</a>,<a href="#ref-32" id="cite-32">32</a></sup>.</p>
+<p>The third layer comprises <strong>groups</strong>, which function as organizational units that aggregate users for collective permission management and establish access control lists for shared resources<sup class="citation"><a href="#ref-13" id="cite-13">13</a>,<a href="#ref-23" id="cite-23">23</a>,<a href="#ref-50" id="cite-50">50</a></sup>. The security model underlying this architecture is explicitly <strong>additive</strong>, meaning that users begin with the default permission set associated with their role, and any groups to which they belong subsequently add additional capabilities<sup class="citation"><a href="#ref-13" id="cite-13">13</a>,<a href="#ref-23" id="cite-23">23</a>,<a href="#ref-50" id="cite-50">50</a></sup>. This additive model ensures that removing a user from a group immediately revokes the additional permissions granted through that group membership without affecting permissions derived from their base role<sup class="citation"><a href="#ref-13" id="cite-13">13</a>,<a href="#ref-23" id="cite-23">23</a>,<a href="#ref-50" id="cite-50">50</a></sup>. Users effectively possess the union of all rights granted by their assigned role and all group memberships, creating a composable and predictable authorization model<sup class="citation"><a href="#ref-13" id="cite-13">13</a>,<a href="#ref-23" id="cite-23">23</a>,<a href="#ref-50" id="cite-50">50</a></sup>.</p>
+<h2>Permission Layers and Scopes</h2>
+<p>The granular permission system in Open WebUI operates across distinct functional domains, with each domain providing specific controls appropriate to that functional area. The <strong>chat permissions</strong> domain includes the ability to delete personal chat histories, an important privacy control that allows users to remove conversations from the system<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>. Users can regenerate responses from previous conversations, which triggers new API calls and allows experimentation with different model outputs for the same input<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>. Message editing permission enables users to modify previously sent messages and regenerate responses based on the modified input<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>. Chat sharing capabilities allow users to export conversations for external use or share them with other platform users<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>.</p>
+<p>The <strong>workspace permissions</strong> domain controls access to content creation and management within the collaborative workspace. Models access permission enables users to view available models within the model selector dropdown, which is essential for basic platform functionality<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-8" id="cite-8">8</a></sup>. Users with model creation permission can define custom model configurations using Open WebUI's preset system, creating specialized agents with custom system prompts, bound knowledge bases, and tool configurations<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-17" id="cite-17">17</a></sup>. Knowledge base access permission determines whether users can view and interact with document collections<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-12" id="cite-12">12</a></sup>. Users with knowledge creation permission can upload documents and organize them into knowledge bases for use in retrieval-augmented generation workflows<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-12" id="cite-12">12</a></sup>. Prompt creation permission enables users to define custom prompt templates with variable substitution and slash-command access<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-19" id="cite-19">19</a></sup>. Tools permission allows users to create Python-based tools and functions that extend model capabilities<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-24" id="cite-24">24</a></sup>.</p>
+<p>The <strong>feature permissions</strong> domain controls access to specific capabilities that enhance the core chat experience. Web search permission enables models to perform real-time internet searches to supplement knowledge with current information<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>. Image generation permission allows models to create images using integrated image generation models<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-17" id="cite-17">17</a></sup>. Text-to-speech permission enables voice synthesis of model responses using configured voice models<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>. Voice input permission allows users to provide input through voice rather than exclusively through text<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>. Vision permission, when configured at the model level, enables specific models to analyze and interpret images provided by users<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-17" id="cite-17">17</a></sup>.</p>
+<p>The <strong>advanced feature permissions</strong> domain controls access to sophisticated capabilities that enhance organizational productivity. The channels feature enables persistent, topic-based collaborative rooms similar to Discord or Slack, allowing multiple users and models to interact within a shared timeline<sup class="citation"><a href="#ref-6" id="cite-6">6</a></sup>. Channel functionality is currently a beta feature and requires explicit administrator enablement through the `USER_PERMISSIONS_FEATURES_CHANNELS` environment variable or group permissions configuration<sup class="citation"><a href="#ref-6" id="cite-6">6</a></sup>. Workspace tools permission grants access to the ability to create and execute backend tools that can access the server's file system and network, representing a particularly sensitive capability that requires careful authorization control<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup>. Admin panel access, restricted to users with administrator privileges, provides full system control including user management, connection configuration, and system-wide settings<sup class="citation"><a href="#ref-1" id="cite-1">1</a></sup>.</p>
+<h2>Group Management and Access Control Hierarchies</h2>
+<p>Groups function as the primary mechanism for organizing users into logical hierarchies and establishing shared access to workspace resources. The platform distinguishes between two conceptual types of groups: <strong>permission groups</strong> and <strong>sharing groups</strong>, though both leverage the same underlying group mechanism with different application patterns<sup class="citation"><a href="#ref-13" id="cite-13">13</a>,<a href="#ref-23" id="cite-23">23</a>,<a href="#ref-50" id="cite-50">50</a></sup>. Permission groups aggregate users who share a common set of required capabilities, such as a "Machine Learning Researchers" group that requires access to specific models or a "Teaching Assistants" group that requires the ability to create knowledge bases for student access. Sharing groups establish access control lists for private resources, allowing creators to specify which groups of users can access their custom models, knowledge bases, and prompts<sup class="citation"><a href="#ref-13" id="cite-13">13</a>,<a href="#ref-23" id="cite-23">23</a>,<a href="#ref-50" id="cite-50">50</a></sup>.</p>
+<p>The administrative interface provides granular controls for assigning both read and write access to workspace resources on a per-group basis. For knowledge bases, administrators and content creators can specify which groups possess read access, allowing group members to utilize knowledge bases in their conversations without modification permissions, or write access, enabling collaborative editing and expansion of knowledge base content<sup class="citation"><a href="#ref-8" id="cite-8">8</a>,<a href="#ref-9" id="cite-9">9</a></sup>. Model access control allows administrators to restrict visibility and usability of models to specific groups, preventing unintended model exposure and enabling model versioning strategies where different user populations access different model versions or configurations<sup class="citation"><a href="#ref-8" id="cite-8">8</a>,<a href="#ref-17" id="cite-17">17</a></sup>. Knowledge base access operates similarly, with administrators able to create knowledge bases visible only to designated groups, facilitating team-specific documentation and organizational knowledge management<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>.</p>
+<p>Recent enhancements in versions 0.5.5 through 0.7.2 have expanded collaborative capabilities for group-based resource management<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-43" id="cite-43">43</a>,<a href="#ref-46" id="cite-46">46</a></sup>. The read and write toggle functionality, though initially underdocumented, enables group members to transition from read-only access to collaborative editing permissions<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-45" id="cite-45">45</a></sup>. Knowledge bases support this functionality fully, allowing multiple group members to contribute to and refine knowledge base content collaboratively<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-45" id="cite-45">45</a></sup>. Tools, prompts, and channels have progressively gained write access support through multiple release cycles<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-43" id="cite-43">43</a>,<a href="#ref-45" id="cite-45">45</a></sup>. Model-level write access permissions, which initially were not togglable in the user interface, have been fixed in recent releases<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-45" id="cite-45">45</a></sup>, enabling groups to collectively manage and update model configurations<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup>.</p>
+<h2>User Categories and Administrative Hierarchies</h2>
+<p>Open WebUI's permission system accommodates a spectrum of user roles and responsibilities appropriate for diverse organizational structures. <strong>Default users</strong> represent the baseline user category with minimal default permissions, primarily able to participate in conversations with available models but restricted from creating or modifying workspace content<sup class="citation"><a href="#ref-32" id="cite-32">32</a>,<a href="#ref-36" id="cite-36">36</a></sup>. These users form the bulk of typical deployments, particularly in educational settings where students access instructor-configured models and knowledge bases without creating their own specialized resources<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-7" id="cite-7">7</a>,<a href="#ref-36" id="cite-36">36</a></sup>.</p>
+<p><strong>Teachers and instructors</strong> operate as a specialized user category within educational deployments, requiring the ability to create models and knowledge bases for student access while potentially restricting student collaboration on these resources<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-7" id="cite-7">7</a></sup>. The permission system accommodates this through group membership that grants model and knowledge creation permissions without necessarily granting administrative privileges<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-7" id="cite-7">7</a></sup>. Teachers typically have write access to knowledge bases they create, allowing them to curate and update course materials, while students in a designated group receive read-only access<sup class="citation"><a href="#ref-9" id="cite-9">9</a>,<a href="#ref-12" id="cite-12">12</a></sup>.</p>
+<p><strong>Researchers and content creators</strong> require sophisticated workspace management capabilities including the ability to create and maintain multiple models, knowledge bases, and tools for specialized research domains<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-15" id="cite-15">15</a></sup>. This category often includes users who conduct experiments with different model configurations, maintain specialized knowledge bases for specific research areas, and create custom tools that implement domain-specific processing logic<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-15" id="cite-15">15</a></sup>. Permission groups specifically designed for researchers can enable fine-grained control, such as granting web search permissions for specific models while restricting them on others<sup class="citation"><a href="#ref-1" id="cite-1">1</a>,<a href="#ref-17" id="cite-17">17</a></sup>.</p>
+<p><strong>Administrative leaders</strong> possess elevated privileges exceeding standard administrator accounts while potentially lacking certain system modification capabilities<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-15" id="cite-15">15</a>,<a href="#ref-33" id="cite-33">33</a></sup>. Feature requests within the community propose a "Manager" role that would provide content governance and validation responsibilities without full administrative system access<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-15" id="cite-15">15</a>,<a href="#ref-33" id="cite-33">33</a></sup>. Such a role would enable organizations to delegate responsibilities such as reviewing and validating community-contributed models before making them publicly available, ensuring compliance with organizational standards and security guidelines<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-33" id="cite-33">33</a></sup>. Unlike administrators with unrestricted system access, these managers would focus exclusively on content governance and collaborative resource validation<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-33" id="cite-33">33</a></sup>.</p>
+<h2>Current Limitations and Feature Development</h2>
+<p>The existing permission system, while comprehensive, exhibits specific limitations that the development community actively addresses through feature requests and ongoing enhancements. The most frequently cited limitation involves the lack of <strong>custom role definitions</strong> beyond the three predefined roles of Admin, User, and Pending<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-15" id="cite-15">15</a>,<a href="#ref-33" id="cite-33">33</a></sup>. Community members have extensively documented use cases requiring intermediate roles with specific permission combinations, such as a "Knowledge Base Manager" role that enables knowledge creation and management without granting full administrative privileges<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-15" id="cite-15">15</a>,<a href="#ref-33" id="cite-33">33</a></sup>. Such custom roles would eliminate the necessity of creating numerous specialized groups to achieve granular permission hierarchies, providing a more scalable approach to permission management in large organizations<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-15" id="cite-15">15</a>,<a href="#ref-33" id="cite-33">33</a></sup>.</p>
+<p>A second significant limitation concerns the inability to restrict model visibility and access when the `BYPASS_MODEL_ACCESS_CONTROL` environment variable is enabled<sup class="citation"><a href="#ref-8" id="cite-8">8</a>,<a href="#ref-14" id="cite-14">14</a>,<a href="#ref-32" id="cite-32">32</a></sup>. This binary switch either enforces comprehensive model access control or completely disables it, preventing intermediate configurations where certain models remain restricted while others are universally available<sup class="citation"><a href="#ref-14" id="cite-14">14</a></sup>. Community members managing large numbers of API-provided models from external services have requested a configuration option that defaults new models to public visibility rather than private, eliminating repetitive manual visibility adjustments<sup class="citation"><a href="#ref-14" id="cite-14">14</a></sup>. This limitation becomes particularly acute in educational settings where institutions maintain hundreds of models from diverse sources<sup class="citation"><a href="#ref-8" id="cite-8">8</a>,<a href="#ref-14" id="cite-14">14</a></sup>.</p>
+<p>Another limitation involves restrictions on <strong>collaborative resource sharing within groups</strong><sup class="citation"><a href="#ref-20" id="cite-20">20</a>,<a href="#ref-51" id="cite-51">51</a></sup>. Currently, any user belonging to a group can automatically share workspace resources they create with that entire group, with no administrative override mechanism to prevent this behavior<sup class="citation"><a href="#ref-20" id="cite-20">20</a>,<a href="#ref-51" id="cite-51">51</a></sup>. This creates governance challenges in large organizations and educational institutions where students in a shared "Students" group could potentially spam each other's interfaces with personal models or irrelevant knowledge bases<sup class="citation"><a href="#ref-20" id="cite-20">20</a>,<a href="#ref-51" id="cite-51">51</a></sup>. A proposed enhancement suggests implementing granular `shareGroup` style permissions for each workspace resource type, allowing administrators to enable sharing for certain resources while restricting it for others<sup class="citation"><a href="#ref-20" id="cite-20">20</a>,<a href="#ref-51" id="cite-51">51</a></sup>.</p>
+<p>The platform currently lacks comprehensive <strong>document access control</strong> at the granular level, though multiple feature requests propose solutions including approval-required access workflows, document-level access restrictions, and workspace-based document organization<sup class="citation"><a href="#ref-26" id="cite-26">26</a>,<a href="#ref-39" id="cite-39">39</a></sup>. Current implementations restrict documents to binary visibility (private or accessible to groups), without intermediate access control states such as approval workflows or temporary access grants<sup class="citation"><a href="#ref-26" id="cite-26">26</a>,<a href="#ref-39" id="cite-39">39</a></sup>. Proposed solutions would allow administrators to set access levels of Public, Approval Required, and Confidential on individual documents, with document owners or designated delegates approving access requests from other users<sup class="citation"><a href="#ref-26" id="cite-26">26</a>,<a href="#ref-39" id="cite-39">39</a></sup>.</p>
+<h2>Security Vulnerabilities and Access Control Failures</h2>
+<p>The platform has experienced multiple security vulnerabilities related to access control failures, highlighting the complexity of implementing secure permission systems at scale. A critical vulnerability identified in October 2025 and publicly disclosed in November 2025 (CVE-2025-64496) demonstrated how direct connections between the client and external model servers could bypass authentication boundaries<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup>. The vulnerability required users to connect to a malicious server, but once exploited, it allowed token exfiltration and—for users with `workspace.tools` permission enabled—remote code execution on the backend server<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup>. The attack chain involved Server-Sent Events (SSE) frames containing malicious JavaScript that executed in the browser context, exfiltrating authentication tokens that could subsequently be used to access user data or create malicious tools<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup>.</p>
+<p>This vulnerability highlighted a fundamental trust boundary failure between untrusted external model servers and the trusted browser context<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup>. Open WebUI's patch (version 0.6.35 and newer) implemented middleware that blocks execute events from direct connections, effectively closing the vulnerability while accepting that users remain vulnerable if they manually configure connections to malicious servers<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup>. The incident revealed broader concerns about the security implications of the `workspace.tools` permission, which grants the ability to create tools containing arbitrary Python code executed via `exec()` without sandboxing or validation<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup>. Users with this permission granted can create tools that access the server's file system, establish network connections, and potentially pivot to internal networks accessible to the server<sup class="citation"><a href="#ref-4" id="cite-4">4</a></sup>.</p>
+<p>Numerous other access control failures documented in vulnerability databases indicate that the permission system has experienced challenges in enforcement. Improper access control allowed unauthorized viewing of prompts, functions, tools, and admin details despite intended visibility restrictions<sup class="citation"><a href="#ref-11" id="cite-11">11</a></sup>. Insecure direct object references enabled users to view and delete files created by other users, and to enumerate and access memory belonging to other users<sup class="citation"><a href="#ref-11" id="cite-11">11</a></sup>. File upload mechanisms allowed arbitrary file creation and overwrite through path traversal vulnerabilities<sup class="citation"><a href="#ref-11" id="cite-11">11</a></sup>. These incidents underscore the importance of comprehensive access control enforcement at the API level, not merely at the user interface layer<sup class="citation"><a href="#ref-11" id="cite-11">11</a></sup>.</p>
+<h2>Channels as Collaborative Spaces</h2>
+<p>The channels feature, introduced as a beta capability in recent versions, represents a significant enhancement to Open WebUI's collaborative capabilities while introducing new access control considerations<sup class="citation"><a href="#ref-6" id="cite-6">6</a>,<a href="#ref-43" id="cite-43">43</a>,<a href="#ref-46" id="cite-46">46</a></sup>. Channels transform the platform from a set of isolated personal chat sessions into persistent, topic-based collaborative rooms accessible to multiple users and multiple AI models simultaneously<sup class="citation"><a href="#ref-6" id="cite-6">6</a></sup>. The channel system supports three channel types: standard topic-based channels with configurable public or private visibility, group channels where users explicitly join as members with automatic group inclusion options, and direct message channels enabling private one-on-one or multi-user conversations<sup class="citation"><a href="#ref-6" id="cite-6">6</a></sup>.</p>
+<p>Access control for channels requires <strong>write permission</strong> for posting, editing, and deleting messages, while read-only users can view all channel content but cannot contribute<sup class="citation"><a href="#ref-43" id="cite-43">43</a>,<a href="#ref-46" id="cite-46">46</a></sup>. Channel creators can edit and delete their own channels without requiring administrator privileges, though standard channels require administrative access for modification<sup class="citation"><a href="#ref-6" id="cite-6">6</a></sup>. Channel models support image processing capabilities, enabling AI assistants to analyze and interpret images shared in conversation threads<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. The native tool calling functionality allows models within channels to perform multi-step tasks that combine web research, knowledge base queries, note-taking, and image generation, creating rich collaborative experiences where AI augments human discussion<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>.</p>
+<p>Channel images uploaded during conversations are now processed and stored as compressed files rather than inline data, improving memory efficiency and enabling faster message loading in large conversations<sup class="citation"><a href="#ref-43" id="cite-43">43</a>,<a href="#ref-46" id="cite-46">46</a></sup>. Users can utilize the tagging mechanism to mention other human users within channels using the `@` symbol, directing messages to specific individuals and notifying them of relevant discussions<sup class="citation"><a href="#ref-6" id="cite-6">6</a></sup>. The combination of persistent channels, group-based access control, native tool support, and rich media handling positions channels as a significant platform for organizational collaboration in academic and research settings<sup class="citation"><a href="#ref-6" id="cite-6">6</a>,<a href="#ref-43" id="cite-43">43</a>,<a href="#ref-46" id="cite-46">46</a></sup>.</p>
+<h2>Advanced Configuration and Environment Variables</h2>
+<p>Administrators can configure the permissions system through multiple mechanisms, ranging from direct database manipulation to environment variable configuration and administrative user interface controls<sup class="citation"><a href="#ref-32" id="cite-32">32</a>,<a href="#ref-40" id="cite-40">40</a>,<a href="#ref-47" id="cite-47">47</a></sup>. The <strong>persistent configuration system</strong> stores many settings in the database while maintaining environment variable overrides, allowing administrators to change most settings through the administrative interface without application restarts<sup class="citation"><a href="#ref-32" id="cite-32">32</a></sup>. The `ENABLE_PERSISTENT_CONFIG` variable controls whether the system prioritizes database-stored configuration or environment variables, with the database-stored configuration taking precedence when enabled<sup class="citation"><a href="#ref-32" id="cite-32">32</a></sup>.</p>
+<p>The `BYPASS_MODEL_ACCESS_CONTROL` environment variable, when set to `true`, disables all model access restrictions, making all models universally accessible to all users regardless of visibility settings or group restrictions<sup class="citation"><a href="#ref-32" id="cite-32">32</a>,<a href="#ref-14" id="cite-14">14</a></sup>. This setting proves useful for smaller or individual Open WebUI installations where granular model access control may be unnecessary, but it eliminates the ability to maintain any model access restrictions<sup class="citation"><a href="#ref-32" id="cite-32">32</a></sup>. The `BYPASS_ADMIN_ACCESS_CONTROL` variable provides an alternative approach, treating administrator accounts like regular users for workspace access, causing admins to see only items they have explicit permission to access rather than all created items<sup class="citation"><a href="#ref-32" id="cite-32">32</a></sup>. When disabled, admins see only items they created or have group-based access to, matching the behavior of standard users<sup class="citation"><a href="#ref-32" id="cite-32">32</a></sup>.</p>
+<p>Default role assignment through `DEFAULT_USER_ROLE` determines the role (pending, user, or admin) automatically assigned to newly registered users<sup class="citation"><a href="#ref-32" id="cite-32">32</a></sup>. The `DEFAULT_GROUP_ID` variable optionally assigns all new users to a specific group upon creation, enabling automatic group membership that can provide baseline permissions to all new accounts<sup class="citation"><a href="#ref-32" id="cite-32">32</a></sup>. Feature-specific environment variables enable or disable entire feature categories; for example, `ENABLE_USER_WEBHOOKS` controls user-created webhook functionality, and feature flags like `USER_PERMISSIONS_FEATURES_CHANNELS` control beta features that require explicit enablement<sup class="citation"><a href="#ref-32" id="cite-32">32</a>,<a href="#ref-6" id="cite-6">6</a></sup>.</p>
+<h2>Knowledge Management and Document Organization</h2>
+<p>Knowledge bases represent a cornerstone of Open WebUI's value proposition for organizational knowledge management, enabling institutions to maintain curated document collections that AI models can reference during conversations<sup class="citation"><a href="#ref-12" id="cite-12">12</a>,<a href="#ref-26" id="cite-26">26</a></sup>. The knowledge section functions as a storage area within Open WebUI where administrators and users with appropriate permissions can save specific pieces of information or data points for reference<sup class="citation"><a href="#ref-12" id="cite-12">12</a></sup>. Open WebUI refers to knowledge bases as a "reference library" that the platform uses to make responses more accurate and relevant to user needs through retrieval-augmented generation processes<sup class="citation"><a href="#ref-12" id="cite-12">12</a></sup>. Knowledge bases can store important project parameters, specific data points, custom commands, workflows, settings, personal preferences, guidelines, and organizational rules that the AI should follow in every conversation<sup class="citation"><a href="#ref-12" id="cite-12">12</a></sup>.</p>
+<p>Admins can add knowledge to workspaces for user access through the knowledge section's interface, but users do not typically have direct access to the workspace itself; instead, they reference knowledge through chat commands<sup class="citation"><a href="#ref-12" id="cite-12">12</a></sup>. Semantic and vector search across knowledge bases represents the default search strategy for models, which serves as the first choice for finding information before engaging web search providers<sup class="citation"><a href="#ref-12" id="cite-12">12</a></sup>. Native agentic tools enable models to autonomously query knowledge bases, locate specific knowledge bases by name or description, search files within knowledge bases, and retrieve full file content<sup class="citation"><a href="#ref-12" id="cite-12">12</a></sup>. This autonomous access empowers models to contextually incorporate relevant organizational knowledge without requiring explicit user intervention to locate and attach documents<sup class="citation"><a href="#ref-12" id="cite-12">12</a></sup>.</p>
+<p>Knowledge base export functionality, restricted to administrative users, allows administrators to download entire knowledge bases as compressed zip archives containing all files converted to text format for universal compatibility<sup class="citation"><a href="#ref-12" id="cite-12">12</a></sup>. This functionality proves valuable for knowledge base backup, migration between instances, and sharing curated knowledge collections with external partners or other organizational units<sup class="citation"><a href="#ref-12" id="cite-12">12</a></sup>. Programmatic access through API endpoints enables automated workflows, bulk imports of documents from external systems, and integration with enterprise document management infrastructure<sup class="citation"><a href="#ref-12" id="cite-12">12</a></sup>. The knowledge API supports asynchronous file processing, requiring administrators to wait for file processing completion before adding files to knowledge bases, a requirement that ensures files are properly indexed before knowledge base integration<sup class="citation"><a href="#ref-12" id="cite-12">12</a></sup>.</p>
+<h2>Recent Developments in 2025-2026</h2>
+<p>The development trajectory of Open WebUI through 2025 and into early 2026 demonstrates the platform's evolution toward more sophisticated permission management and collaborative functionality. Version 0.6.27 (released in September 2025) introduced emoji folder icons allowing users to personalize workspace organization with visual cues, improving the user experience for navigating large collections of models and knowledge bases<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. The 'Search Collection' input field began dynamically displaying the total number of files within knowledge bases, providing transparency about knowledge base scope<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. A provider toggle in connection settings enabled users to manually specify Azure OpenAI deployments, expanding integration flexibility<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>.</p>
+<p>Version 0.6.32 (released in September 2025) included visual warnings for group permissions that display when a permission is disabled in a group but remains enabled in the default user role, clarifying inheritance behavior for administrators<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. Milvus multi-tenancy mode using shared collections with resource ID filtering improved scalability of vector database backends, mirroring existing Qdrant implementation and configurable via the `ENABLE_MILVUS_MULTITENANCY_MODE` environment variable<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. External and built-in tools gained support for rich UI element embedding, allowing tools to return HTML content and interactive iframes that display directly within chat conversations with configurable security settings<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>.</p>
+<p>Version 0.6.39 (released in November 2025) introduced a user list modal for channels displaying all users with access and featuring search, sorting, and pagination capabilities<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. Channel navigation began displaying the total number of users with access to each channel, providing transparency about channel scope<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. Tool servers and Model Context Protocol connections gained support for function name filtering, allowing administrators to selectively enable or block specific functions using allow and block lists<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. This filtering capability addresses security concerns by enabling administrators to prevent certain functions from being available across all instances<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>.</p>
+<p>Version 0.7.0 (released in January 2026) introduced native function calling with built-in tools, enabling users to ask models to perform multi-step tasks combining web research, knowledge base queries, note-taking, and image generation in single conversations<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>. Administrators gained the ability to quickly find settings using a new search bar in the Admin Settings sidebar, supporting fuzzy filtering by category names and related keywords<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>. Knowledge base file management was enhanced with automatic list refresh after file operations, ensuring immediate UI updates and improved permission validation at the model layer<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>. Citation content links now allow users to click and jump directly to relevant portions of source documents with automatic text highlighting, making it easier to verify AI responses against their original sources<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>.</p>
+<p>Model pinning functionality expanded to the Workspace Models page and Admin Settings Models page, allowing administrators to manage which models appear in the sidebar without switching to the chat interface<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>. Server-side pagination for the workspace models page dramatically improved load times and usability for instances with thousands of workspace models<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>. Hybrid search functionality was enhanced to index file metadata including filenames, titles, headings, sources, and snippets alongside document content, enabling keyword queries to surface documents where search terms appear only in metadata<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>. User interface scale adjustment became available in interface settings, allowing users to increase the size of the entire interface from 1.0x to 1.5x for improved accessibility and readability<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>.</p>
+<h2>Architectural Patterns for Academic and Research Deployments</h2>
+<p>The architectural patterns that have emerged from community usage and feature development suggest several best practices for deploying Open WebUI in academic and research environments. The permission group structure supports natural organizational hierarchies where separate groups represent different user categories: one for instructors or researchers who create resources, separate groups for student cohorts or research team members at different access levels, and administrative groups for content validators and system administrators<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-7" id="cite-7">7</a>,<a href="#ref-13" id="cite-13">13</a>,<a href="#ref-23" id="cite-23">23</a>,<a href="#ref-50" id="cite-50">50</a></sup>. This hierarchical structure can scale to accommodate complex organizational structures with multiple levels of authority and responsibility<sup class="citation"><a href="#ref-13" id="cite-13">13</a>,<a href="#ref-23" id="cite-23">23</a>,<a href="#ref-50" id="cite-50">50</a></sup>.</p>
+<p>For universities managing institution-wide AI access across undergraduate students, graduate researchers, postdoctoral researchers, and faculty members, the permission system can implement granular control that respects organizational boundaries while enabling knowledge sharing. Undergraduate students might belong to a group with access to basic models and general knowledge bases but restricted from creating personal resources. Graduate students could have create permissions for research-specific models and knowledge bases while being restricted from modifying models created by faculty. Faculty could possess broader permissions including the ability to approve or validate models created by students before making them available to the wider student body<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-7" id="cite-7">7</a>,<a href="#ref-9" id="cite-9">9</a>,<a href="#ref-15" id="cite-15">15</a>,<a href="#ref-33" id="cite-33">33</a></sup>.</p>
+<p>Research groups working across multiple institutions can utilize the stateless architecture to maintain consistent permissions and data across geographically distributed deployments, with external database backends enabling shared access to knowledge bases and model configurations across organizational boundaries<sup class="citation"><a href="#ref-2" id="cite-2">2</a>,<a href="#ref-13" id="cite-13">13</a></sup>. The platform's support for team management (introduced in version 0.4.0) enables the creation of distinct team structures with team-specific resources and permissions<sup class="citation"><a href="#ref-3" id="cite-3">3</a>,<a href="#ref-7" id="cite-7">7</a></sup>. Individual team members can create personal workspace items for experimentation without affecting the shared team environment, while designated team leads can validate and promote quality resources to team-wide visibility<sup class="citation"><a href="#ref-20" id="cite-20">20</a>,<a href="#ref-51" id="cite-51">51</a></sup>.</p>
+<h2>Extensibility and Custom Implementations</h2>
+<p>The architectural design of Open WebUI creates multiple extension points where organizations can integrate with existing enterprise systems and customize permission behaviors. The LDAP authentication system supports user entries with multiple username attributes, enabling organizations to authenticate against existing directory services with complex schema requirements<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup>. OAuth and OIDC authentication mechanisms integrate with enterprise single sign-on infrastructure, with feature requests proposing federated role assignment based on SAML attributes such as `eduPersonEntitlement` to enable dynamic role provisioning based on directory attributes<sup class="citation"><a href="#ref-56" id="cite-56">56</a></sup>. Such capabilities allow organizations to eliminate manual user provisioning processes, instead automatically assigning roles and group memberships based on directory information that is maintained as users progress through educational programs or transition between organizational positions<sup class="citation"><a href="#ref-56" id="cite-56">56</a></sup>.</p>
+<p>The API endpoints provide comprehensive programmatic access to user management, permissions, and resource operations, enabling custom workflows that extend beyond the web interface capabilities<sup class="citation"><a href="#ref-37" id="cite-37">37</a>,<a href="#ref-40" id="cite-40">40</a></sup>. Bearer token authentication allows external systems to integrate with Open WebUI, creating models, knowledge bases, and tools through automated processes<sup class="citation"><a href="#ref-37" id="cite-37">37</a>,<a href="#ref-40" id="cite-40">40</a></sup>. The ability to bulk import users through CSV files reduces onboarding friction for large deployments, though federated authentication reduces the necessity for bulk import by automating user creation<sup class="citation"><a href="#ref-36" id="cite-36">36</a>,<a href="#ref-56" id="cite-56">56</a></sup>.</p>
+<p>Function and tool creation mechanisms enable organizations to extend platform capabilities with custom Python code, though the `workspace.tools` permission requires careful restriction due to security implications of arbitrary code execution<sup class="citation"><a href="#ref-4" id="cite-4">4</a>,<a href="#ref-24" id="cite-24">24</a></sup>. External tool servers through the Model Context Protocol enable organizations to implement specialized tools in languages other than Python and deploy them separately from the main application<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>. Tool function filtering through allow and block lists provides granular control over which functions are available to which users, addressing the security implications of external tool integration<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup>.</p>
+<h2>Conclusion and Organizational Implementation Framework</h2>
+<p>Open WebUI's architectural design and permissions system represent a sophisticated approach to deploying large language model interfaces at organizational scale while maintaining granular access control appropriate for diverse user populations and functional requirements. The three-layer permission model combining roles, permissions, and groups provides the fundamental building blocks for complex organizational hierarchies, while the additive permission model ensures that authorization decisions remain predictable and auditable even as users accumulate group memberships and organizational responsibilities change over time. The stateless, container-first architecture enables horizontal scaling suitable for institutions managing thousands to hundreds of thousands of concurrent users while maintaining consistent behavior across geographically distributed deployments<sup class="citation"><a href="#ref-2" id="cite-2">2</a></sup>.</p>
+<p>The current system effectively accommodates traditional organizational structures with administrators, default users, and specialized roles for teachers, researchers, and content creators. The progressive enhancement of collaborative capabilities through channels, shared workspace resource management, and group-based write access permissions extends the platform's suitability for team-based workflows that characterize modern academic research and enterprise development environments. However, the absence of custom role definitions and the limitations on granular document access control remain barriers to deployment in organizations with complex permission requirements that fall outside standard hierarchical structures<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-15" id="cite-15">15</a>,<a href="#ref-26" id="cite-26">26</a>,<a href="#ref-33" id="cite-33">33</a>,<a href="#ref-39" id="cite-39">39</a></sup>.</p>
+<p>Organizations implementing Open WebUI should adopt a deliberate permission strategy that leverages the existing permission group mechanisms to create logical hierarchies aligned with organizational structures and workflows. Rather than awaiting custom role functionality, organizations can achieve similar results through strategic creation of permission groups, careful configuration of default permissions and group-specific permissions, and thoughtful assignment of users to groups that reflect their functional responsibilities. The platform's support for environment variable configuration and persistent database storage of settings allows administrators to gradually refine permission policies based on operational experience without requiring application restarts or complex configuration management.</p>
+<p>The security considerations surrounding the `workspace.tools` permission and external tool integration require careful attention, with organizations implementing auditing and approval workflows for tool creation despite the absence of native approval mechanisms. The planned enhancements to custom role definitions, federated role assignment through directory attributes, granular document access control, and more sophisticated group sharing restrictions will further enhance the platform's suitability for complex organizational deployments as these features progress through development and stabilization cycles in future release cycles<sup class="citation"><a href="#ref-7" id="cite-7">7</a>,<a href="#ref-15" id="cite-15">15</a>,<a href="#ref-26" id="cite-26">26</a>,<a href="#ref-33" id="cite-33">33</a>,<a href="#ref-38" id="cite-38">38</a>,<a href="#ref-39" id="cite-39">39</a>,<a href="#ref-46" id="cite-46">46</a></sup>.</p>
+    </article>
+    
+    <section class="citations" id="citations">
+        <h2>Sources</h2>
+        <ol>
+            <li id="ref-1">
+        <a href="#cite-1" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">1.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/rbac/permissions/" target="_blank" rel="noopener">https://docs.openwebui.com/features/rbac/permissions/</a>
+    </li>
+<li id="ref-2">
+        <a href="#cite-2" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">2.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/enterprise/architecture/" target="_blank" rel="noopener">https://docs.openwebui.com/enterprise/architecture/</a>
+    </li>
+<li id="ref-3">
+        <a href="#cite-3" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">3.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/issues/2924" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/issues/2924</a>
+    </li>
+<li id="ref-4">
+        <a href="#cite-4" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">4.</span>
+        "catonetworks.com." Accessed February 8, 2026.
+        <a href="https://www.catonetworks.com/blog/cato-ctrl-vulnerability-discovered-open-webui-cve-2025-64496/" target="_blank" rel="noopener">https://www.catonetworks.com/blog/cato-ctrl-vulnerability-discovered-open-webui-cve-2025-64496/</a>
+    </li>
+<li id="ref-5">
+        <a href="#cite-5" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">5.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/security" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/security</a>
+    </li>
+<li id="ref-6">
+        <a href="#cite-6" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">6.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/channels/" target="_blank" rel="noopener">https://docs.openwebui.com/features/channels/</a>
+    </li>
+<li id="ref-7">
+        <a href="#cite-7" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">7.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/8642" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/8642</a>
+    </li>
+<li id="ref-8">
+        <a href="#cite-8" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">8.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/4468" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/4468</a>
+    </li>
+<li id="ref-9">
+        <a href="#cite-9" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">9.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/8847" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/8847</a>
+    </li>
+<li id="ref-10">
+        <a href="#cite-10" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">10.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/rbac/permissions/" target="_blank" rel="noopener">https://docs.openwebui.com/features/rbac/permissions/</a>
+    </li>
+<li id="ref-11">
+        <a href="#cite-11" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">11.</span>
+        "huntr.com." Accessed February 8, 2026.
+        <a href="https://huntr.com/repos/open-webui/open-webui" target="_blank" rel="noopener">https://huntr.com/repos/open-webui/open-webui</a>
+    </li>
+<li id="ref-12">
+        <a href="#cite-12" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">12.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/workspace/knowledge/" target="_blank" rel="noopener">https://docs.openwebui.com/features/workspace/knowledge/</a>
+    </li>
+<li id="ref-13">
+        <a href="#cite-13" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">13.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/rbac/" target="_blank" rel="noopener">https://docs.openwebui.com/features/rbac/</a>
+    </li>
+<li id="ref-14">
+        <a href="#cite-14" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">14.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/8774" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/8774</a>
+    </li>
+<li id="ref-15">
+        <a href="#cite-15" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">15.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/8642" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/8642</a>
+    </li>
+<li id="ref-16">
+        <a href="#cite-16" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">16.</span>
+        "docs.digitalocean.com." Accessed February 8, 2026.
+        <a href="https://docs.digitalocean.com/products/marketplace/catalog/open-webui/" target="_blank" rel="noopener">https://docs.digitalocean.com/products/marketplace/catalog/open-webui/</a>
+    </li>
+<li id="ref-17">
+        <a href="#cite-17" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">17.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/workspace/models/" target="_blank" rel="noopener">https://docs.openwebui.com/features/workspace/models/</a>
+    </li>
+<li id="ref-18">
+        <a href="#cite-18" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">18.</span>
+        "digitalbrainbase.com." Accessed February 8, 2026.
+        <a href="https://www.digitalbrainbase.com/t/lesson-4-exploring-open-webuis-admin-panel/143" target="_blank" rel="noopener">https://www.digitalbrainbase.com/t/lesson-4-exploring-open-webuis-admin-panel/143</a>
+    </li>
+<li id="ref-19">
+        <a href="#cite-19" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">19.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/workspace/prompts/" target="_blank" rel="noopener">https://docs.openwebui.com/features/workspace/prompts/</a>
+    </li>
+<li id="ref-20">
+        <a href="#cite-20" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">20.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/15100" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/15100</a>
+    </li>
+<li id="ref-21">
+        <a href="#cite-21" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">21.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/18445" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/18445</a>
+    </li>
+<li id="ref-22">
+        <a href="#cite-22" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">22.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/rbac/permissions/" target="_blank" rel="noopener">https://docs.openwebui.com/features/rbac/permissions/</a>
+    </li>
+<li id="ref-23">
+        <a href="#cite-23" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">23.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/rbac/" target="_blank" rel="noopener">https://docs.openwebui.com/features/rbac/</a>
+    </li>
+<li id="ref-24">
+        <a href="#cite-24" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">24.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/plugin/" target="_blank" rel="noopener">https://docs.openwebui.com/features/plugin/</a>
+    </li>
+<li id="ref-25">
+        <a href="#cite-25" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">25.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/rbac/permissions/" target="_blank" rel="noopener">https://docs.openwebui.com/features/rbac/permissions/</a>
+    </li>
+<li id="ref-26">
+        <a href="#cite-26" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">26.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/issues/1096" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/issues/1096</a>
+    </li>
+<li id="ref-27">
+        <a href="#cite-27" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">27.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/15522" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/15522</a>
+    </li>
+<li id="ref-28">
+        <a href="#cite-28" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">28.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/issues/17899" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/issues/17899</a>
+    </li>
+<li id="ref-29">
+        <a href="#cite-29" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">29.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/chat-features/" target="_blank" rel="noopener">https://docs.openwebui.com/features/chat-features/</a>
+    </li>
+<li id="ref-30">
+        <a href="#cite-30" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">30.</span>
+        "webui.docs.backend.ai." Accessed February 8, 2026.
+        <a href="https://webui.docs.backend.ai/en/latest/admin_menu/admin_menu.html" target="_blank" rel="noopener">https://webui.docs.backend.ai/en/latest/admin_menu/admin_menu.html</a>
+    </li>
+<li id="ref-31">
+        <a href="#cite-31" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">31.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/7082" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/7082</a>
+    </li>
+<li id="ref-32">
+        <a href="#cite-32" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">32.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/getting-started/env-configuration/" target="_blank" rel="noopener">https://docs.openwebui.com/getting-started/env-configuration/</a>
+    </li>
+<li id="ref-33">
+        <a href="#cite-33" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">33.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/8642" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/8642</a>
+    </li>
+<li id="ref-34">
+        <a href="#cite-34" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">34.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/" target="_blank" rel="noopener">https://docs.openwebui.com/features/</a>
+    </li>
+<li id="ref-35">
+        <a href="#cite-35" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">35.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/rbac/permissions/" target="_blank" rel="noopener">https://docs.openwebui.com/features/rbac/permissions/</a>
+    </li>
+<li id="ref-36">
+        <a href="#cite-36" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">36.</span>
+        "youtube.com." Accessed February 8, 2026.
+        <a href="https://www.youtube.com/watch?v=xlE782FrW_s" target="_blank" rel="noopener">https://www.youtube.com/watch?v=xlE782FrW_s</a>
+    </li>
+<li id="ref-37">
+        <a href="#cite-37" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">37.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/16402" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/16402</a>
+    </li>
+<li id="ref-38">
+        <a href="#cite-38" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">38.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/roadmap/" target="_blank" rel="noopener">https://docs.openwebui.com/roadmap/</a>
+    </li>
+<li id="ref-39">
+        <a href="#cite-39" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">39.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/issues/1096" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/issues/1096</a>
+    </li>
+<li id="ref-40">
+        <a href="#cite-40" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">40.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/getting-started/api-endpoints/" target="_blank" rel="noopener">https://docs.openwebui.com/getting-started/api-endpoints/</a>
+    </li>
+<li id="ref-41">
+        <a href="#cite-41" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">41.</span>
+        "openbao.org." Accessed February 8, 2026.
+        <a href="https://openbao.org/blog/roadmap-2.0/" target="_blank" rel="noopener">https://openbao.org/blog/roadmap-2.0/</a>
+    </li>
+<li id="ref-42">
+        <a href="#cite-42" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">42.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/" target="_blank" rel="noopener">https://docs.openwebui.com/features/</a>
+    </li>
+<li id="ref-43">
+        <a href="#cite-43" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">43.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/blob/main/CHANGELOG.md" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/blob/main/CHANGELOG.md</a>
+    </li>
+<li id="ref-44">
+        <a href="#cite-44" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">44.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/8642" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/8642</a>
+    </li>
+<li id="ref-45">
+        <a href="#cite-45" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">45.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/8847" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/8847</a>
+    </li>
+<li id="ref-46">
+        <a href="#cite-46" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">46.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/releases" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/releases</a>
+    </li>
+<li id="ref-47">
+        <a href="#cite-47" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">47.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/rbac/permissions/" target="_blank" rel="noopener">https://docs.openwebui.com/features/rbac/permissions/</a>
+    </li>
+<li id="ref-48">
+        <a href="#cite-48" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">48.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/workspace/models/" target="_blank" rel="noopener">https://docs.openwebui.com/features/workspace/models/</a>
+    </li>
+<li id="ref-49">
+        <a href="#cite-49" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">49.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/10044" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/10044</a>
+    </li>
+<li id="ref-50">
+        <a href="#cite-50" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">50.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/rbac/" target="_blank" rel="noopener">https://docs.openwebui.com/features/rbac/</a>
+    </li>
+<li id="ref-51">
+        <a href="#cite-51" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">51.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/15100" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/15100</a>
+    </li>
+<li id="ref-52">
+        <a href="#cite-52" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">52.</span>
+        "docs.vllm.ai." Accessed February 8, 2026.
+        <a href="https://docs.vllm.ai/en/latest/deployment/frameworks/open-webui/" target="_blank" rel="noopener">https://docs.vllm.ai/en/latest/deployment/frameworks/open-webui/</a>
+    </li>
+<li id="ref-53">
+        <a href="#cite-53" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">53.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/rbac/permissions/" target="_blank" rel="noopener">https://docs.openwebui.com/features/rbac/permissions/</a>
+    </li>
+<li id="ref-54">
+        <a href="#cite-54" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">54.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/workspace/" target="_blank" rel="noopener">https://docs.openwebui.com/features/workspace/</a>
+    </li>
+<li id="ref-55">
+        <a href="#cite-55" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">55.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/8847" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/8847</a>
+    </li>
+<li id="ref-56">
+        <a href="#cite-56" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">56.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/issues/4858" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/issues/4858</a>
+    </li>
+<li id="ref-57">
+        <a href="#cite-57" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">57.</span>
+        "github.com." Accessed February 8, 2026.
+        <a href="https://github.com/open-webui/open-webui/discussions/18445" target="_blank" rel="noopener">https://github.com/open-webui/open-webui/discussions/18445</a>
+    </li>
+<li id="ref-58">
+        <a href="#cite-58" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">58.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/rbac/permissions/" target="_blank" rel="noopener">https://docs.openwebui.com/features/rbac/permissions/</a>
+    </li>
+<li id="ref-59">
+        <a href="#cite-59" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">59.</span>
+        "youtube.com." Accessed February 8, 2026.
+        <a href="https://www.youtube.com/watch?v=xlE782FrW_s" target="_blank" rel="noopener">https://www.youtube.com/watch?v=xlE782FrW_s</a>
+    </li>
+<li id="ref-60">
+        <a href="#cite-60" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">60.</span>
+        "docs.openwebui.com." Accessed February 8, 2026.
+        <a href="https://docs.openwebui.com/features/" target="_blank" rel="noopener">https://docs.openwebui.com/features/</a>
+    </li>
+        </ol>
+    </section>
+    <footer>filed under: things worth knowing</footer>
+</body>
+</html>
