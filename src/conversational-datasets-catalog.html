@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversational Datasets Catalog</title>
+    <link rel="icon" type="image/jpeg" href="../default.jpg">
+    <link rel="stylesheet" href="../page-theme.css">
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            padding: 40px 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: #00ffff;
+            font-size: 24px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #ff0000;
+            font-size: 18px;
+            margin: 30px 0 15px;
+        }
+        
+        .dataset {
+            background: rgba(126, 200, 227, 0.05);
+            border: 1px solid #333;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .dataset h3 {
+            color: #00ffff;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        
+        .meta {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            margin-bottom: 15px;
+        }
+        
+        .download {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #00ffff;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .download a {
+            color: #00ffff;
+            text-decoration: none;
+        }
+        
+        .download a:hover {
+            color: #ff0000;
+            text-decoration: underline;
+        }
+        
+        .annotation {
+            background: rgba(255, 0, 0, 0.1);
+            border-left: 3px solid #ff0000;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        
+        .home-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #7ec8e3;
+            text-decoration: none;
+        }
+        
+        .home-link:hover {
+            color: #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <a class="home-link" href="../index.html">← Back to Arcade</a>
+    
+    <h1>Conversational Datasets Catalog</h1>
+    <p>Curated list of dialogue datasets for training multi-turn instruction-following models</p>
+    
+    <div class="annotation">
+        <strong>Research Summary:</strong> Recent datasets (2024-2026) show improved design for capturing authentic conversational phenomena including disfluencies, code-switching, and emotional nuances.
+    </div>
+
+    <h2>Multi-Turn Reasoning & Instruction-Following</h2>
+    
+    <div class="dataset">
+        <h3>MuTual</h3>
+        <div class="meta">Reasoning dialogues • Multi-turn • Commonsense reasoning</div>
+        <div class="description">Multi-turn reasoning dialogues that require commonsense reasoning across turns</div>
+        <div class="download"><strong>Download:</strong> <a href="https://github.com/Nealcly/MuTual">https://github.com/Nealcly/MuTual</a></div>
+    </div>
+    
+    <div class="dataset">
+        <h3>DREAM</h3>
+        <div class="meta">Reading comprehension • Dialogue-based • Multiple choice</div>
+        <div class="description">Dialogue-based reading comprehension with multiple-choice questions</div>
+        <div class="download"><strong>Download:</strong> <a href="https://github.com/nlpdata/dream">https://github.com/nlpdata/dream</a></div>
+    </div>
+    
+    <div class="dataset">
+        <h3>MultiWOZ (2.x)</h3>
+        <div class="meta">Task-oriented • 7 domains • Wizard-of-Oz</div>
+        <div class="description">Multi-domain Wizard-of-Oz dataset for task-oriented dialogues across 7 domains</div>
+        <div class="download"><strong>Download:</strong> <a href="https://github.com/budzianowski/multiwoz">https://github.com/budzianowski/multiwoz</a></div>
+    </div>
+    
+    <div class="dataset">
+        <h3>Persona-Chat / ConvAI2</h3>
+        <div class="meta">Persona-based • Multi-turn • Personality traits</div>
+        <div class="description">Multi-turn conversations between speakers adopting specific personas with personality traits</div>
+        <div class="download"><strong>Download:</strong> <a href="https://parl.ai/projects/convai2/">https://parl.ai/projects/convai2/</a></div>
+    </div>
+
+    <h2>Question Answering & Contextual Learning</h2>
+    
+    <div class="dataset">
+        <h3>CoQA</h3>
+        <div class="meta">Conversational QA • Text passages • Question-answer pairs</div>
+        <div class="description">Conversational Question Answering with question-answer pairs from text passages</div>
+        <div class="download"><strong>Download:</strong> <a href="https://stanfordnlp.github.io/coqa/">https://stanfordnlp.github.io/coqa/</a></div>
+    </div>
+    
+    <div class="dataset">
+        <h3>HotpotQA</h3>
+        <div class="meta">Multi-hop reasoning • Wikipedia-based • Complex questions</div>
+        <div class="description">Multi-hop reasoning dataset with complex questions requiring information synthesis</div>
+        <div class="download"><strong>Download:</strong> <a href="https://hotpotqa.github.io/">https://hotpotqa.github.io/</a></div>
+    </div>
+    
+    <div class="dataset">
+        <h3>QuAC</h3>
+        <div class="meta">Information-seeking • Unanswerable questions • Contextual dialogue</div>
+        <div class="description">Question Answering in Context with information-seeking dialogues and unanswerable questions</div>
+        <div class="download"><strong>Download:</strong> <a href="https://quac.ai/">https://quac.ai/</a></div>
+    </div>
+
+    <h2>Daily Conversations & Social Interactions</h2>
+    
+    <div class="dataset">
+        <h3>DialogSum</h3>
+        <div class="meta">Daily conversations • Summarization • High-quality dialogues</div>
+        <div class="description">High-quality daily conversations covering various everyday topics with emotions</div>
+        <div class="download"><strong>Download:</strong> <a href="https://huggingface.co/datasets/knkarthick/dialogsum">https://huggingface.co/datasets/knkarthick/dialogsum</a></div>
+    </div>
+    
+    <div class="dataset">
+        <h3>MASSIVE</h3>
+        <div class="meta">Multi-language • 51 languages • Task-oriented</div>
+        <div class="description">Multi-language dataset spanning 51 languages for task-oriented conversations</div>
+        <div class="download"><strong>Download:</strong> <a href="https://huggingface.co/datasets/amazon/massive">https://huggingface.co/datasets/amazon/massive</a></div>
+    </div>
+    
+    <div class="dataset">
+        <h3>DailyDialog</h3>
+        <div class="meta">Everyday topics • Emotional labels • High-quality</div>
+        <div class="description">High-quality daily conversations covering various everyday topics with emotional annotations</div>
+        <div class="download"><strong>Download:</strong> <a href="https://github.com/thu-coai/dailydialog">https://github.com/thu-coai/dailydialog</a></div>
+    </div>
+
+    <h2>Instruction-Tuning & Fine-Tuning Collections</h2>
+    
+    <div class="dataset">
+        <h3>Flan Collection</h3>
+        <div class="meta">Instruction-tuning • Multi-task • Large-scale</div>
+        <div class="description">Large-scale instruction-tuning dataset collection for multi-task learning</div>
+        <div class="download"><strong>Download:</strong> <a href="https://github.com/google-research/FLAN">https://github.com/google-research/FLAN</a></div>
+    </div>
+    
+    <div class="dataset">
+        <h3>ChatAlpaca</h3>
+        <div class="meta">Conversational AI • Instruction-following • Multi-turn</div>
+        <div class="description">Dataset for conversational AI training with multi-turn instruction-following capabilities</div>
+        <div class="download"><strong>Download:</strong> <a href="https://github.com/cascaded-ai/ChatAlpaca">https://github.com/cascaded-ai/ChatAlpaca</a></div>
+    </div>
+
+    <div class="annotation">
+        <strong>Technical Note:</strong> Most datasets are available through Hugging Face datasets, GitHub repositories, or academic portals. Recent datasets (2024-2026) feature improved design for capturing authentic conversational phenomena.
+    </div>
+
+    <p><em>Source: Research compiled from conversational dialogue datasets taxonomy (Feb 2026)</em></p>
+</body>
+</html>
