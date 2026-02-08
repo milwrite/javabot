@@ -120,41 +120,11 @@
       "collection": "meta",
       "hidden": false
     },
-    "double_dragon_beatem_up": {
-      "title": "Double Dragon Beatdown",
-      "description": "Side-scroll co-op brawler",
-      "icon": "👊",
-      "collection": "featured"
-    },
-    "amtrak-journey": {
-      "title": "Zach & Cen's Amtrak Journey",
-      "description": "Rail trip arcade story",
-      "icon": "🚂",
-      "collection": "featured"
-    },
     "anniversary": {
       "title": "Anniversary Chronicle",
       "description": "Surreal relationship time capsule",
       "icon": "💜",
       "collection": "stories-content"
-    },
-    "peanut-city": {
-      "title": "Peanut City",
-      "description": "Noir detective horror tale",
-      "icon": "🥜",
-      "collection": "featured"
-    },
-    "terminal-memory": {
-      "title": "Terminal Memory",
-      "description": "CRT card match challenge",
-      "icon": "🧠",
-      "collection": "featured"
-    },
-    "rat_bushwick": {
-      "title": "Rat Bushwick Log",
-      "description": "Underground survival brief",
-      "icon": "🐀",
-      "collection": "featured"
     },
     "rhythm-test": {
       "title": "Rhythm Test",
@@ -307,13 +277,6 @@
       "description": "Quantum Hoax Infomercial noir project",
       "icon": "🌐",
       "collection": "unsorted"
-    },
-    "rhythm-test": {
-      "title": "Rhythm Test",
-      "icon": "🎵",
-      "description": "beat matching rhythm arcade",
-      "collection": "arcade-games",
-      "hidden": false
     },
     "saber-duel": {
       "title": "Saber Duel",
@@ -508,12 +471,6 @@
       "icon": "🐕",
       "collection": "stories-content"
     },
-    "anniversary": {
-      "title": "Anniversary Chronicle",
-      "description": "Surreal relationship time capsule",
-      "icon": "💜",
-      "collection": "stories-content"
-    },
     "bills-superbowl-infographic": {
       "title": "Bills Super Bowl Case",
       "description": "Hype-heavy data infographic",
@@ -638,6 +595,12 @@
       "title": "Lynchian Spin Off",
       "description": "Lynchian Spin Off noir project",
       "icon": "🌐",
+      "collection": "unsorted"
+    },
+    "surrealist-memory-game": {
+      "title": "Surrealist Memory Game",
+      "description": "Surrealist Memory Game noir project",
+      "icon": "🎮",
       "collection": "unsorted"
     }
   }
