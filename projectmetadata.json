@@ -120,6 +120,14 @@
       "collection": "meta",
       "hidden": false
     },
+    "search/index": {
+      "title": "Deep Research Archive",
+      "icon": "📚",
+      "description": "25 research reports with filters",
+      "collection": "meta",
+      "path": "src/search/index.html",
+      "hidden": false
+    },
     "double_dragon_beatem_up": {
       "title": "Double Dragon Beatdown",
       "description": "Side-scroll co-op brawler",
