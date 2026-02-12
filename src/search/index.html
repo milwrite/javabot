@@ -142,11 +142,12 @@
             <label>theme</label>
             <select id="filter-theme">
                 <option value="">all themes</option>
-                <option value="arts-culture">arts & culture</option>
-                <option value="academic">academic research</option>
-                <option value="job-search">job search</option>
-                <option value="sports">sports</option>
-                <option value="policy-history">policy & history</option>
+                <option value="museums-culture">museums & cultural institutions</option>
+                <option value="academic">academic research & digital scholarship</option>
+                <option value="ai-ml">ai & machine learning</option>
+                <option value="job-search">job market & careers</option>
+                <option value="sports">sports analytics</option>
+                <option value="education-history">education & history</option>
             </select>
         </div>
         <div class="filter-group">
@@ -180,41 +181,69 @@
 
     <script>
     const REPORTS = [
-        { title: "Lincoln Center for the Performing Arts: Education Programs, Young Artist Pipeline, and Arts Education Initiatives", file: "deep-lincoln-center-performing-arts-2026-01.html", date: "2026-01-12", format: "review", theme: "arts-culture" },
-        { title: "The Jerome Robbins Dance Division of NYPL: The World's Largest Dance Archive and Its Oral History Project", file: "you-deep-jerome-robbins-dance-2026-01.html", date: "2026-01-11", format: "review", theme: "arts-culture" },
-        { title: "Roundabout Theatre Company: Mission, Community Impact, and Institutional Challenges", file: "you-roundabout-theatre-company-identify-2026-01.html", date: "2026-01-08", format: "review", theme: "arts-culture" },
-        { title: "Fort Ticonderoga: Institutional Legacy, Collections, Educational Mission, and the Pell Graduate Fellowship", file: "deep-fort-ticonderoga-its-institutional-2026-01.html", date: "2026-01-17", format: "review", theme: "arts-culture" },
-        { title: "The Museum of Modern Art's Development and Research Department: Institutional Research, Preservation, and Innovation", file: "moma-developement-department-2026-01.html", date: "2026-01-12", format: "review", theme: "arts-culture" },
-        { title: "MoMA Research and Development Department: Strategic Innovation, Institutional Impact, and Challenges", file: "you-development-department-moma-propose-2026-01.html", date: "2026-01-18", format: "review", theme: "arts-culture" },
-        { title: "New York State Council on the Arts: History, Grant Programs, Statewide Initiatives, and Staff Responsibilities", file: "deep-new-york-council-arts-2026-01.html", date: "2026-01-17", format: "review", theme: "arts-culture" },
-        { title: "Albany Institute of History & Art: Collections Stewardship and Associate Curator Requirements", file: "1436782482967101491-you-deep-institute-history-2025-12.html", date: "2025-12-23", format: "review", theme: "arts-culture" },
-        { title: "The 1911 Albany Capitol Fire and the Transformation of New York State Educational Records", file: "locate-available-commentary-records-1911-2026-01.html", date: "2026-01-26", format: "review", theme: "arts-culture" },
+        // Museums & Cultural Institutions
+        { title: "Lincoln Center for the Performing Arts: Education Programs, Young Artist Pipeline, and Arts Education Initiatives", file: "deep-lincoln-center-performing-arts-2026-01.html", date: "2026-01-12", format: "review", theme: "museums-culture" },
+        { title: "The Jerome Robbins Dance Division of NYPL: The World's Largest Dance Archive and Its Oral History Project", file: "you-deep-jerome-robbins-dance-2026-01.html", date: "2026-01-11", format: "review", theme: "museums-culture" },
+        { title: "Roundabout Theatre Company: Mission, Community Impact, and Institutional Challenges", file: "you-roundabout-theatre-company-identify-2026-01.html", date: "2026-01-08", format: "review", theme: "museums-culture" },
+        { title: "Fort Ticonderoga: Institutional Legacy, Collections, Educational Mission, and the Pell Graduate Fellowship", file: "deep-fort-ticonderoga-its-institutional-2026-01.html", date: "2026-01-17", format: "review", theme: "museums-culture" },
+        { title: "The Museum of Modern Art's Development and Research Department: Institutional Research, Preservation, and Innovation", file: "moma-developement-department-2026-01.html", date: "2026-01-12", format: "review", theme: "museums-culture" },
+        { title: "MoMA Research and Development Department: Strategic Innovation, Institutional Impact, and Challenges", file: "you-development-department-moma-propose-2026-01.html", date: "2026-01-18", format: "review", theme: "museums-culture" },
+        { title: "New York State Council on the Arts: History, Grant Programs, Statewide Initiatives, and Staff Responsibilities", file: "deep-new-york-council-arts-2026-01.html", date: "2026-01-17", format: "review", theme: "museums-culture" },
+        { title: "Albany Institute of History & Art: Collections Stewardship and Associate Curator Requirements", file: "1436782482967101491-you-deep-institute-history-2025-12.html", date: "2025-12-23", format: "review", theme: "museums-culture" },
+        { title: "New York Public Library: Center for Educators & Scholars and Educational Mission", file: "deep-new-york-public-library-2026-01.html", date: "2026-01-17", format: "review", theme: "museums-culture" },
+        { title: "The New York Society Library: History, Collections, and Programming", file: "you-deep-new-york-society-2026-02.html", date: "2026-02-08", format: "review", theme: "museums-culture" },
+        { title: "Museum Challenges Today: Funding, Attendance, and Institutional Sustainability", file: "you-deep-museum-challenges-today-2026-02.html", date: "2026-02-09", format: "review", theme: "museums-culture" },
+        { title: "The Mercer Museum: Mission, Collections, and Educational Programs", file: "deep-mercer-museum-its-mission-2026-01.html", date: "2026-01-28", format: "review", theme: "museums-culture" },
+        { title: "The Paley Center for Media: Archives, Public Programs, and Digital Preservation", file: "reserach-paley-center-media-especially-2026-02.html", date: "2026-02-10", format: "review", theme: "museums-culture" },
+
+        // Academic Research & Digital Scholarship
         { title: "Critical University Studies: Urban Universities, Technology, Institutional Critique, and Higher Education Transformation", file: "literature-review-critical-university-studies-2026-01-taxonomy.html", date: "2026-01-18", format: "taxonomy", theme: "academic" },
         { title: "A Comprehensive Literature Review of Reddit Research: Community, Education, Discourse, and Literacy", file: "literature-review-reddit-2026-01-taxonomy.html", date: "2026-01-18", format: "taxonomy", theme: "academic" },
         { title: "Reddit as a Knowledge Commons and Networked Public: Governance, Participatory Practice, and Digital Scholarship", file: "scholarship-reddit-discusses-commons-based-2026-01.html", date: "2026-01-19", format: "review", theme: "academic" },
         { title: "CUNY Reddit Discussions in March 2020: Student Voices During the COVID-19 Transition", file: "deep-cuny-subreddit-posts-march-2026-01.html", date: "2026-01-11", format: "review", theme: "academic" },
-        { title: "Model Registries: An Environmental Scan of Theory, Practice, and Implementation in AI Development", file: "comprehensive-environmental-scan-model-registries-2026-01-taxonomy.html", date: "2026-01-19", format: "taxonomy", theme: "academic" },
+        { title: "Reddit Bridge Users: Cross-Community Participation and Network Analysis", file: "follow-deep-reddit-bridge-users-2026-01.html", date: "2026-01-23", format: "review", theme: "academic" },
+        { title: "Environmental Scan: Reddit Research Methodologies and Community Studies", file: "conduct-environmental-scan-reddit-focusing-2026-01.html", date: "2026-01-24", format: "review", theme: "academic" },
         { title: "The Common School Movement in the United States and New York State: Secondary Scholarship Analysis", file: "you-secondary-scholarship-new-york-2026-01.html", date: "2026-01-22", format: "review", theme: "academic" },
+        { title: "Peer-Reviewed Scholarship on Networked Education and Digital Learning (2020-2026)", file: "deep-prompt-peer-reviewed-scholarship-2026-02.html", date: "2026-02-07", format: "review", theme: "academic" },
+        { title: "Environmental Scan: Scholarship on Formal Work, Labor Studies, and Organizational Theory", file: "environmental-scan-scholarship-formal-work-2026-02.html", date: "2026-02-08", format: "taxonomy", theme: "academic" },
+
+        // AI & Machine Learning Technology
+        { title: "Model Registries: An Environmental Scan of Theory, Practice, and Implementation in AI Development", file: "comprehensive-environmental-scan-model-registries-2026-01-taxonomy.html", date: "2026-01-19", format: "taxonomy", theme: "ai-ml" },
+        { title: "AI Writing Detection Software: Critical Perspectives on Accuracy, Bias, and Educational Impact", file: "writing-detection-software-critical-perspective-2026-02.html", date: "2026-02-06", format: "review", theme: "ai-ml" },
+        { title: "Conversational and Dialogue Datasets for Training Language Models (Multilingual Survey)", file: "conversational-dialogue-datasets-any-language-2026-02-taxonomy.html", date: "2026-02-05", format: "taxonomy", theme: "ai-ml" },
+        { title: "Hugging Face and Jagged Training Datasets for LoRA: Character and Conversational AI", file: "hugging-face-jagged-training-datasets-2026-02.html", date: "2026-02-04", format: "review", theme: "ai-ml" },
+        { title: "Open-Source Game Development on Linux: Godot Engine, libretro/RetroArch, and SDL", file: "open-source-game-development-linux-2026-02-taxonomy.html", date: "2026-02-03", format: "taxonomy", theme: "ai-ml" },
+        { title: "Open WebUI: Workspace Templates, Models, and Self-Hosted AI Integration", file: "open-webui-workspace-templates-models-2026-02-taxonomy.html", date: "2026-02-02", format: "taxonomy", theme: "ai-ml" },
+        { title: "Architectural Layout and Permissions Systems: Design Patterns and Implementation", file: "latest-architectural-layout-permissions-system-2026-02-taxonomy.html", date: "2026-02-01", format: "taxonomy", theme: "ai-ml" },
+
+        // Job Market & Professional Development
         { title: "PhD Theatre and Performance Studies Job Opportunities in Museums and Cultural Institutions (Nov-Dec 2025)", file: "job-openings-phd-theatre-performance-2025-12.html", date: "2025-12-23", format: "review", theme: "job-search" },
         { title: "Job Openings for PhD in Theatre: Archival Work, Exhibition Development, Public Programming (Nov-Dec 2025)", file: "search-job-openings-for-a-phd-in-theatre-and-perfo.html", date: "2025-12-23", format: "review", theme: "job-search" },
         { title: "Theatre and Performance Studies Employment: Archival Work, Exhibition Development in Cultural Institutions", file: "examination-of-current-job-openings-qualifying-for.html", date: "2025-12-23", format: "review", theme: "job-search" },
         { title: "Career Opportunities and Professional Development at The Museum of Modern Art", file: "deep-job-https-recruiting-ultipro-2026-01.html", date: "2026-01-12", format: "review", theme: "job-search" },
         { title: "Comprehensive Guide to Applying for a Project Management Position Through ADP Workforce Now", file: "you-deep-everyting-know-order-2025-12.html", date: "2025-12-28", format: "review", theme: "job-search" },
+
+        // Sports Analytics & Betting
         { title: "Lakers vs. Rockets Christmas Classic: Constructing a Four-Leg Parlay Analysis", file: "construct-four-leg-parlay-lakers-2025-12.html", date: "2025-12-26", format: "review", theme: "sports" },
         { title: "Ascending Scoring Trends in the Los Angeles Lakers: 2025-26 Season Analysis", file: "player-trending-upward-scoring-lakers-2025-12.html", date: "2025-12-26", format: "review", theme: "sports" },
         { title: "New York Knicks Next Five Games: Sportsbook Market Odds and Movement (Jan 2026)", file: "you-sports-betting-analyst-today-2026-01.html", date: "2026-01-08", format: "review", theme: "sports" },
-        { title: "The Evolution of New York City's Organizational Structure: Administrative Change and Reform", file: "history-organization-changes-new-york-2025-12.html", date: "2025-12-27", format: "review", theme: "policy-history" }
+
+        // Education & Historical Research
+        { title: "The 1911 Albany Capitol Fire and the Transformation of New York State Educational Records", file: "locate-available-commentary-records-1911-2026-01.html", date: "2026-01-26", format: "review", theme: "education-history" },
+        { title: "The Evolution of New York City's Organizational Structure: Administrative Change and Reform", file: "history-organization-changes-new-york-2025-12.html", date: "2025-12-27", format: "review", theme: "education-history" },
+        { title: "Chronological History of the Cloze Deletion Test in Educational and Cognitive Psychology", file: "chronological-history-cloze-deletion-test-2026-02.html", date: "2026-02-11", format: "review", theme: "education-history" }
     ];
 
     const THEME_LABELS = {
-        'arts-culture': 'arts & culture',
-        'academic': 'academic research',
-        'job-search': 'job search',
-        'sports': 'sports',
-        'policy-history': 'policy & history'
+        'museums-culture': 'museums & cultural institutions',
+        'academic': 'academic research & digital scholarship',
+        'ai-ml': 'ai & machine learning',
+        'job-search': 'job market & careers',
+        'sports': 'sports analytics',
+        'education-history': 'education & history'
     };
 
-    const THEME_ORDER = ['arts-culture', 'academic', 'job-search', 'sports', 'policy-history'];
+    const THEME_ORDER = ['museums-culture', 'academic', 'ai-ml', 'job-search', 'sports', 'education-history'];
 
     const filterTheme = document.getElementById('filter-theme');
     const filterFormat = document.getElementById('filter-format');
