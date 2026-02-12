@@ -58,6 +58,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .stats .count { color: #00ffff; }
         .clear-btn {
@@ -66,10 +68,14 @@
             color: #555;
             font-family: 'Courier New', monospace;
             font-size: 11px;
-            padding: 2px 8px;
+            padding: 4px 10px;
             cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
         }
-        .clear-btn:hover { color: #ff0000; border-color: #ff0000; }
+        .clear-btn:hover:not(:disabled) { color: #ff0000; border-color: #ff0000; }
+        .clear-btn:disabled { opacity: 0.5; cursor: wait; }
+        #download-md:hover:not(:disabled) { color: #00ffff; border-color: #00ffff; }
 
         /* theme section headers */
         .theme-header {
@@ -174,11 +180,16 @@
 
     <div class="stats">
         <span>showing <span class="count" id="result-count">0</span> reports</span>
-        <button class="clear-btn" id="clear-filters">clear filters</button>
+        <div style="display: flex; gap: 8px;">
+            <button class="clear-btn" id="download-md">download all (md)</button>
+            <button class="clear-btn" id="download-pdf">download all (pdf)</button>
+            <button class="clear-btn" id="clear-filters">clear filters</button>
+        </div>
     </div>
 
     <div id="report-list"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
     const REPORTS = [
         // Museums & Cultural Institutions
@@ -326,6 +337,166 @@
         filterSearch.value = '';
         filterReports();
     });
+
+    // Download functionality
+    async function fetchReportContent(file) {
+        try {
+            const response = await fetch(file);
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // Extract title and content
+            const title = doc.querySelector('h1')?.textContent || 'Untitled';
+            const content = doc.querySelector('body')?.textContent || '';
+
+            return { title, content: content.trim() };
+        } catch (e) {
+            console.error('Failed to fetch', file, e);
+            return null;
+        }
+    }
+
+    async function downloadAsMarkdown() {
+        const btn = document.getElementById('download-md');
+        btn.textContent = 'generating...';
+        btn.disabled = true;
+
+        let markdown = '# Deep Research Archive\n\n';
+        markdown += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+        markdown += `Total reports: ${REPORTS.length}\n\n---\n\n`;
+
+        // Group by theme
+        const grouped = {};
+        REPORTS.forEach(r => {
+            if (!grouped[r.theme]) grouped[r.theme] = [];
+            grouped[r.theme].push(r);
+        });
+
+        for (const theme of THEME_ORDER) {
+            const items = grouped[theme];
+            if (!items || items.length === 0) continue;
+
+            markdown += `## ${THEME_LABELS[theme]}\n\n`;
+
+            for (const report of items) {
+                const content = await fetchReportContent(report.file);
+                if (!content) continue;
+
+                markdown += `### ${report.title}\n\n`;
+                markdown += `**Date:** ${report.date} | **Format:** ${report.format}\n\n`;
+                markdown += `**File:** ${report.file}\n\n`;
+                markdown += '---\n\n';
+                markdown += content.content + '\n\n';
+                markdown += '---\n\n';
+            }
+        }
+
+        // Create and download
+        const blob = new Blob([markdown], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `deep-research-archive-${new Date().toISOString().split('T')[0]}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        btn.textContent = 'download all (md)';
+        btn.disabled = false;
+    }
+
+    async function downloadAsPDF() {
+        const btn = document.getElementById('download-pdf');
+        btn.textContent = 'generating...';
+        btn.disabled = true;
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 15;
+        const maxWidth = pageWidth - (margin * 2);
+        let y = margin;
+
+        // Title page
+        doc.setFontSize(20);
+        doc.text('Deep Research Archive', margin, y);
+        y += 10;
+        doc.setFontSize(10);
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, margin, y);
+        y += 5;
+        doc.text(`Total reports: ${REPORTS.length}`, margin, y);
+        y += 15;
+
+        // Group by theme
+        const grouped = {};
+        REPORTS.forEach(r => {
+            if (!grouped[r.theme]) grouped[r.theme] = [];
+            grouped[r.theme].push(r);
+        });
+
+        for (const theme of THEME_ORDER) {
+            const items = grouped[theme];
+            if (!items || items.length === 0) continue;
+
+            // Theme header
+            if (y > 250) {
+                doc.addPage();
+                y = margin;
+            }
+            doc.setFontSize(14);
+            doc.setTextColor(255, 0, 0);
+            doc.text(THEME_LABELS[theme].toUpperCase(), margin, y);
+            y += 8;
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+
+            for (const report of items) {
+                const content = await fetchReportContent(report.file);
+                if (!content) continue;
+
+                // Report title
+                if (y > 250) {
+                    doc.addPage();
+                    y = margin;
+                }
+                doc.setFontSize(11);
+                doc.setFont(undefined, 'bold');
+                const titleLines = doc.splitTextToSize(report.title, maxWidth);
+                doc.text(titleLines, margin, y);
+                y += titleLines.length * 5;
+
+                // Metadata
+                doc.setFontSize(9);
+                doc.setFont(undefined, 'normal');
+                doc.setTextColor(100, 100, 100);
+                doc.text(`${report.date} | ${report.format}`, margin, y);
+                y += 6;
+                doc.setTextColor(0, 0, 0);
+
+                // Content preview (first 500 chars)
+                doc.setFontSize(9);
+                const preview = content.content.substring(0, 500) + '...';
+                const contentLines = doc.splitTextToSize(preview, maxWidth);
+                const linesToShow = Math.min(contentLines.length, 8);
+                doc.text(contentLines.slice(0, linesToShow), margin, y);
+                y += linesToShow * 4 + 8;
+
+                if (y > 250) {
+                    doc.addPage();
+                    y = margin;
+                }
+            }
+        }
+
+        // Save PDF
+        doc.save(`deep-research-archive-${new Date().toISOString().split('T')[0]}.pdf`);
+
+        btn.textContent = 'download all (pdf)';
+        btn.disabled = false;
+    }
+
+    document.getElementById('download-md').addEventListener('click', downloadAsMarkdown);
+    document.getElementById('download-pdf').addEventListener('click', downloadAsPDF);
 
     filterReports();
     </script>
