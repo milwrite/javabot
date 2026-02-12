@@ -288,6 +288,8 @@ The bot is organized across `index.js` (~4900 lines) and modular services:
 | **/src/*.html** | Generated pages (games, pages, features) | Self-contained HTML + inline CSS/JS | Created via `write_file()` tool |
 | **/src/gallery/*.png** | AI-generated images | PNG files with slugified names | Created via `/image` command; pushed to GitHub |
 | **/src/gallery/gallery.json** | Gallery metadata (prompts, authors, timestamps) | JSON: {images: [...]} | Updated on each image generation |
+| **/src/search/*.html** | Deep research reports (archive) | Self-contained HTML with citations | Created via `/deep-research` command; catalogued in index.html |
+| **/src/search/index.html** | Research archive interface | HTML with filters, search, MD/PDF export | Manually maintained catalogue with 40+ reports |
 | **PostgreSQL (Railway)** | Long-term event logging | Tables: bot_events, tool_calls, build_stages | Persistent; queryable via `/logs` command |
 
 ### PostgreSQL Logging
@@ -360,7 +362,7 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
 - `web_search(query)` - Search internet for current information (via Perplexity Sonar)
 - Automatically triggered for questions about "latest", "recent", "current"
 
-**Deep Research** (`/deep-research` command - RECENT ADDITION, UNTESTED):
+**Deep Research** (`/deep-research` command):
 - Comprehensive research with citations via Perplexity Sonar Deep Research (1-3 minute runtime)
 - **New parameters** (all optional):
   - `format` - Output format: `review` (comprehensive analysis, default), `taxonomy` (hierarchical bullets with dates), `cover-letter` (300-500 word job application letter)
@@ -374,6 +376,41 @@ The bot uses OpenRouter's function calling with an **agentic loop** to give the 
   - Enhanced: `services/deepResearch.js` - Added `buildResearchPrompt()`, `generateFormattedReportHTML()`, format-specific HTML generators
 - **Tool handler** (lines 1843-1868 in index.js): Executes deep_research tool with all new parameters
 - **Tool definition** (toolCatalog.js line 225): Updated schema with all parameters documented
+
+**Deep Research Archive** (`src/search/` directory):
+
+- **Location**: All deep research outputs saved to `src/search/{slug}.html`
+- **Archive Interface**: `src/search/index.html` - Filterable catalogue of all research reports
+- **Current Inventory**: 40+ reports organized into 6 thematic categories:
+  - Museums & Cultural Institutions (13 reports)
+  - Academic Research & Digital Scholarship (8 reports)
+  - AI & Machine Learning (7 reports)
+  - Job Market & Careers (5 reports)
+  - Sports Analytics (3 reports)
+  - Education & History (3 reports)
+- **Filtering System**:
+  - Theme-based filters with dropdown selection
+  - Format filters (review vs taxonomy)
+  - Date range filtering by month
+  - Live text search across titles
+  - Dynamic result counting with "clear filters" button
+- **Export Functionality**:
+  - **Download All (MD)**: Exports entire archive as Markdown file with full content
+    - Organized by theme with proper headers
+    - Includes metadata (date, format, file path)
+    - Filename: `deep-research-archive-YYYY-MM-DD.md`
+  - **Download All (PDF)**: Generates professional PDF compilation
+    - Theme-based organization with colored section titles
+    - Content previews (first 500 chars per report)
+    - Automatic pagination
+    - Filename: `deep-research-archive-YYYY-MM-DD.pdf`
+- **Technical Implementation**:
+  - Uses `DOMParser API` for HTML-to-text extraction
+  - `jsPDF library` (CDN) for client-side PDF generation
+  - `Blob URLs` for triggering downloads without server
+  - Async/await pattern for sequential report fetching
+  - Button state management during generation ("generating..." feedback)
+- **Archive Access**: <https://bot.inference-arcade.com/src/search/>
 
 **Image Generation** (`/image` command):
 - Uses Nano Banana Pro (Gemini 3 Pro Image Preview) via OpenRouter
@@ -577,6 +614,19 @@ Available presets (ZDR-compliant only):
 **Note**: OpenAI models removed - they don't support Zero Data Retention on OpenRouter.
 
 Changes apply immediately to all subsequent AI calls.
+
+## Arcade Quality Control & Refinement
+
+**Rating System for Game Fixes**:
+When refining arcade games, use this notation to prioritize work:
+
+- `~~` = **DELETE** - Redundant/shitty work, remove entirely
+- `***` = **CRITICAL JS OVERHAUL** - Badly broken game logic, needs complete rebuild
+- `**` = **FUNCTIONAL FIXES** - More challenging JavaScript/game functionality issues
+- `+` = **REFINEMENT** - Mostly works but no end/progression; refine style and structure
+- `*` = **STYLING** - Needs styling and structure attention (not central to arcade)
+
+**Process**: Before starting arcade refinement work, ask user which games need attention. Reference this notation when discussing fixes.
 
 ## Mobile & Styling
 
