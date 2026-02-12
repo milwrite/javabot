@@ -2289,7 +2289,7 @@ const commands = [
                 ))
         .addStringOption(option =>
             option.setName('custom_model')
-                .setDescription('Custom model name (e.g. deepseek/deepseek-v3.1-terminus:exacto)')
+                .setDescription('Custom model name (e.g. deepseek/deepseek-v3.2-speciale)')
                 .setRequired(false)),
 
     new SlashCommandBuilder()

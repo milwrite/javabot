@@ -7,23 +7,23 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 // Available models (2025 latest) - All ZDR-compliant
 const MODEL_PRESETS = {
-    'glm': 'z-ai/glm-4.6:exacto',
-    'deepseek': 'deepseek/deepseek-v3.1-terminus:exacto',
+    'glm': 'z-ai/glm-5',
+    'deepseek': 'deepseek/deepseek-v3.2-speciale',
     'kimi': 'moonshotai/kimi-k2.5',
     'kimi-fast': 'moonshotai/kimi-k2-0905:exacto',
     'qwen': 'qwen/qwen3-coder:exacto',
-    'minimax': 'minimax/minimax-m2.1',
+    'minimax': 'minimax/minimax-m2.5',
     'mimo': 'xiaomi/mimo-v2-flash'
 };
 
 // Human-readable display names for each model
 const MODEL_DISPLAY_NAMES = {
-    'glm': 'GLM 4.6 Exacto',
-    'deepseek': 'DeepSeek V3.1 Terminus',
+    'glm': 'GLM 5',
+    'deepseek': 'DeepSeek V3.2 Speciale',
     'kimi': 'Kimi K2.5 (Default)',
     'kimi-fast': 'Kimi K2 Fast',
     'qwen': 'Qwen 3 Coder',
-    'minimax': 'Minimax M2.1',
+    'minimax': 'Minimax M2.5',
     'mimo': 'MiMo V2 Flash'
 };
 
@@ -38,13 +38,13 @@ const REASONING_CONFIG = {
     // Kimi K2 thinking (legacy) - mandatory reasoning with <think> tokens
     'moonshotai/kimi-k2-thinking': { effort: 'low' },
     // Models without reasoning support - graceful skip
-    'deepseek/deepseek-v3.1-terminus:exacto': null,
+    'deepseek/deepseek-v3.2-speciale': null,
     'perplexity/sonar': null,
     'perplexity/sonar-deep-research': null,  // Uses internal reasoning
     'moonshotai/kimi-k2-0905:exacto': null,
     'qwen/qwen3-coder:exacto': null,
     'xiaomi/mimo-v2-flash': null,
-    'minimax/minimax-m2.1': null,
+    'minimax/minimax-m2.5': null,
     'default': null  // Fallback: no reasoning for unknown models
 };
 
