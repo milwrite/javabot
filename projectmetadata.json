@@ -126,6 +126,18 @@
       "icon": "💜",
       "collection": "stories-content"
     },
+    "literature-review-critical-university-studies-2026-01-taxonomy": {
+      "title": "Critical University Studies",
+      "description": "Academic research taxonomy review",
+      "icon": "🎓",
+      "collection": "stories-content"
+    },
+    "scholarship-reddit-discusses-commons-based-2026-01": {
+      "title": "Reddit Knowledge Commons",
+      "description": "Digital scholarship research paper",
+      "icon": "📚",
+      "collection": "stories-content"
+    },
     "rhythm-test": {
       "title": "Rhythm Test",
       "icon": "🎵",
@@ -601,6 +613,12 @@
       "title": "Surrealist Memory Game",
       "description": "Surrealist Memory Game noir project",
       "icon": "🎮",
+      "collection": "unsorted"
+    },
+    "conversational-datasets-catalog": {
+      "title": "Conversational Datasets Catalog",
+      "description": "Conversational Datasets Catalog noir project",
+      "icon": "🌐",
       "collection": "unsorted"
     }
   }
