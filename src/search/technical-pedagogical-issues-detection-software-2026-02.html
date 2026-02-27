@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The technical and pedagogical issues of ai detection software discussed in ac...</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #111;
+            color: #999;
+            line-height: 1.6;
+            padding: 40px 20px 60px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+        a { color: #888; }
+        a:hover { color: #ccc; }
+        .back { display: inline-block; margin-bottom: 30px; font-size: 13px; text-decoration: none; }
+        .back:before { content: '← '; }
+        header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        header h1 { color: #ccc; font-size: 20px; font-weight: normal; margin-bottom: 8px; }
+        header .meta { font-size: 12px; color: #555; }
+        article { color: #aaa; }
+        article h1 { color: #bbb; font-size: 17px; font-weight: normal; margin: 35px 0 15px; }
+        article h2 { color: #999; font-size: 15px; font-weight: normal; margin: 30px 0 12px; text-transform: lowercase; }
+        article h3 { color: #777; font-size: 14px; font-weight: normal; margin: 20px 0 10px; }
+        article p { margin-bottom: 16px; }
+        article strong { color: #ccc; font-weight: normal; }
+        article em { font-style: normal; color: #888; }
+
+        /* Chicago-style citation styling */
+        .citation { font-size: 0.75em; vertical-align: super; line-height: 0; }
+        .citation a {
+            color: #ff6b6b;
+            text-decoration: none;
+            padding: 0 1px;
+            transition: color 0.2s;
+        }
+        .citation a:hover { color: #ff9999; text-decoration: underline; }
+
+        /* References section */
+        .references {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #333;
+        }
+        .references h2 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .references ol {
+            list-style: none;
+            padding: 0;
+        }
+        .references li {
+            font-size: 12px;
+            margin: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+        .references .back-ref {
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #ff6b6b;
+            text-decoration: none;
+            font-size: 11px;
+        }
+        .references .back-ref:hover { color: #ff9999; }
+        .references .cite-num {
+            color: #666;
+            margin-right: 8px;
+        }
+        .references li a:not(.back-ref) {
+            color: #666;
+            word-break: break-all;
+        }
+        .references li a:not(.back-ref):hover { color: #999; }
+
+        footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 11px; color: #444; }
+        @media (max-width: 600px) {
+            body { padding: 25px 15px 40px; }
+            header h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <a class="back" href="../../index.html">back</a>
+    <header>
+        <h1>The technical and pedagogical issues of ai detection software discussed in ac...</h1>
+        <div class="meta">researched Feb 27, 2026 · dug up by sportello</div>
+    </header>
+    <article>
+        <h1>The Technical and Pedagogical Crisis of AI Detection Software in Academic Settings: A Comprehensive Analysis of Mechanisms, Limitations, and Ethical Implications</h1>
+<p>The rapid proliferation of artificial intelligence detection systems in higher education represents one of the most significant and contested developments in contemporary academic practice. While institutions globally have rushed to implement technological solutions aimed at identifying AI-generated student work, substantial evidence from peer-reviewed scholarship, academic research institutes, and educational research centers reveals that these systems are fundamentally unreliable, prone to generating false accusations, and systematically biased against marginalized student populations. This report examines the technical architecture of AI detection tools, their pedagogical implications, the empirical evidence demonstrating their inadequacy, and the emerging scholarly consensus that detection-based approaches to academic integrity are ultimately counterproductive to educational mission and institutional values. The analysis draws exclusively from academic scholarship, peer-reviewed journals, and institutional research to provide a rigorous examination of this critical educational technology issue.</p>
+<h2>The Architecture and Technical Foundations of AI Detection Systems</h2>
+<h3>Foundational Metrics: Perplexity and Burstiness</h3>
+<p>The technical foundation of most contemporary AI detection systems rests upon two primary linguistic metrics that aim to distinguish machine-generated from human-generated text. These metrics—perplexity and burstiness—emerged as central analytical tools following the development of early detection systems and have become the dominant approach in the field despite growing recognition of their fundamental limitations. Understanding these metrics is essential for comprehending why detection systems fail and why they systematically disadvantage certain populations of writers.</p>
+<p>Perplexity, in the context of AI text detection, functions as a measure of how predictable or unpredictable a sequence of language appears to a language model.<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup> The metric quantifies what researchers term the "unpredictability" of text by assessing how well a language model predicts successive words in a passage.<sup class="citation"><a href="#ref-8" id="cite-8">8</a></sup> Lower perplexity scores are theoretically indicative of AI-generated text because artificial intelligence systems, when generating language, tend to make statistically "obvious" or most common language choices rather than surprising or creative selections that characterize human writing.<sup class="citation"><a href="#ref-7" id="cite-7">7</a></sup> The theoretical assumption underlying this metric is that human writers, particularly those engaging in creative or intellectual work, will make less predictable word choices, resulting in higher perplexity scores that reflect their originality and stylistic variation.</p>
+<p>Burstiness represents a complementary metric that measures what researchers describe as "creative variability" or the variation in sentence structure and length within a text.<sup class="citation"><a href="#ref-7" id="cite-7">7</a></sup> The underlying principle is that human writers naturally exhibit burstiness—they mix long and short sentences, vary their paragraph structures, and employ diverse syntactic patterns to maintain reader engagement and express complex ideas with nuance.<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup> In contrast, AI language models tend to produce writing with consistent tempo and uniform sentence length, resulting in low burstiness scores that reflect the systematic nature of algorithmic text generation.<sup class="citation"><a href="#ref-7" id="cite-7">7</a></sup> Research examining these characteristics has found that "in natural language processing, AI models tend to write with a consistent tempo, resulting in low perplexity and burstiness, whereas human writers often exhibit bursts and lulls in their writing styles."<sup class="citation"><a href="#ref-7" id="cite-7">7</a></sup></p>
+<p>These two metrics became institutionalized through their incorporation into early prominent detection systems such as GPTZero, which "analyzes two metrics of text: perplexity and burstiness."<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup> The system utilizes a strided sliding window approach based on GPT-2 to extract perplexity features from text samples, determining whether content is human- or AI-generated by comparing the magnitude of these features.<sup class="citation"><a href="#ref-9" id="cite-9">9</a></sup> While this technical approach has achieved theoretical elegance and has been widely adopted, empirical testing has increasingly revealed that both metrics are susceptible to manipulation and produce inconsistent results across diverse writing contexts.</p>
+<h3>Machine Learning Approaches and Statistical Analysis</h3>
+<p>Beyond the perplexity-burstiness framework, AI detection systems employ various machine learning and statistical approaches to identify machine-generated content. These methods include supervised learning models trained on labeled datasets of known human and AI-generated texts, with systems utilizing neural network architectures such as transformers or modified classifiers to distinguish between authorship types.<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup> The typical pipeline involves preprocessing the text, extracting linguistic and statistical features, and feeding these features into a trained classifier that outputs a probability score indicating the likelihood of AI generation.</p>
+<p>More sophisticated detection approaches have attempted to address the limitations of perplexity-based systems by incorporating additional analytical layers. Researchers have proposed frameworks like the Siamese Calibrated Reconstruction Network (SCRN), which employs reconstruction approaches to enhance model robustness by promoting the learning of resilient representations under token-level perturbations, combined with siamese calibration techniques that train models to make predictions with consistent confidence levels for various random perturbations.<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup> These advanced methods represent attempts to address the adversarial robustness problem—the reality that adversaries can deliberately alter AI-generated text through paraphrasing or other modifications to evade detection.</p>
+<p>Post-hoc detection approaches, which represent the most common commercial implementations, attempt to identify AI-generated content after it has been produced without any intervention during the generation process itself.<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup> These systems analyze the finished text for patterns that distinguish machine from human authorship, working retrospectively to flag suspect submissions. In contrast, watermarking approaches embed imperceptible patterns or markers within AI-generated content during the generation process, theoretically allowing for reliable identification later through detection of these embedded signals.<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup> Statistical watermarking, in particular, represents "one of the watermarking techniques drawing the most research interest," where instead of embedding a clearly defined pattern, "an algorithm embeds a statistically unusual arrangement of words" that distinguishes AI-generated content.<sup class="citation"><a href="#ref-18" id="cite-18">18</a></sup></p>
+<p>However, these technical architectures, regardless of sophistication, share a fundamental vulnerability: they rely on identifying patterns in language that are neither invariant across different AI systems nor robust to adversarial modification. As AI models advance and become more capable of mimicking human writing patterns, the technical distinction between machine and human text becomes increasingly difficult to maintain at a reliable level.</p>
+<h2>The Empirical Failure of Detection Systems: Accuracy and Reliability</h2>
+<h3>Comprehensive Testing and False Positive Rates</h3>
+<p>The empirical inadequacy of AI detection systems has been extensively documented through rigorous peer-reviewed research that tested these tools against diverse text samples and manipulation techniques. One of the most comprehensive evaluations, published in the International Journal for Educational Integrity, examined "14 publicly available tools and two commercial systems (Turnitin and PlagiarismCheck)" and concluded that "the available detection tools are neither accurate nor reliable and have a main bias towards classifying the output as human-written rather than detecting AI-generated text."<sup class="citation"><a href="#ref-23" id="cite-23">23</a>,<a href="#ref-25" id="cite-25">25</a></sup> This bias toward false negatives—failing to identify AI-generated content—represents a critical failure mode for systems purportedly designed to catch cheating.</p>
+<p>The false positive rate—the proportion of human-written texts incorrectly flagged as AI-generated—constitutes perhaps the most ethically problematic failure of detection systems. While commercial providers like Turnitin claim false positive rates as low as one percent, independent testing reveals substantially higher rates in practice.<sup class="citation"><a href="#ref-3" id="cite-3">3</a></sup> Research by Geoffrey Fowler published in the Washington Post demonstrated that detection tools achieved far higher false positive rates than manufacturers claimed, with significant implications for student welfare and academic integrity investigations.<sup class="citation"><a href="#ref-3" id="cite-3">3</a></sup> One particularly troubling finding emerged from testing of ChatGPT detectors: while detectors identified ChatGPT-generated text with 74% accuracy, this accuracy plummeted to 42% "when students made minor tweaks to the generated content," suggesting that even simplistic adversarial modifications could substantially degrade detection performance.<sup class="citation"><a href="#ref-3" id="cite-3">3</a></sup></p>
+<p>More concerning still, OpenAI—the company behind ChatGPT—shutdown its own AI detection software, which "correctly identified only 26% of AI-written text while falsely flagging 9% of human writing as AI-generated."<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup> This failure of the technology creator to maintain viable detection systems signals the fundamental technical obstacles inherent in distinguishing machine from human text at scale. The company's decision to abandon detection development reflected recognition that "such systems were unreliable."<sup class="citation"><a href="#ref-2" id="cite-2">2</a>,<a href="#ref-2" id="cite-2">2</a></sup></p>
+<h3>Context-Specific Failure Modes</h3>
+<p>Detection system failures manifest across multiple contexts and content types, with particular vulnerability in specialized domains. Research examining the ability of detection tools to identify AI-generated scientific abstracts found that "the AI content detector we used did not demonstrate sufficient accuracy in detecting AI-generated content," identifying only approximately one-third of AI-generated abstracts.<sup class="citation"><a href="#ref-7" id="cite-7">7</a></sup> However, when researchers examined the perplexity and burstiness scores directly—the underlying metrics—they found "significant differences between human-written and AI-generated abstracts," suggesting that the detectors themselves were inadequate at operationalizing the theoretical metrics they purported to measure.</p>
+<p>The problem intensifies when considering mixed documents containing both human and AI-generated content. Real-world student work often represents genuine attempts to use AI as a tool while maintaining human authorship for substantial portions of assignments—exactly the scenario that detection systems prove least equipped to handle. As one analysis noted, "the real challenge is in detecting mixed documents that contain both AI-generated and human-written content," with detection accuracy declining substantially when human and machine text are intermingled.<sup class="citation"><a href="#ref-8" id="cite-8">8</a></sup></p>
+<h2>Critical Pedagogical Perspectives: How Detection Systems Undermine Educational Goals</h2>
+<h3>The Integrity Paradox: Detection as Threat to Academic Integrity</h3>
+<p>From a critical pedagogical standpoint, AI detection systems represent a fundamental inversion of academic integrity principles. Rather than fostering a learning environment built on trust, transparency, and ethical development, detection-based approaches cultivate an atmosphere of surveillance, suspicion, and enforcement. This pedagogical crisis extends beyond mere implementation failures; it reflects deeper conflicts between technological solutions and educational values that emphasize human agency, critical thinking, and intellectual growth.</p>
+<p>Faculty across diverse institutions have articulated concerns that detection-based approaches prioritize punishment over learning, with research from College Board finding that "more than 84% agree that AI reduces students' critical thinking, originality, and deep engagement with course material," while "88% are concerned about overreliance on automation."<sup class="citation"><a href="#ref-6" id="cite-6">6</a></sup> However, the response of implementing detection systems intensifies rather than resolves these concerns by treating AI use itself as inherently problematic rather than examining pedagogical approaches that integrate AI literacy and critical evaluation into curriculum design.</p>
+<p>Research on higher education policy and practice documents how institutions have "failed to create institution-wide policies that define acceptable and unacceptable uses of AI," leaving students in positions where "they may be accused of academic dishonesty" despite unclear standards and, critically, "it is likely to leave students underprepared for the workplace" where AI integration is ubiquitous.<sup class="citation"><a href="#ref-31" id="cite-31">31</a></sup> This institutional failure becomes compounded when institutions respond by implementing unreliable detection systems rather than developing clear guidance and transparent expectations about AI use across disciplines.</p>
+<h3>Detection as Epistemological Harm</h3>
+<p>Critical scholarship examining the epistemological implications of AI detection in educational contexts highlights how these systems fundamentally alter the nature of knowledge authority and justification in learning spaces. Research published in Frontiers in Education argues that the implementation of surveillance-based detection systems, combined with unreliable AI-detection tools, creates what scholars term an "epistemic crisis" where "the rise of generative AI—capable of producing fluent, instantaneous, and confident responses—is subtly reconfiguring where authority in learning resides, often without institutional or pedagogical mediation."<sup class="citation"><a href="#ref-46" id="cite-46">46</a></sup> When institutions respond to this shift by deploying detection technologies rather than rethinking pedagogy, they compound the epistemological confusion rather than clarifying the nature of intellectual work and authentic learning.</p>
+<p>Furthermore, detection systems encode specific epistemological assumptions about what constitutes legitimate knowledge-making and authentic student work. By privileging certain textual characteristics—low perplexity, high burstiness—as markers of authenticity, these systems embed particular linguistic and epistemic norms that may not align with diverse ways of knowing or legitimate academic practices. The fact that these metrics systematically disadvantage certain writers (as discussed extensively below) suggests that detection systems encode cultural and linguistic hierarchies into technological systems.</p>
+<h3>The Burden of Proof and Relational Rupture</h3>
+<p>The implementation of detection systems fundamentally transforms the relationship between instructors and students by shifting from a foundation of trust to one of suspicion. Rather than assuming good faith and working collaboratively to develop students' understanding of responsible AI use, detection-based enforcement models position faculty as "AI-detectives" responsible for identifying transgressions.<sup class="citation"><a href="#ref-16" id="cite-16">16</a></sup> This role transformation creates what educators describe as a "relational rupture" that undermines the pedagogical relationship essential to effective teaching and learning.</p>
+<p>Research on faculty experience documents substantial concern about this transformation, with one study finding that "71% of teachers said student use of AI has created an additional burden on them to understand whether a student's work is their own," effectively conscripting faculty into policing roles for which they lack training, authority, and desire.<sup class="citation"><a href="#ref-29" id="cite-29">29</a></sup> This burden becomes particularly acute when unreliable detection systems generate ambiguous results requiring human judgment in contexts where faculty lack both technical expertise and epistemic authority to definitively determine authorship.</p>
+<p>Moreover, the psychological burden on students of potential false accusation cannot be overstated. Research documenting cases where students have been falsely accused of AI use emphasizes the emotional and reputational damage that accompanies such accusations, particularly in contexts where detection tools provide algorithmic veneer of objectivity to inherently fallible determinations. The collaborative, trusting learning environment that educational research consistently identifies as essential for deep learning becomes impossible to maintain when underlying infrastructure embeds assumptions of potential malfeasance.</p>
+<h2>Systematic Bias and Discrimination in AI Detection</h2>
+<h3>Language-Based Discrimination Against Non-Native English Speakers</h3>
+<p>Perhaps the most damning evidence regarding AI detection systems emerges from comprehensive research demonstrating systematic bias against non-native English speakers and other marginalized populations. Stanford researchers conducted a rigorous empirical study evaluating "the performance of several widely-used GPT detectors using writing samples from native and non-native English writers," finding that "these detectors consistently misclassify non-native English writing samples as AI-generated, whereas native writing samples are accurately identified."<sup class="citation"><a href="#ref-12" id="cite-12">12</a>,<a href="#ref-14" id="cite-14">14</a>,<a href="#ref-14" id="cite-14">14</a></sup></p>
+<p>The numerical findings proved stark and alarming. While detection systems achieved "near-perfect" accuracy when evaluating essays written by "U.S.-born eighth-graders," they "classified more than half of TOEFL essays (61.22%) written by non-native English students as AI-generated (TOEFL is an acronym for the Test of English as a Foreign Language)."<sup class="citation"><a href="#ref-14" id="cite-14">14</a>,<a href="#ref-14" id="cite-14">14</a></sup> Most troublingly, "all seven AI detectors unanimously identified 18 of the 91 TOEFL student essays (19%) as AI-generated and a remarkable 89 of the 91 TOEFL essays (97%) were flagged by at least one of the detectors."<sup class="citation"><a href="#ref-14" id="cite-14">14</a>,<a href="#ref-14" id="cite-14">14</a></sup></p>
+<p>The mechanism driving this bias flows directly from the perplexity metric discussed above. Stanford researchers explained that "they typically score based on a metric known as 'perplexity,' which correlates with the sophistication of the writing — something in which non-native speakers are naturally going to trail their U.S.-born counterparts."<sup class="citation"><a href="#ref-14" id="cite-14">14</a>,<a href="#ref-14" id="cite-14">14</a></sup> Non-native English speakers "typically score lower on common perplexity measures such as lexical richness, lexical diversity, syntactic complexity, and grammatical complexity," characteristics that detection systems misinterpret as indicators of AI generation rather than acknowledging them as legitimate variations in English expression reflecting different linguistic backgrounds.<sup class="citation"><a href="#ref-14" id="cite-14">14</a>,<a href="#ref-14" id="cite-14">14</a></sup></p>
+<h3>Racialized Disparities in False Accusations</h3>
+<p>The bias embedded in detection systems extends beyond language proficiency to produce racialized disparities in false accusation rates. Research cited by Education Week documented that "about 10 percent of teens of any background said they had their work inaccurately identified as generated by an AI tool," but "20 percent of Black teens were falsely accused of using AI to complete an assignment, compared with 7 percent of white and 10 percent of Latino teens."<sup class="citation"><a href="#ref-3" id="cite-3">3</a></sup> This disparity suggests that the compound effects of potential linguistic bias, stylistic differences, and systemic inequities in how detection results are interpreted create disproportionate harm for Black students.</p>
+<p>The implications of these biased systems extend far beyond academic settings. Students falsely accused of AI cheating face potential disciplinary consequences including course failure, suspension, or expulsion—consequences that can derail educational trajectories and futures, with particular impact on students already navigating systemic barriers to educational access and success. The fact that these systems produce false accusations at dramatically higher rates for marginalized students represents what scholars term "technological discrimination"—the embedding of bias into ostensibly neutral technical systems that then reproduce and amplify existing inequities.</p>
+<h3>Conceptual Limitations of Bias-Based Metrics</h3>
+<p>Beyond empirical documentation of disparate impact, scholars have articulated fundamental conceptual problems with using perplexity and burstiness as detection mechanisms when those metrics themselves encode linguistic and cultural assumptions. Researchers studying cross-linguistic bias in AI systems note that "biases in word embeddings vary across languages," and multilingual systems "tend to favor culturally dominant groups in each language, suggesting that biases can be amplified or altered based on cultural context." When detection systems built on perplexity metrics are applied across diverse linguistic populations, the systems inherit and amplify these embedded biases.</p>
+<h2>The Ineffectiveness of Detection Mitigation Strategies</h2>
+<h3>Adversarial Robustness and Evasion Techniques</h3>
+<p>The technical vulnerability of detection systems to adversarial perturbations—deliberate modifications aimed at defeating detection—represents a fundamental limitation that no amount of engineering refinement can fully resolve. Research demonstrates that "current detectors for AI-generated text (AIGT) lack robustness against adversarial perturbations, with even minor changes in characters or words causing a reversal in distinguishing between human-created and AI-generated text."<sup class="citation"><a href="#ref-45" id="cite-45">45</a></sup></p>
+<p>One particularly illustrative example involved researchers using simple prompt engineering to reduce detection accuracy from 100% to 0%. When researchers had ChatGPT "write like a teenager," Turnitin's detection rate dropped dramatically from complete detection to complete failure.<sup class="citation"><a href="#ref-3" id="cite-3">3</a></sup> Similarly, researchers instructed ChatGPT to "elevate the provided text by employing literary language," and the system successfully bypassed detection through this straightforward rhetorical strategy.<sup class="citation"><a href="#ref-14" id="cite-14">14</a></sup> These examples demonstrate that detection systems can be defeated through techniques that require no sophisticated technical knowledge—simply asking AI systems to rephrase generated content in particular styles substantially degraded detection accuracy.</p>
+<p>More sophisticated adversarial attack research has documented the existence of what scholars term a "semantic evasion threshold," where "conventional adversarial training, while resilient to syntactic noise, fails against semantic attacks," with detection systems experiencing a "semantic evasion threshold where its True Positive Rate at a strict 1% False Positive Rate plummets to 48.8%."<sup class="citation"><a href="#ref-48" id="cite-48">48</a></sup> This means that at a false positive rate of only one percent (arguably already too high for high-stakes educational decisions), detection systems correctly identify only about half of AI-generated text when that text has been deliberately modified through semantic-level perturbations.</p>
+<h3>The Arms Race Dynamic and Technological Stalemate</h3>
+<p>The fundamental problem underlying detection system limitations emerges from what researchers term the "AI detection arms race"—an ongoing competitive dynamic where improvements in detection prompt development of more sophisticated evasion techniques, which in turn necessitate further detection improvements.<sup class="citation"><a href="#ref-16" id="cite-16">16</a></sup> This arms race proves inherently asymmetrical: as one analysis notes, "an attacker can break a model with a fraction of the compute used to defend it," suggesting that the offense-defense balance fundamentally favors those seeking to evade detection.<sup class="citation"><a href="#ref-39" id="cite-39">39</a></sup></p>
+<p>Moreover, as AI models themselves continue to improve and become more capable of generating human-like text, the underlying technical distinction that detection systems attempt to identify diminishes. When AI systems can generate text indistinguishable from human writing, the entire premise of detection-based approaches becomes theoretically incoherent. One research synthesis concluded that "as these models are trained on data sets that may contain biases, they can inadvertently amplify such biases without proper supervision by domain experts," and "as AI capabilities progress, there is concern that AI-generated scientific papers could deceive reviewers and educators," suggesting that the problem only worsens as technology advances.<sup class="citation"><a href="#ref-7" id="cite-7">7</a></sup></p>
+<h2>Institutional Responses and Policy Failures</h2>
+<h3>The Proliferation of Unclear Guidance</h3>
+<p>Rather than providing clear institutional direction about AI use in learning, many universities have failed to develop coherent policies, leaving both faculty and students uncertain about expectations and standards. Research examining faculty perspectives documented that "colleges and universities' failure to create institution-wide policies that define acceptable and unacceptable uses of AI places students at reputational risk: it may cause students to be accused of academic dishonesty, and it is likely to leave students underprepared for the workplace."<sup class="citation"><a href="#ref-31" id="cite-31">31</a></sup> Furthermore, research on syllabus AI policies found "widespread disagreement about whether AI tools should be prohibited, permitted or encouraged," with particular disciplinary divides where "Humanities faculty tend to prohibit AI-assisted writing entirely, considering it unethical and contrary to academic integrity policies," while "some faculty – particularly in STEM and business – permit AI unconditionally."<sup class="citation"><a href="#ref-31" id="cite-31">31</a></sup></p>
+<p>This policy incoherence extends to citation and attribution guidance. Extant guidelines from professional associations like the American Psychological Association (APA) and Modern Language Association (MLA) "don't account for the extent of human labour involved or the varying degrees of AI assistance, making it challenging to accurately attribute authorship or assess the integrity of the work."<sup class="citation"><a href="#ref-31" id="cite-31">31</a></sup> Students therefore navigate contradictory expectations across courses without clear frameworks for understanding what transparency and responsible use entail.</p>
+<h3>The Institutional Embrace of Unreliable Technology</h3>
+<p>Despite mounting evidence of detection system failures, many institutions continue implementing these tools, often through their integration into widely-adopted educational technology platforms. Research notes that "24 percent of teachers reported" that AI detection tools were automatically added as features to educational platforms they already used, suggesting that institutional adoption often occurs through technological momentum rather than deliberate policy choice.<sup class="citation"><a href="#ref-29" id="cite-29">29</a></sup> This default adoption of unreliable technology reflects what scholars term "technological solutionism"—the tendency to embrace technical fixes for complex educational and ethical problems without adequate consideration of their limitations and harms.</p>
+<p>Particularly troubling is the pattern where institutions that have examined detection systems critically have explicitly rejected them. Universities including UCLA "declined to adopt Turnitin's AI detection software, citing 'concerns and unanswered questions' about accuracy and false positives—a decision mirrored by many UC campuses and institutions nationwide."<sup class="citation"><a href="#ref-5" id="cite-5">5</a></sup> This pattern of informed institutional rejection suggests that awareness of detection system limitations has increased among educational leaders, yet deployment continues at many institutions, potentially reflecting organizational inertia rather than deliberate choice.</p>
+<h3>Disciplinary and Epistemological Divides in Policy Development</h3>
+<p>The disciplinary variation in faculty approaches to AI policy reflects deeper epistemological differences about the nature of intellectual work and learning goals across academic fields. Scholars examining these variations note that "Faculty in writing-intensive fields such as English, history, and humanities are more likely to report student AI use, greater AI use for detecting plagiarism or academic dishonesty, and more negative attitudes toward AI," while "Faculty in STEM and business disciplines are generally more likely to report using AI themselves, for research and their own academic writing, and to express more positive views."<sup class="citation"><a href="#ref-6" id="cite-6">6</a></sup></p>
+<p>These disciplinary differences suggest that AI policy cannot be appropriately designed through institution-wide mandates but rather requires discipline-specific conversation about how AI relates to learning goals and intellectual practices within particular fields. Yet institutional adoption of detection systems, which lack nuance about disciplinary variation in appropriate AI use, enforces uniform approaches across contexts where such uniformity may be pedagogically inappropriate.</p>
+<h2>Toward Alternative Approaches: Beyond Detection</h2>
+<h3>Authentic Assessment and Process-Oriented Learning</h3>
+<p>Critical scholarship examining alternatives to detection-based approaches emphasizes the importance of authentic assessment—pedagogical practices that evaluate students' application of knowledge in real-world contexts rather than decontextualized problem-solving exercises.<sup class="citation"><a href="#ref-47" id="cite-47">47</a></sup> Authentic assessment includes project-based learning, portfolios, presentations, simulations, and other forms of evaluation requiring application of learning to complex problems. Research on authentic assessment in the age of AI demonstrates that "authentic assessment, which prioritizes learning, builds trust, and calls on higher-order thinking," proves both more educationally sound and more resistant to shortcuts than traditional assessments amenable to AI assistance.</p>
+<p>The pedagogical advantages of authentic assessment emerge from their inherent AI-resistance. Simulations, presentations requiring real-time response, and projects grounded in specific local contexts or personal experience cannot be effectively "outsourced" to AI systems without student engagement in substantive intellectual work. As one analysis notes, "Simulations are harder to design, but also harder to 'outsource' to AI reducing the need for AI detection."<sup class="citation"><a href="#ref-42" id="cite-42">42</a></sup> By shifting from detection-based policing to pedagogically-sound assessment design, institutions can simultaneously improve educational quality and eliminate the need for unreliable detection technologies.</p>
+<h3>Transparency-Based Approaches and Process Documentation</h3>
+<p>Alternative institutional approaches emphasize transparency rather than detection—requiring students to document their AI use and the thinking processes underlying their work rather than attempting to identify hidden AI use through pattern matching. Research on transparency-based approaches notes that this "authorship tracking approach proves more effective for educational outcomes because it focuses on teaching responsible AI use rather than punishment."<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup> When students maintain documentation of their AI interactions, including prompts used and how they modified or evaluated AI-generated content, instructors gain visibility into the actual intellectual processes and ethical decision-making that students engaged in.</p>
+<p>This approach aligns with emerging scholarly consensus that "rather than attempting to catch violations after the fact, VisibleAI provides full transparency throughout the writing process," representing "a significant shift in approach" from adversarial detection toward "collaborative understanding of how students engage with technology."<sup class="citation"><a href="#ref-43" id="cite-43">43</a></sup> Such transparency-based systems allow instructors to see exactly when and how students interacted with AI, evaluate whether those interactions represented responsible use aligned with assignment requirements, and provide feedback grounded in understanding the actual intellectual work undertaken.</p>
+<h3>Critical AI Literacy and Pedagogical Integration</h3>
+<p>Rather than attempting to police AI use through detection, scholars advocate developing critical AI literacy among students—systematic education about how AI systems work, their capabilities and limitations, embedded biases, and appropriate uses across contexts. Research on critical AI literacy emphasizes that "helping students learn how to engage critically with generative AI is central to ensuring that they can make the most of their educational experiences and be prepared for responsible citizenship and rewarding lives and careers."<sup class="citation"><a href="#ref-13" id="cite-13">13</a></sup> This approach treats AI engagement as a learning opportunity rather than a potential transgression.</p>
+<p>Institutional approaches to critical AI literacy involve professional development for faculty, curriculum redesign to embed AI literacy across disciplines, and explicit instruction about AI's epistemological status and limitations.<sup class="citation"><a href="#ref-13" id="cite-13">13</a>,<a href="#ref-46" id="cite-46">46</a></sup> Such approaches position AI not as a threat to be detected but as a technology requiring critical engagement, just as students require media literacy to navigate information environments or digital citizenship skills to participate responsibly online.</p>
+<h2>Conclusion: Toward Trustworthy Academic Integrity in the AI Era</h2>
+<p>The comprehensive evidence from academic scholarship, peer-reviewed research, and rigorous empirical testing reveals that AI detection systems represent a fundamentally flawed response to the challenge of maintaining academic integrity in an era of advanced generative AI. These systems fail on multiple technical, pedagogical, and ethical grounds: they lack robust accuracy even under normal conditions, fail catastrophically against modest adversarial modifications, systematically discriminate against non-native English speakers and other marginalized populations, generate false accusations at unacceptably high rates, undermine trust-based learning relationships, and ultimately distract from the deeper work of redesigning pedagogy and assessment for the AI era.</p>
+<p>The costs of continued reliance on detection systems extend beyond mere technological inefficiency. Implementation of unreliable detection systems in institutional contexts creates conditions for unjust accusations and disciplinary consequences that fall disproportionately on already-marginalized students. The surveillance infrastructure implicit in detection-based approaches corrodes the trust and intellectual relationship essential to effective teaching and learning. Most fundamentally, detection-based responses represent a failure of educational leadership to engage seriously with the challenge AI poses to learning and knowledge-making practices, instead offering a technological shortcut that promises certainty while delivering injustice.</p>
+<p>The scholarly consensus emerging from academic research, policy analysis, and pedagogical scholarship points toward fundamentally different approaches: clear institutional policies defining acceptable AI use with transparency about academic integrity standards; redesigned assessments emphasizing authentic application of knowledge, critical thinking, and process-based learning; systematic development of critical AI literacy among students and faculty; and infrastructure supporting transparent documentation of student work processes rather than adversarial detection attempts. These approaches require more serious institutional investment than the relatively straightforward adoption of detection software, but they promise to address the underlying educational and ethical challenges rather than merely attempting to police their symptoms.</p>
+<p>As institutions continue navigating the integration of AI into academic life, the evidence suggests that the path forward requires moving beyond the detection paradigm. Trust, transparency, critical engagement, and pedagogically-sound assessment design offer more promising foundations for maintaining academic integrity while preparing students for lives and careers in which AI engagement is inevitable and essential.</p>
+    </article>
+    
+    <section class="references" id="references">
+        <h2>References</h2>
+        <ol>
+            <li id="ref-1">
+        <a href="#cite-1" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">1.</span>
+        "vappingo.com." Accessed February 27, 2026.
+        <a href="https://www.vappingo.com/word-blog/best-ai-tools-for-researchers-and-academics-2026/" target="_blank" rel="noopener">https://www.vappingo.com/word-blog/best-ai-tools-for-researchers-and-academics-2026/</a>
+    </li>
+<li id="ref-2">
+        <a href="#cite-2" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">2.</span>
+        "mitsloanedtech.mit.edu." Accessed February 27, 2026.
+        <a href="https://mitsloanedtech.mit.edu/ai/teach/ai-detectors-dont-work/" target="_blank" rel="noopener">https://mitsloanedtech.mit.edu/ai/teach/ai-detectors-dont-work/</a>
+    </li>
+<li id="ref-3">
+        <a href="#cite-3" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">3.</span>
+        "brandeis.edu." Accessed February 27, 2026.
+        <a href="https://www.brandeis.edu/ai-steering-council/ai-literacy/ai-teaching-learning/detection-tools.html" target="_blank" rel="noopener">https://www.brandeis.edu/ai-steering-council/ai-literacy/ai-teaching-learning/detection-tools.html</a>
+    </li>
+<li id="ref-4">
+        <a href="#cite-4" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">4.</span>
+        "scholarsreview.com." Accessed February 27, 2026.
+        <a href="https://scholarsreview.com/blogs/best-ai-peer-review-tool-2026-for-researchers" target="_blank" rel="noopener">https://scholarsreview.com/blogs/best-ai-peer-review-tool-2026-for-researchers</a>
+    </li>
+<li id="ref-5">
+        <a href="#cite-5" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">5.</span>
+        "humtech.ucla.edu." Accessed February 27, 2026.
+        <a href="https://humtech.ucla.edu/technology/the-imperfection-of-ai-detection-tools/" target="_blank" rel="noopener">https://humtech.ucla.edu/technology/the-imperfection-of-ai-detection-tools/</a>
+    </li>
+<li id="ref-6">
+        <a href="#cite-6" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">6.</span>
+        "newsroom.collegeboard.org." Accessed February 27, 2026.
+        <a href="https://newsroom.collegeboard.org/new-college-board-research-faculty-express-near-universal-concern-student-ai-use-undermines" target="_blank" rel="noopener">https://newsroom.collegeboard.org/new-college-board-research-faculty-express-near-universal-concern-student-ai-use-undermines</a>
+    </li>
+<li id="ref-7">
+        <a href="#cite-7" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">7.</span>
+        "pmc.ncbi.nlm.nih.gov." Accessed February 27, 2026.
+        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10760418/" target="_blank" rel="noopener">https://pmc.ncbi.nlm.nih.gov/articles/PMC10760418/</a>
+    </li>
+<li id="ref-8">
+        <a href="#cite-8" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">8.</span>
+        "gptzero.me." Accessed February 27, 2026.
+        <a href="https://gptzero.me/news/how-ai-detectors-work/" target="_blank" rel="noopener">https://gptzero.me/news/how-ai-detectors-work/</a>
+    </li>
+<li id="ref-9">
+        <a href="#cite-9" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">9.</span>
+        "ceur-ws.org." Accessed February 27, 2026.
+        <a href="https://ceur-ws.org/Vol-3740/paper-261.pdf" target="_blank" rel="noopener">https://ceur-ws.org/Vol-3740/paper-261.pdf</a>
+    </li>
+<li id="ref-10">
+        <a href="#cite-10" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">10.</span>
+        "proofademic.ai." Accessed February 27, 2026.
+        <a href="https://proofademic.ai/blog/false-positives-ai-detection-guide/" target="_blank" rel="noopener">https://proofademic.ai/blog/false-positives-ai-detection-guide/</a>
+    </li>
+<li id="ref-11">
+        <a href="#cite-11" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">11.</span>
+        "guides.library.ttu.edu." Accessed February 27, 2026.
+        <a href="https://guides.library.ttu.edu/artificialintelligencetools/detection" target="_blank" rel="noopener">https://guides.library.ttu.edu/artificialintelligencetools/detection</a>
+    </li>
+<li id="ref-12">
+        <a href="#cite-12" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">12.</span>
+        "arxiv.org." Accessed February 27, 2026.
+        <a href="https://arxiv.org/abs/2304.02819" target="_blank" rel="noopener">https://arxiv.org/abs/2304.02819</a>
+    </li>
+<li id="ref-13">
+        <a href="#cite-13" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">13.</span>
+        "academyforeducationalstudies.org." Accessed February 27, 2026.
+        <a href="https://academyforeducationalstudies.org/wp-content/uploads/2025/09/conrad-kamperman-final-1.pdf" target="_blank" rel="noopener">https://academyforeducationalstudies.org/wp-content/uploads/2025/09/conrad-kamperman-final-1.pdf</a>
+    </li>
+<li id="ref-14">
+        <a href="#cite-14" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">14.</span>
+        "hai.stanford.edu." Accessed February 27, 2026.
+        <a href="https://hai.stanford.edu/news/ai-detectors-biased-against-non-native-english-writers" target="_blank" rel="noopener">https://hai.stanford.edu/news/ai-detectors-biased-against-non-native-english-writers</a>
+    </li>
+<li id="ref-15">
+        <a href="#cite-15" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">15.</span>
+        "read.dukeupress.edu." Accessed February 27, 2026.
+        <a href="https://read.dukeupress.edu/critical-ai/article/doi/10.1215/2834703X-12095991/406208/A-Pedagogy-of-the-Inevitable" target="_blank" rel="noopener">https://read.dukeupress.edu/critical-ai/article/doi/10.1215/2834703X-12095991/406208/A-Pedagogy-of-the-Inevitable</a>
+    </li>
+<li id="ref-16">
+        <a href="#cite-16" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">16.</span>
+        "pmc.ncbi.nlm.nih.gov." Accessed February 27, 2026.
+        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11573885/" target="_blank" rel="noopener">https://pmc.ncbi.nlm.nih.gov/articles/PMC11573885/</a>
+    </li>
+<li id="ref-17">
+        <a href="#cite-17" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">17.</span>
+        "arxiv.org." Accessed February 27, 2026.
+        <a href="https://arxiv.org/html/2510.26008v2" target="_blank" rel="noopener">https://arxiv.org/html/2510.26008v2</a>
+    </li>
+<li id="ref-18">
+        <a href="#cite-18" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">18.</span>
+        "brookings.edu." Accessed February 27, 2026.
+        <a href="https://www.brookings.edu/articles/detecting-ai-fingerprints-a-guide-to-watermarking-and-beyond/" target="_blank" rel="noopener">https://www.brookings.edu/articles/detecting-ai-fingerprints-a-guide-to-watermarking-and-beyond/</a>
+    </li>
+<li id="ref-19">
+        <a href="#cite-19" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">19.</span>
+        "websensa.com." Accessed February 27, 2026.
+        <a href="https://www.websensa.com/beyond-ai/breaking-ai-model-security-what-works" target="_blank" rel="noopener">https://www.websensa.com/beyond-ai/breaking-ai-model-security-what-works</a>
+    </li>
+<li id="ref-20">
+        <a href="#cite-20" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">20.</span>
+        "pmc.ncbi.nlm.nih.gov." Accessed February 27, 2026.
+        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10607777/" target="_blank" rel="noopener">https://pmc.ncbi.nlm.nih.gov/articles/PMC10607777/</a>
+    </li>
+<li id="ref-21">
+        <a href="#cite-21" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">21.</span>
+        "ai.google.dev." Accessed February 27, 2026.
+        <a href="https://ai.google.dev/responsible/docs/safeguards/synthid" target="_blank" rel="noopener">https://ai.google.dev/responsible/docs/safeguards/synthid</a>
+    </li>
+<li id="ref-22">
+        <a href="#cite-22" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">22.</span>
+        "cloud.google.com." Accessed February 27, 2026.
+        <a href="https://cloud.google.com/blog/topics/threat-intelligence/threat-actor-usage-of-ai-tools" target="_blank" rel="noopener">https://cloud.google.com/blog/topics/threat-intelligence/threat-actor-usage-of-ai-tools</a>
+    </li>
+<li id="ref-23">
+        <a href="#cite-23" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">23.</span>
+        "eprints.whiterose.ac.uk." Accessed February 27, 2026.
+        <a href="https://eprints.whiterose.ac.uk/id/eprint/207396/" target="_blank" rel="noopener">https://eprints.whiterose.ac.uk/id/eprint/207396/</a>
+    </li>
+<li id="ref-24">
+        <a href="#cite-24" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">24.</span>
+        "deeplearning.ai." Accessed February 27, 2026.
+        <a href="https://www.deeplearning.ai/resources/natural-language-processing/" target="_blank" rel="noopener">https://www.deeplearning.ai/resources/natural-language-processing/</a>
+    </li>
+<li id="ref-25">
+        <a href="#cite-25" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">25.</span>
+        "arxiv.org." Accessed February 27, 2026.
+        <a href="https://arxiv.org/abs/2306.15666" target="_blank" rel="noopener">https://arxiv.org/abs/2306.15666</a>
+    </li>
+<li id="ref-26">
+        <a href="#cite-26" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">26.</span>
+        "pmc.ncbi.nlm.nih.gov." Accessed February 27, 2026.
+        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10693655/" target="_blank" rel="noopener">https://pmc.ncbi.nlm.nih.gov/articles/PMC10693655/</a>
+    </li>
+<li id="ref-27">
+        <a href="#cite-27" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">27.</span>
+        "hiddenlayer.com." Accessed February 27, 2026.
+        <a href="https://www.hiddenlayer.com/research/novel-universal-bypass-for-all-major-llms" target="_blank" rel="noopener">https://www.hiddenlayer.com/research/novel-universal-bypass-for-all-major-llms</a>
+    </li>
+<li id="ref-28">
+        <a href="#cite-28" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">28.</span>
+        "journals.sagepub.com." Accessed February 27, 2026.
+        <a href="https://journals.sagepub.com/doi/10.1177/23294906241254786" target="_blank" rel="noopener">https://journals.sagepub.com/doi/10.1177/23294906241254786</a>
+    </li>
+<li id="ref-29">
+        <a href="#cite-29" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">29.</span>
+        "edweek.org." Accessed February 27, 2026.
+        <a href="https://www.edweek.org/technology/rising-use-of-ai-in-schools-comes-with-big-downsides-for-students/2025/10" target="_blank" rel="noopener">https://www.edweek.org/technology/rising-use-of-ai-in-schools-comes-with-big-downsides-for-students/2025/10</a>
+    </li>
+<li id="ref-30">
+        <a href="#cite-30" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">30.</span>
+        "arxiv.org." Accessed February 27, 2026.
+        <a href="https://arxiv.org/html/2407.18745v1" target="_blank" rel="noopener">https://arxiv.org/html/2407.18745v1</a>
+    </li>
+<li id="ref-31">
+        <a href="#cite-31" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">31.</span>
+        "timeshighereducation.com." Accessed February 27, 2026.
+        <a href="https://www.timeshighereducation.com/depth/universities-must-compel-students-detail-how-they-use-ai-assignments" target="_blank" rel="noopener">https://www.timeshighereducation.com/depth/universities-must-compel-students-detail-how-they-use-ai-assignments</a>
+    </li>
+<li id="ref-32">
+        <a href="#cite-32" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">32.</span>
+        "etcjournal.com." Accessed February 27, 2026.
+        <a href="https://etcjournal.com/2025/09/22/10-critical-articles-on-ai-in-higher-ed-sep-2025/" target="_blank" rel="noopener">https://etcjournal.com/2025/09/22/10-critical-articles-on-ai-in-higher-ed-sep-2025/</a>
+    </li>
+<li id="ref-33">
+        <a href="#cite-33" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">33.</span>
+        "edutopia.org." Accessed February 27, 2026.
+        <a href="https://www.edutopia.org/article/equity-bias-ai-what-educators-should-know/" target="_blank" rel="noopener">https://www.edutopia.org/article/equity-bias-ai-what-educators-should-know/</a>
+    </li>
+<li id="ref-34">
+        <a href="#cite-34" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">34.</span>
+        "arxiv.org." Accessed February 27, 2026.
+        <a href="https://arxiv.org/html/2502.15176v2" target="_blank" rel="noopener">https://arxiv.org/html/2502.15176v2</a>
+    </li>
+<li id="ref-35">
+        <a href="#cite-35" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">35.</span>
+        "hai.stanford.edu." Accessed February 27, 2026.
+        <a href="https://hai.stanford.edu/news/holistic-evaluation-of-large-language-models-for-medical-applications" target="_blank" rel="noopener">https://hai.stanford.edu/news/holistic-evaluation-of-large-language-models-for-medical-applications</a>
+    </li>
+<li id="ref-36">
+        <a href="#cite-36" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">36.</span>
+        "arxiv.org." Accessed February 27, 2026.
+        <a href="https://arxiv.org/abs/2510.16255" target="_blank" rel="noopener">https://arxiv.org/abs/2510.16255</a>
+    </li>
+<li id="ref-37">
+        <a href="#cite-37" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">37.</span>
+        "arxiv.org." Accessed February 27, 2026.
+        <a href="https://arxiv.org/list/cs.AI/2024" target="_blank" rel="noopener">https://arxiv.org/list/cs.AI/2024</a>
+    </li>
+<li id="ref-38">
+        <a href="#cite-38" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">38.</span>
+        "crfm.stanford.edu." Accessed February 27, 2026.
+        <a href="https://crfm.stanford.edu/helm/" target="_blank" rel="noopener">https://crfm.stanford.edu/helm/</a>
+    </li>
+<li id="ref-39">
+        <a href="#cite-39" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">39.</span>
+        "far.ai." Accessed February 27, 2026.
+        <a href="https://far.ai/topic/robustness" target="_blank" rel="noopener">https://far.ai/topic/robustness</a>
+    </li>
+<li id="ref-40">
+        <a href="#cite-40" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">40.</span>
+        "naspa.org." Accessed February 27, 2026.
+        <a href="https://www.naspa.org/blog/the-role-of-ai-technology-and-ethical-decision-making-perspectives-from-an-undergraduate-student-and-faculty-member" target="_blank" rel="noopener">https://www.naspa.org/blog/the-role-of-ai-technology-and-ethical-decision-making-perspectives-from-an-undergraduate-student-and-faculty-member</a>
+    </li>
+<li id="ref-41">
+        <a href="#cite-41" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">41.</span>
+        "gptzero.me." Accessed February 27, 2026.
+        <a href="https://gptzero.me/news/falsely-accused-of-ai-cheating/" target="_blank" rel="noopener">https://gptzero.me/news/falsely-accused-of-ai-cheating/</a>
+    </li>
+<li id="ref-42">
+        <a href="#cite-42" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">42.</span>
+        "cursivetechnology.com." Accessed February 27, 2026.
+        <a href="https://cursivetechnology.com/ai-proofing-assignments-alternative-approaches-to-ai-detection/" target="_blank" rel="noopener">https://cursivetechnology.com/ai-proofing-assignments-alternative-approaches-to-ai-detection/</a>
+    </li>
+<li id="ref-43">
+        <a href="#cite-43" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">43.</span>
+        "kritik.ca." Accessed February 27, 2026.
+        <a href="https://www.kritik.ca/blog-post/assignment-ai-navigating-student-ai-use-in-2025" target="_blank" rel="noopener">https://www.kritik.ca/blog-post/assignment-ai-navigating-student-ai-use-in-2025</a>
+    </li>
+<li id="ref-44">
+        <a href="#cite-44" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">44.</span>
+        "activelearningps.com." Accessed February 27, 2026.
+        <a href="https://activelearningps.com/2025/06/06/5-strategies-for-ai-resistant-assignments/" target="_blank" rel="noopener">https://activelearningps.com/2025/06/06/5-strategies-for-ai-resistant-assignments/</a>
+    </li>
+<li id="ref-45">
+        <a href="#cite-45" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">45.</span>
+        "aclanthology.org." Accessed February 27, 2026.
+        <a href="https://aclanthology.org/2024.acl-long.327.pdf" target="_blank" rel="noopener">https://aclanthology.org/2024.acl-long.327.pdf</a>
+    </li>
+<li id="ref-46">
+        <a href="#cite-46" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">46.</span>
+        "frontiersin.org." Accessed February 27, 2026.
+        <a href="https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2025.1647687/full" target="_blank" rel="noopener">https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2025.1647687/full</a>
+    </li>
+<li id="ref-47">
+        <a href="#cite-47" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">47.</span>
+        "asccc.org." Accessed February 27, 2026.
+        <a href="https://www.asccc.org/content/ai-powered-education-authentic-assessments-and-learning" target="_blank" rel="noopener">https://www.asccc.org/content/ai-powered-education-authentic-assessments-and-learning</a>
+    </li>
+<li id="ref-48">
+        <a href="#cite-48" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">48.</span>
+        "arxiv.org." Accessed February 27, 2026.
+        <a href="https://arxiv.org/html/2510.02319v1" target="_blank" rel="noopener">https://arxiv.org/html/2510.02319v1</a>
+    </li>
+<li id="ref-49">
+        <a href="#cite-49" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">49.</span>
+        "bera-journals.onlinelibrary.wiley.com." Accessed February 27, 2026.
+        <a href="https://bera-journals.onlinelibrary.wiley.com/doi/full/10.1111/bjet.13585" target="_blank" rel="noopener">https://bera-journals.onlinelibrary.wiley.com/doi/full/10.1111/bjet.13585</a>
+    </li>
+<li id="ref-50">
+        <a href="#cite-50" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">50.</span>
+        "aisel.aisnet.org." Accessed February 27, 2026.
+        <a href="https://aisel.aisnet.org/cgi/viewcontent.cgi?article=1001&context=neais2025" target="_blank" rel="noopener">https://aisel.aisnet.org/cgi/viewcontent.cgi?article=1001&context=neais2025</a>
+    </li>
+        </ol>
+    </section>
+    <footer>filed under: things worth knowing</footer>
+</body>
+</html>
