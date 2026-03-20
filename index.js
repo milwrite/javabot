@@ -1646,7 +1646,8 @@ async function executeReadOnlyTool(functionName, args, parsePathArg, fileReadCac
             focusAreas: args.focus_areas,
             dateRange: args.date_range,
             contextText: contextText,
-            citationStyle: args.citation_style || 'chicago'
+            citationStyle: args.citation_style || 'chicago',
+            sourceTypes: args.source_types || null
         });
 
         // Format result based on format type
@@ -2314,7 +2315,7 @@ const commands = [
                 .addChoices(
                     { name: 'Comprehensive Review (default)', value: 'review' },
                     { name: 'Annotated Taxonomy', value: 'taxonomy' },
-                    { name: 'Cover Letter (job applications)', value: 'cover-letter' }
+                    { name: 'Literature Review (academic)', value: 'lit-review' }
                 ))
         .addStringOption(option =>
             option.setName('context_url')
@@ -2344,7 +2345,19 @@ const commands = [
                 .addChoices(
                     { name: 'Chicago (default)', value: 'chicago' },
                     { name: 'APA', value: 'apa' },
+                    { name: 'MLA', value: 'mla' },
                     { name: 'Numbered', value: 'numbered' }
+                ))
+        .addStringOption(option =>
+            option.setName('source_types')
+                .setDescription('What kinds of sources to draw from')
+                .setRequired(false)
+                .addChoices(
+                    { name: 'Anything (default)', value: 'any' },
+                    { name: 'Peer-reviewed articles', value: 'peer-reviewed' },
+                    { name: 'Blogs & websites', value: 'blogs-websites' },
+                    { name: 'Social media & forums', value: 'social-media' },
+                    { name: 'News & journalism', value: 'news' }
                 )),
 
     new SlashCommandBuilder()
@@ -3702,6 +3715,7 @@ async function handleDeepResearch(interaction) {
     const focusAreas = interaction.options.getString('focus_areas');
     const dateRange = interaction.options.getString('date_range');
     const citationStyle = interaction.options.getString('citation_style') || 'chicago';
+    const sourceTypes = interaction.options.getString('source_types') || null;
 
     try {
         // Initial thinking message
@@ -3744,7 +3758,8 @@ async function handleDeepResearch(interaction) {
             focusAreas,
             dateRange,
             contextText,
-            citationStyle
+            citationStyle,
+            sourceTypes
         });
 
         // Generate format-specific HTML report
@@ -3763,7 +3778,7 @@ async function handleDeepResearch(interaction) {
         const { embed } = formatDeepResearchForDiscord(result, query);
 
         // Add format information to footer
-        const formatLabel = { 'review': 'Comprehensive Review', 'taxonomy': 'Annotated Taxonomy', 'cover-letter': 'Research-Informed Cover Letter' }[format] || format;
+        const formatLabel = { 'review': 'Comprehensive Review', 'taxonomy': 'Annotated Taxonomy', 'lit-review': 'Literature Review' }[format] || format;
         embed.setURL(liveUrl);
         embed.setFooter({ text: `${formatLabel} · full report → ${liveUrl}` });
 

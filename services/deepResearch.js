@@ -28,7 +28,8 @@ function buildResearchPrompt(query, options = {}) {
         depth = 'standard',
         focusAreas = null,
         dateRange = null,
-        contextText = null
+        contextText = null,
+        sourceTypes = null
     } = options;
 
     // Depth instructions
@@ -55,15 +56,18 @@ Structure: Main categories → Subcategories → Specific items with brief descr
 Use clear hierarchical indentation with bullet points. Include dates where relevant.
 
 ${citationInstruction}`,
-        'cover-letter': `You are helping write a professional cover letter for a job application. Based on the job context provided and your research, generate a 300-500 word cover letter (4-6 paragraphs) that:
-1. Opens with specific interest in the role
-2. Connects applicant's research interests to the job requirements
-3. References relevant scholarly knowledge from your research
-4. Demonstrates understanding of the field's current landscape
-5. Closes with enthusiasm and fit
+        'lit-review': `Write an academic literature review on the following topic, as it would appear in an academic paper or dissertation. Structure it as an in-context review of the literature ${depthInstruction}.
 
-Use formal but personable academic tone. Reference specific requirements from the job posting where relevant.
-${depthInstruction}. Cite sources to demonstrate field knowledge.
+Requirements:
+1. Use formal academic prose with topic sentences and clear transitions between sources
+2. Synthesize sources thematically rather than summarizing them one-by-one
+3. Identify consensus, debates, and gaps in the existing literature
+4. Position findings within broader scholarly conversations
+5. Use hedging language where appropriate ("suggests", "argues", "demonstrates")
+6. Group related works and draw connections between them
+7. Conclude with a synthesis of current knowledge and identified gaps
+
+Write in third person. Maintain the analytical tone of a peer-reviewed journal article.
 
 ${citationInstruction}`
     };
@@ -73,7 +77,7 @@ ${citationInstruction}`
     // Build context section
     let contextSection = '';
     if (contextText) {
-        contextSection = `\nJOB/CONTEXT FROM PROVIDED URL:
+        contextSection = `\nCONTEXT FROM PROVIDED URL:
 ${contextText}
 
 ---
@@ -93,7 +97,20 @@ ${contextText}
         dateSection = `\nPrioritize sources published ${dateRange}. If time-sensitive, emphasize recent developments.\n`;
     }
 
-    return `${formatPrompt}\n\n${contextSection}Research Query:\n${query}${focusSection}${dateSection}\n\nRemember: Use inline [1], [2], [3] bracket citations throughout your response for every factual claim. Do not omit citations.`;
+    // Build source types section
+    let sourceSection = '';
+    if (sourceTypes) {
+        const sourceInstructions = {
+            'any': '', // no restriction
+            'peer-reviewed': '\nIMPORTANT: Draw ONLY from peer-reviewed academic articles, scholarly journals, and published academic research. Exclude blogs, news articles, social media, and non-academic websites.\n',
+            'blogs-websites': '\nFocus on blog posts, website articles, and online publications (not academic journals). Include personal blogs, industry publications, and journalistic sources.\n',
+            'social-media': '\nFocus on social media discussions, Reddit threads, Twitter/X posts, forum posts, and online community discussions about this topic.\n',
+            'news': '\nFocus on news articles, journalism, and media coverage from established news organizations and reporting outlets.\n'
+        };
+        sourceSection = sourceInstructions[sourceTypes] || '';
+    }
+
+    return `${formatPrompt}\n\n${contextSection}Research Query:\n${query}${focusSection}${dateSection}${sourceSection}\n\nRemember: Use inline [1], [2], [3] bracket citations throughout your response for every factual claim. Do not omit citations.`;
 }
 
 /**
@@ -135,16 +152,42 @@ function formatNumberedCitation(num, url) {
 }
 
 /**
+ * Format citation in MLA style
+ * MLA: "Page Title." Website Name, Day Month Year, URL.
+ * Since we don't have full metadata, simplified: Domain. Web. Accessed Date. URL.
+ * @param {number} num - Citation number
+ * @param {string} url - Source URL
+ * @returns {string} - MLA-formatted HTML citation with back-link
+ */
+function formatMLACitation(num, url) {
+    const domain = extractDomain(url);
+    const accessDate = new Date().toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+
+    return `<li id="ref-${num}">
+        <a href="#cite-${num}" class="back-ref" title="Back to text">↩</a>
+        <span class="cite-num">${num}.</span>
+        "${domain}." <em>Web.</em> Accessed ${accessDate}.
+        <a href="${url}" target="_blank" rel="noopener">${url}</a>
+    </li>`;
+}
+
+/**
  * Format a citation using the specified style
  * @param {number} num - Citation number
  * @param {string} url - Source URL
- * @param {string} style - Citation style (chicago, apa, numbered)
+ * @param {string} style - Citation style (chicago, apa, mla, numbered)
  * @returns {string} - Formatted HTML citation
  */
 function formatCitationByStyle(num, url, style = 'chicago') {
     switch (style) {
         case 'apa':
             return formatAPACitation(num, url);
+        case 'mla':
+            return formatMLACitation(num, url);
         case 'numbered':
             return formatNumberedCitation(num, url);
         case 'chicago':
@@ -158,12 +201,13 @@ function formatCitationByStyle(num, url, style = 'chicago') {
  * @param {string} query - Research query
  * @param {object} options - Optional configuration
  * @param {Function} options.onProgress - Progress callback for long-running queries
- * @param {string} options.format - Output format (review, taxonomy, cover-letter)
+ * @param {string} options.format - Output format (review, taxonomy, lit-review)
  * @param {string} options.depth - Research depth (focused, standard, comprehensive)
  * @param {string} options.focusAreas - Comma-separated focus areas
  * @param {string} options.dateRange - Source date filter
  * @param {string} options.contextText - Scraped context from URL
- * @param {string} options.citationStyle - Citation style (chicago, apa, numbered)
+ * @param {string} options.citationStyle - Citation style (chicago, apa, mla, numbered)
+ * @param {string} options.sourceTypes - Source type filter (any, peer-reviewed, blogs-websites, social-media, news)
  * @returns {object} - { content: string, citations: array, usage: object }
  */
 async function deepResearch(query, options = {}) {
@@ -174,7 +218,8 @@ async function deepResearch(query, options = {}) {
         focusAreas = null,
         dateRange = null,
         contextText = null,
-        citationStyle = 'chicago'
+        citationStyle = 'chicago',
+        sourceTypes = null
     } = options;
 
     // Set up progress interval (every 30 seconds)
@@ -195,7 +240,8 @@ async function deepResearch(query, options = {}) {
             depth,
             focusAreas,
             dateRange,
-            contextText
+            contextText,
+            sourceTypes
         });
 
         const response = await axios.post(OPENROUTER_URL, {
@@ -674,9 +720,9 @@ function generateFormattedReportHTML(result, query, options = {}) {
     const format = result.format || 'review';
     const citationStyle = result.citationStyle || 'chicago';
 
-    // Check if this is a cover-letter format (special handling)
-    if (format === 'cover-letter') {
-        return generateCoverLetterHTML(result, query, citationStyle);
+    // Route to format-specific HTML generator
+    if (format === 'lit-review') {
+        return generateLitReviewHTML(result, query, citationStyle);
     } else if (format === 'taxonomy') {
         return generateTaxonomyHTML(result, query, citationStyle);
     } else {
@@ -832,15 +878,15 @@ function generateTaxonomyHTML(result, query, citationStyle = 'chicago') {
 }
 
 /**
- * Generate HTML for cover-letter format
- * Professional letter format with research-informed content
+ * Generate HTML for lit-review format
+ * Academic literature review with in-context citations
  * @param {object} result - Research result
  * @param {string} query - Original query
  * @param {string} citationStyle - Citation style to use
  * @returns {object} - { html: string, slug: string, filename: string }
  */
-function generateCoverLetterHTML(result, query, citationStyle = 'chicago') {
-    const slug = generateSlug(query) + '-cover-letter';
+function generateLitReviewHTML(result, query, citationStyle = 'chicago') {
+    const slug = generateSlug(query) + '-lit-review';
     const title = generateTitle(query);
     const displayDate = new Date().toLocaleDateString('en-US', {
         year: 'numeric', month: 'short', day: 'numeric'
@@ -848,8 +894,8 @@ function generateCoverLetterHTML(result, query, citationStyle = 'chicago') {
 
     const citationMap = result.citationMap || {};
 
-    // Build citations section
-    let citationsHTML = '';
+    // Build works cited / references section
+    let referencesHTML = '';
     const citationNumbers = Object.keys(citationMap).map(Number).sort((a, b) => a - b);
 
     if (citationNumbers.length > 0) {
@@ -857,132 +903,126 @@ function generateCoverLetterHTML(result, query, citationStyle = 'chicago') {
             .map(num => formatCitationByStyle(num, citationMap[num], citationStyle))
             .join('\n');
 
-        citationsHTML = `
-    <section class="letter-sources" id="sources">
-        <h3>Research Sources</h3>
+        // Use MLA "Works Cited" heading for MLA style, "References" otherwise
+        const refHeading = citationStyle === 'mla' ? 'Works Cited' : 'References';
+
+        referencesHTML = `
+    <section class="references" id="references">
+        <h2>${refHeading}</h2>
         <ol>
             ${citationItems}
         </ol>
     </section>`;
     }
 
-    // Clean letter content (remove citation numbers for letter format, they'll be in sources)
-    let letterContent = result.content
-        .replace(/\[\d+\]/g, '') // Remove citation brackets
-        .replace(/\n{3,}/g, '\n\n') // Normalize line breaks
-        .trim();
-
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cover Letter - ${title}</title>
+    <title>Literature Review: ${title}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Courier New', monospace;
             background: #0a0a0a;
             color: #7ec8e3;
-            line-height: 1.65;
+            line-height: 1.7;
             padding: 60px 20px 80px;
-            max-width: 650px;
+            max-width: 700px;
             margin: 0 auto;
         }
         a { color: #00ffff; text-decoration: none; }
         a:hover { color: #ff0000; text-decoration: underline; }
         .home-link { display: inline-block; margin-bottom: 40px; font-size: 13px; }
-        .home-link::before { content: '← '; }
+        .home-link::before { content: '\\2190 '; }
         header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #333; }
-        header h1 { color: #ff0000; font-size: 16px; font-weight: normal; margin-bottom: 8px; }
+        header h1 { color: #ff0000; font-size: 18px; font-weight: normal; margin-bottom: 8px; }
         header .meta { font-size: 11px; color: #555; }
 
-        .letter-body {
-            color: #7ec8e3;
-            margin: 30px 0;
-        }
-        .letter-body p {
-            margin-bottom: 20px;
+        article { color: #aaa; }
+        article h1 { color: #00ffff; font-size: 17px; font-weight: normal; margin: 35px 0 15px; }
+        article h2 { color: #ff0000; font-size: 15px; font-weight: normal; margin: 30px 0 12px; }
+        article h3 { color: #7ec8e3; font-size: 14px; font-weight: normal; margin: 20px 0 10px; }
+        article p {
+            margin-bottom: 18px;
             text-align: justify;
-            letter-spacing: 0.3px;
+            text-indent: 2em;
         }
-        .letter-body p:first-letter {
-            margin-right: 2px;
-        }
+        article p:first-child { text-indent: 0; }
+        article strong { color: #00ffff; font-weight: normal; }
+        article em { font-style: italic; color: #999; }
 
-        /* Citation styling in letter */
+        /* Citation styling */
         .citation { font-size: 0.75em; vertical-align: super; line-height: 0; }
-        .citation a { color: #ff0000; padding: 0 1px; }
+        .citation a { color: #ff0000; padding: 0 1px; text-decoration: none; }
         .citation a:hover { color: #ff9999; text-decoration: underline; }
 
-        /* Research sources section */
-        .letter-sources {
+        /* References / Works Cited section */
+        .references {
             margin-top: 50px;
             padding-top: 25px;
             border-top: 1px solid #333;
         }
-        .letter-sources h3 {
+        .references h2 {
             color: #ff0000;
-            font-size: 12px;
-            margin-bottom: 15px;
+            font-size: 14px;
+            margin-bottom: 20px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        .letter-sources ol {
+        .references ol {
             list-style: none;
             padding: 0;
         }
-        .letter-sources li {
-            font-size: 11px;
-            margin: 10px 0;
-            padding-left: 25px;
+        .references li {
+            font-size: 12px;
+            margin: 12px 0;
+            padding-left: 30px;
             position: relative;
-            line-height: 1.4;
+            line-height: 1.5;
             word-break: break-word;
             color: #666;
         }
-        .letter-sources .back-ref {
+        .references .back-ref {
             position: absolute;
             left: 0;
             top: 0;
             color: #ff0000;
             text-decoration: none;
-            font-size: 10px;
+            font-size: 11px;
         }
-        .letter-sources .cite-num {
+        .references .back-ref:hover { color: #ff9999; }
+        .references .cite-num {
             color: #666;
-            margin-right: 6px;
+            margin-right: 8px;
         }
-        .letter-sources li a:not(.back-ref) {
+        .references li a:not(.back-ref) {
             color: #00ffff;
             word-break: break-all;
         }
-        .letter-sources li a:not(.back-ref):hover { color: #ff0000; }
+        .references li a:not(.back-ref):hover { color: #ff0000; }
 
         footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 10px; color: #444; }
-        .generated-note { font-size: 10px; color: #555; margin-top: 10px; }
 
         @media (max-width: 600px) {
             body { padding: 40px 15px 60px; }
-            header h1 { font-size: 14px; }
-            .letter-body p { font-size: 14px; }
+            header h1 { font-size: 16px; }
+            article p { text-indent: 1.5em; }
         }
     </style>
 </head>
 <body>
     <a class="home-link" href="../../index.html"></a>
     <header>
-        <h1>Research-Informed Cover Letter</h1>
-        <div class="meta">generated ${displayDate} · for application: ${title}</div>
+        <h1>Literature Review: ${title}</h1>
+        <div class="meta">researched ${displayDate} · dug up by sportello</div>
     </header>
-    <div class="letter-body">
-        ${letterContent.split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('')}
-    </div>
-    ${citationsHTML}
-    <footer>
-        <p>filed under: job applications · powered by deep research</p>
-        <p class="generated-note">This cover letter was generated using scholarly research and synthesized with job requirements. Customize as needed for your application.</p>
-    </footer>
+    <article>
+        ${contentToHTML(result.content, citationMap)}
+    </article>
+    ${referencesHTML}
+    <footer>filed under: literature reviews</footer>
 </body>
 </html>`;
 

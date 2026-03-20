@@ -223,19 +223,19 @@ const ALL_TOOLS = [
         type: 'function',
         function: {
             name: 'deep_research',
-            description: 'In-depth research with citations (1-3 minutes). Use when user requests: deep/thorough/extensive research, literature review, taxonomy/timeline, cover letter research, or comprehensive analysis on a topic. Format options: review (narrative analysis), taxonomy (hierarchical bullets with dates - good for timelines/histories), cover-letter (job application focused - requires context_url for job posting).',
+            description: 'In-depth research with citations (1-3 minutes). Use when user requests: deep/thorough/extensive research, literature review, taxonomy/timeline, or comprehensive analysis on a topic. Format options: review (narrative analysis), taxonomy (hierarchical bullets with dates - good for timelines/histories), lit-review (academic literature review as it would appear in a paper).',
             parameters: {
                 type: 'object',
                 properties: {
                     query: { type: 'string', description: 'Detailed research question or topic' },
                     format: {
                         type: 'string',
-                        enum: ['review', 'taxonomy', 'cover-letter'],
-                        description: 'Output format: review (comprehensive narrative), taxonomy (hierarchical bullets with dates), cover-letter (job application). Default: review'
+                        enum: ['review', 'taxonomy', 'lit-review'],
+                        description: 'Output format: review (comprehensive narrative), taxonomy (hierarchical bullets with dates), lit-review (academic literature review). Default: review'
                     },
                     context_url: {
                         type: 'string',
-                        description: 'Optional URL to scrape for context (e.g., job posting, reference document). Enhances research with specific requirements.'
+                        description: 'Optional URL to scrape for context (e.g., reference document). Enhances research with specific requirements.'
                     },
                     depth: {
                         type: 'string',
@@ -252,8 +252,13 @@ const ALL_TOOLS = [
                     },
                     citation_style: {
                         type: 'string',
-                        enum: ['chicago', 'apa', 'numbered'],
-                        description: 'Citation formatting: chicago (default), apa, numbered'
+                        enum: ['chicago', 'apa', 'mla', 'numbered'],
+                        description: 'Citation formatting: chicago (default), apa, mla, numbered'
+                    },
+                    source_types: {
+                        type: 'string',
+                        enum: ['any', 'peer-reviewed', 'blogs-websites', 'social-media', 'news'],
+                        description: 'What kinds of sources to draw from: any (default), peer-reviewed (academic articles only), blogs-websites, social-media (Reddit/forums), news'
                     }
                 },
                 required: ['query']
