@@ -8,7 +8,8 @@ const { EmbedBuilder } = require('discord.js');
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const DEEP_RESEARCH_MODEL = 'perplexity/sonar-deep-research';
-const DEEP_RESEARCH_TIMEOUT = 180000; // 3 minutes
+const DEEP_RESEARCH_TIMEOUT = 300000; // 5 minutes (deep research can take a while)
+const DEEP_RESEARCH_MAX_TOKENS = 16000; // High limit to avoid truncating citations
 
 /**
  * Build format-specific research prompt
@@ -40,12 +41,20 @@ function buildResearchPrompt(query, options = {}) {
     const depthInstruction = depthInstructions[depth] || depthInstructions['standard'];
 
     // Format-specific instructions
+    // IMPORTANT: All formats must explicitly request inline [N] bracket citations
+    // Perplexity returns a citations array that maps to these bracket numbers
+    const citationInstruction = `CRITICAL: You MUST use inline numbered citations throughout your response using bracket notation like [1], [2], [3] etc. Every factual claim must have at least one citation. Place citations immediately after the relevant sentence or claim. Do NOT save all citations for the end — distribute them throughout the text.`;
+
     const formatInstructions = {
-        'review': `Research the following topic comprehensively ${depthInstruction}. Provide detailed analysis with sources and citations:`,
+        'review': `Research the following topic comprehensively ${depthInstruction}. Provide detailed analysis organized with clear section headings.
+
+${citationInstruction}`,
         'taxonomy': `Research the following topic and organize findings as a hierarchical taxonomy using bullet points and nested lists ${depthInstruction}.
 Each entry should include key facts, dates, and citations. Group related concepts.
 Structure: Main categories → Subcategories → Specific items with brief descriptions.
-Use clear hierarchical indentation with bullet points. Include dates where relevant.`,
+Use clear hierarchical indentation with bullet points. Include dates where relevant.
+
+${citationInstruction}`,
         'cover-letter': `You are helping write a professional cover letter for a job application. Based on the job context provided and your research, generate a 300-500 word cover letter (4-6 paragraphs) that:
 1. Opens with specific interest in the role
 2. Connects applicant's research interests to the job requirements
@@ -54,7 +63,9 @@ Use clear hierarchical indentation with bullet points. Include dates where relev
 5. Closes with enthusiasm and fit
 
 Use formal but personable academic tone. Reference specific requirements from the job posting where relevant.
-${depthInstruction}. Cite sources to demonstrate field knowledge.`
+${depthInstruction}. Cite sources to demonstrate field knowledge.
+
+${citationInstruction}`
     };
 
     const formatPrompt = formatInstructions[format] || formatInstructions['review'];
@@ -82,7 +93,7 @@ ${contextText}
         dateSection = `\nPrioritize sources published ${dateRange}. If time-sensitive, emphasize recent developments.\n`;
     }
 
-    return `${formatPrompt}\n\n${contextSection}Research Query:\n${query}${focusSection}${dateSection}\n\nProvide detailed analysis with sources and citations.`;
+    return `${formatPrompt}\n\n${contextSection}Research Query:\n${query}${focusSection}${dateSection}\n\nRemember: Use inline [1], [2], [3] bracket citations throughout your response for every factual claim. Do not omit citations.`;
 }
 
 /**
@@ -193,7 +204,7 @@ async function deepResearch(query, options = {}) {
                 role: 'user',
                 content: prompt
             }],
-            max_tokens: 8000,
+            max_tokens: DEEP_RESEARCH_MAX_TOKENS,
             temperature: 0.3,
             provider: { data_collection: 'deny' } // ZDR enforcement
         }, {
@@ -209,12 +220,23 @@ async function deepResearch(query, options = {}) {
         // Clear progress interval
         if (progressInterval) clearInterval(progressInterval);
 
-        const message = response.data.choices[0].message;
+        const choice = response.data.choices[0];
+        const message = choice.message;
+        const finishReason = choice.finish_reason;
+
+        // Log finish reason — 'length' means content was truncated by token limit
+        console.log(`[DEEP_RESEARCH] finish_reason: ${finishReason}, content length: ${message.content?.length || 0} chars`);
+        if (finishReason === 'length') {
+            console.warn(`[DEEP_RESEARCH] ⚠️ Response truncated by max_tokens (${DEEP_RESEARCH_MAX_TOKENS}). Citations may be incomplete.`);
+        }
 
         // Perplexity returns citations in response.data.citations as an array of URLs
         // These correspond to [1], [2], etc. in the text (1-indexed)
-        let apiCitations = response.data.citations || [];
-        console.log(`[DEEP_RESEARCH] API returned ${apiCitations.length} citations`);
+        // OpenRouter may also place them under choices[0].message.citations
+        let apiCitations = response.data.citations
+            || choice.message?.citations
+            || [];
+        console.log(`[DEEP_RESEARCH] API returned ${apiCitations.length} citations (top-level: ${(response.data.citations || []).length}, message-level: ${(choice.message?.citations || []).length})`);
 
         // Fallback: if no API citations, try extracting URLs from content
         if (apiCitations.length === 0) {
@@ -230,12 +252,21 @@ async function deepResearch(query, options = {}) {
             citationMap[index + 1] = url; // 1-indexed to match [1], [2], etc.
         });
 
+        // Also scan content for the highest [N] bracket number used
+        // If the content references more citations than we have in the map,
+        // the text was likely truncated or citations were lost
+        const bracketNums = [...(message.content.matchAll(/\[(\d+)\]/g))].map(m => parseInt(m[1]));
+        const maxBracketNum = bracketNums.length > 0 ? Math.max(...bracketNums) : 0;
+        if (maxBracketNum > Object.keys(citationMap).length) {
+            console.warn(`[DEEP_RESEARCH] ⚠️ Content references [${maxBracketNum}] but only ${Object.keys(citationMap).length} citations available. Some references may be unlinked.`);
+        }
+
         // Clean up the content
         const cleanContent = message.content
             .replace(/\n{4,}/g, '\n\n\n')
             .trim();
 
-        console.log(`[DEEP_RESEARCH] Built citationMap with ${Object.keys(citationMap).length} entries`);
+        console.log(`[DEEP_RESEARCH] Built citationMap with ${Object.keys(citationMap).length} entries, max bracket ref: [${maxBracketNum}]`);
 
         return {
             content: cleanContent,
@@ -258,29 +289,41 @@ async function deepResearch(query, options = {}) {
  * @returns {object} - { cleanContent: string, citations: array, citationMap: object }
  */
 function extractCitations(content) {
-    const urlPattern = /https?:\/\/[^\s\]\)]+/g;
     const citations = [];
+    const citationMap = {};
 
-    // Extract unique URLs as citations
-    let match;
-    while ((match = urlPattern.exec(content)) !== null) {
-        // Clean trailing punctuation from URLs
-        let url = match[0].replace(/[.,;:!?\)]+$/, '');
+    // Strategy 1: Look for numbered reference lines like "1. https://..." or "[1] https://..."
+    // This handles when the model writes its own references section
+    const numberedRefPattern = /(?:^|\n)\s*(?:\[?(\d+)\]?[\.\):\s]+)(https?:\/\/[^\s\]\)]+)/g;
+    let numberedMatch;
+    while ((numberedMatch = numberedRefPattern.exec(content)) !== null) {
+        const num = parseInt(numberedMatch[1]);
+        let url = numberedMatch[2].replace(/[.,;:!?\)]+$/, '');
         if (!citations.includes(url)) {
             citations.push(url);
+            citationMap[num] = url;
         }
     }
 
-    // Build citation map: bracket number [n] -> nth URL (1-indexed)
-    // Perplexity uses sequential numbering: [1] = 1st URL, [2] = 2nd URL, etc.
-    const citationMap = {};
-    citations.forEach((url, index) => {
-        citationMap[index + 1] = url; // [1] -> citations[0], [2] -> citations[1], etc.
-    });
+    // Strategy 2: If no numbered refs found, extract all unique URLs in order
+    if (citations.length === 0) {
+        const urlPattern = /https?:\/\/[^\s\]\)]+/g;
+        let match;
+        while ((match = urlPattern.exec(content)) !== null) {
+            let url = match[0].replace(/[.,;:!?\)]+$/, '');
+            if (!citations.includes(url)) {
+                citations.push(url);
+            }
+        }
+        // Map sequentially
+        citations.forEach((url, index) => {
+            citationMap[index + 1] = url;
+        });
+    }
 
     // Keep content as-is (Perplexity formats it well)
     let cleanContent = content
-        .replace(/\n{4,}/g, '\n\n\n') // Normalize excessive line breaks
+        .replace(/\n{4,}/g, '\n\n\n')
         .trim();
 
     return { cleanContent, citations, citationMap };
