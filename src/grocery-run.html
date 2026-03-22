@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GROCERY RUN</title>
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.4;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #ff00ff;
+            border-bottom: 2px solid #ff00ff;
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .item-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .item-card:hover {
+            border-color: #ff00ff;
+            transform: translateY(-2px);
+        }
+        
+        .item-name {
+            color: #ffff00;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .item-quantity {
+            color: #00ffff;
+            font-size: 0.9rem;
+        }
+        
+        .timestamp {
+            color: #888;
+            font-size: 0.8rem;
+            margin-top: 2rem;
+            border-top: 1px solid #333;
+            padding-top: 1rem;
+        }
+        
+        .back-link {
+            color: #ff00ff;
+            text-decoration: none;
+            margin-top: 2rem;
+            display: inline-block;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GROCERY RUN</h1>
+        
+        <div class="inventory-grid">
+            <div class="item-card">
+                <div class="item-name">CELERY</div>
+                <div class="item-quantity">QUANTITY: FOUR</div>
+            </div>
+            
+            <div class="item-card">
+                <div class="item-name">CARROTS</div>
+                <div class="item-quantity">QUANTITY: THREE</div>
+            </div>
+            
+            <div class="item-card">
+                <div class="item-name">SWEET POTATOES</div>
+                <div class="item-quantity">QUANTITY: THREE</div>
+            </div>
+            
+            <div class="item-card">
+                <div class="item-name">LARGE BEETS</div>
+                <div class="item-quantity">QUANTITY: THREE</div>
+            </div>
+            
+            <div class="item-card">
+                <div class="item-name">APPLES</div>
+                <div class="item-quantity">QUANTITY: TWO</div>
+            </div>
+            
+            <div class="item-card">
+                <div class="item-name">ONIONS</div>
+                <div class="item-quantity">QUANTITY: ONE</div>
+            </div>
+            
+            <div class="item-card">
+                <div class="item-name">GARLIC</div>
+                <div class="item-quantity">QUANTITY: ONE</div>
+            </div>
+            
+            <div class="item-card">
+                <div class="item-name">CHICKEN THIGH</div>
+                <div class="item-quantity">QUANTITY: FAMILY PACK</div>
+            </div>
+            
+            <div class="item-card">
+                <div class="item-name">BUTTERNUT SQUASH</div>
+                <div class="item-quantity">QUANTITY: ONE</div>
+            </div>
+            
+            <div class="item-card">
+                <div class="item-name">COCONUT MILK</div>
+                <div class="item-quantity">QUANTITY: ONE CAN</div>
+            </div>
+            
+            <div class="item-card">
+                <div class="item-name">GROUND PORK</div>
+                <div class="item-quantity">QUANTITY: ONE PACK</div>
+            </div>
+        </div>
+        
+        <div class="timestamp">
+            INVENTORY SCANNED: 2024-12-19 14:30 UTC<br>
+            SYSTEM STATUS: OPERATIONAL
+        </div>
+        
+        <a href="https://bot.inference-arcade.com/" class="back-link">← BACK TO ARCADE</a>
+    </div>
+</body>
+</html>
