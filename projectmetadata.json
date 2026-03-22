@@ -620,6 +620,12 @@
       "description": "Conversational Datasets Catalog noir project",
       "icon": "🌐",
       "collection": "unsorted"
+    },
+    "grocery-run": {
+      "title": "Grocery Run",
+      "description": "Terminal-style grocery inventory tracker",
+      "icon": "🛒",
+      "collection": "utilities-apps"
     }
   }
 }
