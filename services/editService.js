@@ -43,7 +43,8 @@ const EDIT_TOOLS = [
                             { type: 'array', items: { type: 'string' }, description: 'Array of files/directories to search' }
                         ]
                     },
-                    case_insensitive: { type: 'boolean', description: 'Case-insensitive search (default: false)' }
+                    case_insensitive: { type: 'boolean', description: 'Case-insensitive search (default: false)' },
+                    file_pattern: { type: 'string', description: 'Filter by filename pattern (e.g., ".html", "crossword")' }
                 },
                 required: ['pattern']
             }
@@ -255,7 +256,8 @@ async function getEditResponse(userMessage, conversationMessages = [], context =
                     result = await fileExists(args.path);
                 } else if (functionName === 'search_files') {
                     result = await searchFiles(args.pattern, args.path || './src', {
-                        caseInsensitive: args.case_insensitive || false
+                        caseInsensitive: args.case_insensitive || false,
+                        filePattern: args.file_pattern || null
                     });
                     // Track search patterns and failures for clarification
                     searchPatterns.push(args.pattern);

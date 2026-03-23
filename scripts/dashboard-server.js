@@ -59,7 +59,10 @@ class DashboardServer {
             res.setHeader('Content-Type', 'text/event-stream');
             res.setHeader('Cache-Control', 'no-cache');
             res.setHeader('Connection', 'keep-alive');
-            res.setHeader('Access-Control-Allow-Origin', '*');
+            const origin = req.headers.origin || '';
+            if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+                res.setHeader('Access-Control-Allow-Origin', origin);
+            }
 
             // Send initial connection event
             res.write('event: connected\ndata: {"status":"connected"}\n\n');

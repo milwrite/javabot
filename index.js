@@ -38,6 +38,17 @@ const agentLog = require('./services/agentLogging');
 const DashboardServer = require('./scripts/dashboard-server');
 let dashboard = null;
 
+const DEVLOG_WATCH_PATH = 'docs/DEVLOG.md';
+let devlogWatcherActive = false;
+
+function stopDevlogWatcher() {
+    if (devlogWatcherActive) {
+        fsSync.unwatchFile(DEVLOG_WATCH_PATH);
+        devlogWatcherActive = false;
+        console.log('[WATCHER] DEVLOG.md watcher stopped');
+    }
+}
+
 // Edit service (streamlined edit loop)
 const { getEditResponse: getEditResponseService } = require('./services/editService');
 
@@ -112,20 +123,21 @@ agentLog.init().then(async (connected) => {
 });
 
 // Graceful shutdown handlers
-process.on('SIGTERM', async () => {
-    console.log('🛑 SIGTERM received, shutting down gracefully...');
-    await agentLog.endSession(0, 'sigterm');
+async function gracefulShutdown(reason) {
+    console.log(`🛑 ${reason.toUpperCase()} received, shutting down gracefully...`);
+    stopDevlogWatcher();
+    await agentLog.endSession(0, reason);
     await agentLog.close();
     if (dashboard) await dashboard.stop();
     process.exit(0);
+}
+
+process.on('SIGTERM', async () => {
+    await gracefulShutdown('sigterm');
 });
 
 process.on('SIGINT', async () => {
-    console.log('🛑 SIGINT received, shutting down gracefully...');
-    await agentLog.endSession(0, 'sigint');
-    await agentLog.close();
-    if (dashboard) await dashboard.stop();
-    process.exit(0);
+    await gracefulShutdown('sigint');
 });
 
 // Configuration constants
@@ -3866,8 +3878,8 @@ async function handleImage(interaction) {
 }
 
 // File watcher for DEVLOG.md to trigger site inventory updates
-if (fsSync.existsSync('docs/DEVLOG.md')) {
-    fsSync.watchFile('docs/DEVLOG.md', { interval: 5000 }, async (curr, prev) => {
+if (fsSync.existsSync(DEVLOG_WATCH_PATH)) {
+    fsSync.watchFile(DEVLOG_WATCH_PATH, { interval: 5000 }, async (curr, prev) => {
         if (curr.mtime !== prev.mtime) {
             console.log('[WATCHER] DEVLOG.md modified, updating site inventory...');
             try {
@@ -3878,6 +3890,7 @@ if (fsSync.existsSync('docs/DEVLOG.md')) {
             }
         }
     });
+    devlogWatcherActive = true;
     console.log('[WATCHER] File watcher started for DEVLOG.md');
 }
 

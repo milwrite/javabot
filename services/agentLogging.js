@@ -10,6 +10,7 @@ const os = require('os');
 let pool = null;
 let notifyClient = null;
 let sessionId = null;
+let sessionPersisted = false;
 let isEnabled = false;
 
 const DEFAULTS = {
@@ -74,10 +75,12 @@ async function startSession() {
             [os.hostname(), version]
         );
         sessionId = res.rows[0].id;
+        sessionPersisted = true;
     } catch (error) {
         // Fallback to UUID if session table doesn't exist
         console.error('[AGENT-LOG] startSession error:', error.message);
         sessionId = crypto.randomUUID();
+        sessionPersisted = false;
     }
 }
 
