@@ -6,8 +6,13 @@
 const axios = require('axios');
 const { EmbedBuilder } = require('discord.js');
 
+// OPENROUTER_API_KEY: required for search (/research) and other AI calls
+// PERPLEXITY_API_KEY: optional — if set, uses Perplexity's native API which returns citations natively
+//                     (OpenRouter strips the Perplexity citations array from responses)
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const PERPLEXITY_URL = 'https://api.perplexity.ai/chat/completions';
 const DEEP_RESEARCH_MODEL = 'perplexity/sonar-deep-research';
+const PERPLEXITY_MODEL = 'sonar-deep-research'; // native Perplexity model name (no prefix)
 const DEEP_RESEARCH_TIMEOUT = 300000; // 5 minutes (deep research can take a while)
 const DEEP_RESEARCH_MAX_TOKENS = 16000; // High limit to avoid truncating citations
 
@@ -244,18 +249,31 @@ async function deepResearch(query, options = {}) {
             sourceTypes
         });
 
-        const response = await axios.post(OPENROUTER_URL, {
-            model: DEEP_RESEARCH_MODEL,
+        // Use Perplexity native API if key is available (returns citations natively)
+        // Fall back to OpenRouter otherwise
+        const usePerplexityNative = !!process.env.PERPLEXITY_API_KEY;
+        const apiUrl = usePerplexityNative ? PERPLEXITY_URL : OPENROUTER_URL;
+        const modelName = usePerplexityNative ? PERPLEXITY_MODEL : DEEP_RESEARCH_MODEL;
+        const authKey = usePerplexityNative ? process.env.PERPLEXITY_API_KEY : process.env.OPENROUTER_API_KEY;
+        console.log(`[DEEP_RESEARCH] Using ${usePerplexityNative ? 'Perplexity native API' : 'OpenRouter'}`);
+
+        const requestBody = {
+            model: modelName,
             messages: [{
                 role: 'user',
                 content: prompt
             }],
             max_tokens: DEEP_RESEARCH_MAX_TOKENS,
             temperature: 0.3,
-            provider: { data_collection: 'deny' } // ZDR enforcement
-        }, {
+        };
+        // OpenRouter-specific options
+        if (!usePerplexityNative) {
+            requestBody.provider = { data_collection: 'deny' }; // ZDR enforcement
+        }
+
+        const response = await axios.post(apiUrl, requestBody, {
             headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Authorization': `Bearer ${authKey}`,
                 'Content-Type': 'application/json',
                 'HTTP-Referer': 'https://github.com/milwrite/javabot',
                 'X-Title': 'Bot Sportello Deep Research'
@@ -281,7 +299,11 @@ async function deepResearch(query, options = {}) {
         // OpenRouter may also place them under choices[0].message.citations
         let apiCitations = response.data.citations
             || choice.message?.citations
+            || response.data?.provider_metadata?.citations  // OpenRouter may nest here
             || [];
+        // Log full response structure to help diagnose citation routing
+        console.log(`[DEEP_RESEARCH] Response keys: ${Object.keys(response.data).join(', ')}`);
+        console.log(`[DEEP_RESEARCH] Message keys: ${Object.keys(choice.message || {}).join(', ')}`);
         console.log(`[DEEP_RESEARCH] API returned ${apiCitations.length} citations (top-level: ${(response.data.citations || []).length}, message-level: ${(choice.message?.citations || []).length})`);
 
         // Fallback: if no API citations, try extracting URLs from content
