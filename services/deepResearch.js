@@ -572,6 +572,11 @@ function generateTitle(query) {
  * @returns {object} - { html: string, slug: string, filename: string }
  */
 function generateReportHTML(result, query) {
+    // Reconstruct citationMap from citations array if map is empty but citations exist
+    if ((!result.citationMap || Object.keys(result.citationMap).length === 0) && result.citations && result.citations.length > 0) {
+        result.citationMap = {};
+        result.citations.forEach((url, idx) => { result.citationMap[idx + 1] = url; });
+    }
     const slug = generateSlug(query);
     const title = generateTitle(query);
     const displayDate = new Date().toLocaleDateString('en-US', {
@@ -702,6 +707,7 @@ function generateReportHTML(result, query) {
         ${contentToHTML(result.content, citationMap)}
     </article>
     ${referencesHTML}
+    <script type="application/json" id="citation-data">${JSON.stringify(citationMap)}</script>
     <footer>filed under: things worth knowing</footer>
 </body>
 </html>`;
@@ -719,6 +725,13 @@ function generateReportHTML(result, query) {
 function generateFormattedReportHTML(result, query, options = {}) {
     const format = result.format || 'review';
     const citationStyle = result.citationStyle || 'chicago';
+
+    // Reconstruct citationMap from citations array if map is empty but citations exist
+    if ((!result.citationMap || Object.keys(result.citationMap).length === 0) && result.citations && result.citations.length > 0) {
+        result.citationMap = {};
+        result.citations.forEach((url, idx) => { result.citationMap[idx + 1] = url; });
+        console.log(`[DEEP_RESEARCH] Reconstructed citationMap from citations array: ${result.citations.length} entries`);
+    }
 
     // Route to format-specific HTML generator
     if (format === 'lit-review') {
