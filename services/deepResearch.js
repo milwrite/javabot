@@ -14,7 +14,7 @@ const PERPLEXITY_URL = 'https://api.perplexity.ai/chat/completions';
 const DEEP_RESEARCH_MODEL = 'perplexity/sonar-deep-research';
 const PERPLEXITY_MODEL = 'sonar-deep-research'; // native Perplexity model name (no prefix)
 const DEEP_RESEARCH_TIMEOUT = 300000; // 5 minutes (deep research can take a while)
-const DEEP_RESEARCH_MAX_TOKENS = 16000; // High limit to avoid truncating citations
+const DEEP_RESEARCH_MAX_TOKENS = 32000; // Never truncate — raised from 16K to prevent content/citation cutoff
 
 /**
  * Build format-specific research prompt
