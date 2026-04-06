@@ -6,15 +6,10 @@
 const axios = require('axios');
 const { EmbedBuilder } = require('discord.js');
 
-// OPENROUTER_API_KEY: required for search (/research) and other AI calls
-// PERPLEXITY_API_KEY: optional — if set, uses Perplexity's native API which returns citations natively
-//                     (OpenRouter strips the Perplexity citations array from responses)
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const PERPLEXITY_URL = 'https://api.perplexity.ai/chat/completions';
 const DEEP_RESEARCH_MODEL = 'perplexity/sonar-deep-research';
-const PERPLEXITY_MODEL = 'sonar-deep-research'; // native Perplexity model name (no prefix)
 const DEEP_RESEARCH_TIMEOUT = 300000; // 5 minutes (deep research can take a while)
-const DEEP_RESEARCH_MAX_TOKENS = 32000; // Never truncate — raised from 16K to prevent content/citation cutoff
+const DEEP_RESEARCH_MAX_TOKENS = 128000; // Full output — never truncate references
 
 /**
  * Build format-specific research prompt
@@ -249,31 +244,18 @@ async function deepResearch(query, options = {}) {
             sourceTypes
         });
 
-        // Use Perplexity native API if key is available (returns citations natively)
-        // Fall back to OpenRouter otherwise
-        const usePerplexityNative = !!process.env.PERPLEXITY_API_KEY;
-        const apiUrl = usePerplexityNative ? PERPLEXITY_URL : OPENROUTER_URL;
-        const modelName = usePerplexityNative ? PERPLEXITY_MODEL : DEEP_RESEARCH_MODEL;
-        const authKey = usePerplexityNative ? process.env.PERPLEXITY_API_KEY : process.env.OPENROUTER_API_KEY;
-        console.log(`[DEEP_RESEARCH] Using ${usePerplexityNative ? 'Perplexity native API' : 'OpenRouter'}`);
-
-        const requestBody = {
-            model: modelName,
+        const response = await axios.post(OPENROUTER_URL, {
+            model: DEEP_RESEARCH_MODEL,
             messages: [{
                 role: 'user',
                 content: prompt
             }],
             max_tokens: DEEP_RESEARCH_MAX_TOKENS,
             temperature: 0.3,
-        };
-        // OpenRouter-specific options
-        if (!usePerplexityNative) {
-            requestBody.provider = { data_collection: 'deny' }; // ZDR enforcement
-        }
-
-        const response = await axios.post(apiUrl, requestBody, {
+            provider: { data_collection: 'deny' } // ZDR enforcement
+        }, {
             headers: {
-                'Authorization': `Bearer ${authKey}`,
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json',
                 'HTTP-Referer': 'https://github.com/milwrite/javabot',
                 'X-Title': 'Bot Sportello Deep Research'
@@ -293,17 +275,14 @@ async function deepResearch(query, options = {}) {
         if (finishReason === 'length') {
             console.warn(`[DEEP_RESEARCH] ⚠️ Response truncated by max_tokens (${DEEP_RESEARCH_MAX_TOKENS}). Citations may be incomplete.`);
         }
+        const wasTruncatedByTokens = (finishReason === 'length');
 
         // Perplexity returns citations in response.data.citations as an array of URLs
         // These correspond to [1], [2], etc. in the text (1-indexed)
         // OpenRouter may also place them under choices[0].message.citations
         let apiCitations = response.data.citations
             || choice.message?.citations
-            || response.data?.provider_metadata?.citations  // OpenRouter may nest here
             || [];
-        // Log full response structure to help diagnose citation routing
-        console.log(`[DEEP_RESEARCH] Response keys: ${Object.keys(response.data).join(', ')}`);
-        console.log(`[DEEP_RESEARCH] Message keys: ${Object.keys(choice.message || {}).join(', ')}`);
         console.log(`[DEEP_RESEARCH] API returned ${apiCitations.length} citations (top-level: ${(response.data.citations || []).length}, message-level: ${(choice.message?.citations || []).length})`);
 
         // Fallback: if no API citations, try extracting URLs from content
@@ -342,6 +321,7 @@ async function deepResearch(query, options = {}) {
             citationMap: citationMap,
             citationStyle: citationStyle,
             format: format,
+            truncated: wasTruncatedByTokens,
             usage: response.data.usage
         };
     } catch (error) {
@@ -594,16 +574,16 @@ function generateTitle(query) {
  * @returns {object} - { html: string, slug: string, filename: string }
  */
 function generateReportHTML(result, query) {
-    // Reconstruct citationMap from citations array if map is empty but citations exist
-    if ((!result.citationMap || Object.keys(result.citationMap).length === 0) && result.citations && result.citations.length > 0) {
-        result.citationMap = {};
-        result.citations.forEach((url, idx) => { result.citationMap[idx + 1] = url; });
-    }
     const slug = generateSlug(query);
     const title = generateTitle(query);
     const displayDate = new Date().toLocaleDateString('en-US', {
         year: 'numeric', month: 'short', day: 'numeric'
     });
+
+    // Truncation guard: if finish_reason was 'length', surface a visible warning in HTML
+    const truncationBanner = result.truncated
+        ? '<p style="background:#3a0000;color:#ff9999;padding:10px 14px;margin-bottom:24px;font-size:12px;">⚠ This report was truncated before completion. References may be missing. Re-run with a narrower query.</p>'
+        : '';
 
     // Build citation map if not provided (for backwards compatibility)
     const citationMap = result.citationMap || {};
@@ -725,11 +705,11 @@ function generateReportHTML(result, query) {
         <h1>${title}</h1>
         <div class="meta">researched ${displayDate} · dug up by sportello</div>
     </header>
+    ${truncationBanner}
     <article>
         ${contentToHTML(result.content, citationMap)}
     </article>
     ${referencesHTML}
-    <script type="application/json" id="citation-data">${JSON.stringify(citationMap)}</script>
     <footer>filed under: things worth knowing</footer>
 </body>
 </html>`;
@@ -747,13 +727,6 @@ function generateReportHTML(result, query) {
 function generateFormattedReportHTML(result, query, options = {}) {
     const format = result.format || 'review';
     const citationStyle = result.citationStyle || 'chicago';
-
-    // Reconstruct citationMap from citations array if map is empty but citations exist
-    if ((!result.citationMap || Object.keys(result.citationMap).length === 0) && result.citations && result.citations.length > 0) {
-        result.citationMap = {};
-        result.citations.forEach((url, idx) => { result.citationMap[idx + 1] = url; });
-        console.log(`[DEEP_RESEARCH] Reconstructed citationMap from citations array: ${result.citations.length} entries`);
-    }
 
     // Route to format-specific HTML generator
     if (format === 'lit-review') {
