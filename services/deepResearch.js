@@ -1,15 +1,23 @@
 /**
  * Deep Research Service
- * Uses Perplexity Sonar Deep Research via OpenRouter for comprehensive research with citations
+ * Uses Perplexity Sonar Deep Research for comprehensive research with citations
  */
 
 const axios = require('axios');
 const { EmbedBuilder } = require('discord.js');
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const PERPLEXITY_URL = 'https://api.perplexity.ai/v1/sonar';
 const DEEP_RESEARCH_MODEL = 'perplexity/sonar-deep-research';
+const PERPLEXITY_MODEL = 'sonar-deep-research';
 const DEEP_RESEARCH_TIMEOUT = 300000; // 5 minutes (deep research can take a while)
-const DEEP_RESEARCH_MAX_TOKENS = 128000; // Full output — never truncate references
+const DEFAULT_DEEP_RESEARCH_MAX_TOKENS = 8000;
+const DEEP_RESEARCH_MAX_TOKENS = getPositiveIntegerEnv('DEEP_RESEARCH_MAX_TOKENS', DEFAULT_DEEP_RESEARCH_MAX_TOKENS);
+
+function getPositiveIntegerEnv(name, fallback) {
+    const value = Number.parseInt(process.env[name], 10);
+    return Number.isInteger(value) && value > 0 ? value : fallback;
+}
 
 /**
  * Build format-specific research prompt
@@ -196,6 +204,113 @@ function formatCitationByStyle(num, url, style = 'chicago') {
     }
 }
 
+function getReasoningEffort(depth) {
+    const configured = (process.env.DEEP_RESEARCH_REASONING_EFFORT || '').toLowerCase();
+    const allowed = new Set(['minimal', 'low', 'medium', 'high']);
+    if (allowed.has(configured)) {
+        return configured;
+    }
+
+    const byDepth = {
+        focused: 'low',
+        standard: 'medium',
+        comprehensive: 'high'
+    };
+
+    return byDepth[depth] || byDepth.standard;
+}
+
+function getNativeSearchOptions(sourceTypes) {
+    if (sourceTypes === 'peer-reviewed') {
+        return { search_mode: 'academic' };
+    }
+
+    return null;
+}
+
+function getDeepResearchRequest(prompt, options = {}) {
+    const usePerplexityNative = Boolean(process.env.PERPLEXITY_API_KEY);
+    const authKey = usePerplexityNative
+        ? process.env.PERPLEXITY_API_KEY
+        : process.env.OPENROUTER_API_KEY;
+
+    if (!authKey) {
+        const envName = usePerplexityNative ? 'PERPLEXITY_API_KEY' : 'OPENROUTER_API_KEY';
+        throw new Error(`Missing ${envName} for deep research`);
+    }
+
+    const requestBody = {
+        model: usePerplexityNative ? PERPLEXITY_MODEL : DEEP_RESEARCH_MODEL,
+        messages: [{
+            role: 'user',
+            content: prompt
+        }],
+        max_tokens: DEEP_RESEARCH_MAX_TOKENS,
+        temperature: 0.3
+    };
+
+    const headers = {
+        'Authorization': `Bearer ${authKey}`,
+        'Content-Type': 'application/json'
+    };
+
+    if (usePerplexityNative) {
+        requestBody.reasoning_effort = getReasoningEffort(options.depth);
+        const webSearchOptions = getNativeSearchOptions(options.sourceTypes);
+        if (webSearchOptions) {
+            requestBody.web_search_options = webSearchOptions;
+        }
+    } else {
+        requestBody.provider = { data_collection: 'deny' }; // ZDR enforcement
+        headers['HTTP-Referer'] = 'https://github.com/milwrite/javabot';
+        headers['X-Title'] = 'Bot Sportello Deep Research';
+    }
+
+    return {
+        apiUrl: usePerplexityNative ? PERPLEXITY_URL : OPENROUTER_URL,
+        requestBody,
+        headers,
+        providerName: usePerplexityNative ? 'Perplexity native API' : 'OpenRouter'
+    };
+}
+
+function normalizeCitationUrl(citation) {
+    if (typeof citation === 'string') {
+        return citation.trim();
+    }
+
+    return citation?.url
+        || citation?.href
+        || citation?.link
+        || citation?.source?.url
+        || citation?.url_citation?.url
+        || null;
+}
+
+function getApiCitations(responseData, choice) {
+    const rawSources = [
+        responseData?.citations,
+        choice?.message?.citations,
+        responseData?.provider_metadata?.citations,
+        responseData?.search_results,
+        choice?.message?.annotations
+    ];
+
+    const citations = [];
+    rawSources
+        .filter(Array.isArray)
+        .flat()
+        .map(normalizeCitationUrl)
+        .filter(Boolean)
+        .forEach(url => {
+            if (!citations.includes(url)) {
+                citations.push(url);
+            }
+        });
+
+    return citations;
+}
+
 /**
  * Execute deep research query via Perplexity Sonar Deep Research
  * @param {string} query - Research query
@@ -244,22 +359,11 @@ async function deepResearch(query, options = {}) {
             sourceTypes
         });
 
-        const response = await axios.post(OPENROUTER_URL, {
-            model: DEEP_RESEARCH_MODEL,
-            messages: [{
-                role: 'user',
-                content: prompt
-            }],
-            max_tokens: DEEP_RESEARCH_MAX_TOKENS,
-            temperature: 0.3,
-            provider: { data_collection: 'deny' } // ZDR enforcement
-        }, {
-            headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json',
-                'HTTP-Referer': 'https://github.com/milwrite/javabot',
-                'X-Title': 'Bot Sportello Deep Research'
-            },
+        const request = getDeepResearchRequest(prompt, { depth, sourceTypes });
+        console.log(`[DEEP_RESEARCH] Using ${request.providerName}, max_tokens=${DEEP_RESEARCH_MAX_TOKENS}`);
+
+        const response = await axios.post(request.apiUrl, request.requestBody, {
+            headers: request.headers,
             timeout: DEEP_RESEARCH_TIMEOUT
         });
 
@@ -277,13 +381,10 @@ async function deepResearch(query, options = {}) {
         }
         const wasTruncatedByTokens = (finishReason === 'length');
 
-        // Perplexity returns citations in response.data.citations as an array of URLs
-        // These correspond to [1], [2], etc. in the text (1-indexed)
-        // OpenRouter may also place them under choices[0].message.citations
-        let apiCitations = response.data.citations
-            || choice.message?.citations
-            || [];
-        console.log(`[DEEP_RESEARCH] API returned ${apiCitations.length} citations (top-level: ${(response.data.citations || []).length}, message-level: ${(choice.message?.citations || []).length})`);
+        // Perplexity native returns top-level citations/search_results. OpenRouter may
+        // place provider data in message-level or provider_metadata fields.
+        let apiCitations = getApiCitations(response.data, choice);
+        console.log(`[DEEP_RESEARCH] API returned ${apiCitations.length} citations`);
 
         // Fallback: if no API citations, try extracting URLs from content
         if (apiCitations.length === 0) {
