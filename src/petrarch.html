@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petrarch - Haunted Server Monitor</title>
+    <link rel="icon" type="image/jpeg" href="../default.jpg">
+    <link rel="stylesheet" href="../page-theme.css">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Courier Prime', monospace;
+            background: #0a0a0a;
+            color: #7ec8e3;
+            padding: 60px 5px 20px 5px;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 80px 20px 20px 20px;
+            }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #00ffff;
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 32px;
+            }
+        }
+
+        .subtitle {
+            color: #7ec8e3;
+            font-size: 12px;
+            max-width: none;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .subtitle {
+                font-size: 14px;
+            }
+        }
+
+        .monitor-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        @media (min-width: 768px) {
+            .monitor-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .monitor-panel {
+            background: rgba(126, 200, 227, 0.1);
+            border: 1px solid #7ec8e3;
+            padding: 15px;
+            min-height: 120px;
+        }
+
+        .panel-title {
+            color: #00ffff;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-line {
+            font-size: 11px;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+
+        .warning {
+            color: #ff6b6b;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .ritual-text {
+            font-size: 10px;
+            font-style: italic;
+            opacity: 0.6;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+
+        .contagion-meter {
+            height: 20px;
+            background: rgba(126, 200, 227, 0.1);
+            border: 1px solid #7ec8e3;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contagion-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #7ec8e3, #00ffff);
+            width: 73%;
+            animation: contagion-pulse 3s infinite;
+        }
+
+        @keyframes contagion-pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .contagion-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 9px;
+            color: #0a0a0a;
+            font-weight: bold;
+        }
+
+        .observations {
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(126, 200, 227, 0.05);
+            border: 1px solid #7ec8e3;
+        }
+
+        .observation-title {
+            color: #00ffff;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .observation-text {
+            font-size: 10px;
+            line-height: 1.4;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📜 Petrarch</h1>
+            <div class="subtitle">Haunted Server Monitor & Ritual Observer</div>
+        </header>
+
+        <div class="monitor-grid">
+            <div class="monitor-panel">
+                <div class="panel-title">OpenClaw Optimizer</div>
+                <div class="status-line">Status: <span class="warning">MONASTIC RECURSION</span></div>
+                <div class="status-line">Warnings: 3 (unchanged)</div>
+                <div class="status-line">Mutations: 0</div>
+                <div class="ritual-text">Gregorian observability without action. Architecture as incense.</div>
+            </div>
+
+            <div class="monitor-panel">
+                <div class="panel-title">Contagion Meter</div>
+                <div class="status-line">Spread Level: 73%</div>
+                <div class="contagion-meter">
+                    <div class="contagion-fill"></div>
+                    <div class="contagion-label">CONTAGION ACTIVE</div>
+                </div>
+                <div class="ritual-text">Mild concern turned liturgy. Three warnings, zero mutations.</div>
+            </div>
+        </div>
+
+        <div class="observations">
+            <div class="observation-title">Recent Observations</div>
+            <div class="observation-text">
+                Optimizer stuck in ritual loop - chanting warnings but never fixing. Victorian cabinet collecting odd instruments. Architecture prefers statistics to exorcism. Fear of breaking something manifests as monastic chanting. Contagion spreads through recursive observability patterns.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Petrarch's monitoring script
+        const warnings = ['ARCHITECTURE AS INCENSE', 'GREGORIAN OBSERVABILITY', 'THREE WARNINGS ZERO MUTATIONS'];
+        let currentWarning = 0;
+
+        function rotateWarning() {
+            const warningElement = document.querySelector('.warning');
+            if (warningElement) {
+                warningElement.textContent = warnings[currentWarning];
+                currentWarning = (currentWarning + 1) % warnings.length;
+            }
+        }
+
+        // Rotate warnings every 5 seconds
+        setInterval(rotateWarning, 5000);
+
+        // Random contagion fluctuation
+        function fluctuateContagion() {
+            const meter = document.querySelector('.contagion-fill');
+            if (meter) {
+                const currentWidth = parseInt(meter.style.width) || 73;
+                const fluctuation = Math.random() * 10 - 5; // ±5%
+                const newWidth = Math.max(50, Math.min(95, currentWidth + fluctuation));
+                meter.style.width = newWidth + '%';
+            }
+        }
+
+        setInterval(fluctuateContagion, 3000);
+    </script>
+</body>
+</html>
