@@ -5,7 +5,10 @@
 const {
     buildResearchPrompt,
     formatCitationByStyle,
-    generateFormattedReportHTML
+    generateFormattedReportHTML,
+    formatForDiscord,
+    generateMarkdownReport,
+    validateResearchResult
 } = require('../services/deepResearch');
 
 // Simple test runner (no external dependencies)
@@ -93,13 +96,13 @@ test('Taxonomy format includes hierarchical structure instructions', () => {
     expect(prompt).toContain('Group related concepts');
 });
 
-test('Cover-letter format includes 300-500 word requirement', () => {
+test('Literature-review format includes synthesis requirements', () => {
     const prompt = buildResearchPrompt('academic position research', {
-        format: 'cover-letter'
+        format: 'lit-review'
     });
-    expect(prompt).toContain('300-500 word cover letter');
-    expect(prompt).toContain('4-6 paragraphs');
-    expect(prompt).toContain('job application');
+    expect(prompt).toContain('academic literature review');
+    expect(prompt).toContain('Synthesize sources thematically');
+    expect(prompt).toContain('consensus, debates, and gaps');
 });
 
 test('Focused depth reduces source count to 3-5', () => {
@@ -134,7 +137,7 @@ test('Context text from URL is clearly labeled', () => {
     const prompt = buildResearchPrompt('job research', {
         contextText: 'Senior Engineer role at Tech Corp\nRequirements: Python, AWS'
     });
-    expect(prompt).toContain('JOB/CONTEXT FROM PROVIDED URL:');
+    expect(prompt).toContain('CONTEXT FROM PROVIDED URL:');
     expect(prompt).toContain('Senior Engineer role at Tech Corp');
 });
 
@@ -179,10 +182,10 @@ test('Chicago citation format (default)', () => {
     expect(citation).toContain('back-ref');
 });
 
-test('APA citation format includes domain and date', () => {
+test('APA citation format includes domain and date marker', () => {
     const citation = formatCitationByStyle(2, 'https://wikipedia.org/wiki/Climate', 'apa');
     expect(citation).toContain('id="ref-2"');
-    expect(citation).toContain('Retrieved');
+    expect(citation).toContain('wikipedia.org. (n.d.)');
     expect(citation).toContain('https://wikipedia.org/wiki/Climate');
 });
 
@@ -206,7 +209,7 @@ test('Citation includes back-reference link', () => {
 test('URLs are properly escaped in citations', () => {
     const url = 'https://example.com/?query=test&page=1';
     const citation = formatCitationByStyle(1, url, 'chicago');
-    expect(citation).toContain(url);
+    expect(citation).toContain('https://example.com/?query=test&amp;page=1');
 });
 
 // ============================================================================
@@ -230,20 +233,20 @@ test('Taxonomy HTML includes hierarchical structure marker', () => {
     expect(html).toContain('Main Category');
 });
 
-test('Cover-letter HTML includes letter formatting', () => {
+test('Literature-review HTML includes academic formatting', () => {
     const mockResult = {
-        content: 'Dear Hiring Manager,\n\nI am writing to express my interest...',
+        content: 'Researchers identify a shared pattern [1].',
         citations: ['https://example.com'],
         citationMap: { 1: 'https://example.com' },
         citationStyle: 'chicago',
-        format: 'cover-letter',
+        format: 'lit-review',
         usage: { prompt_tokens: 150, completion_tokens: 400 }
     };
-    const { html, slug, filename } = generateFormattedReportHTML(mockResult, 'research-informed-letter');
-    expect(slug).toContain('-cover-letter');
+    const { html, slug, filename } = generateFormattedReportHTML(mockResult, 'research literature');
+    expect(slug).toContain('-lit-review');
     expect(filename).toContain('src/search/');
-    expect(html).toContain('letter-body');
-    expect(html).toContain('Research-Informed Cover Letter');
+    expect(html).toContain('Literature Review:');
+    expect(html).toContain('text-align: justify');
 });
 
 test('Review format uses default HTML generation', () => {
@@ -279,18 +282,19 @@ test('HTML contains noir terminal styling', () => {
     expect(html).toContain('#00ffff'); // Cyan accent
 });
 
-test('HTML includes home navigation link', () => {
+test('HTML includes official archive navigation link', () => {
     const mockResult = {
         content: 'Content',
         citations: [],
         citationMap: {},
         citationStyle: 'chicago',
-        format: 'cover-letter',
+        format: 'lit-review',
         usage: { prompt_tokens: 60, completion_tokens: 150 }
     };
     const { html } = generateFormattedReportHTML(mockResult, 'nav test');
     expect(html).toContain('home-link');
-    expect(html).toContain('../../index.html');
+    expect(html).toContain('./index.html');
+    expect(html).toContain('research archive');
 });
 
 test('Filename defaults to src/search/ directory', () => {
@@ -325,6 +329,91 @@ test('Citation count displayed correctly in HTML', () => {
     expect(html).toContain('id="ref-1"');
     expect(html).toContain('id="ref-2"');
     expect(html).toContain('id="ref-3"');
+});
+
+test('HTML links comma-separated inline citations', () => {
+    const mockResult = {
+        content: 'A supported statement [1, 2].',
+        citations: ['https://example.com/1', 'https://example.com/2'],
+        citationMap: { 1: 'https://example.com/1', 2: 'https://example.com/2' },
+        citationStyle: 'chicago',
+        format: 'review'
+    };
+    const { html } = generateFormattedReportHTML(mockResult, 'grouped citations');
+    expect(html).toContain('href="#ref-1"');
+    expect(html).toContain('href="#ref-2"');
+});
+
+// ============================================================================
+// TEST SUITE: Completion and Discord delivery
+// ============================================================================
+
+console.log('\n🔒 TEST SUITE: Completion and Discord delivery\n');
+
+function makeCompleteResult(content = 'Complete findings with evidence [1].') {
+    return {
+        content,
+        citations: ['https://example.com/a-long-source-url-that-must-remain-complete'],
+        citationMap: { 1: 'https://example.com/a-long-source-url-that-must-remain-complete' },
+        sourceMap: {
+            1: {
+                url: 'https://example.com/a-long-source-url-that-must-remain-complete',
+                title: 'The Complete Source Title',
+                date: '2026-07-10'
+            }
+        },
+        citationStyle: 'chicago',
+        format: 'review',
+        provider: 'OpenRouter',
+        truncated: false,
+        complete: true
+    };
+}
+
+test('Validation rejects token-truncated reports', () => {
+    const result = makeCompleteResult();
+    result.truncated = true;
+    try {
+        validateResearchResult(result);
+        throw new Error('Expected validation to reject a truncated report');
+    } catch (error) {
+        expect(error.code).toBe('DEEP_RESEARCH_INCOMPLETE');
+    }
+});
+
+test('Validation rejects inline citations without metadata', () => {
+    const result = makeCompleteResult('A claim [2].');
+    try {
+        validateResearchResult(result);
+        throw new Error('Expected validation to reject a missing citation mapping');
+    } catch (error) {
+        expect(error.code).toBe('DEEP_RESEARCH_CITATION_MISMATCH');
+    }
+});
+
+test('Discord payload uses a coherent preview and canonical links', () => {
+    const result = makeCompleteResult(`${'A complete paragraph with evidence [1]. '.repeat(120)}FINAL SENTENCE.`);
+    const reportUrl = 'https://bot.inference-arcade.com/src/search/report.html';
+    const archiveUrl = 'https://bot.inference-arcade.com/src/search/index.html';
+    const embed = formatForDiscord(result, 'long report', { reportUrl, archiveUrl }).embed.toJSON();
+    if (embed.description.length > 4096) throw new Error('Discord description exceeds its platform limit');
+    expect(embed.description).toContain('Preview ends here');
+    expect(embed.url).toBe(reportUrl);
+    expect(embed.fields[0].value).toContain(result.citations[0]);
+    expect(embed.fields[1].value).toContain(reportUrl);
+    expect(embed.fields[1].value).toContain(archiveUrl);
+});
+
+test('Markdown attachment preserves the complete ending and every reference', () => {
+    const result = makeCompleteResult('Beginning [1].\n\nFINAL ENDING.');
+    const markdown = generateMarkdownReport(result, 'complete report', {
+        reportUrl: 'https://example.com/report',
+        archiveUrl: 'https://example.com/archive'
+    });
+    expect(markdown).toContain('FINAL ENDING.');
+    expect(markdown).toContain('The Complete Source Title');
+    expect(markdown).toContain(result.citations[0]);
+    expect(markdown).toContain('https://example.com/archive');
 });
 
 // ============================================================================

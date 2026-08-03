@@ -16,8 +16,8 @@ const { generateRoutingPlan, buildRoutingGuidance } = require('./services/llmRou
 
 // Filesystem and Git tools (Phase 2 extraction)
 const { listFiles: listFilesService, fileExists: fileExistsService, readFile: readFileService, writeFile: writeFileService, editFile: editFileService, deleteFile: deleteFileService, moveFile: moveFileService, searchFiles: searchFilesService } = require('./services/filesystem');
-const { pushFileViaAPI } = require('./services/gitHelper');
-const { deepResearch, formatForDiscord: formatDeepResearchForDiscord, generateReportHTML, generateFormattedReportHTML, DEEP_RESEARCH_MODEL } = require('./services/deepResearch');
+const { deepResearch, formatForDiscord: formatDeepResearchForDiscord } = require('./services/deepResearch');
+const { publishDeepResearchResult } = require('./services/deepResearchPublishing');
 const { scrapeURL } = require('./services/webScraper');
 const { generateImage, saveToGallery, getStyleContext, updateStyleCache, clearStyleCache } = require('./services/vision/imageGenerator');
 
@@ -626,13 +626,9 @@ async function safeEditReply(interactionOrMessage, content, options = {}) {
                 console.warn(`⚠️ Interaction age: ${Math.round(age/1000)}s - near expiration, attempting fallback`);
 
                 // Interaction likely expired - send to channel instead
-                const fallbackContent = typeof content === 'string' ? content : '';
-                const fallbackEmbeds = options.embeds || (content.embeds ? content.embeds : []);
-
-                await interaction.channel.send({
-                    content: `<@${interaction.user.id}> ${fallbackContent}`,
-                    embeds: fallbackEmbeds
-                });
+                const payload = typeof content === 'string' ? { content, ...options } : { ...content };
+                payload.content = `<@${interaction.user.id}>${payload.content ? ` ${payload.content}` : ''}`;
+                await interaction.channel.send(payload);
 
                 console.log('✅ Sent fallback message to channel (interaction expired)');
                 return { success: true, usedFallback: true };
@@ -653,13 +649,9 @@ async function safeEditReply(interactionOrMessage, content, options = {}) {
                 console.error('❌ Interaction expired (10062) - sending fallback to channel');
 
                 try {
-                    const fallbackContent = typeof content === 'string' ? content : '';
-                    const fallbackEmbeds = options.embeds || (content.embeds ? content.embeds : []);
-
-                    await interaction.channel.send({
-                        content: `<@${interaction.user.id}> ${fallbackContent}`,
-                        embeds: fallbackEmbeds
-                    });
+                    const payload = typeof content === 'string' ? { content, ...options } : { ...content };
+                    payload.content = `<@${interaction.user.id}>${payload.content ? ` ${payload.content}` : ''}`;
+                    await interaction.channel.send(payload);
 
                     return { success: true, usedFallback: true };
                 } catch (fallbackError) {
@@ -676,13 +668,8 @@ async function safeEditReply(interactionOrMessage, content, options = {}) {
         const message = interactionOrMessage;
 
         try {
-            if (typeof content === 'string') {
-                await message.edit(content);
-            } else if (content.embeds) {
-                await message.edit({ embeds: content.embeds });
-            } else {
-                await message.edit(content);
-            }
+            const payload = typeof content === 'string' ? { content, ...options } : content;
+            await message.edit(payload);
 
             return { success: true, usedFallback: false };
         } catch (error) {
@@ -690,6 +677,34 @@ async function safeEditReply(interactionOrMessage, content, options = {}) {
             return { success: false, error: error.message };
         }
     }
+}
+
+function buildDeepResearchDiscordPayload(result, query, publication) {
+    const { embed } = formatDeepResearchForDiscord(result, query, {
+        reportUrl: publication.reportUrl,
+        archiveUrl: publication.archiveUrl
+    });
+    const linkRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setLabel('Open complete report')
+            .setStyle(ButtonStyle.Link)
+            .setURL(publication.reportUrl),
+        new ButtonBuilder()
+            .setLabel('Official research archive')
+            .setStyle(ButtonStyle.Link)
+            .setURL(publication.archiveUrl)
+    );
+
+    return {
+        content: `Deep Research complete: [open this report](<${publication.reportUrl}>) · [browse the official archive](<${publication.archiveUrl}>)`,
+        embeds: [embed],
+        files: [{
+            attachment: Buffer.from(publication.markdown, 'utf8'),
+            name: publication.markdownFilename,
+            description: 'Complete Deep Research report with all references'
+        }],
+        components: [linkRow]
+    };
 }
 
 // Enhanced error logging and tracking for better debugging
@@ -1642,6 +1657,8 @@ async function executeReadOnlyTool(functionName, args, parsePathArg, fileReadCac
         searchResults.push({ query: args.query, results: result });
         return result;
     } else if (functionName === 'deep_research') {
+        const startedAt = Date.now();
+        logEvent('DEEP_RESEARCH', `Starting conversational research: ${args.query.slice(0, 120)}`, null, discordContext);
         // Scrape context URL if provided
         let contextText = null;
         if (args.context_url) {
@@ -1652,21 +1669,51 @@ async function executeReadOnlyTool(functionName, args, parsePathArg, fileReadCac
         }
 
         // Execute deep research with all options
-        const researchResult = await deepResearch(args.query, {
-            format: args.format || 'review',
-            depth: args.depth || 'standard',
-            focusAreas: args.focus_areas,
-            dateRange: args.date_range,
-            contextText: contextText,
-            citationStyle: args.citation_style || 'chicago',
-            sourceTypes: args.source_types || null
-        });
+        try {
+            const researchResult = await deepResearch(args.query, {
+                format: args.format || 'review',
+                depth: args.depth || 'standard',
+                focusAreas: args.focus_areas,
+                dateRange: args.date_range,
+                contextText: contextText,
+                citationStyle: args.citation_style || 'chicago',
+                sourceTypes: args.source_types || null
+            });
+            const publication = await publishDeepResearchResult(researchResult, args.query);
+            const result = `## Deep Research Results (${args.format || 'review'})\n\n` +
+                `${researchResult.content}\n\n` +
+                `### Canonical links\n` +
+                `- Report: ${publication.reportUrl}\n` +
+                `- Official archive: ${publication.archiveUrl}\n\n` +
+                `### Sources\n${researchResult.citations.map((citation, i) => `${i + 1}. ${citation}`).join('\n')}`;
 
-        // Format result based on format type
-        let result = `## Deep Research Results (${args.format || 'review'})\n\n${researchResult.content}\n\n### Sources\n${researchResult.citations.map((c, i) => `${i + 1}. ${c}`).join('\n')}`;
-
-        searchResults.push({ query: args.query, results: result, type: 'deep', format: args.format || 'review' });
-        return result;
+            searchResults.push({
+                query: args.query,
+                results: result,
+                type: 'deep',
+                format: args.format || 'review',
+                researchResult,
+                publication
+            });
+            logToolCall('deep_research', { query: args.query, format: args.format || 'review' }, {
+                reportUrl: publication.reportUrl,
+                archiveUrl: publication.archiveUrl,
+                citations: researchResult.citations.length,
+                complete: researchResult.complete
+            }, null, {
+                durationMs: Date.now() - startedAt,
+                channelId: discordContext.channelId,
+                userId: discordContext.userId
+            });
+            return result;
+        } catch (error) {
+            logToolCall('deep_research', { query: args.query, format: args.format || 'review' }, null, error, {
+                durationMs: Date.now() - startedAt,
+                channelId: discordContext.channelId,
+                userId: discordContext.userId
+            });
+            throw error;
+        }
     }
     return `Error: Unknown read-only tool: ${functionName}`;
 }
@@ -3139,8 +3186,25 @@ async function handleMentionAsync(message) {
             throw new Error(`All ${maxProcessingAttempts} processing attempts failed. Last failure: ${lastFailureReason}`);
         }
 
-        // Send response directly (no commit prompts in mentions)
-        if (finalResponse.length > 2000) {
+        // Deep Research always uses the complete canonical delivery payload. This
+        // bypasses the generic 2,000-character path that previously pointed users
+        // to a local file they could not access.
+        const deepResearchRuns = (finalSearchContext || []).filter(item =>
+            item.type === 'deep' && item.researchResult && item.publication
+        );
+
+        if (deepResearchRuns.length > 0) {
+            for (let index = 0; index < deepResearchRuns.length; index += 1) {
+                const run = deepResearchRuns[index];
+                const payload = buildDeepResearchDiscordPayload(run.researchResult, run.query, run.publication);
+                if (index === 0) {
+                    const delivery = await safeEditReply(thinkingMsg, payload);
+                    if (!delivery.success) throw new Error(`Deep Research Discord delivery failed: ${delivery.error}`);
+                } else {
+                    await message.channel.send(payload);
+                }
+            }
+        } else if (finalResponse.length > 2000) {
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const fileName = `logs/responses/mention-${timestamp}.txt`;
 
@@ -3728,8 +3792,13 @@ async function handleDeepResearch(interaction) {
     const dateRange = interaction.options.getString('date_range');
     const citationStyle = interaction.options.getString('citation_style') || 'chicago';
     const sourceTypes = interaction.options.getString('source_types') || null;
+    const startedAt = Date.now();
 
     try {
+        logEvent('DEEP_RESEARCH', `Starting slash-command research: ${query.slice(0, 120)}`, null, {
+            channelId: interaction.channelId,
+            userId: interaction.user.id
+        });
         // Initial thinking message
         let thinkingMsg = `${getBotResponse('thinking')} diving deep into "${query.substring(0, 50)}${query.length > 50 ? '...' : ''}"...`;
 
@@ -3751,12 +3820,13 @@ async function handleDeepResearch(interaction) {
             }
         }
 
-        await safeEditReply(interaction, thinkingMsg);
+        const initialDelivery = await safeEditReply(interaction, thinkingMsg);
+        if (!initialDelivery.success) throw new Error(`Could not update Discord interaction: ${initialDelivery.error}`);
 
         // Progress callback for long research
         const onProgress = async (message) => {
             try {
-                await interaction.editReply(`${getBotResponse('thinking')} ${message}`);
+                await safeEditReply(interaction, `${getBotResponse('thinking')} ${message}`);
             } catch (e) {
                 // Ignore if interaction expired
             }
@@ -3774,39 +3844,45 @@ async function handleDeepResearch(interaction) {
             sourceTypes
         });
 
-        // Generate format-specific HTML report
-        const { html, slug, filename } = generateFormattedReportHTML(result, query);
-        const reportPath = filename;
-        const liveUrl = `https://bot.inference-arcade.com/${reportPath}`;
+        // Publish the report and archive registry in the same commit. Discord is
+        // updated only after GitHub confirms the canonical files exist.
+        const publication = await publishDeepResearchResult(result, query);
+        const payload = buildDeepResearchDiscordPayload(result, query, publication);
+        const delivery = await safeEditReply(interaction, payload);
+        if (!delivery.success) throw new Error(`Deep Research Discord delivery failed: ${delivery.error}`);
 
-        try {
-            await pushFileViaAPI(reportPath, html, `add deep research: ${query.substring(0, 50)}`, 'main');
-            console.log(`[DEEP_RESEARCH] Pushed ${format} report: ${reportPath}`);
-        } catch (pushError) {
-            console.error('[DEEP_RESEARCH] Push failed:', pushError.message);
-        }
-
-        // Format for Discord embed
-        const { embed } = formatDeepResearchForDiscord(result, query);
-
-        // Add format information to footer
-        const formatLabel = { 'review': 'Comprehensive Review', 'taxonomy': 'Annotated Taxonomy', 'lit-review': 'Literature Review' }[format] || format;
-        embed.setURL(liveUrl);
-        embed.setFooter({ text: `${formatLabel} · full report → ${liveUrl}` });
-
-        await interaction.editReply({ embeds: [embed] });
+        logToolCall('deep_research', { query, format, depth, citationStyle, sourceTypes }, {
+            reportUrl: publication.reportUrl,
+            archiveUrl: publication.archiveUrl,
+            commitSha: publication.commitSha,
+            citations: result.citations.length,
+            complete: result.complete
+        }, null, {
+            durationMs: Date.now() - startedAt,
+            channelId: interaction.channelId,
+            userId: interaction.user.id
+        });
 
     } catch (error) {
         console.error('Deep research error:', error);
+        logToolCall('deep_research', { query, format, depth, citationStyle, sourceTypes }, null, error, {
+            durationMs: Date.now() - startedAt,
+            channelId: interaction.channelId,
+            userId: interaction.user.id
+        });
 
         let errorMsg = getBotResponse('errors');
         if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
             errorMsg += ' Research timed out - try a more specific query.';
         } else if (error.response?.status === 402) {
             errorMsg += ' Insufficient API credits for deep research.';
+        } else if (error.code?.startsWith('DEEP_RESEARCH_')) {
+            errorMsg += ' The provider did not return a complete cited report, so nothing incomplete was published. Please try again.';
+        } else {
+            errorMsg += ' The report could not be published and linked, so I did not announce a broken page. Please try again.';
         }
 
-        await interaction.editReply(errorMsg);
+        await safeEditReply(interaction, errorMsg);
     }
 }
 
