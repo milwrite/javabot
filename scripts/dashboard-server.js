@@ -4,6 +4,28 @@
 
 const express = require('express');
 const path = require('path');
+const { getFileContentViaAPI } = require('../services/gitHelper');
+
+function isSafeResearchFilename(filename) {
+    return /^[a-z0-9][a-z0-9._-]*\.(?:html|json)$/i.test(filename);
+}
+
+async function serveRemoteResearchFile(filename, res, next, getFile = getFileContentViaAPI) {
+    if (!isSafeResearchFilename(filename)) return next();
+
+    try {
+        const content = await getFile(`src/search/${filename}`, 'main');
+        if (content === null) return next();
+
+        const isRegistry = filename === 'reports.json';
+        res.type(isRegistry ? 'application/json' : 'text/html');
+        res.set('Cache-Control', isRegistry ? 'no-store' : 'public, max-age=60');
+        return res.send(content);
+    } catch (error) {
+        console.error(`[RESEARCH_ARCHIVE] GitHub fallback failed for ${filename}:`, error.message);
+        return next();
+    }
+}
 
 // Lazy-load agentLog to avoid circular dependency
 let agentLog = null;
@@ -43,8 +65,29 @@ class DashboardServer {
      * Setup Express routes
      */
     setupRoutes() {
+        const remoteResearchEnabled = process.env.REMOTE_RESEARCH_ARCHIVE !== 'false'
+            && Boolean(process.env.GITHUB_TOKEN);
+
+        // The registry changes on every successful research publication. Serve
+        // the current main-branch version before the bundled static snapshot so
+        // the official archive syndicates a confirmed report immediately.
+        if (remoteResearchEnabled) {
+            this.app.get('/src/search/reports.json', (req, res, next) =>
+                serveRemoteResearchFile('reports.json', res, next)
+            );
+        }
+
         // Serve static files from project root (main site)
         this.app.use(express.static(path.join(__dirname, '..')));
+
+        // Existing pages come from the local image. A report created by the
+        // currently running bot is not in that image yet, so fall through to
+        // GitHub until Railway's source rebuild catches up.
+        if (remoteResearchEnabled) {
+            this.app.get('/src/search/:filename', (req, res, next) =>
+                serveRemoteResearchFile(req.params.filename, res, next)
+            );
+        }
 
         // Serve static files from gui/ directory
         this.app.use('/gui', express.static(path.join(__dirname, '../gui')));
@@ -221,3 +264,5 @@ class DashboardServer {
 }
 
 module.exports = DashboardServer;
+module.exports.isSafeResearchFilename = isSafeResearchFilename;
+module.exports.serveRemoteResearchFile = serveRemoteResearchFile;
