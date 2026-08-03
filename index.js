@@ -37,6 +37,9 @@ const SITE_CONFIG = require('./site-config.js');
 const agentLog = require('./services/agentLogging');
 const DashboardServer = require('./scripts/dashboard-server');
 let dashboard = null;
+const runtimeStatus = {
+    discordLoginFailed: false
+};
 
 const DEVLOG_WATCH_PATH = 'docs/DEVLOG.md';
 let devlogWatcherActive = false;
@@ -109,18 +112,24 @@ if (process.env.OPENROUTER_FALLBACK) {
     console.log('🔑 Fallback OpenRouter key configured');
 }
 
-// Initialize Serena Logs and Dashboard
-agentLog.init().then(async (connected) => {
-    if (connected && !process.env.NO_GUI) {
-        dashboard = new DashboardServer(process.env.GUI_PORT || 3001);
-        await dashboard.start().catch(err => {
-            console.error('[DASHBOARD] Failed to start:', err.message);
-            dashboard = null;
-        });
-    }
-}).catch(err => {
+async function startDashboard() {
+    if (process.env.NO_GUI || dashboard) return;
+
+    dashboard = new DashboardServer(process.env.GUI_PORT || 3001, () => ({
+        discordReady: client.isReady(),
+        discordLoginFailed: runtimeStatus.discordLoginFailed
+    }));
+    await dashboard.start().catch(err => {
+        console.error('[DASHBOARD] Failed to start:', err.message);
+        dashboard = null;
+    });
+}
+
+// Logging enriches the dashboard but is not a prerequisite for serving the
+// official site or Deep Research archive.
+agentLog.init().catch(err => {
     console.error('[SERENA] Init failed:', err.message);
-});
+}).finally(startDashboard);
 
 // Graceful shutdown handlers
 async function gracefulShutdown(reason) {
@@ -2505,6 +2514,7 @@ commands.forEach((cmd, idx) => {
 });
 
 client.once('clientReady', async () => {
+    runtimeStatus.discordLoginFailed = false;
     console.log(`Bot is ready as ${client.user.tag}`);
     console.log(`Monitoring channels: ${CHANNEL_IDS.length > 0 ? CHANNEL_IDS.join(', ') : 'ALL CHANNELS'}`);
     console.log(`Message Content Intent enabled: ${client.options.intents.has(GatewayIntentBits.MessageContent)}`);
@@ -3971,12 +3981,17 @@ if (fsSync.existsSync(DEVLOG_WATCH_PATH)) {
 }
 
 client.login(process.env.DISCORD_TOKEN).catch(error => {
+    runtimeStatus.discordLoginFailed = true;
     console.error('❌ Failed to connect to Discord:', error.message);
     if (error.code === 'ECONNRESET' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
         console.error('⚠️  Network connectivity issue - check your internet connection or VPN settings');
         console.error('   Try: curl https://discord.com in terminal to verify connectivity');
     } else if (error.code === 'TOKEN_INVALID') {
         console.error('⚠️  Invalid Discord token - check DISCORD_TOKEN in .env file');
+    }
+    if (process.env.KEEP_HTTP_ON_DISCORD_FAILURE === 'true') {
+        console.error('⚠️  Discord is offline; keeping the official site and Deep Research archive online in degraded mode');
+        return;
     }
     process.exit(1);
 });
