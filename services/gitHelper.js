@@ -32,6 +32,27 @@ async function getExistingFileSha(repoPath, branch = 'main') {
 }
 
 /**
+ * Read a UTF-8 repository file through the GitHub API.
+ * @param {string} repoPath - Repository-relative path
+ * @param {string} branch - Branch name
+ * @returns {Promise<string|null>} File contents, or null when the file is absent
+ */
+async function getFileContentViaAPI(repoPath, branch = 'main') {
+    const owner = process.env.GITHUB_REPO_OWNER;
+    const repo = process.env.GITHUB_REPO_NAME;
+    try {
+        const { data } = await octokit.repos.getContent({ owner, repo, path: repoPath, ref: branch });
+        if (Array.isArray(data) || data.type !== 'file') {
+            throw new Error(`Path does not refer to a file: ${repoPath}`);
+        }
+        return Buffer.from(data.content || '', data.encoding || 'base64').toString('utf8');
+    } catch (error) {
+        if (error.status === 404) return null;
+        throw error;
+    }
+}
+
+/**
  * Push a file to GitHub via API (creates or updates)
  * @param {string} filePath - Local file path (will be normalized for GitHub)
  * @param {string} content - File content to push
@@ -207,6 +228,7 @@ async function pushMultipleFiles(files, commitMessage, branch = 'main') {
 
 module.exports = {
     pushFileViaAPI,
+    getFileContentViaAPI,
     getRepoStatus,
     pushMultipleFiles
 };

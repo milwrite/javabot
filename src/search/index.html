@@ -191,7 +191,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
-    const REPORTS = [
+    const STATIC_REPORTS = [
         // Museums & Cultural Institutions
         { title: "Lincoln Center for the Performing Arts: Education Programs, Young Artist Pipeline, and Arts Education Initiatives", file: "deep-lincoln-center-performing-arts-2026-01.html", date: "2026-01-12", format: "review", theme: "museums-culture" },
         { title: "The Jerome Robbins Dance Division of NYPL: The World's Largest Dance Archive and Its Oral History Project", file: "you-deep-jerome-robbins-dance-2026-01.html", date: "2026-01-11", format: "review", theme: "museums-culture" },
@@ -245,16 +245,19 @@
         { title: "Chronological History of the Cloze Deletion Test in Educational and Cognitive Psychology", file: "chronological-history-cloze-deletion-test-2026-02.html", date: "2026-02-11", format: "review", theme: "education-history" }
     ];
 
+    let REPORTS = [...STATIC_REPORTS];
+
     const THEME_LABELS = {
         'museums-culture': 'museums & cultural institutions',
         'academic': 'academic research & digital scholarship',
         'ai-ml': 'ai & machine learning',
         'job-search': 'job market & careers',
         'sports': 'sports analytics',
-        'education-history': 'education & history'
+        'education-history': 'education & history',
+        'other': 'other research'
     };
 
-    const THEME_ORDER = ['museums-culture', 'academic', 'ai-ml', 'job-search', 'sports', 'education-history'];
+    const THEME_ORDER = ['museums-culture', 'academic', 'ai-ml', 'job-search', 'sports', 'education-history', 'other'];
 
     const filterTheme = document.getElementById('filter-theme');
     const filterFormat = document.getElementById('filter-format');
@@ -263,6 +266,49 @@
     const clearBtn = document.getElementById('clear-filters');
     const resultCount = document.getElementById('result-count');
     const reportList = document.getElementById('report-list');
+
+    function populateFilters() {
+        const currentTheme = filterTheme.value;
+        const currentFormat = filterFormat.value;
+        const currentMonth = filterMonth.value;
+        const themes = [...new Set(REPORTS.map(r => r.theme))].sort((a, b) =>
+            THEME_ORDER.indexOf(a) - THEME_ORDER.indexOf(b)
+        );
+        const formats = [...new Set(REPORTS.map(r => r.format))].sort();
+        const months = [...new Set(REPORTS.map(r => r.date.slice(0, 7)))].sort().reverse();
+
+        filterTheme.innerHTML = '<option value="">all themes</option>' + themes
+            .map(theme => `<option value="${escapeHtml(theme)}">${escapeHtml(THEME_LABELS[theme] || theme)}</option>`)
+            .join('');
+        filterFormat.innerHTML = '<option value="">all formats</option>' + formats
+            .map(format => `<option value="${escapeHtml(format)}">${escapeHtml(format)}</option>`)
+            .join('');
+        filterMonth.innerHTML = '<option value="">all dates</option>' + months
+            .map(month => {
+                const label = new Date(`${month}-01T12:00:00`).toLocaleDateString('en-US', {
+                    month: 'short', year: 'numeric'
+                }).toLowerCase();
+                return `<option value="${month}">${label}</option>`;
+            }).join('');
+
+        filterTheme.value = themes.includes(currentTheme) ? currentTheme : '';
+        filterFormat.value = formats.includes(currentFormat) ? currentFormat : '';
+        filterMonth.value = months.includes(currentMonth) ? currentMonth : '';
+    }
+
+    async function loadReportRegistry() {
+        try {
+            const response = await fetch('./reports.json', { cache: 'no-store' });
+            if (!response.ok) throw new Error(`registry returned ${response.status}`);
+            const registry = await response.json();
+            if (!Array.isArray(registry) || registry.length === 0) throw new Error('registry is empty or invalid');
+            REPORTS = registry;
+        } catch (error) {
+            console.warn('Using embedded report registry fallback:', error);
+        }
+        populateFilters();
+        filterReports();
+    }
 
     function filterReports() {
         const theme = filterTheme.value;
@@ -311,7 +357,7 @@
                     '<span class="report-meta">' +
                         '<span>' + dateStr + '</span>' +
                         '<span class="tag format-tag">' + r.format + '</span>' +
-                        '<span class="tag theme-tag">' + THEME_LABELS[r.theme] + '</span>' +
+                        '<span class="tag theme-tag">' + (THEME_LABELS[r.theme] || r.theme) + '</span>' +
                     '</span>' +
                 '</a>';
             });
@@ -498,7 +544,7 @@
     document.getElementById('download-md').addEventListener('click', downloadAsMarkdown);
     document.getElementById('download-pdf').addEventListener('click', downloadAsPDF);
 
-    filterReports();
+    loadReportRegistry();
     </script>
 </body>
 </html>

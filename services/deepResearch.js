@@ -10,13 +10,35 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const PERPLEXITY_URL = 'https://api.perplexity.ai/v1/sonar';
 const DEEP_RESEARCH_MODEL = 'perplexity/sonar-deep-research';
 const PERPLEXITY_MODEL = 'sonar-deep-research';
-const DEEP_RESEARCH_TIMEOUT = 300000; // 5 minutes (deep research can take a while)
-const DEFAULT_DEEP_RESEARCH_MAX_TOKENS = 8000;
-const DEEP_RESEARCH_MAX_TOKENS = getPositiveIntegerEnv('DEEP_RESEARCH_MAX_TOKENS', DEFAULT_DEEP_RESEARCH_MAX_TOKENS);
+const DEFAULT_DEEP_RESEARCH_MAX_TOKENS = 32768;
+const MAX_DEEP_RESEARCH_TOKENS = 128000;
+const DEEP_RESEARCH_MAX_TOKENS = getBoundedIntegerEnv(
+    'DEEP_RESEARCH_MAX_TOKENS',
+    DEFAULT_DEEP_RESEARCH_MAX_TOKENS,
+    1024,
+    MAX_DEEP_RESEARCH_TOKENS
+);
+const DEEP_RESEARCH_TIMEOUT = getBoundedIntegerEnv(
+    'DEEP_RESEARCH_TIMEOUT_MS',
+    720000,
+    30000,
+    840000
+);
+const DEEP_RESEARCH_MAX_ATTEMPTS = getBoundedIntegerEnv(
+    'DEEP_RESEARCH_MAX_ATTEMPTS',
+    2,
+    1,
+    2
+);
 
 function getPositiveIntegerEnv(name, fallback) {
     const value = Number.parseInt(process.env[name], 10);
     return Number.isInteger(value) && value > 0 ? value : fallback;
+}
+
+function getBoundedIntegerEnv(name, fallback, min, max) {
+    const value = getPositiveIntegerEnv(name, fallback);
+    return Math.min(Math.max(value, min), max);
 }
 
 /**
@@ -28,6 +50,7 @@ function getPositiveIntegerEnv(name, fallback) {
  * @param {string} options.focusAreas - Comma-separated focus areas
  * @param {string} options.dateRange - Source date filter
  * @param {string} options.contextText - Scraped context from URL
+ * @param {number} options.attempt - Generation attempt (retry prompts are stricter)
  * @returns {string} - Complete prompt for Perplexity
  */
 function buildResearchPrompt(query, options = {}) {
@@ -37,8 +60,18 @@ function buildResearchPrompt(query, options = {}) {
         focusAreas = null,
         dateRange = null,
         contextText = null,
-        sourceTypes = null
+        sourceTypes = null,
+        attempt = 1
     } = options;
+
+    // Keep the answer substantial but bounded. A complete report with a complete
+    // reference map is more useful than an exhaustive response cut off midstream.
+    const wordBudgets = {
+        focused: { min: 1000, max: 1800 },
+        standard: { min: 2200, max: 4000 },
+        comprehensive: { min: 4000, max: 7000 }
+    };
+    const wordBudget = wordBudgets[depth] || wordBudgets.standard;
 
     // Depth instructions
     const depthInstructions = {
@@ -53,17 +86,23 @@ function buildResearchPrompt(query, options = {}) {
     // IMPORTANT: All formats must explicitly request inline [N] bracket citations
     // Perplexity returns a citations array that maps to these bracket numbers
     const citationInstruction = `CRITICAL: You MUST use inline numbered citations throughout your response using bracket notation like [1], [2], [3] etc. Every factual claim must have at least one citation. Place citations immediately after the relevant sentence or claim. Do NOT save all citations for the end — distribute them throughout the text.`;
+    const lengthInstruction = `LENGTH AND COMPLETENESS: Write ${wordBudget.min}-${wordBudget.max} words and do not exceed ${wordBudget.max} words. Finish every section and the conclusion within that limit. Never stop mid-sentence or mid-section.`;
+    const retryInstruction = attempt > 1
+        ? `\nRETRY REQUIREMENT: The previous response reached its output limit. Be more selective, remain under ${wordBudget.max} words, and return a fully concluded report with intact inline citations.`
+        : '';
 
     const formatInstructions = {
         'review': `Research the following topic comprehensively ${depthInstruction}. Provide detailed analysis organized with clear section headings.
 
-${citationInstruction}`,
+${citationInstruction}
+${lengthInstruction}${retryInstruction}`,
         'taxonomy': `Research the following topic and organize findings as a hierarchical taxonomy using bullet points and nested lists ${depthInstruction}.
 Each entry should include key facts, dates, and citations. Group related concepts.
 Structure: Main categories → Subcategories → Specific items with brief descriptions.
 Use clear hierarchical indentation with bullet points. Include dates where relevant.
 
-${citationInstruction}`,
+${citationInstruction}
+${lengthInstruction}${retryInstruction}`,
         'lit-review': `Write an academic literature review on the following topic, as it would appear in an academic paper or dissertation. Structure it as an in-context review of the literature ${depthInstruction}.
 
 Requirements:
@@ -77,7 +116,8 @@ Requirements:
 
 Write in third person. Maintain the analytical tone of a peer-reviewed journal article.
 
-${citationInstruction}`
+${citationInstruction}
+${lengthInstruction}${retryInstruction}`
     };
 
     const formatPrompt = formatInstructions[format] || formatInstructions['review'];
@@ -118,89 +158,90 @@ ${contextText}
         sourceSection = sourceInstructions[sourceTypes] || '';
     }
 
-    return `${formatPrompt}\n\n${contextSection}Research Query:\n${query}${focusSection}${dateSection}${sourceSection}\n\nRemember: Use inline [1], [2], [3] bracket citations throughout your response for every factual claim. Do not omit citations.`;
+    return `${formatPrompt}\n\n${contextSection}Research Query:\n${query}${focusSection}${dateSection}${sourceSection}\n\nRemember: Use inline [1], [2], [3] bracket citations throughout your response for every factual claim. Do not omit citations. Complete the report within the stated word limit.`;
 }
 
-/**
- * Format citation in APA style
- * APA: Author(s). (Year). Title. Retrieved from URL
- * Since we don't have full metadata, simplified format: Domain. Retrieved [Date]. URL
- * @param {number} num - Citation number
- * @param {string} url - Source URL
- * @returns {string} - APA-formatted HTML citation with back-link
- */
-function formatAPACitation(num, url) {
-    const domain = extractDomain(url);
-    const accessDate = new Date().toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-    });
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
+function normalizeReferenceSource(source) {
+    const normalized = typeof source === 'string' ? { url: source } : (source || {});
+    const url = normalized.url || '';
+    return {
+        url,
+        title: normalized.title || extractDomain(url),
+        date: normalized.date || null,
+        domain: extractDomain(url)
+    };
+}
+
+function formatSourceDate(date, options) {
+    if (!date) return null;
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toLocaleDateString('en-US', options);
+}
+
+function formatAPACitation(num, source) {
+    const ref = normalizeReferenceSource(source);
+    const year = formatSourceDate(ref.date, { year: 'numeric' }) || 'n.d.';
     return `<li id="ref-${num}">
         <a href="#cite-${num}" class="back-ref" title="Back to text">↩</a>
         <span class="cite-num">${num}.</span>
-        ${domain}. Retrieved ${accessDate}, from
-        <a href="${url}" target="_blank" rel="noopener">${url}</a>
+        ${escapeHtml(ref.domain)}. (${escapeHtml(year)}). <em>${escapeHtml(ref.title)}</em>.
+        <a href="${escapeHtml(ref.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(ref.url)}</a>
     </li>`;
 }
 
-/**
- * Format citation in numbered style (simple [1], [2], etc.)
- * Simple format: just the URL
- * @param {number} num - Citation number
- * @param {string} url - Source URL
- * @returns {string} - Numbered HTML citation with back-link
- */
-function formatNumberedCitation(num, url) {
+function formatNumberedCitation(num, source) {
+    const ref = normalizeReferenceSource(source);
     return `<li id="ref-${num}">
         <a href="#cite-${num}" class="back-ref" title="Back to text">↩</a>
-        <a href="${url}" target="_blank" rel="noopener">[${num}] ${url}</a>
+        <span class="cite-num">[${num}]</span>
+        <a href="${escapeHtml(ref.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(ref.title)}</a>
+        <span class="cite-domain">${escapeHtml(ref.domain)}</span>
     </li>`;
 }
 
-/**
- * Format citation in MLA style
- * MLA: "Page Title." Website Name, Day Month Year, URL.
- * Since we don't have full metadata, simplified: Domain. Web. Accessed Date. URL.
- * @param {number} num - Citation number
- * @param {string} url - Source URL
- * @returns {string} - MLA-formatted HTML citation with back-link
- */
-function formatMLACitation(num, url) {
-    const domain = extractDomain(url);
+function formatMLACitation(num, source) {
+    const ref = normalizeReferenceSource(source);
+    const published = formatSourceDate(ref.date, { day: 'numeric', month: 'long', year: 'numeric' });
     const accessDate = new Date().toLocaleDateString('en-US', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
+        day: 'numeric', month: 'long', year: 'numeric'
     });
-
+    const publishedText = published ? `, ${escapeHtml(published)}` : '';
     return `<li id="ref-${num}">
         <a href="#cite-${num}" class="back-ref" title="Back to text">↩</a>
         <span class="cite-num">${num}.</span>
-        "${domain}." <em>Web.</em> Accessed ${accessDate}.
-        <a href="${url}" target="_blank" rel="noopener">${url}</a>
+        “${escapeHtml(ref.title)}.” <em>${escapeHtml(ref.domain)}</em>${publishedText}. Accessed ${escapeHtml(accessDate)}.
+        <a href="${escapeHtml(ref.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(ref.url)}</a>
     </li>`;
 }
 
 /**
  * Format a citation using the specified style
  * @param {number} num - Citation number
- * @param {string} url - Source URL
+ * @param {string|object} source - Source URL or source metadata
  * @param {string} style - Citation style (chicago, apa, mla, numbered)
  * @returns {string} - Formatted HTML citation
  */
-function formatCitationByStyle(num, url, style = 'chicago') {
+function formatCitationByStyle(num, source, style = 'chicago') {
     switch (style) {
         case 'apa':
-            return formatAPACitation(num, url);
+            return formatAPACitation(num, source);
         case 'mla':
-            return formatMLACitation(num, url);
+            return formatMLACitation(num, source);
         case 'numbered':
-            return formatNumberedCitation(num, url);
+            return formatNumberedCitation(num, source);
         case 'chicago':
         default:
-            return formatChicagoCitation(num, url);
+            return formatChicagoCitation(num, source);
     }
 }
 
@@ -229,7 +270,14 @@ function getNativeSearchOptions(sourceTypes) {
 }
 
 function getDeepResearchRequest(prompt, options = {}) {
-    const usePerplexityNative = Boolean(process.env.PERPLEXITY_API_KEY);
+    const configuredProvider = (process.env.DEEP_RESEARCH_PROVIDER || 'auto').trim().toLowerCase();
+    const allowedProviders = new Set(['auto', 'perplexity', 'openrouter']);
+    if (!allowedProviders.has(configuredProvider)) {
+        throw new Error(`Invalid DEEP_RESEARCH_PROVIDER: ${configuredProvider}`);
+    }
+
+    const usePerplexityNative = configuredProvider === 'perplexity'
+        || (configuredProvider === 'auto' && Boolean(process.env.PERPLEXITY_API_KEY));
     const authKey = usePerplexityNative
         ? process.env.PERPLEXITY_API_KEY
         : process.env.OPENROUTER_API_KEY;
@@ -262,6 +310,11 @@ function getDeepResearchRequest(prompt, options = {}) {
         }
     } else {
         requestBody.provider = { data_collection: 'deny' }; // ZDR enforcement
+        requestBody.reasoning = { effort: getReasoningEffort(options.depth) };
+        const webSearchOptions = getNativeSearchOptions(options.sourceTypes);
+        if (webSearchOptions) {
+            requestBody.web_search_options = webSearchOptions;
+        }
         headers['HTTP-Referer'] = 'https://github.com/milwrite/javabot';
         headers['X-Title'] = 'Bot Sportello Deep Research';
     }
@@ -287,28 +340,99 @@ function normalizeCitationUrl(citation) {
         || null;
 }
 
-function getApiCitations(responseData, choice) {
+function normalizeSource(citation) {
+    const url = normalizeCitationUrl(citation);
+    if (!url) return null;
+
+    if (typeof citation === 'string') {
+        return { url };
+    }
+
+    const nested = citation?.url_citation || citation?.source || {};
+    return {
+        url,
+        title: citation?.title || nested?.title || citation?.name || null,
+        date: citation?.date || citation?.published_at || nested?.date || null,
+        lastUpdated: citation?.last_updated || citation?.lastUpdated || null,
+        snippet: citation?.snippet || citation?.description || nested?.snippet || null
+    };
+}
+
+function getApiSources(responseData, choice) {
+    // Citation arrays establish the [N] ordering. Rich search result objects are
+    // merged afterward so titles and dates enhance, rather than reorder, refs.
     const rawSources = [
         responseData?.citations,
         choice?.message?.citations,
         responseData?.provider_metadata?.citations,
-        responseData?.search_results,
-        choice?.message?.annotations
+        choice?.message?.annotations,
+        responseData?.search_results
     ];
 
-    const citations = [];
+    const sources = [];
+    const sourceIndexes = new Map();
     rawSources
         .filter(Array.isArray)
         .flat()
-        .map(normalizeCitationUrl)
+        .map(normalizeSource)
         .filter(Boolean)
-        .forEach(url => {
-            if (!citations.includes(url)) {
-                citations.push(url);
+        .forEach(source => {
+            const existingIndex = sourceIndexes.get(source.url);
+            if (existingIndex === undefined) {
+                sourceIndexes.set(source.url, sources.length);
+                sources.push(source);
+                return;
             }
+
+            const existing = sources[existingIndex];
+            sources[existingIndex] = {
+                ...existing,
+                ...Object.fromEntries(
+                    Object.entries(source).filter(([, value]) => value !== null && value !== undefined && value !== '')
+                )
+            };
         });
 
-    return citations;
+    return sources;
+}
+
+function getInlineCitationNumbers(content) {
+    const numbers = [];
+    for (const match of content.matchAll(/\[(\d+(?:\s*,\s*\d+)*)\]/g)) {
+        match[1].split(',').forEach(value => numbers.push(Number.parseInt(value.trim(), 10)));
+    }
+    return numbers.filter(Number.isInteger);
+}
+
+function validateResearchResult(result) {
+    if (!result?.content || !result.content.trim()) {
+        const error = new Error('Deep Research returned no content');
+        error.code = 'DEEP_RESEARCH_EMPTY';
+        throw error;
+    }
+
+    if (result.truncated) {
+        const error = new Error('Deep Research reached its output limit before completion');
+        error.code = 'DEEP_RESEARCH_INCOMPLETE';
+        throw error;
+    }
+
+    const inlineNumbers = [...new Set(getInlineCitationNumbers(result.content))];
+    if (inlineNumbers.length === 0 || !result.citations?.length) {
+        const error = new Error('Deep Research returned no usable citations');
+        error.code = 'DEEP_RESEARCH_NO_CITATIONS';
+        throw error;
+    }
+
+    const missing = inlineNumbers.filter(number => !result.citationMap?.[number]);
+    if (missing.length > 0) {
+        const error = new Error(`Deep Research citation metadata is incomplete for references: ${missing.join(', ')}`);
+        error.code = 'DEEP_RESEARCH_CITATION_MISMATCH';
+        error.missingCitationNumbers = missing;
+        throw error;
+    }
+
+    return result;
 }
 
 /**
@@ -344,90 +468,107 @@ async function deepResearch(query, options = {}) {
     if (onProgress) {
         progressInterval = setInterval(() => {
             elapsedSeconds += 30;
-            onProgress(`still researching... (${elapsedSeconds}s elapsed)`);
+            Promise.resolve(onProgress(`still researching... (${elapsedSeconds}s elapsed)`)).catch(() => {});
         }, 30000);
     }
 
     try {
-        // Build format-specific prompt
-        const prompt = buildResearchPrompt(query, {
-            format,
-            depth,
-            focusAreas,
-            dateRange,
-            contextText,
-            sourceTypes
-        });
+        for (let attempt = 1; attempt <= DEEP_RESEARCH_MAX_ATTEMPTS; attempt += 1) {
+            const prompt = buildResearchPrompt(query, {
+                format,
+                depth,
+                focusAreas,
+                dateRange,
+                contextText,
+                sourceTypes,
+                attempt
+            });
 
-        const request = getDeepResearchRequest(prompt, { depth, sourceTypes });
-        console.log(`[DEEP_RESEARCH] Using ${request.providerName}, max_tokens=${DEEP_RESEARCH_MAX_TOKENS}`);
+            const request = getDeepResearchRequest(prompt, { depth, sourceTypes });
+            console.log(`[DEEP_RESEARCH] Using ${request.providerName}, max_tokens=${DEEP_RESEARCH_MAX_TOKENS}, attempt=${attempt}/${DEEP_RESEARCH_MAX_ATTEMPTS}`);
 
-        const response = await axios.post(request.apiUrl, request.requestBody, {
-            headers: request.headers,
-            timeout: DEEP_RESEARCH_TIMEOUT
-        });
+            const response = await axios.post(request.apiUrl, request.requestBody, {
+                headers: request.headers,
+                timeout: DEEP_RESEARCH_TIMEOUT
+            });
 
-        // Clear progress interval
-        if (progressInterval) clearInterval(progressInterval);
+            const choice = response.data?.choices?.[0];
+            const message = choice?.message;
+            if (!choice || typeof message?.content !== 'string') {
+                const error = new Error('Deep Research provider returned an unexpected response shape');
+                error.code = 'DEEP_RESEARCH_BAD_RESPONSE';
+                throw error;
+            }
 
-        const choice = response.data.choices[0];
-        const message = choice.message;
-        const finishReason = choice.finish_reason;
+            const finishReason = choice.finish_reason;
+            const wasTruncatedByTokens = finishReason === 'length';
+            console.log(`[DEEP_RESEARCH] finish_reason: ${finishReason}, content length: ${message.content.length} chars`);
+            if (wasTruncatedByTokens) {
+                console.warn(`[DEEP_RESEARCH] Response reached max_tokens (${DEEP_RESEARCH_MAX_TOKENS}).`);
+            }
 
-        // Log finish reason — 'length' means content was truncated by token limit
-        console.log(`[DEEP_RESEARCH] finish_reason: ${finishReason}, content length: ${message.content?.length || 0} chars`);
-        if (finishReason === 'length') {
-            console.warn(`[DEEP_RESEARCH] ⚠️ Response truncated by max_tokens (${DEEP_RESEARCH_MAX_TOKENS}). Citations may be incomplete.`);
+            let sources = getApiSources(response.data, choice);
+            if (sources.length === 0) {
+                console.log('[DEEP_RESEARCH] No API citations, extracting URLs from content...');
+                const extracted = extractCitations(message.content);
+                sources = extracted.citations.map(url => ({ url }));
+            }
+
+            const citations = sources.map(source => source.url);
+            const citationMap = {};
+            const sourceMap = {};
+            sources.forEach((source, index) => {
+                citationMap[index + 1] = source.url;
+                sourceMap[index + 1] = source;
+            });
+
+            const bracketNums = getInlineCitationNumbers(message.content);
+            const maxBracketNum = bracketNums.length > 0 ? Math.max(...bracketNums) : 0;
+            const cleanContent = message.content
+                .replace(/\n{4,}/g, '\n\n\n')
+                .trim();
+
+            const result = {
+                content: cleanContent,
+                citations,
+                citationMap,
+                sourceMap,
+                citationStyle,
+                format,
+                truncated: wasTruncatedByTokens,
+                complete: !wasTruncatedByTokens,
+                finishReason,
+                provider: request.providerName,
+                attempts: attempt,
+                usage: response.data.usage
+            };
+
+            console.log(`[DEEP_RESEARCH] Built citationMap with ${citations.length} entries, max bracket ref: [${maxBracketNum}]`);
+
+            try {
+                return validateResearchResult(result);
+            } catch (validationError) {
+                const retryableCodes = new Set([
+                    'DEEP_RESEARCH_INCOMPLETE',
+                    'DEEP_RESEARCH_NO_CITATIONS',
+                    'DEEP_RESEARCH_CITATION_MISMATCH'
+                ]);
+                if (attempt < DEEP_RESEARCH_MAX_ATTEMPTS && retryableCodes.has(validationError.code)) {
+                    console.warn(`[DEEP_RESEARCH] ${validationError.code}; retrying with a stricter completion prompt.`);
+                    if (onProgress) {
+                        await Promise.resolve(onProgress('the first draft was incomplete — rebuilding a complete cited report...')).catch(() => {});
+                    }
+                    continue;
+                }
+                throw validationError;
+            }
         }
-        const wasTruncatedByTokens = (finishReason === 'length');
 
-        // Perplexity native returns top-level citations/search_results. OpenRouter may
-        // place provider data in message-level or provider_metadata fields.
-        let apiCitations = getApiCitations(response.data, choice);
-        console.log(`[DEEP_RESEARCH] API returned ${apiCitations.length} citations`);
-
-        // Fallback: if no API citations, try extracting URLs from content
-        if (apiCitations.length === 0) {
-            console.log('[DEEP_RESEARCH] No API citations, extracting from content...');
-            const extracted = extractCitations(message.content);
-            apiCitations = extracted.citations;
-            console.log(`[DEEP_RESEARCH] Extracted ${apiCitations.length} URLs from content`);
-        }
-
-        // Build citation map: [1] -> first URL, [2] -> second URL, etc.
-        const citationMap = {};
-        apiCitations.forEach((url, index) => {
-            citationMap[index + 1] = url; // 1-indexed to match [1], [2], etc.
-        });
-
-        // Also scan content for the highest [N] bracket number used
-        // If the content references more citations than we have in the map,
-        // the text was likely truncated or citations were lost
-        const bracketNums = [...(message.content.matchAll(/\[(\d+)\]/g))].map(m => parseInt(m[1]));
-        const maxBracketNum = bracketNums.length > 0 ? Math.max(...bracketNums) : 0;
-        if (maxBracketNum > Object.keys(citationMap).length) {
-            console.warn(`[DEEP_RESEARCH] ⚠️ Content references [${maxBracketNum}] but only ${Object.keys(citationMap).length} citations available. Some references may be unlinked.`);
-        }
-
-        // Clean up the content
-        const cleanContent = message.content
-            .replace(/\n{4,}/g, '\n\n\n')
-            .trim();
-
-        console.log(`[DEEP_RESEARCH] Built citationMap with ${Object.keys(citationMap).length} entries, max bracket ref: [${maxBracketNum}]`);
-
-        return {
-            content: cleanContent,
-            citations: apiCitations,
-            citationMap: citationMap,
-            citationStyle: citationStyle,
-            format: format,
-            truncated: wasTruncatedByTokens,
-            usage: response.data.usage
-        };
-    } catch (error) {
-        if (progressInterval) clearInterval(progressInterval);
+        const error = new Error('Deep Research exhausted all completion attempts');
+        error.code = 'DEEP_RESEARCH_INCOMPLETE';
         throw error;
+    } finally {
+        if (progressInterval) clearInterval(progressInterval);
     }
 }
 
@@ -484,49 +625,119 @@ function extractCitations(content) {
  * @param {string} query - Original query
  * @returns {object} - { embed: EmbedBuilder, fullText: string }
  */
-function formatForDiscord(result, query) {
-    const maxDescLength = 3500; // Leave room for sources field
-    let description = result.content;
-    let wasTruncated = false;
+function makeDiscordPreview(content, maxLength = 2800) {
+    if (content.length <= maxLength) return content;
 
-    if (description.length > maxDescLength) {
-        description = description.substring(0, maxDescLength) + '...';
-        wasTruncated = true;
+    const available = maxLength - 110;
+    const window = content.slice(0, available);
+    const paragraphEnd = window.lastIndexOf('\n\n');
+    const sentenceMatches = [...window.matchAll(/[.!?](?:\s|$)/g)];
+    const sentenceEnd = sentenceMatches.at(-1)?.index;
+    let end = paragraphEnd >= Math.floor(available * 0.55)
+        ? paragraphEnd
+        : (sentenceEnd >= Math.floor(available * 0.55) ? sentenceEnd + 1 : window.lastIndexOf(' '));
+
+    if (end < 1) end = available;
+    return `${window.slice(0, end).trim()}\n\n*Preview ends here. The complete report and references are linked and attached below.*`;
+}
+
+function escapeMarkdownLabel(value) {
+    return String(value ?? '').replace(/[\\[\]*_`~|>]/g, '\\$&');
+}
+
+function formatSourceMarkdown(num, source) {
+    const ref = normalizeReferenceSource(source);
+    const date = formatSourceDate(ref.date, { year: 'numeric', month: 'short', day: 'numeric' });
+    const dateText = date ? ` (${date})` : '';
+    return `**[${num}]** ${escapeMarkdownLabel(ref.title)}${dateText} — <${ref.url}>`;
+}
+
+function buildDiscordSourcesField(result, maxLength = 1024) {
+    const citationMap = result.citationMap || {};
+    const sourceMap = result.sourceMap || {};
+    const numbers = Object.keys(citationMap).map(Number).sort((a, b) => a - b);
+    const lines = [];
+
+    for (const num of numbers) {
+        const line = formatSourceMarkdown(num, sourceMap[num] || citationMap[num]);
+        const remaining = numbers.length - lines.length - 1;
+        const suffix = remaining > 0 ? `\n*${remaining} more in the complete report.*` : '';
+        const candidate = [...lines, line].join('\n');
+        if (`${candidate}${suffix}`.length > maxLength) break;
+        lines.push(line);
     }
+
+    const remaining = numbers.length - lines.length;
+    if (remaining > 0) lines.push(`*${remaining} more in the complete report.*`);
+    return lines.join('\n') || 'See the complete report for references.';
+}
+
+/**
+ * Format a complete result for Discord without silently cutting off the report.
+ * Discord receives a bounded preview; the canonical page and Markdown attachment
+ * carry the entire validated result.
+ * @param {object} result - Validated result from deepResearch()
+ * @param {string} query - Original query
+ * @param {object} options - Canonical report and archive URLs
+ * @returns {object} - { embed: EmbedBuilder, fullText: string }
+ */
+function formatForDiscord(result, query, options = {}) {
+    const reportUrl = options.reportUrl || null;
+    const archiveUrl = options.archiveUrl || process.env.DEEP_RESEARCH_ARCHIVE_URL
+        || 'https://bot.inference-arcade.com/src/search/index.html';
+    const titlePrefix = 'Deep Research: ';
+    const availableTitleLength = 256 - titlePrefix.length;
+    const displayQuery = query.length > availableTitleLength
+        ? `${query.slice(0, availableTitleLength - 1)}…`
+        : query;
 
     const embed = new EmbedBuilder()
-        .setTitle(`Deep Research: ${query.substring(0, 80)}${query.length > 80 ? '...' : ''}`)
-        .setDescription(description)
-        .setColor(0x7B68EE) // Medium purple for research
+        .setTitle(`${titlePrefix}${displayQuery}`)
+        .setDescription(makeDiscordPreview(result.content))
+        .setColor(0x7B68EE)
+        .addFields({
+            name: `References (${result.citations.length})`,
+            value: buildDiscordSourcesField(result),
+            inline: false
+        })
+        .addFields({
+            name: 'Complete Deep Research',
+            value: [
+                reportUrl ? `[Open this report](${reportUrl})` : null,
+                `[Browse the official archive](${archiveUrl})`
+            ].filter(Boolean).join(' · '),
+            inline: false
+        })
+        .setFooter({ text: `${result.format || 'review'} · ${result.citationStyle || 'chicago'} citations · complete` })
         .setTimestamp();
 
-    // Add sources field (up to 10 citations)
-    if (result.citations && result.citations.length > 0) {
-        const citationsText = result.citations
-            .slice(0, 10)
-            .map((c, i) => `**[${i + 1}]** ${c.substring(0, 80)}${c.length > 80 ? '...' : ''}`)
-            .join('\n');
+    if (reportUrl) embed.setURL(reportUrl);
+    return { embed, fullText: result.content };
+}
 
-        embed.addFields({
-            name: `Sources (${result.citations.length} found)`,
-            value: citationsText.substring(0, 1024), // Field value max
-            inline: false
-        });
-    }
+function generateMarkdownReport(result, query, options = {}) {
+    const reportUrl = options.reportUrl || null;
+    const archiveUrl = options.archiveUrl || process.env.DEEP_RESEARCH_ARCHIVE_URL
+        || 'https://bot.inference-arcade.com/src/search/index.html';
+    const citationMap = result.citationMap || {};
+    const sourceMap = result.sourceMap || {};
+    const numbers = Object.keys(citationMap).map(Number).sort((a, b) => a - b);
+    const references = numbers.map(num => {
+        const ref = normalizeReferenceSource(sourceMap[num] || citationMap[num]);
+        const date = formatSourceDate(ref.date, { year: 'numeric', month: 'long', day: 'numeric' });
+        return `${num}. ${ref.title}. ${ref.domain}.${date ? ` ${date}.` : ''} ${ref.url}`;
+    });
+    const links = [
+        reportUrl ? `- Canonical report: ${reportUrl}` : null,
+        `- Official Deep Research archive: ${archiveUrl}`
+    ].filter(Boolean).join('\n');
 
-    // Add truncation notice if needed
-    if (wasTruncated) {
-        embed.addFields({
-            name: 'Note',
-            value: 'Response truncated. Full report saved to file.',
-            inline: true
-        });
-    }
-
-    return {
-        embed,
-        fullText: result.content
-    };
+    return `# ${generateTitle(query)}\n\n${links}\n\n` +
+        `- Generated: ${new Date().toISOString()}\n` +
+        `- Format: ${result.format || 'review'}\n` +
+        `- Citation style: ${result.citationStyle || 'chicago'}\n` +
+        `- Provider: ${result.provider || 'Deep Research'}\n\n` +
+        `---\n\n${result.content}\n\n## References\n\n${references.join('\n\n')}\n`;
 }
 
 /**
@@ -581,10 +792,10 @@ function generateSlug(query) {
 function contentToHTML(content, citationMap = {}) {
     // First, convert bracket citations [1][2] to Chicago-style superscripts
     // Groups consecutive citations and links them to references section
-    let processed = content;
+    let processed = escapeHtml(content);
 
-    // Handle consecutive citations like [1][2][3] - combine into single superscript group
-    processed = processed.replace(/(\[\d+\])+/g, (match) => {
+    // Handle [1][2], [1, 2], and combinations of both.
+    processed = processed.replace(/(\[\d+(?:\s*,\s*\d+)*\]\s*)+/g, (match) => {
         const nums = match.match(/\d+/g);
         if (!nums) return match;
 
@@ -633,23 +844,26 @@ function extractDomain(url) {
  * Chicago style for websites: "Page Title." Website Name. Accessed Month Day, Year. URL.
  * Since we don't have page titles, we use domain as identifier
  * @param {number} num - Citation number
- * @param {string} url - Source URL
+ * @param {string|object} source - Source URL or source metadata
  * @returns {string} - Chicago-formatted HTML citation with back-link
  */
-function formatChicagoCitation(num, url) {
-    const domain = extractDomain(url);
+function formatChicagoCitation(num, source) {
+    const ref = normalizeReferenceSource(source);
     const accessDate = new Date().toLocaleDateString('en-US', {
         month: 'long',
         day: 'numeric',
         year: 'numeric'
     });
+    const published = formatSourceDate(ref.date, {
+        month: 'long', day: 'numeric', year: 'numeric'
+    });
+    const publishedText = published ? ` Published ${escapeHtml(published)}.` : '';
 
-    // Chicago style with back-link to in-text citation
     return `<li id="ref-${num}">
         <a href="#cite-${num}" class="back-ref" title="Back to text">↩</a>
         <span class="cite-num">${num}.</span>
-        "${domain}." Accessed ${accessDate}.
-        <a href="${url}" target="_blank" rel="noopener">${url}</a>
+        “${escapeHtml(ref.title)}.” <em>${escapeHtml(ref.domain)}</em>.${publishedText} Accessed ${escapeHtml(accessDate)}.
+        <a href="${escapeHtml(ref.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(ref.url)}</a>
     </li>`;
 }
 
@@ -688,6 +902,7 @@ function generateReportHTML(result, query) {
 
     // Build citation map if not provided (for backwards compatibility)
     const citationMap = result.citationMap || {};
+    const sourceMap = result.sourceMap || {};
 
     // Generate Chicago-style references section
     let referencesHTML = '';
@@ -695,7 +910,7 @@ function generateReportHTML(result, query) {
 
     if (citationNumbers.length > 0) {
         const citationItems = citationNumbers
-            .map(num => formatChicagoCitation(num, citationMap[num]))
+            .map(num => formatChicagoCitation(num, sourceMap[num] || citationMap[num]))
             .join('\n');
 
         referencesHTML = `
@@ -801,7 +1016,7 @@ function generateReportHTML(result, query) {
     </style>
 </head>
 <body>
-    <a class="back" href="../../index.html">back</a>
+    <a class="back" href="./index.html">research archive</a>
     <header>
         <h1>${title}</h1>
         <div class="meta">researched ${displayDate} · dug up by sportello</div>
@@ -856,6 +1071,7 @@ function generateTaxonomyHTML(result, query, citationStyle = 'chicago') {
     });
 
     const citationMap = result.citationMap || {};
+    const sourceMap = result.sourceMap || {};
 
     // Build citations section
     let citationsHTML = '';
@@ -863,7 +1079,7 @@ function generateTaxonomyHTML(result, query, citationStyle = 'chicago') {
 
     if (citationNumbers.length > 0) {
         const citationItems = citationNumbers
-            .map(num => formatCitationByStyle(num, citationMap[num], citationStyle))
+            .map(num => formatCitationByStyle(num, sourceMap[num] || citationMap[num], citationStyle))
             .join('\n');
 
         citationsHTML = `
@@ -970,7 +1186,7 @@ function generateTaxonomyHTML(result, query, citationStyle = 'chicago') {
     </style>
 </head>
 <body>
-    <a class="home-link" href="../../index.html"></a>
+    <a class="home-link" href="./index.html">research archive</a>
     <header>
         <h1>${title}</h1>
         <div class="meta">researched ${displayDate} · dug up by sportello</div>
@@ -1002,6 +1218,7 @@ function generateLitReviewHTML(result, query, citationStyle = 'chicago') {
     });
 
     const citationMap = result.citationMap || {};
+    const sourceMap = result.sourceMap || {};
 
     // Build works cited / references section
     let referencesHTML = '';
@@ -1009,7 +1226,7 @@ function generateLitReviewHTML(result, query, citationStyle = 'chicago') {
 
     if (citationNumbers.length > 0) {
         const citationItems = citationNumbers
-            .map(num => formatCitationByStyle(num, citationMap[num], citationStyle))
+            .map(num => formatCitationByStyle(num, sourceMap[num] || citationMap[num], citationStyle))
             .join('\n');
 
         // Use MLA "Works Cited" heading for MLA style, "References" otherwise
@@ -1122,7 +1339,7 @@ function generateLitReviewHTML(result, query, citationStyle = 'chicago') {
     </style>
 </head>
 <body>
-    <a class="home-link" href="../../index.html"></a>
+    <a class="home-link" href="./index.html">research archive</a>
     <header>
         <h1>Literature Review: ${title}</h1>
         <div class="meta">researched ${displayDate} · dug up by sportello</div>
@@ -1141,9 +1358,14 @@ function generateLitReviewHTML(result, query, citationStyle = 'chicago') {
 module.exports = {
     deepResearch,
     formatForDiscord,
+    generateMarkdownReport,
     generateReportHTML,
     generateFormattedReportHTML,
     buildResearchPrompt,
     formatCitationByStyle,
+    generateSlug,
+    generateTitle,
+    validateResearchResult,
+    getInlineCitationNumbers,
     DEEP_RESEARCH_MODEL
 };

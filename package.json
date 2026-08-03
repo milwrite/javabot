@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "node services/responseHealing.test.js"
+    "test": "node services/responseHealing.test.js && node tests/deep-research.test.js && node tests/research-archive.test.js"
   },
   "dependencies": {
     "@octokit/rest": "^20.0.2",
