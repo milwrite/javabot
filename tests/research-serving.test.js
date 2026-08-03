@@ -1,7 +1,9 @@
+const DashboardServer = require('../scripts/dashboard-server');
 const {
     isSafeResearchFilename,
-    serveRemoteResearchFile
-} = require('../scripts/dashboard-server');
+    serveRemoteResearchFile,
+    buildHealthPayload
+} = DashboardServer;
 
 let passed = 0;
 let failed = 0;
@@ -94,6 +96,44 @@ function createResponseRecorder() {
             fallthroughs += 1;
         }, async () => null);
         assert(fallthroughs === 2, 'missing/unsafe routes did not fall through');
+    });
+
+    await test('Health distinguishes a ready bot from a live degraded archive', () => {
+        const ready = buildHealthPayload(
+            { discordReady: true },
+            { clients: 2, dbConnected: true, sessionId: 'session-ready' }
+        );
+        const degraded = buildHealthPayload(
+            { discordReady: false, discordLoginFailed: true },
+            { clients: 0, dbConnected: true, sessionId: 'session-degraded' }
+        );
+
+        assert(ready.status === 'ok', 'ready bot reported degraded');
+        assert(ready.discordReady === true, 'ready bot omitted Discord readiness');
+        assert(ready.clients === 2, 'health payload omitted connected clients');
+        assert(degraded.status === 'degraded', 'offline bot reported healthy');
+        assert(degraded.discordReady === false, 'degraded archive hid Discord failure');
+        assert(degraded.dbConnected === true, 'degraded health lost database status');
+    });
+
+    await test('Degraded archive stays live while bot readiness returns 503', async () => {
+        const server = new DashboardServer(0, () => ({ discordReady: false }));
+        await server.start();
+
+        try {
+            const port = server.server.address().port;
+            const healthResponse = await fetch(`http://127.0.0.1:${port}/api/health`);
+            const readyResponse = await fetch(`http://127.0.0.1:${port}/api/ready`);
+            const health = await healthResponse.json();
+            const ready = await readyResponse.json();
+
+            assert(healthResponse.status === 200, 'liveness endpoint took the archive offline');
+            assert(health.status === 'degraded', 'liveness endpoint hid Discord degradation');
+            assert(readyResponse.status === 503, 'readiness endpoint accepted an offline bot');
+            assert(ready.discordReady === false, 'readiness response hid Discord failure');
+        } finally {
+            await server.stop();
+        }
     });
 
     console.log(`\n${passed} passed, ${failed} failed\n`);

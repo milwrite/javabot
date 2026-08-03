@@ -27,6 +27,18 @@ async function serveRemoteResearchFile(filename, res, next, getFile = getFileCon
     }
 }
 
+function buildHealthPayload(runtimeStatus = {}, serviceStatus = {}) {
+    const discordReady = runtimeStatus.discordReady === true;
+
+    return {
+        status: discordReady ? 'ok' : 'degraded',
+        discordReady,
+        clients: serviceStatus.clients || 0,
+        dbConnected: Boolean(serviceStatus.dbConnected),
+        sessionId: serviceStatus.sessionId || null
+    };
+}
+
 // Lazy-load agentLog to avoid circular dependency
 let agentLog = null;
 function getAgentLog() {
@@ -37,8 +49,9 @@ function getAgentLog() {
 }
 
 class DashboardServer {
-    constructor(port = 3001) {
+    constructor(port = 3001, getRuntimeStatus = () => ({ discordReady: true })) {
         this.port = port;
+        this.getRuntimeStatus = getRuntimeStatus;
         this.app = express();
         this.server = null;
         this.clients = new Set(); // SSE clients
@@ -191,14 +204,25 @@ class DashboardServer {
             }
         });
 
-        // Health check
+        // Liveness keeps the public archive available even when Discord is
+        // degraded. Readiness below separately reports whether the bot can
+        // currently answer Discord requests.
         this.app.get('/api/health', (req, res) => {
-            res.json({
-                status: 'ok',
+            const payload = buildHealthPayload(this.getRuntimeStatus(), {
                 clients: this.clients.size,
                 dbConnected: getAgentLog().enabled(),
                 sessionId: getAgentLog().getSessionId()
             });
+            res.json(payload);
+        });
+
+        this.app.get('/api/ready', (req, res) => {
+            const payload = buildHealthPayload(this.getRuntimeStatus(), {
+                clients: this.clients.size,
+                dbConnected: getAgentLog().enabled(),
+                sessionId: getAgentLog().getSessionId()
+            });
+            res.status(payload.discordReady ? 200 : 503).json(payload);
         });
     }
 
@@ -266,3 +290,4 @@ class DashboardServer {
 module.exports = DashboardServer;
 module.exports.isSafeResearchFilename = isSafeResearchFilename;
 module.exports.serveRemoteResearchFile = serveRemoteResearchFile;
+module.exports.buildHealthPayload = buildHealthPayload;
